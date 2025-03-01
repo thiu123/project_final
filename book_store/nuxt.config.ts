@@ -19,7 +19,9 @@ export default defineNuxtConfig({
 						colors: {
 							waterblue:"#5295D0",
               customblack: "#191b24",
-              customyellow: "#F4CE70"
+              customyellow: "#DCF763",
+              darkgreen: "#435058",
+              whitesmoke:"#F1F2EE"
 						}
 					}
 				}
