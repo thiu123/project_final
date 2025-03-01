@@ -1,11 +1,11 @@
 <template>
   <v-container class="h-screen position-relative" fluid>
-    <v-img
+    <!-- <v-img
       class="position-absolute h-100 w-100 top-0 left-0"
       style="filter: blur(3px)"
       src="/assets/background.jpg"
       cover
-    />
+    /> -->
 
     <v-row class="h-100 d-flex justify-center align-center">
       <v-col cols="12" sm="8" md="6" lg="4">

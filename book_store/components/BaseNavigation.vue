@@ -1,96 +1,70 @@
 <template>
   <div>
-    <v-app-bar color="white" elevation="1">
-      <v-container class="d-flex align-center">
+    <v-app-bar dark>
+      <v-container class="d-flex align-center py-0">
         <div class="d-flex align-center">
-          <v-btn
-            variant="text"
-            color="grey-darken-3"
-            class="text-body-2 font-weight-regular"
-          >
-            <v-icon size="small" class="mr-1">mdi-phone</v-icon>
-            +84971450800
-          </v-btn>
+          <v-icon icon="mdi-book-open-page-variant" class="mr-2"></v-icon>
+          <span class="font-weight-bold">THBookStore</span>
         </div>
+        <v-btn
+          color="darkgreen"
+          rounded="lg"
+          variant="text"
+          class="ml-4 font-weight-bold text-subtitle-1"
+          :class="{ 'bg-darkgreen text-white': $route.path === '/' }"
+          to="/"
+          >Home</v-btn
+        >
+        <v-menu>
+          <template v-slot:activator="{ props }">
+            <v-btn
+              color="darkgreen"
+              variant="text"
+              class="font-weight-bold text-subtitle-1"
+              v-bind="props"
+            >
+              Category <v-icon icon="mdi-chevron-down"></v-icon>
+            </v-btn>
+          </template>
+          <v-list>
+            <v-list-item v-for="(item, i) in categories" :key="i" :value="item">
+              <v-list-item-title>{{ item }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+        <v-btn color="darkgreen" class="font-weight-bold text-subtitle-1" variant="text"
+          >New Arrivals</v-btn
+        >
+        <v-btn color="darkgreen" class="font-weight-bold text-subtitle-1" variant="text"
+          >Best Selling Books</v-btn
+        >
+        <v-btn color="darkgreen" class="font-weight-bold text-subtitle-1" variant="text"
+          >View All The Day</v-btn
+        >
+        <v-btn color="darkgreen" class="font-weight-bold text-subtitle-1" variant="text"
+          >Contact Us</v-btn
+        >
         <v-spacer></v-spacer>
-        <div class="d-flex">
-          <v-btn
-            icon="mdi-facebook"
-            variant="text"
-            color="grey-darken-3"
-            size="large"
-          ></v-btn>
-          <v-btn
-            icon="mdi-instagram"
-            variant="text"
-            color="grey-darken-3"
-            size="large"
-          ></v-btn>
-          <v-btn
-            icon="mdi-twitter"
-            variant="text"
-            color="grey-darken-3"
-            size="large"
-          ></v-btn>
-          <v-btn
-            icon="mdi-pinterest"
-            variant="text"
-            color="grey-darken-3"
-            size="large"
-          ></v-btn>
-        </div>
-      </v-container>
-    </v-app-bar>
-
-    <v-app-bar color="white" elevation="0">
-      <v-container>
-        <div class="d-flex align-center">
-          <v-avatar color="grey-lighten-3" size="40" class="mr-4">
-            <v-icon color="grey">mdi-book-open-page-variant</v-icon>
-          </v-avatar>
-          <div class="d-none d-sm-flex">
-            <v-btn variant="text" to="/" class="text-none text-subtitle-2"
-              >HOME</v-btn
-            >
-            <v-btn variant="text" to="/about" class="text-none text-subtitle-2"
-              >ABOUT US</v-btn
-            >
-            <v-btn variant="text" to="/books" class="text-none text-subtitle-2"
-              >BOOKS</v-btn
-            >
-            <v-btn
-              variant="text"
-              to="/new-release"
-              class="text-none text-subtitle-2"
-              >NEW RELEASE</v-btn
-            >
-            <v-btn
-              variant="text"
-              to="/contact"
-              class="text-none text-subtitle-2"
-              >CONTACT US</v-btn
-            >
-            <v-btn variant="text" to="/blog" class="text-none text-subtitle-2"
-              >BLOG</v-btn
-            >
-          </div>
-          <v-spacer></v-spacer>
-          <div class="d-flex align-center">
-            <v-text-field
-              :loading="loading"
-              append-inner-icon="mdi-magnify"
-              density="compact"
-              label="Search templates"
-              variant="outlined"
-              style="width:12vw"
-              hide-details
-              single-line
-              @click:append-inner="onClick"
-            ></v-text-field>
-            <v-btn icon="mdi-heart-outline" variant="text"></v-btn>
-            <v-btn icon="mdi-cart-outline" variant="text"></v-btn>
-          </div>
-        </div>
+        <v-btn icon>
+          <v-icon color="darkgreen">mdi-heart</v-icon>
+        </v-btn>
+        <v-btn icon class="ml-1">
+          <v-icon>mdi-cart</v-icon>
+        </v-btn>
+        <v-btn
+          color="customyellow"
+          variant="flat"
+          class="ml-4 font-weight-bold text-darkgreen text-subtitle-1"
+          rounded
+        >
+          Sign In
+          <v-img
+            class="ml-1"
+            width="28px"
+            height="28px"
+            src="../assets/user_icon.svg"
+          />
+        </v-btn>
       </v-container>
     </v-app-bar>
   </div>
