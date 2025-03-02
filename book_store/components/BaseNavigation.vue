@@ -27,7 +27,14 @@
             </v-btn>
           </template>
           <v-list>
-            <v-list-item v-for="(item, i) in categories" :key="i" :value="item">
+            <v-list-item
+              v-for="(item, i) in categories"
+              :key="i"
+              :value="item"
+              @click="
+                () => $router.push(`/categories/${encodeURIComponent(item)}`)
+              "
+            >
               <v-list-item-title>{{ item }}</v-list-item-title>
             </v-list-item>
           </v-list>
