@@ -32,16 +32,28 @@
             </v-list-item>
           </v-list>
         </v-menu>
-        <v-btn color="darkgreen" class="font-weight-bold text-subtitle-1" variant="text"
+        <v-btn
+          color="darkgreen"
+          class="font-weight-bold text-subtitle-1"
+          variant="text"
           >New Arrivals</v-btn
         >
-        <v-btn color="darkgreen" class="font-weight-bold text-subtitle-1" variant="text"
+        <v-btn
+          color="darkgreen"
+          class="font-weight-bold text-subtitle-1"
+          variant="text"
           >Best Selling Books</v-btn
         >
-        <v-btn color="darkgreen" class="font-weight-bold text-subtitle-1" variant="text"
+        <v-btn
+          color="darkgreen"
+          class="font-weight-bold text-subtitle-1"
+          variant="text"
           >View All The Day</v-btn
         >
-        <v-btn color="darkgreen" class="font-weight-bold text-subtitle-1" variant="text"
+        <v-btn
+          color="darkgreen"
+          class="font-weight-bold text-subtitle-1"
+          variant="text"
           >Contact Us</v-btn
         >
         <v-spacer></v-spacer>
@@ -75,6 +87,21 @@ definePageMeta({
 });
 import { mapState } from "vuex";
 export default {
+  data() {
+    return {
+      categories: [
+        "Fiction",
+        "Mystery & Thriller",
+        "Fantasy",
+        "Romance",
+        "Manga & Graphic Novels",
+        "Self-Help & Personal Development",
+        "Biography & Memoir",
+        "History & Politics",
+        "IT & Programming",
+      ],
+    };
+  },
   computed: {
     ...mapState("auth", ["currentUser"]),
   },

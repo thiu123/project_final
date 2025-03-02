@@ -81,54 +81,82 @@
       </v-container>
 
       <!-- Shop by Category -->
-      <v-container>
-        <div class="d-flex justify-space-between align-center mb-4">
-          <h2 class="text-h5 font-weight-bold">Shop by Category</h2>
-          <div>
-            <v-btn icon variant="text" density="comfortable">
-              <v-icon>mdi-chevron-left</v-icon>
-            </v-btn>
-            <v-btn icon variant="text" density="comfortable">
-              <v-icon>mdi-chevron-right</v-icon>
-            </v-btn>
-          </div>
-        </div>
-        <v-row>
-          <v-col
+      <v-card>
+        <v-tabs
+          v-model="selectedTab"
+          align-tabs="center"
+          bg-color="deep-purple-accent-4"
+          stacked
+        >
+          <v-tab
             v-for="(category, i) in shopCategories"
             :key="i"
-            cols="6"
-            sm="4"
-            md="2"
+            :value="category.name"
           >
-            <v-card class="pa-4" variant="outlined" rounded="lg">
-              <div class="d-flex flex-column align-center">
-                <v-avatar color="grey-lighten-3" size="50" class="mb-2">
-                  <v-icon :icon="category.icon" color="primary"></v-icon>
-                </v-avatar>
-                <span class="text-body-2 text-center">{{ category.name }}</span>
-              </div>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container>
+            <v-icon :icon="category.icon"></v-icon>
+            {{ category.name }}
+          </v-tab>
+        </v-tabs>
+
+        <v-tabs-window v-model="selectedTab">
+          <v-tabs-window-item
+            v-for="(category, i) in shopCategories"
+            :key="i"
+            :value="category.name"
+          >
+            <v-container>
+              <v-row>
+                <v-col cols="6" sm="4" md="2">
+                  <v-card class="pa-4" variant="outlined" rounded="lg">
+                    <div class="d-flex flex-column align-center">
+                      <v-avatar color="grey-lighten-3" size="50" class="mb-2">
+                        <v-icon :icon="category.icon" color="primary"></v-icon>
+                      </v-avatar>
+                      <span class="text-body-2 text-center">{{
+                        category.name
+                      }}</span>
+                    </div>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-tabs-window-item>
+        </v-tabs-window>
+      </v-card>
+
+      <v-window v-model="selectedTab">
+        <v-window-item
+          v-for="(category, i) in shopCategories"
+          :key="i"
+          :value="category.name"
+        >
+          <v-container>
+            <v-row>
+              <v-col cols="6" sm="4" md="2">
+                <v-card class="pa-4" variant="outlined" rounded="lg">
+                  <div class="d-flex flex-column align-center">
+                    <v-avatar color="grey-lighten-3" size="50" class="mb-2">
+                      <v-icon :icon="category.icon" color="primary"></v-icon>
+                    </v-avatar>
+                    <span class="text-body-2 text-center">{{
+                      category.name
+                    }}</span>
+                  </div>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-window-item>
+      </v-window>
 
       <!-- New Arrivals -->
       <v-container class="mt-8">
         <div class="d-flex justify-space-between align-center mb-4">
           <h2 class="text-h5 font-weight-bold">New Arrivals</h2>
-          <div>
-            <v-btn icon variant="text" density="comfortable">
-              <v-icon>mdi-chevron-left</v-icon>
-            </v-btn>
-            <v-btn icon variant="text" density="comfortable">
-              <v-icon>mdi-chevron-right</v-icon>
-            </v-btn>
-          </div>
         </div>
         <v-row>
           <v-col
-            v-for="(book, i) in books"
+            v-for="(book, i) in getNewArrivalBooks"
             :key="i"
             cols="6"
             sm="4"
@@ -136,7 +164,12 @@
           >
             <v-card class="h-100">
               <div class="position-relative">
-                <v-img class="" :src="book.coverImage" height="220" cover></v-img>
+                <v-img
+                  class=""
+                  :src="book.coverImage"
+                  height="250"
+                  cover
+                ></v-img>
                 <v-btn
                   icon
                   variant="text"
@@ -516,7 +549,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
 export default {
   data() {
     return {
@@ -575,7 +608,10 @@ export default {
     };
   },
   computed: {
-    ...mapState("book",["books"]),
+    ...mapState("book", ["books"]),
+    getNewArrivalBooks() {
+      return this.books.filter((book) => book.isNewArrival);
+    },
   },
   async mounted() {
     await this.getAllBooks();
