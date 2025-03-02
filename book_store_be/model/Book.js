@@ -8,6 +8,7 @@ const bookSchema = new mongoose.Schema({
   stock: Number,
   description: String,
   coverImage: String,
+  isNewArrival: Boolean
 });
 
 module.exports = mongoose.model("Book", bookSchema);
