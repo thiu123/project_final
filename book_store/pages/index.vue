@@ -162,7 +162,7 @@
             sm="4"
             md="2"
           >
-            <v-card class="h-100">
+            <v-card class="h-100 bg-transparent" elevation="2">
               <div class="position-relative">
                 <v-img
                   class=""
