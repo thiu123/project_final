@@ -44,7 +44,7 @@
       <!-- Search Bar -->
       <v-container>
         <v-card
-          class="mx-auto my-8 pa-4"
+          class="mx-auto my-8 pa-4 bg-transparent"
           max-width="800"
           height="300"
           rounded="xl"
@@ -123,32 +123,7 @@
           </v-tabs-window-item>
         </v-tabs-window>
       </v-card>
-
-      <v-window v-model="selectedTab">
-        <v-window-item
-          v-for="(category, i) in shopCategories"
-          :key="i"
-          :value="category.name"
-        >
-          <v-container>
-            <v-row>
-              <v-col cols="6" sm="4" md="2">
-                <v-card class="pa-4" variant="outlined" rounded="lg">
-                  <div class="d-flex flex-column align-center">
-                    <v-avatar color="grey-lighten-3" size="50" class="mb-2">
-                      <v-icon :icon="category.icon" color="primary"></v-icon>
-                    </v-avatar>
-                    <span class="text-body-2 text-center">{{
-                      category.name
-                    }}</span>
-                  </div>
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-window-item>
-      </v-window>
-
+      
       <!-- New Arrivals -->
       <v-container class="mt-8">
         <div class="d-flex justify-space-between align-center mb-4">
@@ -191,19 +166,19 @@
                   ></v-rating>
                   <span class="text-caption ml-1">{{ book.reviews }}</span>
                 </div>
-                <div class="text-subtitle-2 font-weight-medium">
+                <div class="text-subtitle-2 font-weight-bold text-truncate">
                   {{ book.title }}
                 </div>
                 <div class="d-flex justify-space-between align-center mt-2">
                   <div>
                     <span class="text-subtitle-2 font-weight-bold ml-1">{{
                       book.price
-                    }}</span>
+                    }} $</span>
                   </div>
                 </div>
               </v-card-text>
               <v-card-actions>
-                <v-btn block color="primary" variant="outlined" size="small">
+                <v-btn block color="white" class="bg-darkgreen rounded-xl" size="small">
                   Add To Cart <v-icon right>mdi-cart</v-icon>
                 </v-btn>
               </v-card-actions>
@@ -549,8 +524,9 @@
 </template>
 
 <script>
-import { mapState, mapActions, mapGetters } from "vuex";
+import { mapState, mapActions } from "vuex";
 export default {
+  name: "Home",
   data() {
     return {
       categories: [
