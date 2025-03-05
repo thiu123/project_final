@@ -9,7 +9,7 @@
                 >mdi-book-open-page-variant</v-icon
               >
             </v-avatar>
-            <span class="text-h6 text-white font-weight-bold">BOOKSTORE</span>
+            <span class="text-h6 text-white font-weight-bold">THBookStore</span>
           </div>
           <p class="text-white text-body-2 mb-6">
             Discover the perfect books for every occasion and interest, with our

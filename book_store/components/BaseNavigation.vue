@@ -74,6 +74,7 @@
         variant="flat"
         class="ml-4 font-weight-bold text-darkgreen text-subtitle-1"
         rounded
+        @click="$router.push('/login')"
       >
         Sign In
         <v-img
