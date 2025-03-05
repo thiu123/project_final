@@ -20,14 +20,14 @@
             <v-card-title>Price</v-card-title>
             <div>
               <v-checkbox
-              v-for="(price, i) in prices"
-              :key="i"
-              v-model="selectedPrice"
-              :label="price"
-              :value="price"
-              density="compact"
-              hide-details
-            ></v-checkbox>
+                v-for="(price, i) in prices"
+                :key="i"
+                v-model="selectedPrice"
+                :label="price"
+                :value="price"
+                density="compact"
+                hide-details
+              ></v-checkbox>
             </div>
           </v-card>
         </v-col>
@@ -77,8 +77,14 @@
                   </div>
                 </v-card-text>
                 <v-card-actions>
-                  <v-btn block color="primary" variant="outlined" size="small">
-                    Add To Cart <v-icon right>mdi-cart</v-icon>
+                  <v-btn
+                    block
+                    color="white"
+                    class="bg-darkgreen rounded-xl"
+                    size="small"
+                  >
+                    Add To Cart 
+                    <v-icon class="ml-1">mdi-cart</v-icon>
                   </v-btn>
                 </v-card-actions>
               </v-card>
@@ -107,7 +113,7 @@ export default {
         "IT & Programming",
       ],
       prices: ["Under $10", "$10 - $20", "$20 - $30", "Above $50"],
-      selectedPrice: []
+      selectedPrice: [],
     };
   },
   computed: {
