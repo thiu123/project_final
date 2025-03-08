@@ -2,16 +2,18 @@
   <div>
     <v-container>
       <v-row>
-        <!-- Category Card -->
         <v-col cols="12" sm="3">
           <v-card>
             <v-card-title class="text-h6">Category</v-card-title>
             <v-list>
               <v-list-item
-                v-for="(item, i) in categories"
+                v-for="(item, i) in subjects"
                 :key="i"
-                :value="item"
-                @click="$router.push(`/categories/${encodeURIComponent(item)}`)"
+                @click="
+                  $router.push(
+                    `/subjects/${encodeURIComponent(item.toLowerCase())}`
+                  )
+                "
               >
                 <v-list-item-title>{{ item }}</v-list-item-title>
               </v-list-item>
@@ -34,9 +36,42 @@
 
         <!-- Books List -->
         <v-col cols="12" sm="9">
-          <v-row>
+          <div class="d-flex align-center" style="gap: 20px">
+            <span>Sort by</span>
+            <div class="text-center mb-2">
+              <v-menu open-on-hover>
+                <template v-slot:activator="{ props }">
+                  <v-btn
+                    variant="outlined"
+                    class="text-subtitle-1"
+                    v-bind="props"
+                  >
+                    Dropdown
+                    <v-icon class="ml-1">mdi-chevron-down</v-icon>
+                  </v-btn>
+                </template>
+
+                <v-list>
+                  <v-list-item v-for="(item, index) in items" :key="index">
+                    <v-list-item-title>{{ item.title }}</v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </v-menu>
+            </div>
+          </div>
+
+          <div class="d-flex justify-center" v-if="isLoading">
+            <v-progress-circular
+              indeterminate
+              color="primary"
+              size="50"
+            ></v-progress-circular>
+          </div>
+
+          <!-- Hiển thị danh sách sách nếu có dữ liệu -->
+          <v-row v-else-if="paginatedBooks.length">
             <v-col
-              v-for="(book, i) in getBookListBasedOnCategory"
+              v-for="(book, i) in paginatedBooks"
               :key="i"
               cols="12"
               sm="6"
@@ -45,7 +80,7 @@
             >
               <v-card class="h-100 bg-transparent" elevation="2">
                 <div class="position-relative">
-                  <v-img :src="book.coverImage" height="250" cover></v-img>
+                  <v-img :src="book.cover_url" height="250" cover></v-img>
                   <v-btn
                     icon
                     variant="text"
@@ -72,7 +107,7 @@
                   </div>
                   <div class="d-flex justify-space-between align-center mt-2">
                     <span class="text-subtitle-2 font-weight-bold ml-1">
-                      {{ book.price }}
+                      {{ book.price }} $
                     </span>
                   </div>
                 </v-card-text>
@@ -83,53 +118,100 @@
                     class="bg-darkgreen rounded-xl"
                     size="small"
                   >
-                    Add To Cart 
+                    Add To Cart
                     <v-icon class="ml-1">mdi-cart</v-icon>
                   </v-btn>
                 </v-card-actions>
               </v-card>
             </v-col>
           </v-row>
+
+          <v-alert type="info" v-else>
+            No books found for this category.
+          </v-alert>
         </v-col>
       </v-row>
+
+      <!-- Pagination -->
+      <div class="text-center mt-3">
+        <v-pagination
+          v-model="page"
+          :length="totalPages"
+          next-icon="mdi-menu-right"
+          prev-icon="mdi-menu-left"
+        ></v-pagination>
+      </div>
     </v-container>
   </div>
 </template>
 
 <script>
 import { mapState, mapActions } from "vuex";
+
 export default {
   data() {
     return {
-      categories: [
+      isLoading: false,
+      items: [
+        { title: "Newest" },
+        { title: "From A to Z" },
+        { title: "From Z to A" },
+      ],
+      subjects: [
         "Fiction",
-        "Mystery & Thriller",
+        "Mystery",
         "Fantasy",
         "Romance",
-        "Manga & Graphic Novels",
-        "Self-Help & Personal Development",
-        "Biography & Memoir",
-        "History & Politics",
+        "Manga",
+        "Self-Help",
+        "Biography",
+        "History",
         "IT & Programming",
       ],
       prices: ["Under $10", "$10 - $20", "$20 - $30", "Above $50"],
       selectedPrice: [],
+      page: 1,
+      itemsPerPage: 12,
     };
   },
   computed: {
     ...mapState("book", ["books"]),
-    getBookListBasedOnCategory() {
-      console.log("Route category:", this.$route.params.category);
-      console.log("Books data:", this.books);
-      const category = decodeURIComponent(this.$route.params.category);
-      return this.books.filter((book) => book.category.includes(category));
+
+    paginatedBooks() {
+      const start = (this.page - 1) * this.itemsPerPage;
+      const end = start + this.itemsPerPage;
+      return this.books.slice(start, end);
+    },
+
+    totalPages() {
+      return Math.ceil(this.books.length / this.itemsPerPage);
     },
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
+    async fetchBooks() {
+      this.isLoading = true;
+      try {
+        const subject = this.$route.params.subject;
+        console.log("Subject:", subject);
+        if (subject) {
+          await this.getAllBooks(subject);
+        }
+      } catch (error) {
+        console.error("Error fetching books:", error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
   },
-  async mounted() {
-    await this.getAllBooks();
+  watch: {
+    "$route.params.subject": {
+      handler() {
+        this.page = 1;
+        this.fetchBooks();
+      },
+      immediate: true,
+    },
   },
 };
 </script>

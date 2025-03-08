@@ -1,14 +1,16 @@
 const mongoose = require("mongoose");
 
-const bookSchema = new mongoose.Schema({
-  title: String,
-  author: String,
-  price: Number,
-  category: [String],
-  stock: Number,
-  description: String,
-  coverImage: String,
-  isNewArrival: Boolean
-});
+const bookSchema = new mongoose.Schema(
+  {
+    key: { type: String, unique: true, required: true },
+    title: { type: String, required: true },
+    cover_url: { type: String },
+    first_publish_year: { type: Number },
+    authors: { type: [String], required: true },
+    price: { type: Number, default: 0 },
+    subjects: { type: [String], default: [] },
+  },
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("Book", bookSchema);

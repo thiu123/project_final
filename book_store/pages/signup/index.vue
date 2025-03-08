@@ -21,7 +21,7 @@
             />
           </div>
 
-          <v-card-text class="w-50 d-flex flex-column justify-center">
+          <v-card-text class="w-50 d-flex flex-column justify-center pt-0">
             <v-form @submit.prevent="onSubmit">
               <div class="text-h4 mb-2">Welcome to my BookStore</div>
               <span class="text-h6">Sign Up</span>

@@ -53,6 +53,7 @@
           <v-row align="center" justify="center">
             <v-col cols="10">
               <v-text-field
+                v-model="searchQuery"
                 density="compact"
                 variant="outlined"
                 label="Search book"
@@ -60,6 +61,30 @@
                 single-line
                 hide-details
               ></v-text-field>
+              <v-list class="py-0">
+                <v-list-item
+                  v-for="(book, index) in searchResults"
+                  :key="index"
+                >
+                  <v-list-item-content class="d-flex align-center">
+                    <img
+                      class="mr-3 rounded"
+                      height="70"
+                      width="50"
+                      cover
+                      :src="`https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`"
+                    />
+                    <div>
+                      <v-list-item-title class="font-weight-bold">
+                        {{ book.title }}
+                      </v-list-item-title>
+                      <v-list-item-subtitle class="text-subtitle-1">
+                        {{ book.first_publish_year }}
+                      </v-list-item-subtitle>
+                    </div>
+                  </v-list-item-content>
+                </v-list-item>
+              </v-list>
             </v-col>
             <v-col cols="2">
               <v-btn color="primary" block>Search</v-btn>
@@ -123,25 +148,19 @@
           </v-tabs-window-item>
         </v-tabs-window>
       </v-card>
-      
+
       <!-- New Arrivals -->
       <v-container class="mt-8">
         <div class="d-flex justify-space-between align-center mb-4">
           <h2 class="text-h5 font-weight-bold">New Arrivals</h2>
         </div>
         <v-row>
-          <v-col
-            v-for="(book, i) in getNewArrivalBooks"
-            :key="i"
-            cols="6"
-            sm="4"
-            md="2"
-          >
+          <v-col v-for="(book, i) in books" :key="i" cols="6" sm="4" md="2">
             <v-card class="h-100 bg-transparent" elevation="2">
               <div class="position-relative">
                 <v-img
                   class=""
-                  :src="book.coverImage"
+                  :src="book.cover_url"
                   height="250"
                   cover
                 ></v-img>
@@ -171,15 +190,21 @@
                 </div>
                 <div class="d-flex justify-space-between align-center mt-2">
                   <div>
-                    <span class="text-subtitle-2 font-weight-bold ml-1">{{
-                      book.price
-                    }} $</span>
+                    <span class="text-subtitle-2 font-weight-bold ml-1"
+                      >{{ book.price }} $</span
+                    >
                   </div>
                 </div>
               </v-card-text>
               <v-card-actions>
-                <v-btn block color="white" class="bg-darkgreen rounded-xl" size="small">
-                  Add To Cart <v-icon right>mdi-cart</v-icon>
+                <v-btn
+                  block
+                  color="white"
+                  class="bg-darkgreen rounded-xl"
+                  size="small"
+                >
+                  Add To Cart
+                  <v-icon class="ml-1">mdi-cart</v-icon>
                 </v-btn>
               </v-card-actions>
             </v-card>
@@ -277,11 +302,12 @@
                     <v-card-actions>
                       <v-btn
                         block
-                        color="primary"
-                        variant="outlined"
+                        color="white"
+                        class="bg-darkgreen rounded-xl"
                         size="small"
                       >
-                        Add To Cart <v-icon right>mdi-cart</v-icon>
+                        Add To Cart
+                        <v-icon class="ml-1">mdi-cart</v-icon>
                       </v-btn>
                     </v-card-actions>
                   </v-card>
@@ -348,9 +374,17 @@
                     book.price
                   }}</span>
                 </div>
-                <v-btn color="primary" variant="outlined" size="small">
-                  Add To Cart <v-icon right>mdi-cart</v-icon>
-                </v-btn>
+                <v-card-actions>
+                  <v-btn
+                    block
+                    color="white"
+                    class="bg-darkgreen rounded-xl"
+                    size="small"
+                  >
+                    Add To Cart
+                    <v-icon class="ml-1">mdi-cart</v-icon>
+                  </v-btn>
+                </v-card-actions>
               </div>
             </v-card>
           </v-col>
@@ -524,7 +558,8 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions, mapGetters } from "vuex";
+import axios from "axios";
 export default {
   name: "Home",
   data() {
@@ -581,17 +616,42 @@ export default {
         "Contact Us",
         "Help & Support",
       ],
+      searchQuery: "",
+      searchResults: [],
     };
   },
-  computed: {
-    ...mapState("book", ["books"]),
-    getNewArrivalBooks() {
-      return this.books.filter((book) => book.isNewArrival);
+  watch: {
+    async searchQuery(newQuery) {
+      if (!newQuery) {
+        this.searchResults = [];
+        return;
+      }
+
+      try {
+        const response = await axios.get(
+          "https://openlibrary.org/search.json",
+          {
+            params: { title: newQuery },
+          }
+        );
+        const apiResults = response.data.docs || [];
+        this.searchResults = apiResults.filter((book) =>
+          this.getTitleBooks.some((storedBook) => storedBook.title === book.title)
+        );
+        console.log("Search Results:", this.searchResults);
+      } catch (error) {
+        console.error(error);
+      }
     },
   },
+  computed: {
+    ...mapGetters("book", ["getTitleBooks"]),
+    ...mapState("book", ["books"]),
+  },
   async mounted() {
-    await this.getAllBooks();
-    console.log(this.books);
+    await this.getAllBooks("fiction");
+    console.log("Books:", this.books);
+    console.log(this.getTitleBooks);
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
