@@ -27,12 +27,10 @@
         </template>
         <v-list>
           <v-list-item
-            v-for="(item, i) in categories"
+            v-for="(item, i) in subjects"
             :key="i"
             :value="item"
-            @click="
-              () => $router.push(`/categories/${encodeURIComponent(item)}`)
-            "
+            @click="() => $router.push(`/subjects/${encodeURIComponent(item.toLowerCase())}`)"
           >
             <v-list-item-title>{{ item }}</v-list-item-title>
           </v-list-item>
@@ -95,15 +93,15 @@ import { mapState } from "vuex";
 export default {
   data() {
     return {
-      categories: [
+      subjects: [
         "Fiction",
-        "Mystery & Thriller",
+        "Mystery",
         "Fantasy",
         "Romance",
-        "Manga & Graphic Novels",
-        "Self-Help & Personal Development",
-        "Biography & Memoir",
-        "History & Politics",
+        "Manga",
+        "Self-Help",
+        "Biography",
+        "History",
         "IT & Programming",
       ],
     };

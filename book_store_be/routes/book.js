@@ -3,6 +3,7 @@ const bookController = require("../controllers/books/bookController");
 const middlewareController = require("../controllers/middlewareController");
 
 router.get("/", bookController.getAllBooks);
+router.get("/subject/:subject", bookController.getBooksBySubject);
 router.get("/:id", bookController.getBookById);
 
 router.post("/", middlewareController.verifyTokenAndAdmin, bookController.addBook);
