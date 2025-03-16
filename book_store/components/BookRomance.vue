@@ -2,6 +2,27 @@
   <v-container class="mt-8">
     <div class="d-flex justify-space-between align-center mb-4">
       <h2 class="text-h5 font-weight-bold">Romance</h2>
+      <v-hover v-slot="{ isHovering, props }">
+        <v-btn
+          @click="() => $router.push(`/subjects/romance`)"
+          v-bind="props"
+          icon
+          size="x-small"
+          :class="['custom-expand-btn', { 'is-hovering': isHovering }]"
+          color="customyellow"
+          elevation="0"
+        >
+          <v-slide-x-transition>
+            <div v-if="!isHovering" class="d-flex align-center">
+              <v-icon>mdi-chevron-right</v-icon>
+            </div>
+            <div v-else class="d-flex align-center">
+              <span class="text-subtitle-1">View Details</span>
+              <v-icon>mdi-chevron-right</v-icon>
+            </div>
+          </v-slide-x-transition>
+        </v-btn>
+      </v-hover>
     </div>
     <v-row v-if="romanceBooks.length">
       <v-col
@@ -26,7 +47,7 @@
               class="position-absolute"
               style="top: 8px; right: 8px"
             >
-              <v-icon>mdi-heart</v-icon>
+              <v-img width="28px" height="28px" src="../assets/heart.svg" />
             </v-btn>
           </div>
           <v-card-text class="pa-2">
@@ -88,3 +109,15 @@ export default {
   },
 };
 </script>
+<style scoped>
+.custom-expand-btn {
+  border: 1px solid #435058 !important;
+  transition: all 0.3s ease !important;
+  overflow: hidden !important;
+}
+
+.custom-expand-btn.is-hovering {
+  min-width: 150px !important;
+  border-radius: 20px;
+}
+</style>

@@ -1,19 +1,23 @@
 <template>
-  <v-app-bar class="bg-transparent">
+  <v-app-bar class="bg-transparent elevation-0">
     <v-container class="d-flex align-center py-0">
       <div class="d-flex align-center">
-        <v-icon icon="mdi-book-open-page-variant" class="mr-2"></v-icon>
-        <span class="font-weight-bold">THBookStore</span>
+        <v-icon
+          color="darkgreen"
+          icon="mdi-book-open-page-variant"
+          class="mr-2"
+        ></v-icon>
+        <span class="font-weight-bold text-darkgreen">THBookStore</span>
       </div>
       <v-btn
-        color="darkgreen"
+        :color="$route.path === '/' ? 'darkgreen' : 'white'"
         rounded="lg"
-        variant="text"
         class="ml-4 font-weight-bold text-subtitle-1"
-        :class="{ 'bg-darkgreen text-white': $route.path === '/' }"
+        :class="$route.path === '/' ? 'active-nav-btn' : 'text-darkgreen'"
         to="/"
-        >Home</v-btn
       >
+        Home
+      </v-btn>
       <v-menu>
         <template v-slot:activator="{ props }">
           <v-btn
@@ -30,7 +34,12 @@
             v-for="(item, i) in subjects"
             :key="i"
             :value="item"
-            @click="() => $router.push(`/subjects/${encodeURIComponent(item.toLowerCase())}`)"
+            @click="
+              () =>
+                $router.push(
+                  `/subjects/${encodeURIComponent(item.toLowerCase())}`
+                )
+            "
           >
             <v-list-item-title>{{ item }}</v-list-item-title>
           </v-list-item>
@@ -61,11 +70,11 @@
         >Contact Us</v-btn
       >
       <v-spacer></v-spacer>
-      <v-btn icon>
-        <v-icon color="darkgreen">mdi-heart</v-icon>
-      </v-btn>
       <v-btn icon class="ml-1">
-        <v-icon>mdi-cart</v-icon>
+        <v-img width="28px" height="28px" src="../assets/shopping_bag.svg" />
+      </v-btn>
+      <v-btn icon>
+        <v-img width="28px" height="28px" src="../assets/heart.svg" />
       </v-btn>
       <v-btn
         color="customyellow"
@@ -111,3 +120,13 @@ export default {
   },
 };
 </script>
+<style scoped>
+.active-nav-btn {
+  background-color: #435058 !important;
+  color: #DCF763 !important;
+}
+
+.text-darkgreen {
+  color:  #435058 !important;
+}
+</style>
