@@ -106,7 +106,7 @@
       </v-container>
 
       <!-- Shop by Category -->
-      <v-card>
+      <!-- <v-card>
         <v-tabs
           v-model="selectedTab"
           align-tabs="center"
@@ -147,7 +147,7 @@
             </v-container>
           </v-tabs-window-item>
         </v-tabs-window>
-      </v-card>
+      </v-card> -->
 
       <BookFiction />
       <BookManga />

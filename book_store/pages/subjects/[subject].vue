@@ -1,44 +1,45 @@
 <template>
-  <div>
-    <v-container>
-      <v-row>
-        <v-col cols="12" sm="3">
-          <v-card>
-            <v-card-title class="text-h6">Category</v-card-title>
-            <v-list>
-              <v-list-item
-                v-for="(item, i) in subjects"
-                :key="i"
-                @click="
-                  $router.push(
-                    `/subjects/${encodeURIComponent(item.toLowerCase())}`
-                  )
-                "
-              >
-                <v-list-item-title>{{ item }}</v-list-item-title>
-              </v-list-item>
-            </v-list>
-            <v-divider class="border-opacity-50 mx-2"></v-divider>
-            <v-card-title>Price</v-card-title>
-            <div>
-              <v-checkbox
-                v-for="(price, i) in prices"
-                :key="i"
-                v-model="selectedPrice"
-                :label="price"
-                :value="price"
-                density="compact"
-                hide-details
-              ></v-checkbox>
-            </div>
-          </v-card>
-        </v-col>
+  <v-container>
+    <v-row>
+      <v-col cols="12" sm="3">
+        <v-card elevation="3">
+          <v-card-title class="text-h6">Category</v-card-title>
+          <v-list>
+            <v-list-item
+              v-for="(item, i) in subjects"
+              :key="i"
+              @click="
+                $router.push(
+                  `/subjects/${encodeURIComponent(item.toLowerCase())}`
+                )
+              "
+            >
+              <v-list-item-title>{{ item }}</v-list-item-title>
+            </v-list-item>
+          </v-list>
+          <v-divider class="border-opacity-50 mx-2"></v-divider>
+          <v-card-title>Price</v-card-title>
+          <div>
+            <v-checkbox
+              v-for="(price, i) in prices"
+              :key="i"
+              v-model="selectedPrice"
+              :label="price"
+              :value="price"
+              density="compact"
+              hide-details
+            ></v-checkbox>
+          </div>
+        </v-card>
+      </v-col>
 
-        <!-- Books List -->
-        <v-col cols="12" sm="9">
-          <div class="d-flex align-center" style="gap: 20px">
+      <!-- Books List -->
+      <v-col cols="12" sm="9">
+        <v-card class="pa-6" elevation="3">
+          <!-- Sort by & Dropdown -->
+          <div class="d-flex align-center mb-4" style="gap: 20px">
             <span>Sort by</span>
-            <div class="text-center mb-2">
+            <div class="text-center">
               <v-menu open-on-hover>
                 <template v-slot:activator="{ props }">
                   <v-btn
@@ -50,7 +51,6 @@
                     <v-icon class="ml-1">mdi-chevron-down</v-icon>
                   </v-btn>
                 </template>
-
                 <v-list>
                   <v-list-item v-for="(item, index) in items" :key="index">
                     <v-list-item-title>{{ item.title }}</v-list-item-title>
@@ -60,7 +60,11 @@
             </div>
           </div>
 
-          <div class="d-flex justify-center" v-if="isLoading">
+          <!-- Loading Indicator -->
+          <div
+            class="d-flex justify-center"
+            v-if="isLoading && paginatedBooks.length === 0"
+          >
             <v-progress-circular
               indeterminate
               color="primary"
@@ -68,8 +72,8 @@
             ></v-progress-circular>
           </div>
 
-          <!-- Hiển thị danh sách sách nếu có dữ liệu -->
-          <v-row v-else-if="paginatedBooks.length">
+          <!-- Display list data -->
+          <v-row v-else>
             <v-col
               v-for="(book, i) in paginatedBooks"
               :key="i"
@@ -125,24 +129,20 @@
               </v-card>
             </v-col>
           </v-row>
+        </v-card>
+      </v-col>
+    </v-row>
 
-          <v-alert type="info" v-else>
-            No books found for this category.
-          </v-alert>
-        </v-col>
-      </v-row>
-
-      <!-- Pagination -->
-      <div class="text-center mt-3">
-        <v-pagination
-          v-model="page"
-          :length="totalPages"
-          next-icon="mdi-menu-right"
-          prev-icon="mdi-menu-left"
-        ></v-pagination>
-      </div>
-    </v-container>
-  </div>
+    <!-- Pagination -->
+    <div class="text-center mt-3">
+      <v-pagination
+        v-model="page"
+        :length="totalPages"
+        next-icon="mdi-menu-right"
+        prev-icon="mdi-menu-left"
+      ></v-pagination>
+    </div>
+  </v-container>
 </template>
 
 <script>
@@ -197,6 +197,7 @@ export default {
         if (subject) {
           await this.getAllBooks(subject);
         }
+        console.log("Books:", this.books);
       } catch (error) {
         console.error("Error fetching books:", error);
       } finally {

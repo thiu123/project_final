@@ -47,7 +47,7 @@
               class="position-absolute"
               style="top: 8px; right: 8px"
             >
-              <v-icon>mdi-heart</v-icon>
+              <v-img width="28px" height="28px" src="../assets/heart.svg" />
             </v-btn>
           </div>
           <v-card-text class="pa-2">
