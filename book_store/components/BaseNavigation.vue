@@ -1,19 +1,25 @@
 <template>
-  <v-app-bar class="bg-transparent elevation-0">
+  <v-app-bar class="bg-darkgreen elevation-0">
     <v-container class="d-flex align-center py-0">
       <div class="d-flex align-center">
         <v-icon
-          color="darkgreen"
+          color="white"
           icon="mdi-book-open-page-variant"
           class="mr-2"
         ></v-icon>
-        <span class="font-weight-bold text-darkgreen">THBookStore</span>
+        <span class="font-weight-bold text-white">THBookStore</span>
       </div>
       <v-btn
-        :color="$route.path === '/' ? 'darkgreen' : 'white'"
         rounded="lg"
+        variant="flat"
+        flat
         class="ml-4 font-weight-bold text-subtitle-1"
-        :class="$route.path === '/' ? 'active-nav-btn' : 'text-darkgreen'"
+        :style="
+          $route.path === '/'
+            ? 'backgroundColor: #435058'
+            : 'backgroundColor:transparent'
+        "
+        :class="$route.path === '/' ? 'text-darkgreen' : 'text-white'"
         to="/"
       >
         Home
@@ -21,7 +27,16 @@
       <v-menu>
         <template v-slot:activator="{ props }">
           <v-btn
-            color="darkgreen"
+            :style="
+              $route.path.startsWith('/subjects')
+                ? 'backgroundColor: #435058'
+                : 'backgroundColor: transparent'
+            "
+            :class="
+              $route.path.startsWith('/subjects')
+                ? 'text-darkgreen'
+                : 'text-white'
+            "
             variant="text"
             class="font-weight-bold text-subtitle-1"
             v-bind="props"
@@ -45,30 +60,67 @@
           </v-list-item>
         </v-list>
       </v-menu>
+
       <v-btn
-        color="darkgreen"
+        :style="
+          $route.path === '/new-arrivals'
+            ? 'backgroundColor: #435058'
+            : 'backgroundColor: transparent'
+        "
+        :class="
+          $route.path === '/new-arrivals' ? 'text-darkgreen' : 'text-white'
+        "
         class="font-weight-bold text-subtitle-1"
         variant="text"
-        >New Arrivals</v-btn
+        to="/new-arrivals"
       >
+        New Arrivals
+      </v-btn>
+
       <v-btn
-        color="darkgreen"
+        :style="
+          $route.path === '/best-selling'
+            ? 'backgroundColor: #435058'
+            : 'backgroundColor: transparent'
+        "
+        :class="
+          $route.path === '/best-selling' ? 'text-darkgreen' : 'text-white'
+        "
         class="font-weight-bold text-subtitle-1"
         variant="text"
-        >Best Selling Books</v-btn
+        to="/best-selling"
       >
+        Best Selling Books
+      </v-btn>
+
       <v-btn
-        color="darkgreen"
+        :style="
+          $route.path === '/view-all'
+            ? 'backgroundColor: #435058'
+            : 'backgroundColor: transparent'
+        "
+        :class="$route.path === '/view-all' ? 'text-darkgreen' : 'text-white'"
         class="font-weight-bold text-subtitle-1"
         variant="text"
-        >View All The Day</v-btn
+        to="/view-all"
       >
+        View All The Day
+      </v-btn>
+
       <v-btn
-        color="darkgreen"
+        :style="
+          $route.path === '/contact'
+            ? 'backgroundColor: #435058'
+            : 'backgroundColor: transparent'
+        "
+        :class="$route.path === '/contact' ? 'text-darkgreen' : 'text-white'"
         class="font-weight-bold text-subtitle-1"
         variant="text"
-        >Contact Us</v-btn
+        to="/contact"
       >
+        Contact Us
+      </v-btn>
+
       <v-spacer></v-spacer>
       <v-btn icon class="ml-1">
         <v-img width="28px" height="28px" src="../assets/shopping_bag.svg" />
@@ -120,13 +172,3 @@ export default {
   },
 };
 </script>
-<style scoped>
-.active-nav-btn {
-  background-color: #435058 !important;
-  color: #DCF763 !important;
-}
-
-.text-darkgreen {
-  color:  #435058 !important;
-}
-</style>

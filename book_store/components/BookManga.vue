@@ -85,10 +85,10 @@
             <v-btn
               block
               color="white"
-              class="bg-darkgreen rounded-xl"
+              class="bg-darkgreen rounded-xl text-subtitle-1"
               size="small"
             >
-              Add To Cart
+              Add to cart
               <v-icon class="ml-1">mdi-cart</v-icon>
             </v-btn>
           </v-card-actions>
