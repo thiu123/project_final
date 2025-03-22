@@ -16,7 +16,7 @@
         class="ml-4 font-weight-bold text-subtitle-1"
         :style="
           $route.path === '/'
-            ? 'backgroundColor: #435058'
+            ? 'backgroundColor: #DCF763'
             : 'backgroundColor:transparent'
         "
         :class="$route.path === '/' ? 'text-darkgreen' : 'text-white'"
@@ -29,7 +29,7 @@
           <v-btn
             :style="
               $route.path.startsWith('/subjects')
-                ? 'backgroundColor: #435058'
+                ? 'backgroundColor: #DCF763'
                 : 'backgroundColor: transparent'
             "
             :class="
@@ -80,7 +80,7 @@
       <v-btn
         :style="
           $route.path === '/best-selling'
-            ? 'backgroundColor: #435058'
+            ? 'backgroundColor: #DCF763'
             : 'backgroundColor: transparent'
         "
         :class="
@@ -96,7 +96,7 @@
       <v-btn
         :style="
           $route.path === '/view-all'
-            ? 'backgroundColor: #435058'
+            ? 'backgroundColor: #DCF763'
             : 'backgroundColor: transparent'
         "
         :class="$route.path === '/view-all' ? 'text-darkgreen' : 'text-white'"

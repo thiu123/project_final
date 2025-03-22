@@ -14,7 +14,7 @@
             "
             alt="Book Cover"
             class="mx-auto rounded-lg"
-            height="400"
+            height="350"
             width="260"
             cover
           ></v-img>
@@ -27,16 +27,16 @@
           </h1>
 
           <!-- Author -->
-          <div class="mb-1">
-            <span class="text-body-1">Tác Giả: </span>
-            <v-btn
+          <div class="mb-1 d-flex align-center">
+            <span class="text-body-1">Author:</span>
+            <div
               variant="text"
               color="primary"
               class="px-1 text-body-1 font-weight-medium"
               density="comfortable"
             >
-              {{ detailsBooks.authors?.[0] || "REKI KAWAHARA" }}
-            </v-btn>
+              {{ detailsBooks.authors?.[0] }}
+            </div>
           </div>
 
           <!-- Rating -->
@@ -48,13 +48,10 @@
               readonly
               size="small"
             ></v-rating>
-            <span class="ml-2 text-body-2"
-              >({{ detailsBooks.rating_count || 24 }})</span
-            >
           </div>
 
           <!-- Price -->
-          <div class="text-h4 font-weight-bold text-primary mb-6">
+          <div class="text-h4 font-weight-bold text-primary mb-3">
             {{ detailsBooks.price || "120.000" }} $
           </div>
 
@@ -134,38 +131,14 @@
         </div>
 
         <div class="d-flex py-2 border-b">
-          <div class="text-body-1 min-width-200">Nhà Xuất Bản:</div>
-          <div class="text-body-1">
-            <v-btn
-              variant="text"
-              color="primary"
-              class="px-1 text-body-1"
-              density="comfortable"
-            >
-              {{ detailsBooks.publishers?.[0] || "IPM" }}
-            </v-btn>
-            <span>, </span>
-            <v-btn
-              variant="text"
-              color="primary"
-              class="px-1 text-body-1"
-              density="comfortable"
-            >
-              Hà Nội
-            </v-btn>
-          </div>
-        </div>
-
-        <div class="d-flex py-2 border-b">
           <div class="text-body-1 min-width-200">Tác Giả:</div>
           <div class="text-body-1">
             <v-btn
               variant="text"
-              color="primary"
-              class="px-1 text-body-1"
+              class="pa-0 text-body-1"
               density="comfortable"
             >
-              {{ detailsBooks.authors?.[0] || "REKI KAWAHARA" }}
+              {{ detailsBooks.authors?.[0]}}
             </v-btn>
           </div>
         </div>
@@ -180,20 +153,14 @@
         <div class="d-flex py-2 border-b">
           <div class="text-body-1 min-width-200">Ngôn Ngữ:</div>
           <div class="text-body-1">
-            <v-btn
+            <div
               variant="text"
-              color="primary"
-              class="px-1 text-body-1"
+              class="pa-0 text-body-1"
               density="comfortable"
             >
-              Tiếng Việt
-            </v-btn>
+              English
+            </div>
           </div>
-        </div>
-
-        <div class="d-flex py-2 border-b">
-          <div class="text-body-1 min-width-200">Số Trang:</div>
-          <div class="text-body-1">{{ detailsBooks.page_count || "360" }}</div>
         </div>
       </v-sheet>
 
