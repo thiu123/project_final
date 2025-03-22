@@ -4,7 +4,7 @@
       <span class="text-h5 font-weight-bold">Fiction</span>
       <v-hover v-slot="{ isHovering, props }">
         <v-btn
-          @click="() => $router.push(`/subjects/fiction`)"
+          @click="$router.push(`/subjects/fiction`)"
           v-bind="props"
           icon
           size="x-small"
@@ -39,6 +39,7 @@
               :src="book.cover_url"
               height="250"
               cover
+              @click="$router.push(`/details/${book._id}`)"
             ></v-img>
             <v-btn
               icon
@@ -74,10 +75,10 @@
             <v-btn
               block
               color="white"
-              class="bg-darkgreen rounded-xl"
+              class="bg-darkgreen rounded-xl text-subtitle-1"
               size="small"
             >
-              Add To Cart
+              Add to cart
               <v-icon class="ml-1">mdi-cart</v-icon>
             </v-btn>
           </v-card-actions>

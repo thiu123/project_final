@@ -1,7 +1,7 @@
 <template>
   <v-app min-height="100vh">
-    <v-main min-height="100vh">
-      <base-navigation class="position-fixed w-100" style="z-index:9;" />
+    <v-main class="bg-whitesmoke" min-height="100vh">
+      <base-navigation class="w-100" style="z-index:9;" />
       <slot />
       <Footer />
     </v-main>

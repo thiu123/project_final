@@ -84,7 +84,7 @@
             >
               <v-card class="h-100 bg-transparent" elevation="2">
                 <div class="position-relative">
-                  <v-img :src="book.cover_url" height="250" cover></v-img>
+                  <v-img v-if="book.cover_url" class="cursor-pointer" @click="$router.push(`/details/${book._id}`)" :src="book.cover_url" height="250" cover></v-img>
                   <v-btn
                     icon
                     variant="text"
@@ -119,10 +119,10 @@
                   <v-btn
                     block
                     color="white"
-                    class="bg-darkgreen rounded-xl"
+                    class="bg-darkgreen rounded-xl text-subtile-1"
                     size="small"
                   >
-                    Add To Cart
+                    Add to cart
                     <v-icon class="ml-1">mdi-cart</v-icon>
                   </v-btn>
                 </v-card-actions>
