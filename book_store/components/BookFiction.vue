@@ -73,13 +73,14 @@
           </v-card-text>
           <v-card-actions>
             <v-btn
-              block
-              color="white"
-              class="bg-darkgreen rounded-xl text-subtitle-1"
+              color="darkgreen"
+              variant="elevated"
               size="small"
+              block
+              class="text-none mr-2"
             >
+              <v-icon start>mdi-cart</v-icon>
               Add to cart
-              <v-icon class="ml-1">mdi-cart</v-icon>
             </v-btn>
           </v-card-actions>
         </div>
