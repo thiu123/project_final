@@ -58,6 +58,9 @@
           >
             <v-list-item-title>{{ item }}</v-list-item-title>
           </v-list-item>
+          <v-list-item>
+            {{ currentUser }}
+          </v-list-item>
         </v-list>
       </v-menu>
 
@@ -128,21 +131,125 @@
       <v-btn icon>
         <v-img width="28px" height="28px" src="../assets/heart.svg" />
       </v-btn>
-      <v-btn
-        color="customyellow"
-        variant="flat"
-        class="ml-4 font-weight-bold text-darkgreen text-subtitle-1"
-        rounded
-        @click="$router.push('/login')"
+
+      <v-menu
+        v-model="menu"
+        :close-on-content-click="false"
+        location="bottom"
+        open-on-hover
+        transition="slide-y-transition"
       >
-        Sign In
-        <v-img
-          class="ml-1"
-          width="28px"
-          height="28px"
-          src="../assets/user_icon.svg"
-        />
-      </v-btn>
+        <template v-slot:activator="{ props }">
+          <template v-if="!currentUser">
+            <v-btn
+              color="customyellow"
+              variant="flat"
+              class="ml-4 font-weight-bold text-darkgreen text-subtitle-1"
+              rounded
+              v-bind="props"
+            >
+              Account
+              <v-img
+                class="ml-1"
+                width="28px"
+                height="28px"
+                src="../assets/user_icon.svg"
+              />
+            </v-btn>
+          </template>
+
+          <template v-else>
+            <div class="d-flex align-center" v-bind="props">
+              <v-avatar color="info">
+                <v-icon icon="mdi-account-circle"></v-icon>
+              </v-avatar>
+              <span class="ml-2 text-subtitle-1 font-weight-bold">
+                {{ currentUser.name }}
+              </span>
+            </div>
+          </template>
+        </template>
+
+        <v-card
+          v-if="!currentUser"
+          min-width="200"
+          elevation="0"
+          rounded="lg"
+          class="pa-2 mt-3"
+        >
+          <div class="d-flex flex-column" style="gap: 10px">
+            <v-btn
+              color="darkgreen"
+              block
+              rounded="lg"
+              class="text-white text-body-1"
+              @click="openDialog('sign-in')"
+            >
+              Sign In
+            </v-btn>
+
+            <v-btn
+              variant="outlined"
+              color="darkgreen"
+              block
+              class="text-body-1"
+              rounded="lg"
+              @click="openDialog('sign-up')"
+            >
+              Sign Up
+            </v-btn>
+          </div>
+        </v-card>
+
+        <v-card
+          v-else
+          min-width="200"
+          elevation="0"
+          rounded="lg"
+          class="pa-2 mt-3"
+        >
+          <v-list>
+            <v-list-item>
+              <v-list-item-title class="font-weight-bold">{{
+                currentUser.username
+              }}</v-list-item-title>
+              <v-list-item-subtitle>{{
+                currentUser.email
+              }}</v-list-item-subtitle>
+            </v-list-item>
+
+            <v-divider></v-divider>
+
+            <v-list-item @click="handleLogout">
+              <v-list-item-title>Logout</v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-card>
+      </v-menu>
+
+      <v-dialog v-model="dialogSignIn">
+        <Login class="position-relative" />
+        <v-icon
+          @click="dialogSignIn = false"
+          class="cursor-pointer position-absolute"
+          size="large"
+          color="white"
+          style="top: 8%; right: 15%"
+          >mdi-close</v-icon
+        >
+      </v-dialog>
+
+      <v-dialog v-model="dialogSignUp">
+        <SignUp />
+        <v-icon
+          @click="dialogSignUp = false"
+          color="white"
+          class="cursor-pointer position-absolute"
+          size="large"
+          style="top: 8%; right: 15%"
+          >mdi-close</v-icon
+        >
+      </v-dialog>
     </v-container>
   </v-app-bar>
 </template>
@@ -151,9 +258,13 @@ definePageMeta({
   layout: "default",
 });
 import { mapState } from "vuex";
+import { mapActions } from "vuex";
 export default {
   data() {
     return {
+      dialogSignUp: false,
+      dialogSignIn: false,
+      menu: false,
       subjects: [
         "Fiction",
         "Mystery",
@@ -167,8 +278,43 @@ export default {
       ],
     };
   },
+  watch: {
+    currentUser: {
+      handler(newValue) {
+        if (newValue) {
+          this.dialogSignIn = false;
+          this.dialogSignUp = false;
+        }
+      },
+      immediate: true,
+    },
+  },
+
+  methods: {
+    ...mapActions("auth", ["logout", "restoreSession"]),
+    openDialog(type) {
+      if (this.currentUser) {
+        this.dialogSignIn = false;
+        this.dialogSignUp = false;
+        return;
+      }
+
+      if (type === "sign-in") {
+        this.dialogSignIn = true;
+      } else if (type === "sign-up") {
+        this.dialogSignUp = true;
+      }
+    },
+    handleLogout() {
+      this.logout();
+      this.$router.push("/");
+    },
+  },
   computed: {
     ...mapState("auth", ["currentUser"]),
+  },
+  mounted() {
+    this.restoreSession();
   },
 };
 </script>

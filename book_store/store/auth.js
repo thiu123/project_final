@@ -3,17 +3,24 @@ import axios from "axios";
 export default {
   namespaced: true,
   state: () => ({
-    currentUser: "",
+    currentUser: JSON.parse(localStorage.getItem("currentUser") || "null"),
     isFetching: false,
+    accessToken: localStorage.getItem("accessToken") || "",
     error: false,
   }),
   mutations: {
+    setAccessToken(state, token) {
+      state.accessToken = token;
+    },
     loginStart(state) {
       state.isFetching = true;
       state.error = false;
     },
     loginSuccess(state, user) {
       state.currentUser = user;
+      state.accessToken = user.accessToken || "";
+      localStorage.setItem("accessToken", state.accessToken);
+      localStorage.setItem("currentUser", JSON.stringify(user));
       state.isFetching = false;
       state.error = false;
     },
@@ -21,17 +28,16 @@ export default {
       state.isFetching = false;
       state.error = true;
     },
-    registerStart(state) {
-      state.isFetching = true;
-      state.error = false;
+    logout(state) {
+      state.currentUser = null;
+      state.accessToken = "";
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("currentUser");
     },
-    registerSuccess(state) {
-      state.isFetching = false;
-      state.error = false;
-    },
-    registerFailure(state) {
-      state.isFetching = false;
-      state.error = true;
+    restoreSession(state) {
+      state.currentUser =
+        JSON.parse(localStorage.getItem("currentUser")) || null;
+      state.accessToken = localStorage.getItem("accessToken") || "";
     },
   },
   actions: {
@@ -53,6 +59,9 @@ export default {
         throw error;
       }
     },
+    logout({ commit }) {
+      commit("logout");
+    },
     async register(_, user) {
       try {
         const res = await axios.post(
@@ -63,6 +72,9 @@ export default {
       } catch (error) {
         throw error.response.data;
       }
+    },
+    restoreSession({ commit }) {
+      commit("restoreSession");
     },
   },
 };

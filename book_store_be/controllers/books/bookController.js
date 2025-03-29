@@ -71,6 +71,7 @@ const bookController = {
       }));
 
       for (const book of books) {
+        // Save each book to the database
         await Book.findOneAndUpdate({ key: book.key }, book, { upsert: true });
       }
 
