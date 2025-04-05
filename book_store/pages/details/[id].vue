@@ -118,7 +118,7 @@
       <!-- Book details section -->
       <v-sheet class="mt-8 pa-4 rounded-lg" color="darkgreen" elevation="1">
         <h2 class="text-h6 font-weight-bold text-white mb-0">
-          THÔNG TIN CHI TIẾT
+          Book Details
         </h2>
       </v-sheet>
 
@@ -255,7 +255,7 @@
           </div>
         </div>
 
-        <v-btn color="primary" prepend-icon="mdi-pencil"> Viết Đánh Giá </v-btn>
+      <v-btn color="darkgreen" class="text-body-1" prepend-icon="mdi-pencil"> Write Reviews </v-btn>
       </v-sheet>
     </v-container>
 
