@@ -24,7 +24,13 @@
       >
         Home
       </v-btn>
-      <v-menu>
+      <v-menu
+        transition="fade-transition"
+        :close-on-content-click="false"
+        v-model="menu"
+        eager
+        location="bottom"
+      >
         <template v-slot:activator="{ props }">
           <v-btn
             :style="
@@ -38,30 +44,103 @@
                 : 'text-white'
             "
             variant="text"
-            class="font-weight-bold text-subtitle-1"
+            class="font-weight-bold text-subtitle-1 px-3"
             v-bind="props"
           >
-            Category <v-icon icon="mdi-chevron-down"></v-icon>
+            <span class="mr-1">Category</span>
+            <v-icon icon="mdi-chevron-down"></v-icon>
           </v-btn>
         </template>
-        <v-list>
-          <v-list-item
-            v-for="(item, i) in subjects"
-            :key="i"
-            :value="item"
-            @click="
-              () =>
-                $router.push(
-                  `/subjects/${encodeURIComponent(item.toLowerCase())}`
-                )
-            "
-          >
-            <v-list-item-title>{{ item }}</v-list-item-title>
-          </v-list-item>
-          <v-list-item>
-            {{ currentUser }}
-          </v-list-item>
-        </v-list>
+
+        <v-card flat class="pa-3 mx-auto" min-width="100" max-height="600">
+          <!-- Header with logo -->
+          <div class="d-flex align-center mb-4">
+            <v-icon color="red" size="x-large" class="mr-2">mdi-book</v-icon>
+            <span class="text-h5 font-weight-bold">Book Categories</span>
+          </div>
+
+          <!-- Categories grid -->
+          <v-row dense class="gap-1">
+            <template v-for="(category, index) in bookSubjects" :key="index">
+              <v-col cols="12" sm="6" md="3" class="pa-1">
+                <div class="category-section">
+                  <h2
+                    v-if="category.subcategories"
+                    class="text-subtitle-1 font-weight-bold mb-1"
+                  >
+                    {{ category.category }}
+                  </h2>
+
+                  <!-- If category has subcategories -->
+                  <template v-if="category.subcategories">
+                    <v-list density="compact" class="pa-0 bg-transparent">
+                      <v-list-item
+                        v-for="(
+                          subcategory, subIndex
+                        ) in category.subcategories"
+                        :key="subIndex"
+                        density="compact"
+                        class="pa-0 mb-1"
+                        @click="
+                          () => {
+                            $router.push(
+                              `/subjects/${encodeURIComponent(
+                                subcategory.toLowerCase()
+                              )}`
+                            );
+                            menu = false;
+                          }
+                        "
+                      >
+                        <v-list-item-title
+                          class="text-body-2 text-grey text-truncate"
+                        >
+                          {{ subcategory }}
+                        </v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                    <v-btn
+                      variant="text"
+                      color="primary"
+                      class="px-0 text-body-2"
+                      @click="
+                        () => {
+                          $router.push(
+                            `/subjects/${encodeURIComponent(
+                              category.category.toLowerCase()
+                            )}`
+                          );
+                          menu = false;
+                        }
+                      "
+                    >
+                      View All
+                    </v-btn>
+                  </template>
+
+                  <!-- If category doesn't have subcategories -->
+                  <template v-else>
+                    <v-list-item
+                      density="compact"
+                      class="pa-0 mb-1"
+                      @click="
+                        $router.push(
+                          `/subjects/${encodeURIComponent(
+                            category.category.toLowerCase()
+                          )}`
+                        )
+                      "
+                    >
+                      <v-list-item-title class="text-body-2 font-weight-bold">
+                        {{ category.category }}
+                      </v-list-item-title>
+                    </v-list-item>
+                  </template>
+                </div>
+              </v-col>
+            </template>
+          </v-row>
+        </v-card>
       </v-menu>
 
       <v-btn
@@ -125,21 +204,23 @@
       </v-btn>
 
       <v-spacer></v-spacer>
-      <v-btn icon class="ml-1">
-        <v-img width="28px" height="28px" src="../assets/shopping_bag.svg" />
-      </v-btn>
-      <v-btn icon>
-        <v-img width="28px" height="28px" src="../assets/heart.svg" />
-      </v-btn>
+      <div>
+        <v-btn icon class="ml-1">
+          <v-img width="28px" height="28px" src="../assets/shopping_bag.svg" />
+        </v-btn>
+        <v-btn icon>
+          <v-img width="28px" height="28px" src="../assets/heart.svg" />
+        </v-btn>
+      </div>
 
       <v-menu
-        v-model="menu"
+        v-model="accountMenu"
         :close-on-content-click="false"
         location="bottom"
         open-on-hover
         transition="slide-y-transition"
       >
-        <template v-slot:activator="{ props }">
+        <template v-if="isSessionRestored" v-slot:activator="{ props }">
           <template v-if="!currentUser">
             <v-btn
               color="customyellow"
@@ -265,16 +346,100 @@ export default {
       dialogSignUp: false,
       dialogSignIn: false,
       menu: false,
-      subjects: [
-        "Fiction",
-        "Mystery",
-        "Fantasy",
-        "Romance",
-        "Manga",
-        "Self-Help",
-        "Biography",
-        "History",
-        "IT & Programming",
+      accountMenu: false,
+      isSessionRestored: false,
+      bookSubjects: [
+        {
+          category: "Fiction",
+          subcategories: [
+            "Literary Fiction",
+            "Historical Fiction",
+            "Contemporary Fiction",
+            "Short Stories",
+          ],
+        },
+        {
+          category: "Mystery & Thriller",
+          subcategories: [
+            "Crime Fiction",
+            "Psychological Thriller",
+            "Detective Stories",
+            "Noir",
+          ],
+        },
+        {
+          category: "Fantasy",
+          subcategories: [
+            "Epic Fantasy",
+            "Urban Fantasy",
+            "Dark Fantasy",
+            "High Fantasy",
+          ],
+        },
+        {
+          category: "Science Fiction",
+          subcategories: [
+            "Space Opera",
+            "Cyberpunk",
+            "Dystopian",
+            "Time Travel",
+          ],
+        },
+        {
+          category: "Romance",
+        },
+        {
+          category: "Manga",
+        },
+        {
+          category: "Self-Help & Personal Development",
+          subcategories: [
+            "Time Management",
+            "Mental Health",
+            "Mindfulness & Meditation",
+            "Motivation & Success",
+          ],
+        },
+        {
+          category: "Biography & Memoir",
+          subcategories: [
+            "Historical Figures",
+            "Celebrities & Public Figures",
+            "Sports Biographies",
+            "Political Leaders",
+          ],
+        },
+        {
+          category: "History",
+          subcategories: [
+            "Ancient History",
+            "World War II",
+            "Medieval History",
+            "Modern History",
+          ],
+        },
+        {
+          category: "IT & Programming",
+          subcategories: [
+            "Web Development",
+            "Data Science & Machine Learning",
+            "Cybersecurity",
+            "Software Engineering",
+          ],
+        },
+        {
+          category: "Business & Finance",
+          subcategories: [
+            "Management",
+            "Entrepreneurship",
+            "Business Economics",
+            "Finance",
+          ],
+        },
+        {
+          category: "Health & Wellness",
+          subcategories: ["Cooking", "Nutrition", "Self-help", "Exercise"],
+        },
       ],
     };
   },
@@ -313,8 +478,9 @@ export default {
   computed: {
     ...mapState("auth", ["currentUser"]),
   },
-  mounted() {
-    this.restoreSession();
+  async mounted() {
+    await this.restoreSession();
+    this.isSessionRestored = true;
   },
 };
 </script>

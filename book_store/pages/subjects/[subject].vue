@@ -10,7 +10,7 @@
               :key="i"
               @click="
                 $router.push(
-                  `/subjects/${encodeURIComponent(item.toLowerCase())}`
+                  `/subjects/${encodeURIComponent(item.toLowerCase().replace(/\s+/g, '_'))}`
                 )
               "
             >

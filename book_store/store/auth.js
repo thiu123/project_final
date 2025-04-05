@@ -3,11 +3,16 @@ import axios from "axios";
 export default {
   namespaced: true,
   state: () => ({
-    currentUser: JSON.parse(localStorage.getItem("currentUser") || "null"),
+    currentUser: import.meta.client
+      ? JSON.parse(localStorage.getItem("currentUser") || "null")
+      : null,
+    accessToken: import.meta.client
+      ? localStorage.getItem("accessToken") || ""
+      : "",
     isFetching: false,
-    accessToken: localStorage.getItem("accessToken") || "",
     error: false,
   }),
+
   mutations: {
     setAccessToken(state, token) {
       state.accessToken = token;

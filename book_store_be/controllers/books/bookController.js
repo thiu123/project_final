@@ -53,11 +53,12 @@ const bookController = {
   },
   getBooksBySubject: async (req, res) => {
     try {
-      const subject = req.params.subject;
-      const response = await axios.get(
-        `https://openlibrary.org/subjects/${subject}.json?limit=30`
-      );
+      let subject = req.params.subject.replace(/_/g, " ");
 
+      // If not found, fetch from OpenLibrary
+      const response = await axios.get(
+        `https://openlibrary.org/subjects/${subject}.json?limit=100`
+      );
       const books = response.data.works.map((book) => ({
         key: book.key,
         title: book.title,
@@ -71,7 +72,6 @@ const bookController = {
       }));
 
       for (const book of books) {
-        // Save each book to the database
         await Book.findOneAndUpdate({ key: book.key }, book, { upsert: true });
       }
 
