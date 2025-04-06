@@ -24,13 +24,7 @@
       >
         Home
       </v-btn>
-      <v-menu
-        transition="fade-transition"
-        :close-on-content-click="false"
-        v-model="menu"
-        eager
-        location="bottom"
-      >
+      <v-menu>
         <template v-slot:activator="{ props }">
           <v-btn
             :style="
@@ -44,103 +38,70 @@
                 : 'text-white'
             "
             variant="text"
-            class="font-weight-bold text-subtitle-1 px-3"
+            class="font-weight-bold text-subtitle-1"
             v-bind="props"
           >
-            <span class="mr-1">Category</span>
-            <v-icon icon="mdi-chevron-down"></v-icon>
+            Category <v-icon icon="mdi-chevron-down"></v-icon>
           </v-btn>
         </template>
 
-        <v-card flat class="pa-3 mx-auto" min-width="100" max-height="600">
-          <!-- Header with logo -->
-          <div class="d-flex align-center mb-4">
-            <v-icon color="red" size="x-large" class="mr-2">mdi-book</v-icon>
-            <span class="text-h5 font-weight-bold">Book Categories</span>
-          </div>
+        <v-list>
+          <template v-for="(category, index) in bookSubjects" :key="index">
+            <!-- Categories with subcategories -->
+            <v-list-group v-if="category.subcategories">
+              <template v-slot:activator="{ props }">
+                <v-list-item v-bind="props">
+                  <v-list-item-title>{{ category.category }}</v-list-item-title>
+                </v-list-item>
+              </template>
 
-          <!-- Categories grid -->
-          <v-row dense class="gap-1">
-            <template v-for="(category, index) in bookSubjects" :key="index">
-              <v-col cols="12" sm="6" md="3" class="pa-1">
-                <div class="category-section">
-                  <h2
-                    v-if="category.subcategories"
-                    class="text-subtitle-1 font-weight-bold mb-1"
-                  >
-                    {{ category.category }}
-                  </h2>
+              <template
+                v-for="(subcategory, subIndex) in category.subcategories"
+                :key="subIndex"
+              >
+                <v-list-item
+                  @click="
+                    $router.push(
+                      `/subjects/${encodeURIComponent(
+                        subcategory.toLowerCase()
+                      )}`
+                    )
+                  "
+                >
+                  <v-list-item-title class="text-subtitle-2">{{
+                    subcategory
+                  }}</v-list-item-title>
+                </v-list-item>
 
-                  <!-- If category has subcategories -->
-                  <template v-if="category.subcategories">
-                    <v-list density="compact" class="pa-0 bg-transparent">
-                      <v-list-item
-                        v-for="(
-                          subcategory, subIndex
-                        ) in category.subcategories"
-                        :key="subIndex"
-                        density="compact"
-                        class="pa-0 mb-1"
-                        @click="
-                          () => {
-                            $router.push(
-                              `/subjects/${encodeURIComponent(
-                                subcategory.toLowerCase()
-                              )}`
-                            );
-                            menu = false;
-                          }
-                        "
-                      >
-                        <v-list-item-title
-                          class="text-body-2 text-grey text-truncate"
-                        >
-                          {{ subcategory }}
-                        </v-list-item-title>
-                      </v-list-item>
-                    </v-list>
-                    <v-btn
-                      variant="text"
-                      color="primary"
-                      class="px-0 text-body-2"
-                      @click="
-                        () => {
-                          $router.push(
-                            `/subjects/${encodeURIComponent(
-                              category.category.toLowerCase()
-                            )}`
-                          );
-                          menu = false;
-                        }
-                      "
-                    >
-                      View All
-                    </v-btn>
-                  </template>
+                <!-- Divider between subcategories (except after the last one) -->
+                <v-divider
+                  v-if="subIndex < category.subcategories.length - 1"
+                  class="opacity-25"
+                ></v-divider>
+              </template>
+            </v-list-group>
 
-                  <!-- If category doesn't have subcategories -->
-                  <template v-else>
-                    <v-list-item
-                      density="compact"
-                      class="pa-0 mb-1"
-                      @click="
-                        $router.push(
-                          `/subjects/${encodeURIComponent(
-                            category.category.toLowerCase()
-                          )}`
-                        )
-                      "
-                    >
-                      <v-list-item-title class="text-body-2 font-weight-bold">
-                        {{ category.category }}
-                      </v-list-item-title>
-                    </v-list-item>
-                  </template>
-                </div>
-              </v-col>
-            </template>
-          </v-row>
-        </v-card>
+            <!-- Categories without subcategories -->
+            <v-list-item
+              v-else
+              @click="
+                $router.push(
+                  `/subjects/${encodeURIComponent(
+                    category.category.toLowerCase()
+                  )}`
+                )
+              "
+            >
+              <v-list-item-title>{{ category.category }}</v-list-item-title>
+            </v-list-item>
+
+            <!-- Divider between categories (except after the last one) -->
+            <v-divider
+              v-if="index < bookSubjects.length - 1"
+              class="opacity-25"
+            ></v-divider>
+          </template>
+        </v-list>
       </v-menu>
 
       <v-btn
