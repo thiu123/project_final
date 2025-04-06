@@ -80,6 +80,21 @@ const bookController = {
       return res.status(500).json({ msg: err.message });
     }
   },
+  searchBooksByTitle: async (req, res) => {
+    try {
+      const query = req.query.title?.trim();
+      if (!query) return res.status(200).json([]);
+  
+      const books = await Book.find({
+        title: { $regex: query, $options: "i" },
+      });
+  
+      return res.status(200).json(books);
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+  
 };
 
 module.exports = bookController;
