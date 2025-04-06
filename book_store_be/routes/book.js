@@ -4,7 +4,9 @@ const middlewareController = require("../controllers/middlewareController");
 
 router.get("/", bookController.getAllBooks);
 router.get("/subject/:subject", bookController.getBooksBySubject);
+router.get("/search", bookController.searchBooksByTitle);
 router.get("/:id", bookController.getBookById);
+
 
 router.post("/", middlewareController.verifyTokenAndAdmin, bookController.addBook);
 router.put("/:id", middlewareController.verifyTokenAndAdmin, bookController.updateBook);

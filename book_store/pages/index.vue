@@ -72,7 +72,7 @@
                       height="70"
                       width="50"
                       cover
-                      :src="`https://covers.openlibrary.org/b/id/${book.cover_i}-M.jpg`"
+                      :src="book.cover_url"
                     />
                     <div>
                       <v-list-item-title class="font-weight-bold">
@@ -409,7 +409,6 @@
           </v-col>
         </v-row>
       </v-container>
-
     </div>
   </div>
 </template>
@@ -487,25 +486,13 @@ export default {
 
       try {
         const response = await axios.get(
-          "https://openlibrary.org/search.json",
+          "http://localhost:5000/api/books/search",
           {
             params: { title: newQuery },
           }
         );
 
-        const apiResults = response.data.docs || [];
-
-        const validBooks = apiResults.filter((book) =>
-          this.getTitleBooks.some(
-            (storedBook) =>
-              storedBook.title.toLowerCase() === book.title?.toLowerCase() &&
-              storedBook.first_publish_year === book.first_publish_year
-          )
-        );
-
-        this.searchResults = validBooks.filter((book) =>
-          book.title.toLowerCase().includes(newQuery.toLowerCase())
-        );
+        this.searchResults = response.data || [];
 
         console.log("Search Results:", this.searchResults);
       } catch (error) {
@@ -513,6 +500,7 @@ export default {
       }
     }, 300),
   },
+
   computed: {
     ...mapGetters("book", ["getTitleBooks"]),
     ...mapState("book", ["books"]),
