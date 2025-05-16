@@ -3,9 +3,7 @@
     <v-card class="bg-white rounded-lg">
       <v-toolbar class="w-100" color="customyellow" density="comfortable">
         <v-toolbar-title class="font-weight-bold text-h6 text-darkgreen">Fiction</v-toolbar-title>
-
         <v-spacer></v-spacer>
-
         <v-hover v-slot="{ isHovering, props }">
           <v-btn
             @click="$router.push(`/subjects/fiction`)"
@@ -16,21 +14,42 @@
             color="darkgreen"
             elevation="0"
           >
-            <v-slide-x-transition>
-              <div v-if="!isHovering" class="d-flex align-center">
-                <v-icon>mdi-chevron-right</v-icon>
-              </div>
-              <div v-else class="d-flex align-center">
-                <span class="text-subtitle-1">View Details</span>
-                <v-icon>mdi-chevron-right</v-icon>
-              </div>
-            </v-slide-x-transition>
+            <div class="d-flex align-center">
+              <span v-if="isHovering" class="text-subtitle-1 view-details">View Details</span>
+              <v-icon>mdi-chevron-right</v-icon>
+            </div>
           </v-btn>
         </v-hover>
       </v-toolbar>
 
       <v-card-text class="px-4">
-        <v-row v-if="fictionBooks.length">
+        <!-- Loading skeleton -->
+        <v-row v-if="!fictionBooks.length">
+          <v-col v-for="n in 6" :key="n" cols="6" sm="4" md="2">
+            <v-sheet class="h-100">
+              <v-skeleton-loader
+                class="rounded-xl"
+                type="image"
+                height="250"
+              ></v-skeleton-loader>
+              <div class="pa-2">
+                <v-skeleton-loader
+                  type="article"
+                  class="mt-2"
+                ></v-skeleton-loader>
+              </div>
+              <div class="pa-2">
+                <v-skeleton-loader
+                  type="button"
+                  class="mt-2"
+                ></v-skeleton-loader>
+              </div>
+            </v-sheet>
+          </v-col>
+        </v-row>
+
+        <!-- Actual content -->
+        <v-row v-else>
           <v-col
             v-for="(book, i) in limitedFictionBooks"
             :key="i"

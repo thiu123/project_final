@@ -12,15 +12,10 @@
           color="customyellow"
           elevation="0"
         >
-          <v-slide-x-transition>
-            <div v-if="!isHovering" class="d-flex align-center">
+            <div class="d-flex align-center">
+              <span v-if="isHovering" class="text-subtitle-1 view-details">View Details</span>
               <v-icon>mdi-chevron-right</v-icon>
             </div>
-            <div v-else class="d-flex align-center">
-              <span class="text-subtitle-1">View Details</span>
-              <v-icon>mdi-chevron-right</v-icon>
-            </div>
-          </v-slide-x-transition>
         </v-btn>
       </v-hover>
     </div>

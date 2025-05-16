@@ -164,8 +164,8 @@
         Contact Us
       </v-btn>
 
-      <v-spacer></v-spacer>
-      <div>
+     
+      <div class="d-flex align-center">
         <v-btn icon class="ml-1">
           <v-img width="28px" height="28px" src="../assets/shopping_bag.svg" />
         </v-btn>
@@ -189,6 +189,7 @@
               class="ml-4 font-weight-bold text-darkgreen text-subtitle-1"
               rounded
               v-bind="props"
+              style="min-width: 140px"
             >
               Account
               <v-img
@@ -201,14 +202,24 @@
           </template>
 
           <template v-else>
-            <div class="d-flex align-center" v-bind="props">
-              <v-avatar color="info">
-                <v-icon icon="mdi-account-circle"></v-icon>
-              </v-avatar>
-              <span class="ml-2 text-subtitle-1 font-weight-bold">
-                {{ currentUser.name }}
-              </span>
-            </div>
+            <v-btn
+              v-bind="props"
+              class="ml-4"
+              variant="text"
+              :style="{
+                '--v-theme-overlay-multiplier': '0'
+              }"
+              size="x-large"
+            >
+              <div class="d-flex align-center">
+                <v-avatar color="info" size="30">
+                  <v-icon icon="mdi-account-circle" size="25"></v-icon>
+                </v-avatar>
+                <span class="ml-2 text-subtitle-1 font-weight-bold text-white">
+                  {{ currentUser.name }}
+                </span>
+              </div>
+            </v-btn>
           </template>
         </template>
 
