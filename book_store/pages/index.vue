@@ -421,15 +421,6 @@ export default {
   name: "Home",
   data() {
     return {
-      categories: [
-        "Fiction",
-        "Non-Fiction",
-        "Children",
-        "Biography",
-        "History",
-        "Science",
-        "Self-Help",
-      ],
       featuredBooks: Array(6).fill({ cover: this.getPlaceholderImage(70, 50) }),
       shopCategories: [
         { name: "Best Fiction", icon: "mdi-book-open-variant" },
@@ -504,10 +495,19 @@ export default {
   computed: {
     ...mapGetters("book", ["getTitleBooks"]),
     ...mapState("book", ["books"]),
+    bestSellersStories() {
+      const subjects = [
+        "Detective Stories",
+        "Short Stories", 
+        "Literary Fiction",
+        "Dark Fantasy"
+      ];
+      return this.books.filter(book => subjects.includes(book.title));
+    }
   },
-  mounted() {
-    this.getAllBooks();
-  },
+async mounted() {
+  await this.getAllBooks();
+},
   methods: {
     ...mapActions("book", ["getAllBooks"]),
     getPlaceholderImage(width, height) {
