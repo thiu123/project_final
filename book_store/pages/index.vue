@@ -167,92 +167,83 @@
             </div>
           </div>
           <v-row>
-            <v-col cols="12" md="3">
-              <v-list density="compact" class="bg-transparent">
-                <v-list-subheader>Historical Biographies</v-list-subheader>
-                <v-list-item
-                  v-for="(category, i) in biographyCategories"
-                  :key="i"
-                  :value="category"
-                  rounded
-                  :active="i === 1"
-                  active-color="primary"
+            <v-col cols="12">
+              <!-- Tabs Navigation -->
+              <v-card>
+                <!-- Tabs Navigation -->
+                <v-tabs
+                  v-model="tab"
+                  color="primary"
+                  align-tabs="start"
+                  class="bg-transparent"
                 >
-                  <v-list-item-title>{{ category }}</v-list-item-title>
-                </v-list-item>
-                <v-list-item class="mt-4">
-                  <v-btn variant="text" color="primary" class="px-0">
-                    View More <v-icon right>mdi-chevron-right</v-icon>
-                  </v-btn>
-                </v-list-item>
-              </v-list>
-            </v-col>
-            <v-col cols="12" md="9">
-              <v-row>
-                <v-col
-                  v-for="(book, i) in bestSellers"
-                  :key="i"
-                  cols="12"
-                  sm="6"
-                  md="4"
-                >
-                  <v-card class="h-100">
-                    <div class="position-relative">
-                      <v-img :src="book.cover" height="220" cover></v-img>
-                      <v-btn
-                        icon
-                        variant="text"
-                        color="white"
-                        class="position-absolute"
-                        style="top: 8px; right: 8px"
+                  <v-tab
+                    v-for="(subject, i) in bestSellerSubjects"
+                    :key="i"
+                    :value="subject"
+                    class="text-capitalize"
+                  >
+                    {{ subject }}
+                  </v-tab>
+                </v-tabs>
+
+                <!-- Tabs Content using v-window -->
+                <v-tabs-window v-model="tab">
+                  <v-tabs-window-item
+                    v-for="subject in bestSellerSubjects"
+                    :key="subject"
+                    :value="subject"
+                  >
+                    <v-row>
+                      <v-col
+                        v-for="(book, i) in bestSellersStories.slice(0, 3)"
+                        :key="i"
+                        cols="12"
+                        sm="6"
+                        md="4"
                       >
-                        <v-icon>mdi-heart</v-icon>
-                      </v-btn>
-                    </div>
-                    <v-card-text class="pa-2">
-                      <div class="d-flex align-center mb-1">
-                        <v-rating
-                          :model-value="book.rating"
-                          color="amber"
-                          density="compact"
-                          size="small"
-                          readonly
-                        ></v-rating>
-                        <span class="text-caption ml-1">{{
-                          book.reviews
-                        }}</span>
-                      </div>
-                      <div class="text-subtitle-2 font-weight-medium">
-                        {{ book.title }}
-                      </div>
-                      <div
-                        class="d-flex justify-space-between align-center mt-2"
-                      >
-                        <div>
-                          <span
-                            class="text-caption text-decoration-line-through"
-                            >{{ book.oldPrice }}</span
-                          >
-                          <span class="text-subtitle-2 font-weight-bold ml-1">{{
-                            book.price
-                          }}</span>
-                        </div>
-                      </div>
-                    </v-card-text>
-                    <v-card-actions>
-                      <v-btn
-                        block
-                        color="white"
-                        class="bg-darkgreen rounded-lg"
-                        size="small"
-                      >
-                        Add to cart
-                        <v-icon class="ml-1">mdi-cart</v-icon>
-                      </v-btn>
-                    </v-card-actions>
-                  </v-card>
-                </v-col>
-              </v-row>
+                        <!-- Your v-card content here -->
+                        <v-card class="h-100">
+                          <div class="position-relative">
+                            <v-img
+                              :src="book.cover_url"
+                              height="220"
+                              cover
+                            ></v-img>
+                            <v-btn
+                              icon
+                              variant="text"
+                              color="white"
+                              class="position-absolute"
+                              style="top: 8px; right: 8px"
+                            >
+                              <v-icon>mdi-heart</v-icon>
+                            </v-btn>
+                          </div>
+                          <v-card-text class="pa-2">
+                            <!-- ... existing code ... -->
+                            <div class="text-subtitle-2 font-weight-medium">
+                              {{ book.title }}
+                            </div>
+                            <!-- ... existing code ... -->
+                          </v-card-text>
+                          <v-card-actions>
+                            <v-btn
+                              block
+                              color="white"
+                              class="bg-darkgreen rounded-lg"
+                              size="small"
+                            >
+                              Add to cart
+                              <v-icon class="ml-1">mdi-cart</v-icon>
+                            </v-btn>
+                          </v-card-actions>
+                        </v-card>
+                      </v-col>
+                    </v-row>
+                  </v-tabs-window-item>
+                </v-tabs-window>
+              </v-card>
             </v-col>
           </v-row>
         </v-card>
@@ -421,7 +412,13 @@ export default {
   name: "Home",
   data() {
     return {
+      tab: "historical fiction",
       featuredBooks: Array(6).fill({ cover: this.getPlaceholderImage(70, 50) }),
+      bestSellerSubjects: [
+        "historical fiction",
+        "detective stories",
+        "short stories",
+      ],
       shopCategories: [
         { name: "Best Fiction", icon: "mdi-book-open-variant" },
         { name: "Fiction", icon: "mdi-book" },
@@ -490,24 +487,40 @@ export default {
         console.error("Lỗi khi tìm kiếm:", error);
       }
     }, 300),
+    tab(newVal) {
+      console.log("New Tab Value:", newVal);
+    },
   },
-
   computed: {
     ...mapGetters("book", ["getTitleBooks"]),
     ...mapState("book", ["books"]),
     bestSellersStories() {
-      const subjects = [
-        "Detective Stories",
-        "Short Stories", 
-        "Literary Fiction",
-        "Dark Fantasy"
-      ];
-      return this.books.filter(book => subjects.includes(book.title));
-    }
+      if (!this.books?.length) {
+        return [];
+      }
+
+      return this.books.filter((book) => {
+        // Skip books without subjects
+        if (!book.subjects) return false;
+
+        // Convert book subjects to array if it's not already
+        const bookSubjects = Array.isArray(book.subjects)
+          ? book.subjects
+          : [book.subjects];
+
+        // Filter books that have the currently selected subject (tab)
+        return bookSubjects.some(
+          (subject) => subject.toLowerCase() === this.tab.toLowerCase()
+        );
+      });
+    },
   },
-async mounted() {
-  await this.getAllBooks();
-},
+  async mounted() {
+    await this.getAllBooks();
+    console.log("Current tab:", this.tab);
+    console.log("All books:", this.books);
+    console.log("Filtered books:", this.bestSellersStories);
+  },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
     getPlaceholderImage(width, height) {

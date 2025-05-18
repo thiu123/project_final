@@ -213,7 +213,7 @@
             >
               <div class="d-flex align-center">
                 <v-avatar color="info" size="30">
-                  <v-icon icon="mdi-account-circle" size="25"></v-icon>
+                  <v-icon icon="mdi-account-circle" size="24"></v-icon>
                 </v-avatar>
                 <span class="ml-2 text-subtitle-1 font-weight-bold text-white">
                   {{ currentUser.name }}
