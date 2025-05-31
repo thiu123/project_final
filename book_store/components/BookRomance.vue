@@ -1,7 +1,7 @@
 <template>
   <v-container class="mt-8">
     <div class="d-flex justify-space-between align-center mb-4">
-      <h2 class="text-h5 font-weight-bold">Romance</h2>
+      <h2 class="text-h5 text-darkgreen font-weight-bold">Romance</h2>
       <v-hover v-slot="{ isHovering, props }">
         <v-btn
           @click="() => $router.push(`/subjects/romance`)"

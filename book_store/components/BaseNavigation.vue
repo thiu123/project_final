@@ -1,110 +1,126 @@
 <template>
   <v-app-bar class="bg-darkgreen elevation-0">
-    <v-container class="d-flex align-center py-0">
-      <div class="d-flex align-center">
-        <v-icon
-          color="white"
-          icon="mdi-book-open-page-variant"
-          class="mr-2"
-        ></v-icon>
-        <span class="font-weight-bold text-white">THBookStore</span>
+    <v-container class="d-flex align-center justify-space-between py-0" style="width:65%">
+      <div class="d-flex align-center cursor-pointer" style="text-decoration: none" to="/">
+        <nuxt-link to="/" class="d-flex align-center text-decoration-none">
+          <v-avatar size="40" class="mr-3 bg-customyellow">
+            <v-icon color="darkgreen" size="24">mdi-book-open-page-variant</v-icon>
+          </v-avatar>
+          <span class="font-weight-bold text-h5 text-white letter-spacing">THBookStore</span>
+        </nuxt-link>
       </div>
-      <v-btn
-        rounded="lg"
-        variant="flat"
-        flat
-        class="ml-4 font-weight-bold text-subtitle-1"
-        :style="
-          $route.path === '/'
-            ? 'backgroundColor: #DCF763'
-            : 'backgroundColor:transparent'
-        "
-        :class="$route.path === '/' ? 'text-darkgreen' : 'text-white'"
-        to="/"
-      >
-        Home
-      </v-btn>
-      <v-menu>
-        <template v-slot:activator="{ props }">
-          <v-btn
-            :style="
-              $route.path.startsWith('/subjects')
-                ? 'backgroundColor: #DCF763'
-                : 'backgroundColor: transparent'
-            "
-            :class="
-              $route.path.startsWith('/subjects')
-                ? 'text-darkgreen'
-                : 'text-white'
-            "
-            variant="text"
-            class="font-weight-bold text-subtitle-1"
-            v-bind="props"
-          >
-            Category <v-icon icon="mdi-chevron-down"></v-icon>
-          </v-btn>
-        </template>
-
-        <v-list>
-          <template v-for="(category, index) in bookSubjects" :key="index">
-            <!-- Categories with subcategories -->
-            <v-list-group v-if="category.subcategories">
-              <template v-slot:activator="{ props }">
-                <v-list-item v-bind="props">
-                  <v-list-item-title>{{ category.category }}</v-list-item-title>
-                </v-list-item>
-              </template>
-
-              <template
-                v-for="(subcategory, subIndex) in category.subcategories"
-                :key="subIndex"
-              >
-                <v-list-item
-                  @click="
-                    $router.push(
-                      `/subjects/${encodeURIComponent(
-                        subcategory.toLowerCase()
-                      )}`
-                    )
-                  "
-                >
-                  <v-list-item-title class="text-subtitle-2">{{
-                    subcategory
-                  }}</v-list-item-title>
-                </v-list-item>
-
-                <!-- Divider between subcategories (except after the last one) -->
-                <v-divider
-                  v-if="subIndex < category.subcategories.length - 1"
-                  class="opacity-25"
-                ></v-divider>
-              </template>
-            </v-list-group>
-
-            <!-- Categories without subcategories -->
-            <v-list-item
-              v-else
-              @click="
-                $router.push(
-                  `/subjects/${encodeURIComponent(
-                    category.category.toLowerCase()
-                  )}`
-                )
+      <div class="d-flex algin-center justify-space-between ga-10">
+        <v-btn
+          rounded="lg"
+          variant="flat"
+          flat
+          class="ml-4 font-weight-bold text-subtitle-1"
+          :style="
+            $route.path === '/'
+              ? 'backgroundColor: #DCF763'
+              : 'backgroundColor:transparent'
+          "
+          :class="$route.path === '/' ? 'text-darkgreen' : 'text-white'"
+          to="/"
+        >
+          Home
+        </v-btn>
+        <v-menu>
+          <template v-slot:activator="{ props }">
+            <v-btn
+              :style="
+                $route.path.startsWith('/subjects')
+                  ? 'backgroundColor: #DCF763'
+                  : 'backgroundColor: transparent'
               "
+              :class="
+                $route.path.startsWith('/subjects')
+                  ? 'text-darkgreen'
+                  : 'text-white'
+              "
+              variant="text"
+              class="font-weight-bold text-subtitle-1"
+              v-bind="props"
             >
-              <v-list-item-title>{{ category.category }}</v-list-item-title>
-            </v-list-item>
-
-            <!-- Divider between categories (except after the last one) -->
-            <v-divider
-              v-if="index < bookSubjects.length - 1"
-              class="opacity-25"
-            ></v-divider>
+              Category <v-icon icon="mdi-chevron-down"></v-icon>
+            </v-btn>
           </template>
-        </v-list>
-      </v-menu>
 
-      <v-btn
+          <v-list>
+            <template v-for="(category, index) in bookSubjects" :key="index">
+              <!-- Categories with subcategories -->
+              <v-list-group v-if="category.subcategories">
+                <template v-slot:activator="{ props }">
+                  <v-list-item v-bind="props">
+                    <v-list-item-title>{{
+                      category.category
+                    }}</v-list-item-title>
+                  </v-list-item>
+                </template>
+
+                <template
+                  v-for="(subcategory, subIndex) in category.subcategories"
+                  :key="subIndex"
+                >
+                  <v-list-item
+                    @click="
+                      $router.push(
+                        `/subjects/${encodeURIComponent(
+                          subcategory.toLowerCase()
+                        )}`
+                      )
+                    "
+                  >
+                    <v-list-item-title class="text-subtitle-2">{{
+                      subcategory
+                    }}</v-list-item-title>
+                  </v-list-item>
+
+                  <!-- Divider between subcategories (except after the last one) -->
+                  <v-divider
+                    v-if="subIndex < category.subcategories.length - 1"
+                    class="opacity-25"
+                  ></v-divider>
+                </template>
+              </v-list-group>
+
+              <!-- Categories without subcategories -->
+              <v-list-item
+                v-else
+                @click="
+                  $router.push(
+                    `/subjects/${encodeURIComponent(
+                      category.category.toLowerCase()
+                    )}`
+                  )
+                "
+              >
+                <v-list-item-title>{{ category.category }}</v-list-item-title>
+              </v-list-item>
+
+              <!-- Divider between categories (except after the last one) -->
+              <v-divider
+                v-if="index < bookSubjects.length - 1"
+                class="opacity-25"
+              ></v-divider>
+            </template>
+          </v-list>
+        </v-menu>
+        <v-btn
+          :style="
+            $route.path === '/contact'
+              ? 'backgroundColor: #435058'
+              : 'backgroundColor: transparent'
+          "
+          :class="$route.path === '/contact' ? 'text-darkgreen' : 'text-white'"
+          class="font-weight-bold text-subtitle-1"
+          variant="text"
+          to="/contact"
+        >
+          Contact Us
+        </v-btn>
+      </div>
+      <!-- <v-btn
         :style="
           $route.path === '/new-arrivals'
             ? 'backgroundColor: #435058'
@@ -118,9 +134,9 @@
         to="/new-arrivals"
       >
         New Arrivals
-      </v-btn>
+      </v-btn> -->
 
-      <v-btn
+      <!-- <v-btn
         :style="
           $route.path === '/best-selling'
             ? 'backgroundColor: #DCF763'
@@ -134,9 +150,9 @@
         to="/best-selling"
       >
         Best Selling Books
-      </v-btn>
+      </v-btn> -->
 
-      <v-btn
+      <!-- <v-btn
         :style="
           $route.path === '/view-all'
             ? 'backgroundColor: #DCF763'
@@ -148,23 +164,8 @@
         to="/view-all"
       >
         View All The Day
-      </v-btn>
+      </v-btn> -->
 
-      <v-btn
-        :style="
-          $route.path === '/contact'
-            ? 'backgroundColor: #435058'
-            : 'backgroundColor: transparent'
-        "
-        :class="$route.path === '/contact' ? 'text-darkgreen' : 'text-white'"
-        class="font-weight-bold text-subtitle-1"
-        variant="text"
-        to="/contact"
-      >
-        Contact Us
-      </v-btn>
-
-     
       <div class="d-flex align-center">
         <v-btn icon class="ml-1">
           <v-img width="28px" height="28px" src="../assets/shopping_bag.svg" />
@@ -172,113 +173,114 @@
         <v-btn icon>
           <v-img width="28px" height="28px" src="../assets/heart.svg" />
         </v-btn>
+        <v-menu
+          v-model="accountMenu"
+          :close-on-content-click="false"
+          location="bottom"
+          open-on-hover
+          transition="slide-y-transition"
+        >
+          <template v-if="isSessionRestored" v-slot:activator="{ props }">
+            <template v-if="!currentUser">
+              <v-btn
+                color="customyellow"
+                variant="flat"
+                class="ml-4 font-weight-bold text-darkgreen text-subtitle-1"
+                rounded
+                v-bind="props"
+                style="min-width: 140px"
+              >
+                Account
+                <v-img
+                  class="ml-1"
+                  width="28px"
+                  height="28px"
+                  src="../assets/user_icon.svg"
+                />
+              </v-btn>
+            </template>
+
+            <template v-else>
+              <v-btn
+                v-bind="props"
+                class="ml-4"
+                variant="text"
+                :style="{
+                  '--v-theme-overlay-multiplier': '0',
+                }"
+                size="x-large"
+              >
+                <div class="d-flex align-center">
+                  <v-avatar color="info" size="30">
+                    <v-icon icon="mdi-account-circle" size="24"></v-icon>
+                  </v-avatar>
+                  <span
+                    class="ml-2 text-subtitle-1 font-weight-bold text-white"
+                  >
+                    {{ currentUser.name }}
+                  </span>
+                </div>
+              </v-btn>
+            </template>
+          </template>
+
+          <v-card
+            v-if="!currentUser"
+            min-width="200"
+            elevation="0"
+            rounded="lg"
+            class="pa-2 mt-3"
+          >
+            <div class="d-flex flex-column" style="gap: 10px">
+              <v-btn
+                color="darkgreen"
+                block
+                rounded="lg"
+                class="text-white text-body-1"
+                @click="openDialog('sign-in')"
+              >
+                Sign In
+              </v-btn>
+
+              <v-btn
+                variant="outlined"
+                color="darkgreen"
+                block
+                class="text-body-1"
+                rounded="lg"
+                @click="openDialog('sign-up')"
+              >
+                Sign Up
+              </v-btn>
+            </div>
+          </v-card>
+
+          <v-card
+            v-else
+            min-width="200"
+            elevation="0"
+            rounded="lg"
+            class="pa-2 mt-3"
+          >
+            <v-list>
+              <v-list-item>
+                <v-list-item-title class="font-weight-bold">{{
+                  currentUser.username
+                }}</v-list-item-title>
+                <v-list-item-subtitle>{{
+                  currentUser.email
+                }}</v-list-item-subtitle>
+              </v-list-item>
+
+              <v-divider></v-divider>
+
+              <v-list-item @click="handleLogout">
+                <v-list-item-title>Logout</v-list-item-title>
+              </v-list-item>
+            </v-list>
+          </v-card>
+        </v-menu>
       </div>
-
-      <v-menu
-        v-model="accountMenu"
-        :close-on-content-click="false"
-        location="bottom"
-        open-on-hover
-        transition="slide-y-transition"
-      >
-        <template v-if="isSessionRestored" v-slot:activator="{ props }">
-          <template v-if="!currentUser">
-            <v-btn
-              color="customyellow"
-              variant="flat"
-              class="ml-4 font-weight-bold text-darkgreen text-subtitle-1"
-              rounded
-              v-bind="props"
-              style="min-width: 140px"
-            >
-              Account
-              <v-img
-                class="ml-1"
-                width="28px"
-                height="28px"
-                src="../assets/user_icon.svg"
-              />
-            </v-btn>
-          </template>
-
-          <template v-else>
-            <v-btn
-              v-bind="props"
-              class="ml-4"
-              variant="text"
-              :style="{
-                '--v-theme-overlay-multiplier': '0'
-              }"
-              size="x-large"
-            >
-              <div class="d-flex align-center">
-                <v-avatar color="info" size="30">
-                  <v-icon icon="mdi-account-circle" size="24"></v-icon>
-                </v-avatar>
-                <span class="ml-2 text-subtitle-1 font-weight-bold text-white">
-                  {{ currentUser.name }}
-                </span>
-              </div>
-            </v-btn>
-          </template>
-        </template>
-
-        <v-card
-          v-if="!currentUser"
-          min-width="200"
-          elevation="0"
-          rounded="lg"
-          class="pa-2 mt-3"
-        >
-          <div class="d-flex flex-column" style="gap: 10px">
-            <v-btn
-              color="darkgreen"
-              block
-              rounded="lg"
-              class="text-white text-body-1"
-              @click="openDialog('sign-in')"
-            >
-              Sign In
-            </v-btn>
-
-            <v-btn
-              variant="outlined"
-              color="darkgreen"
-              block
-              class="text-body-1"
-              rounded="lg"
-              @click="openDialog('sign-up')"
-            >
-              Sign Up
-            </v-btn>
-          </div>
-        </v-card>
-
-        <v-card
-          v-else
-          min-width="200"
-          elevation="0"
-          rounded="lg"
-          class="pa-2 mt-3"
-        >
-          <v-list>
-            <v-list-item>
-              <v-list-item-title class="font-weight-bold">{{
-                currentUser.username
-              }}</v-list-item-title>
-              <v-list-item-subtitle>{{
-                currentUser.email
-              }}</v-list-item-subtitle>
-            </v-list-item>
-
-            <v-divider></v-divider>
-
-            <v-list-item @click="handleLogout">
-              <v-list-item-title>Logout</v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-card>
-      </v-menu>
 
       <v-dialog v-model="dialogSignIn">
         <Login class="position-relative" />

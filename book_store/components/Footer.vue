@@ -5,7 +5,7 @@
         <v-col cols="12" md="3">
           <div class="d-flex align-center mb-4">
             <v-icon icon="mdi-book-open-page-variant" class="mr-2"></v-icon>
-            <span class="text-h6 font-weight-bold">BookArt</span>
+            <span class="text-h6 font-weight-bold">THBookStore</span>
           </div>
           <div class="text-body-2 mb-1">Contact Info:</div>
           <div class="text-body-2 mb-1">

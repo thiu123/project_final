@@ -317,7 +317,6 @@ export default {
       }
     },
     buyNow() {
-      // Your existing buy now logic
       console.log("Buy now clicked");
     },
   },
