@@ -2,7 +2,7 @@
   <v-container class="mt-8">
     <v-card class="bg-white rounded-lg">
       <v-toolbar class="w-100" color="customyellow" density="comfortable">
-        <v-toolbar-title class="font-weight-bold text-h6 text-darkgreen">Fiction</v-toolbar-title>
+        <v-toolbar-title class="font-weight-bold text-h5 text-darkgreen">Fiction</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-hover v-slot="{ isHovering, props }">
           <v-btn
