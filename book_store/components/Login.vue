@@ -49,9 +49,9 @@
 
               <v-card-actions class="justify-center">
                 <span>Are you new?</span>
-                <nuxt-link to="/signup">
+                <div @click="$emit('toggleLinkSignUp', 'sign-up')">
                   <v-btn text color="primary">Sign Up</v-btn>
-                </nuxt-link>
+                </div>
               </v-card-actions>
             </v-form>
           </v-card-text>

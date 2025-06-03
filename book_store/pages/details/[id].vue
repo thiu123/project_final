@@ -1,275 +1,356 @@
 <template>
   <div>
     <!-- Main content area -->
-    <v-container class="py-4" v-if="!isLoading">
-      <div class="d-flex" style="gap: 20px">
+    <v-container class="py-6" v-if="!isLoading">
+      <!-- Breadcrumb -->
+      <v-breadcrumbs
+        :items="breadcrumbItems"
+        class="px-0 mb-4"
+        density="compact"
+      >
+        <template v-slot:divider>
+          <v-icon>mdi-chevron-right</v-icon>
+        </template>
+      </v-breadcrumbs>
+
+      <v-row>
         <!-- Left side - Book image -->
-        <div
-          class="book-image-container"
-          style="min-width: 260px; max-width: 260px"
-        >
-          <v-img
-            :src="
-              detailsBooks.cover_url || '/placeholder.svg?height=400&width=260'
-            "
-            alt="Book Cover"
-            class="mx-auto rounded-lg"
-            height="350"
-            width="260"
-            cover
-          ></v-img>
-        </div>
+        <v-col cols="12" md="4" lg="3">
+          <v-card class="book-image-card" elevation="8" rounded="xl">
+            <v-img
+              :src="
+                detailsBooks.cover_url ||
+                '/placeholder.svg?height=400&width=260'
+              "
+              alt="Book Cover"
+              class="rounded-xl"
+              height="480"
+              cover
+            >
+              <template v-slot:placeholder>
+                <div class="d-flex align-center justify-center fill-height">
+                  <v-progress-circular
+                    color="grey-lighten-4"
+                    indeterminate
+                  ></v-progress-circular>
+                </div>
+              </template>
+            </v-img>
+          </v-card>
+        </v-col>
 
         <!-- Right side - Book details -->
-        <div class="flex-grow-1">
-          <h1 class="text-h4 font-weight-bold mb-2">
-            {{ detailsBooks.title }}
-          </h1>
+        <v-col cols="12" md="8" lg="9">
+          <div class="book-details">
+            <!-- Title and Author -->
+            <div class="mb-6">
+              <h1 class="text-h3 font-weight-bold mb-3 text-primary">
+                {{ detailsBooks.title }}
+              </h1>
 
-          <!-- Author -->
-          <div class="mb-1 d-flex align-center">
-            <span class="text-body-1">Author:</span>
-            <div
-              variant="text"
-              color="primary"
-              class="px-1 text-body-1 font-weight-medium"
-              density="comfortable"
-            >
-              {{ detailsBooks.authors?.[0] }}
+              <div class="d-flex align-center mb-3">
+                <v-icon color="grey-darken-1" class="mr-2"
+                  >mdi-account-edit</v-icon
+                >
+                <span class="text-h6 text-grey-darken-1 mr-2">by</span>
+                <v-chip
+                  color="primary"
+                  variant="outlined"
+                  size="large"
+                  class="font-weight-medium"
+                >
+                  {{ detailsBooks.authors?.[0] }}
+                </v-chip>
+              </div>
+
+              <!-- Rating -->
+              <div class="d-flex align-center mb-4">
+                <v-rating
+                  :model-value="4"
+                  color="amber"
+                  density="compact"
+                  readonly
+                  size="large"
+                  class="mr-3"
+                ></v-rating>
+                <span class="text-h6 font-weight-medium">4.0</span>
+                <span class="text-body-1 text-grey-darken-1 ml-2"
+                  >(24 reviews)</span
+                >
+              </div>
             </div>
+
+            <!-- Price and Availability -->
+            <v-card class="mb-6" elevation="2" rounded="lg">
+              <v-card-text class="pa-6">
+                <div class="d-flex align-center justify-space-between mb-4">
+                  <div>
+                    <div class="text-h4 font-weight-bold text-success mb-1">
+                      ${{ detailsBooks.price || "120.00" }}
+                    </div>
+                    <v-chip color="success" size="small" variant="flat">
+                      <v-icon start>mdi-check-circle</v-icon>
+                      In Stock
+                    </v-chip>
+                  </div>
+                  <v-btn icon variant="outlined" color="pink" size="large">
+                    <v-icon>mdi-heart-outline</v-icon>
+                  </v-btn>
+                </div>
+
+                <!-- Quantity selector -->
+                <div class="mb-6">
+                  <v-label class="text-subtitle-1 font-weight-medium mb-2"
+                    >Quantity</v-label
+                  >
+                  <div class="d-flex align-center">
+                    <v-btn
+                      icon
+                      variant="outlined"
+                      color="primary"
+                      size="large"
+                      @click="quantity > 1 ? quantity-- : 1"
+                      :disabled="quantity <= 1"
+                    >
+                      <v-icon>mdi-minus</v-icon>
+                    </v-btn>
+
+                    <v-text-field
+                      v-model="quantity"
+                      type="number"
+                      variant="outlined"
+                      density="comfortable"
+                      hide-details
+                      class="mx-3"
+                      style="max-width: 80px"
+                      min="1"
+                      max="10"
+                    ></v-text-field>
+
+                    <v-btn
+                      icon
+                      variant="outlined"
+                      color="primary"
+                      size="large"
+                      @click="quantity++"
+                      :disabled="quantity >= 10"
+                    >
+                      <v-icon>mdi-plus</v-icon>
+                    </v-btn>
+                  </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="d-flex flex-column flex-sm-row ga-3">
+                  <v-btn
+                    color="primary"
+                    variant="flat"
+                    size="x-large"
+                    class="text-none flex-grow-1"
+                    rounded="lg"
+                  >
+                    <v-icon start>mdi-cart-plus</v-icon>
+                    Add to Cart
+                  </v-btn>
+
+                  <v-btn
+                    color="darkgreen"
+                    variant="flat"
+                    size="x-large"
+                    class="text-none flex-grow-1"
+                    rounded="lg"
+                  >
+                    <v-icon start>mdi-lightning-bolt</v-icon>
+                    Buy Now
+                  </v-btn>
+                </div>
+              </v-card-text>
+            </v-card>
           </div>
-
-          <!-- Rating -->
-          <div class="d-flex align-center mb-2">
-            <v-rating
-              :model-value="4"
-              color="amber"
-              density="compact"
-              readonly
-              size="small"
-            ></v-rating>
-          </div>
-
-          <!-- Price -->
-          <div class="text-h4 font-weight-bold text-primary mb-3">
-            {{ detailsBooks.price || "120.000" }} $
-          </div>
-
-          <!-- Quantity selector -->
-          <div class="d-flex align-center mb-6">
-            <v-btn
-              icon
-              variant="outlined"
-              color="primary"
-              size="small"
-              @click="quantity > 1 ? quantity-- : 1"
-            >
-              <v-icon>mdi-minus</v-icon>
-            </v-btn>
-
-            <v-text-field
-              v-model="quantity"
-              type="number"
-              variant="outlined"
-              density="compact"
-              hide-details
-              class="mx-2"
-              style="max-width: 60px"
-              min="1"
-            ></v-text-field>
-
-            <v-btn
-              icon
-              variant="outlined"
-              color="primary"
-              size="small"
-              @click="quantity++"
-            >
-              <v-icon>mdi-plus</v-icon>
-            </v-btn>
-          </div>
-
-          <!-- Action buttons -->
-          <div class="d-flex gap-4 mb-8">
-            <v-btn
-              color="darkgreen"
-              variant="elevated"
-              size="large"
-              width="180"
-              class="text-none mr-2"
-            >
-              <v-icon start>mdi-cart</v-icon>
-              Add to cart
-            </v-btn>
-
-            <v-btn
-              color="darkgreen"
-              variant="outlined"
-              size="large"
-              width="180"
-              class="text-none"
-            >
-              Buy now
-            </v-btn>
-          </div>
-        </div>
-      </div>
+        </v-col>
+      </v-row>
 
       <!-- Book details section -->
-      <v-sheet class="mt-8 pa-4 rounded-lg" color="darkgreen" elevation="1">
-        <h2 class="text-h6 font-weight-bold text-white mb-0">
+      <v-card class="mt-8" elevation="3" rounded="xl">
+        <v-card-title class="pa-6 bg-primary text-white">
+          <v-icon start class="mr-2">mdi-book-information-variant</v-icon>
           Book Details
-        </h2>
-      </v-sheet>
+        </v-card-title>
 
-      <v-sheet class="pa-4">
-        <div class="d-flex py-2 border-b">
-          <div class="text-body-1 min-width-200">Mã Sách:</div>
-          <div class="text-body-1">
-            {{ detailsBooks.key?.split("/").pop() || "8935250707640" }}
-          </div>
-        </div>
+        <v-card-text class="pa-0">
+          <v-list lines="two">
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon color="primary">mdi-identifier</v-icon>
+              </template>
+              <v-list-item-title class="font-weight-medium"
+                >Book ID</v-list-item-title
+              >
+              <v-list-item-subtitle>
+                {{ detailsBooks.key?.split("/").pop() || "8935250707640" }}
+              </v-list-item-subtitle>
+            </v-list-item>
 
-        <div class="d-flex py-2 border-b">
-          <div class="text-body-1 min-width-200">Tác Giả:</div>
-          <div class="text-body-1">
-            <v-btn
-              variant="text"
-              class="pa-0 text-body-1"
-              density="comfortable"
-            >
-              {{ detailsBooks.authors?.[0]}}
-            </v-btn>
-          </div>
-        </div>
+            <v-divider></v-divider>
 
-        <div class="d-flex py-2 border-b">
-          <div class="text-body-1 min-width-200">Năm Xuất Bản:</div>
-          <div class="text-body-1">
-            {{ detailsBooks.first_publish_year }}
-          </div>
-        </div>
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon color="primary">mdi-account-edit</v-icon>
+              </template>
+              <v-list-item-title class="font-weight-medium"
+                >Author</v-list-item-title
+              >
+              <v-list-item-subtitle>
+                <v-chip
+                  color="primary"
+                  variant="text"
+                  size="small"
+                  class="pa-0"
+                >
+                  {{ detailsBooks.authors?.[0] }}
+                </v-chip>
+              </v-list-item-subtitle>
+            </v-list-item>
 
-        <div class="d-flex py-2 border-b">
-          <div class="text-body-1 min-width-200">Ngôn Ngữ:</div>
-          <div class="text-body-1">
-            <div
-              variant="text"
-              class="pa-0 text-body-1"
-              density="comfortable"
-            >
-              English
-            </div>
-          </div>
-        </div>
-      </v-sheet>
+            <v-divider></v-divider>
+
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon color="primary">mdi-calendar</v-icon>
+              </template>
+              <v-list-item-title class="font-weight-medium"
+                >Publication Year</v-list-item-title
+              >
+              <v-list-item-subtitle>
+                {{ detailsBooks.first_publish_year }}
+              </v-list-item-subtitle>
+            </v-list-item>
+
+            <v-divider></v-divider>
+
+            <v-list-item>
+              <template v-slot:prepend>
+                <v-icon color="primary">mdi-translate</v-icon>
+              </template>
+              <v-list-item-title class="font-weight-medium"
+                >Language</v-list-item-title
+              >
+              <v-list-item-subtitle>English</v-list-item-subtitle>
+            </v-list-item>
+          </v-list>
+        </v-card-text>
+      </v-card>
 
       <!-- Book description -->
-      <div class="mt-4 pa-4">
-        <p class="text-body-1" v-if="detailsBooks.description">
-          {{
-            typeof detailsBooks.description === "object"
-              ? detailsBooks.description.value
-              : detailsBooks.description
-          }}
-        </p>
-        <p class="text-body-1" v-else>
-          Để Thấy Sword Art Online Có Không Gian Kể Chuyện Rất Rộng, Lại Tì Mì
-          Đi Theo Từng Tầng, Tạo Cảm Giác Tận Hưởng Rõ Rệt Cho Người Chơi Và Cả
-          Người Đọc. Câu Chuyện Hiện Đã Đến Tầng 7, Vẫn Là Tầng Tưng Trải Nghiệm
-          Trong Giai Đoạn Chạy Thử Của SAO, Nói Cách Khác, Cho Đến Đây, Kirito
-          Vẫn Biết Nhiều Hiểu Rộng Hơn Asuna. Thành Ra Theo Thói Quen, Vừa Tới
-          Nơi Asuna Đã Lập Tức Hỏi Cậu Lúc Chơi Nào Ngon. Số Vô Cách Lần Trước,
-          Lần Này Kirito Tỏ Ra Thông Thạo Rõ Ràng. Không Phải Cậu Không Muốn Cho
-          Cô Biết, Mà Là Tầng Này Dù Để Lại Cho Cậu Vì Cay Đắng Đến Nỗi Tiếm
-          Thần Luôn Muốn Chôn Bỏ Hết Thông Tin. Cho Dù Lúc Sắp Ra Bản Đến Ngoài,
-          Nhìn Thấy Có Tên Hai Công Đồ Dì, Kirito Mới Khởi Phục Kí Ức. Một Công
-          Là Người Ăn Mặc Lam Lũ Mình Đi Dưới Gió Tập Mưa Sa, Hứa Hẹn Hành Trình
-          Gặp Chính. Sau Khi Nghe Giải Thích, Asuna Chọn Đường Gió Tập Mưa Sa...
-          Tập 7 Chưa Dừng Đôi Chút Suy Luận Điều Tra Dựa Trên Một Manh Mối Vô
-          Lý, Gợi Nhớ Không Khí Tập Lắm Thám Tử Của Kirito Khi Gặp Án Mạng Trong
-          Khu Vực An Toàn Ở Sword Art Online 008 "Early And Late".
-        </p>
-      </div>
+      <v-card
+        class="mt-6"
+        elevation="3"
+        rounded="xl"
+        v-if="detailsBooks.description"
+      >
+        <v-card-title class="pa-6 bg-secondary text-white">
+          <v-icon start class="mr-2">mdi-text-box</v-icon>
+          Description
+        </v-card-title>
+        <v-card-text class="pa-6">
+          <p class="text-body-1 line-height-relaxed">
+            {{
+              typeof detailsBooks.description === "object"
+                ? detailsBooks.description.value
+                : detailsBooks.description
+            }}
+          </p>
+        </v-card-text>
+      </v-card>
 
       <!-- Rating section -->
-      <v-sheet class="mt-8 pa-4 rounded-lg" color="darkgreen" elevation="1">
-        <h2 class="text-h6 font-weight-bold text-white mb-0">Reviews</h2>
-      </v-sheet>
+      <v-card class="mt-6" elevation="3" rounded="xl">
+        <v-card-title class="pa-6 bg-amber text-white">
+          <v-icon start class="mr-2">mdi-star</v-icon>
+          Customer Reviews
+        </v-card-title>
 
-      <v-sheet class="pa-4 d-flex align-center">
-        <div class="text-h3 font-weight-bold mr-4">
-          4.0<span class="text-h5">/5</span>
-        </div>
+        <v-card-text class="pa-6">
+          <v-row>
+            <v-col cols="12" md="4">
+              <div class="text-center">
+                <div class="text-h2 font-weight-bold text-amber mb-2">
+                  4.0<span class="text-h4 text-grey-darken-1">/5</span>
+                </div>
+                <v-rating
+                  :model-value="4"
+                  color="amber"
+                  density="comfortable"
+                  readonly
+                  size="large"
+                  class="mb-2"
+                ></v-rating>
+                <div class="text-body-2 text-grey-darken-1">
+                  Based on 24 reviews
+                </div>
+              </div>
+            </v-col>
 
-        <div class="d-flex flex-column gap-1 flex-grow-1">
-          <div class="d-flex align-center">
-            <v-rating
-              :model-value="5"
-              color="amber"
-              density="compact"
-              readonly
-              size="small"
-            ></v-rating>
-            <div class="ml-2">(20)</div>
-          </div>
-          <div class="d-flex align-center">
-            <v-rating
-              :model-value="4"
-              color="amber"
-              density="compact"
-              readonly
-              size="small"
-            ></v-rating>
-            <div class="ml-2">(2)</div>
-          </div>
-          <div class="d-flex align-center">
-            <v-rating
-              :model-value="3"
-              color="amber"
-              density="compact"
-              readonly
-              size="small"
-            ></v-rating>
-            <div class="ml-2">(2)</div>
-          </div>
-          <div class="d-flex align-center">
-            <v-rating
-              :model-value="2"
-              color="amber"
-              density="compact"
-              readonly
-              size="small"
-            ></v-rating>
-            <div class="ml-2">(0)</div>
-          </div>
-          <div class="d-flex align-center">
-            <v-rating
-              :model-value="1"
-              color="amber"
-              density="compact"
-              readonly
-              size="small"
-            ></v-rating>
-            <div class="ml-2">(0)</div>
-          </div>
-        </div>
+            <v-col cols="12" md="8">
+              <div class="rating-breakdown">
+                <div
+                  class="d-flex align-center mb-2"
+                  v-for="(rating, index) in ratingBreakdown"
+                  :key="index"
+                >
+                  <span class="text-body-2 mr-2" style="min-width: 20px">{{
+                    5 - index
+                  }}</span>
+                  <v-icon color="amber" size="small" class="mr-2"
+                    >mdi-star</v-icon
+                  >
+                  <v-progress-linear
+                    :model-value="rating.percentage"
+                    color="amber"
+                    height="8"
+                    rounded
+                    class="flex-grow-1 mr-3"
+                  ></v-progress-linear>
+                  <span class="text-body-2" style="min-width: 30px"
+                    >({{ rating.count }})</span
+                  >
+                </div>
+              </div>
+            </v-col>
+          </v-row>
 
-      <v-btn color="darkgreen" class="text-body-1" prepend-icon="mdi-pencil"> Write Reviews </v-btn>
-      </v-sheet>
+          <v-divider class="my-4"></v-divider>
+
+          <div class="text-center">
+            <v-btn
+              color="primary"
+              variant="outlined"
+              size="large"
+              rounded="lg"
+              class="text-none"
+            >
+              <v-icon start>mdi-pencil</v-icon>
+              Write a Review
+            </v-btn>
+          </div>
+        </v-card-text>
+      </v-card>
     </v-container>
 
-    <!-- Loading state -->
+    <!-- Enhanced Loading state -->
     <v-container
       v-else
-      class="d-flex justify-center align-center"
-      style="min-height: 400px"
+      class="d-flex flex-column justify-center align-center"
+      style="min-height: 60vh"
     >
       <v-progress-circular
         indeterminate
         color="primary"
-        size="64"
+        size="80"
+        width="6"
+        class="mb-4"
       ></v-progress-circular>
+      <div class="text-h6 text-grey-darken-1">Loading book details...</div>
     </v-container>
   </div>
 </template>
@@ -322,6 +403,7 @@ export default {
   },
   async mounted() {
     await this.getDetailsBooks();
+    console.log(this.detailsBooks, "test detailsBooks");
   },
 };
 </script>

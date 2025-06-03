@@ -1,25 +1,53 @@
 <template>
-  <v-container>
+  <v-container class="py-6">
     <v-row>
+      <!-- Enhanced Sidebar -->
       <v-col cols="12" sm="3">
-        <v-card elevation="3">
-          <v-card-title class="text-h6">Category</v-card-title>
-          <v-list>
+        <v-card
+          elevation="1"
+          rounded="lg"
+          variant="outlined"
+          class="sticky-sidebar"
+        >
+          <!-- Categories Section -->
+          <v-card-title class="pa-4 bg-grey-lighten-4 d-flex align-center">
+            <v-icon start class="mr-2">mdi-format-list-bulleted</v-icon>
+            Category
+          </v-card-title>
+
+          <v-list density="compact" class="pa-0">
             <v-list-item
               v-for="(item, i) in subjects"
               :key="i"
               @click="
                 $router.push(
-                  `/subjects/${encodeURIComponent(item.toLowerCase().replace(/\s+/g, '_'))}`
+                  `/subjects/${encodeURIComponent(
+                    item.toLowerCase().replace(/\s+/g, '_')
+                  )}`
                 )
               "
+              class="category-item"
             >
-              <v-list-item-title>{{ item }}</v-list-item-title>
+              <template v-slot:prepend>
+                <v-icon size="small" color="grey-darken-1"
+                  >mdi-book-outline</v-icon
+                >
+              </template>
+              <v-list-item-title class="text-body-2">{{
+                item
+              }}</v-list-item-title>
             </v-list-item>
           </v-list>
-          <v-divider class="border-opacity-50 mx-2"></v-divider>
-          <v-card-title>Price</v-card-title>
-          <div>
+
+          <v-divider class="mx-2"></v-divider>
+
+          <!-- Price Section -->
+          <v-card-title class="pa-4 bg-grey-lighten-4 d-flex align-center">
+            <v-icon start class="mr-2">mdi-currency-usd</v-icon>
+            Price
+          </v-card-title>
+
+          <v-card-text class="pa-4">
             <v-checkbox
               v-for="(price, i) in prices"
               :key="i"
@@ -28,127 +56,197 @@
               :value="price"
               density="compact"
               hide-details
+              class="mb-1"
+              color="grey-darken-1"
             ></v-checkbox>
-          </div>
+          </v-card-text>
         </v-card>
       </v-col>
 
-      <!-- Books List -->
+      <!-- Enhanced Books List -->
       <v-col cols="12" sm="9">
-        <v-card class="pa-6" elevation="3">
-          <!-- Sort by & Dropdown -->
-          <div class="d-flex align-center mb-4" style="gap: 20px">
-            <span>Sort by</span>
-            <div class="text-center">
-              <v-menu open-on-hover>
-                <template v-slot:activator="{ props }">
-                  <v-btn
-                    variant="outlined"
-                    class="text-subtitle-1"
-                    v-bind="props"
-                  >
-                    Dropdown
-                    <v-icon class="ml-1">mdi-chevron-down</v-icon>
-                  </v-btn>
-                </template>
-                <v-list>
-                  <v-list-item v-for="(item, index) in items" :key="index">
-                    <v-list-item-title>{{ item.title }}</v-list-item-title>
-                  </v-list-item>
-                </v-list>
-              </v-menu>
+        <v-card elevation="1" rounded="lg" variant="outlined">
+          <!-- Enhanced Header -->
+          <v-card-title class="pa-4 bg-grey-lighten-4">
+            <div class="d-flex justify-space-between align-center w-100">
+              <div class="d-flex align-center">
+                <v-icon class="mr-2">mdi-book-multiple</v-icon>
+                <span class="text-h6">Our Collection</span>
+              </div>
+
+              <!-- Enhanced Sort Dropdown -->
+              <div class="d-flex align-center">
+                <span class="text-body-2 mr-3">Sort by</span>
+                <v-menu>
+                  <template v-slot:activator="{ props }">
+                    <v-btn
+                      variant="outlined"
+                      color="grey-darken-1"
+                      class="text-body-2"
+                      v-bind="props"
+                      rounded="lg"
+                    >
+                      Dropdown
+                      <v-icon class="ml-2">mdi-chevron-down</v-icon>
+                    </v-btn>
+                  </template>
+                  <v-list>
+                    <v-list-item v-for="(item, index) in items" :key="index">
+                      <v-list-item-title>{{ item.title }}</v-list-item-title>
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+              </div>
             </div>
-          </div>
+          </v-card-title>
 
-          <!-- Loading Indicator -->
-          <div
-            class="d-flex justify-center"
-            v-if="isLoading && paginatedBooks.length === 0"
-          >
-            <v-progress-circular
-              indeterminate
-              color="primary"
-              size="50"
-            ></v-progress-circular>
-          </div>
-
-          <!-- Display list data -->
-          <v-row v-else>
-            <v-col
-              v-for="(book, i) in paginatedBooks"
-              :key="i"
-              cols="12"
-              sm="6"
-              md="4"
-              lg="3"
+          <v-card-text class="pa-4">
+            <!-- Enhanced Loading Indicator -->
+            <div
+              class="d-flex justify-center py-12"
+              v-if="isLoading && paginatedBooks.length === 0"
             >
-              <v-card class="h-100 bg-transparent" elevation="2">
-                <div class="position-relative">
-                  <v-img
-                    v-if="book.cover_url"
-                    class="cursor-pointer"
-                    @click="$router.push(`/details/${book._id}`)"
-                    :src="book.cover_url"
-                    height="250"
-                    cover
-                  ></v-img>
-                  <v-btn
-                    icon
-                    variant="text"
-                    color="white"
-                    class="position-absolute"
-                    style="top: 8px; right: 8px"
-                  >
-                    <v-icon>mdi-heart</v-icon>
-                  </v-btn>
+              <div class="text-center">
+                <v-progress-circular
+                  indeterminate
+                  color="grey-darken-1"
+                  size="60"
+                  width="4"
+                  class="mb-4"
+                ></v-progress-circular>
+                <div class="text-body-1 text-grey-darken-1">
+                  Loading books...
                 </div>
-                <v-card-text class="pa-2">
-                  <div class="d-flex align-center mb-1">
-                    <v-rating
-                      :model-value="book.rating"
-                      color="amber"
-                      density="compact"
+              </div>
+            </div>
+
+            <!-- Enhanced Books Grid -->
+            <v-row v-else>
+              <v-col
+                v-for="(book, i) in paginatedBooks"
+                :key="i"
+                cols="12"
+                sm="6"
+                md="4"
+                lg="3"
+              >
+                <v-card
+                  class="book-card h-100"
+                  elevation="2"
+                  rounded="lg"
+                  variant="outlined"
+                >
+                  <div class="position-relative">
+                    <v-img
+                      v-if="book.cover_url"
+                      class="cursor-pointer book-cover"
+                      @click="$router.push(`/details/${book._id}`)"
+                      :src="book.cover_url"
+                      height="280"
+                      cover
+                    >
+                      <template v-slot:placeholder>
+                        <div
+                          class="d-flex align-center justify-center fill-height"
+                        >
+                          <v-progress-circular
+                            color="grey-lighten-4"
+                            indeterminate
+                          ></v-progress-circular>
+                        </div>
+                      </template>
+                    </v-img>
+
+                    <!-- Enhanced Wishlist Button -->
+                    <v-btn
+                      icon
+                      variant="flat"
+                      color="white"
                       size="small"
-                      readonly
-                    ></v-rating>
-                    <span class="text-caption ml-1">{{ book.reviews }}</span>
+                      class="wishlist-btn"
+                      elevation="2"
+                    >
+                      <v-icon color="grey-darken-1" size="small"
+                        >mdi-heart-outline</v-icon
+                      >
+                    </v-btn>
                   </div>
-                  <div class="text-subtitle-2 font-weight-medium text-truncate">
-                    {{ book.title }}
-                  </div>
-                  <div class="d-flex justify-space-between align-center mt-2">
-                    <span class="text-subtitle-2 font-weight-bold ml-1">
-                      {{ book.price }} $
-                    </span>
-                  </div>
-                </v-card-text>
-                <v-card-actions>
-                  <v-btn
-                    color="darkgreen"
-                    variant="elevated"
-                    size="small"
-                    block
-                    class="text-body-2 mr-2"
-                  >
-                    <v-icon start>mdi-cart</v-icon>
-                    Add to cart
-                  </v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-col>
-          </v-row>
+
+                  <v-card-text class="pa-3">
+                    <!-- Enhanced Rating -->
+                    <div class="d-flex align-center mb-2">
+                      <v-rating
+                        :model-value="book.rating"
+                        color="grey-darken-1"
+                        density="compact"
+                        size="small"
+                        readonly
+                        class="mr-2"
+                      ></v-rating>
+                      <span class="text-caption text-grey-darken-1">{{
+                        book.reviews
+                      }}</span>
+                    </div>
+
+                    <!-- Enhanced Title -->
+                    <div
+                      class="text-subtitle-1 font-weight-medium mb-2 text-truncate"
+                    >
+                      {{ book.title }}
+                    </div>
+
+                    <!-- Enhanced Price -->
+                    <div class="d-flex justify-space-between align-center">
+                      <span class="text-h6 font-weight-bold">
+                        ${{ book.price }}
+                      </span>
+                    </div>
+                  </v-card-text>
+
+                  <!-- Enhanced Card Actions -->
+                  <v-card-actions class="pa-3 pt-0">
+                    <v-btn
+                      color="grey-darken-3"
+                      variant="flat"
+                      size="small"
+                      block
+                      rounded="lg"
+                      class="text-body-2"
+                    >
+                      <v-icon start size="small">mdi-cart-plus</v-icon>
+                      Add to cart
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-card-text>
         </v-card>
       </v-col>
     </v-row>
 
-    <!-- Pagination -->
-    <div class="text-center mt-3">
+    <!-- Enhanced Pagination -->
+    <div class="d-flex justify-center align-center mt-6">
       <v-pagination
-        v-model="page"
-        :length="totalPages"
-        next-icon="mdi-menu-right"
-        prev-icon="mdi-menu-left"
-      ></v-pagination>
+      v-model="page"
+      :length="totalPages"
+      :total-visible="7"
+      rounded="lg"
+      color="grey-darken-3"
+      variant="outlined"
+      class="d-flex align-center"
+      >
+      <template v-slot:prev>
+        <div class="d-flex justify-center align-center h-100">
+        <v-icon>mdi-chevron-left</v-icon>
+        </div>
+      </template>
+      <template v-slot:next>
+        <div class="d-flex justify-center align-center h-100">
+        <v-icon>mdi-chevron-right</v-icon>
+        </div>
+      </template>
+      </v-pagination>
     </div>
   </v-container>
 </template>

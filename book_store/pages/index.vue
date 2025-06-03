@@ -8,7 +8,7 @@
         <div class="hero-decoration"></div>
 
         <v-container class="position-relative">
-          <v-row align="center" justify="center" class="min-height-400">
+          <v-row align="center" justify="center">
             <v-col cols="12" md="6" class="text-center">
               <div class="book-showcase">
                 <div class="book-shadow"></div>
@@ -16,7 +16,7 @@
                   :src="books[0]?.cover_url"
                   width="280"
                   height="380"
-                  class="book-cover mx-auto"
+                  class="book-cover mx-auto rounded-xl"
                   :alt="books[0]?.title"
                   cover
                 >
@@ -205,7 +205,6 @@
                 <v-card
                   v-for="(book, i) in featuredBooks"
                   :key="i"
-                  class="featured-book-card"
                   elevation="4"
                   rounded="lg"
                   hover
@@ -215,7 +214,6 @@
                     width="70"
                     height="95"
                     cover
-                    class="featured-book-img"
                   ></v-img>
                 </v-card>
               </div>
@@ -305,7 +303,8 @@
                     >
                       <!-- Enhanced Book Card -->
                       <v-card
-                        class="book-card h-100 rounded-xl position-relative"
+                        class="book-card h-100 rounded-xl position-relative cursor-pointer"
+                        @click="$router.push(`/details/${book._id}`)"
                         elevation="3"
                         hover
                       >
@@ -833,8 +832,8 @@ export default {
       featuredBooks: Array(6).fill({ cover: this.getPlaceholderImage(70, 50) }),
       bestSellerSubjects: [
         "historical fiction",
-        "detective stories",
-        "short stories",
+        "ancient history",
+        "cooking",
       ],
       companyLinks: [
         "About Us",
@@ -914,72 +913,14 @@ export default {
   },
   async mounted() {
     await this.getAllBooks();
-    console.log("Current tab:", this.tab);
-    console.log("All books:", this.books);
-    console.log("Filtered books:", this.bestSellersStories);
+    // console.log("Current tab:", this.tab);
+    // console.log("All books:", this.books);
+    // console.log("Filtered books:", this.bestSellersStories);
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
     getPlaceholderImage(width, height) {
       return `https://via.placeholder.com/${width}x${height}`;
-    },
-    generateBooks(count, width, height) {
-      return Array.from({ length: count }, () => ({
-        title: "Title of Book",
-        cover: this.getPlaceholderImage(width, height),
-        rating: (Math.random() * (5 - 4) + 4).toFixed(1),
-        reviews: "157 Reviews",
-        price: "$15.00",
-        oldPrice: "$20.00",
-      }));
-    },
-    generateDeals(count, width, height) {
-      const authors = ["John Author", "Jane Author", "Sam Author"];
-      return Array.from({ length: count }, (_, i) => ({
-        title: "Title of Book",
-        author: authors[i % authors.length],
-        cover: this.getPlaceholderImage(width, height),
-        rating: (Math.random() * (5 - 4) + 4).toFixed(1),
-        reviews: "157 Reviews",
-        price: "$15.00",
-        oldPrice: "$20.00",
-      }));
-    },
-    generateFloatingBooks() {
-      return [
-        {
-          cover: this.getPlaceholderImage(180, 120),
-          top: "20px",
-          left: "20px",
-          width: "120px",
-          height: "180px",
-          zIndex: 3,
-        },
-        {
-          cover: this.getPlaceholderImage(180, 120),
-          top: "100px",
-          left: "150px",
-          width: "120px",
-          height: "180px",
-          zIndex: 2,
-        },
-        {
-          cover: this.getPlaceholderImage(180, 120),
-          top: "200px",
-          left: "50px",
-          width: "120px",
-          height: "180px",
-          zIndex: 1,
-        },
-        {
-          cover: this.getPlaceholderImage(180, 120),
-          top: "150px",
-          left: "250px",
-          width: "120px",
-          height: "180px",
-          zIndex: 4,
-        },
-      ];
     },
   },
 };
