@@ -51,9 +51,9 @@
 
               <v-card-actions class="justify-center">
                 <span>Already have an account?</span>
-                <nuxt-link to="/login">
+                <div @click="$emit('toggleLinkSignIn', 'sign-in')">
                   <v-btn text color="primary">Sign In</v-btn>
-                </nuxt-link>
+                </div>
               </v-card-actions>
             </v-form>
           </v-card-text>
@@ -72,6 +72,7 @@ export default {
       username: "",
       email: "",
       password: "",
+      isSignUp: false
     };
   },
   methods: {
@@ -83,7 +84,7 @@ export default {
           email: this.email,
           password: this.password,
         });
-        this.$router.push("/login");
+        this.$emit("checkIsSignUp", true);
         return data;
       } catch (error) {
         console.log(error);

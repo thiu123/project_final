@@ -103,7 +103,7 @@ export default {
   },
   async mounted() {
     try {
-      await this.getRomanceBooks("romance");
+      await this.getRomanceBooks("contemporary romance");
     } catch (error) {
       console.error("Error fetching books:", error);
     }

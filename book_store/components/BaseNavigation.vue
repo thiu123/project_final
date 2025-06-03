@@ -1,12 +1,23 @@
 <template>
   <v-app-bar class="bg-darkgreen elevation-0">
-    <v-container class="d-flex align-center justify-space-between py-0" style="width:65%">
-      <div class="d-flex align-center cursor-pointer" style="text-decoration: none" to="/">
+    <v-container
+      class="d-flex align-center justify-space-between py-0"
+      style="width: 65%"
+    >
+      <div
+        class="d-flex align-center cursor-pointer"
+        style="text-decoration: none"
+        to="/"
+      >
         <nuxt-link to="/" class="d-flex align-center text-decoration-none">
           <v-avatar size="40" class="mr-3 bg-customyellow">
-            <v-icon color="darkgreen" size="24">mdi-book-open-page-variant</v-icon>
+            <v-icon color="darkgreen" size="24"
+              >mdi-book-open-page-variant</v-icon
+            >
           </v-avatar>
-          <span class="font-weight-bold text-h5 text-white letter-spacing">THBookStore</span>
+          <span class="font-weight-bold text-h5 text-white letter-spacing"
+            >THBookStore</span
+          >
         </nuxt-link>
       </div>
       <div class="d-flex algin-center justify-space-between ga-10">
@@ -283,7 +294,7 @@
       </div>
 
       <v-dialog v-model="dialogSignIn">
-        <Login class="position-relative" />
+        <Login class="position-relative" @toggleLinkSignUp="openDialog" />
         <v-icon
           @click="dialogSignIn = false"
           class="cursor-pointer position-absolute"
@@ -295,7 +306,10 @@
       </v-dialog>
 
       <v-dialog v-model="dialogSignUp">
-        <SignUp />
+        <SignUp
+          @checkIsSignUp="handleCheckIsSignUp"
+          @toggleLinkSignIn="openDialog"
+        />
         <v-icon
           @click="dialogSignUp = false"
           color="white"
@@ -329,90 +343,36 @@ export default {
             "Literary Fiction",
             "Historical Fiction",
             "Contemporary Fiction",
-            "Short Stories",
-          ],
-        },
-        {
-          category: "Mystery & Thriller",
-          subcategories: [
-            "Crime Fiction",
-            "Psychological Thriller",
-            "Detective Stories",
-            "Noir",
-          ],
-        },
-        {
-          category: "Fantasy",
-          subcategories: [
-            "Epic Fantasy",
-            "Urban Fantasy",
-            "Dark Fantasy",
-            "High Fantasy",
-          ],
-        },
-        {
-          category: "Science Fiction",
-          subcategories: [
-            "Space Opera",
-            "Cyberpunk",
-            "Dystopian",
-            "Time Travel",
           ],
         },
         {
           category: "Romance",
+          subcategories: ["Contemporary Romance", "Historical Romance"],
         },
         {
           category: "Manga",
         },
         {
-          category: "Self-Help & Personal Development",
-          subcategories: [
-            "Time Management",
-            "Mental Health",
-            "Mindfulness & Meditation",
-            "Motivation & Success",
-          ],
-        },
-        {
           category: "Biography & Memoir",
-          subcategories: [
-            "Historical Figures",
-            "Celebrities & Public Figures",
-            "Sports Biographies",
-            "Political Leaders",
-          ],
+          subcategories: ["Historical Figures", "Political Leaders"],
         },
         {
           category: "History",
-          subcategories: [
-            "Ancient History",
-            "World War II",
-            "Medieval History",
-            "Modern History",
-          ],
-        },
-        {
-          category: "IT & Programming",
-          subcategories: [
-            "Web Development",
-            "Data Science & Machine Learning",
-            "Cybersecurity",
-            "Software Engineering",
-          ],
-        },
-        {
-          category: "Business & Finance",
-          subcategories: [
-            "Management",
-            "Entrepreneurship",
-            "Business Economics",
-            "Finance",
-          ],
+          subcategories: ["Ancient History", "World War II", "Modern History"],
         },
         {
           category: "Health & Wellness",
-          subcategories: ["Cooking", "Nutrition", "Self-help", "Exercise"],
+          subcategories: ["Cooking", "Nutrition", "Exercise"],
+        },
+        {
+          category: "Vietnamese Books",
+          subcategories: [
+            "Vietnamese Classics",
+            "Vietnamese Poetry",
+            "Vietnamese History",
+            "Translated Literature",
+            "Folktales & Mythology",
+          ],
         },
       ],
     };
@@ -438,11 +398,20 @@ export default {
         return;
       }
 
-      if (type === "sign-in") {
-        this.dialogSignIn = true;
-      } else if (type === "sign-up") {
-        this.dialogSignUp = true;
-      }
+      this.dialogSignIn = false;
+      this.dialogSignUp = false;
+
+      this.$nextTick(() => {
+        if (type === "sign-in") {
+          this.dialogSignIn = true;
+        } else if (type === "sign-up") {
+          this.dialogSignUp = true;
+        }
+      });
+    },
+    handleCheckIsSignUp(data) {
+      this.dialogSignUp = false;
+      this.dialogSignIn = data;
     },
     handleLogout() {
       this.logout();
