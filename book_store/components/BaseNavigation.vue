@@ -1,5 +1,5 @@
 <template>
-  <v-app-bar class="bg-darkgreen elevation-0">
+  <v-app-bar class="bg-waterblue elevation-0">
     <v-container
       class="d-flex align-center justify-space-between py-0"
       style="width: 65%"
@@ -300,7 +300,7 @@
           class="cursor-pointer position-absolute"
           size="large"
           color="white"
-          style="top: 8%; right: 15%"
+          style="top: 9%; right: 19%"
           >mdi-close</v-icon
         >
       </v-dialog>
@@ -315,7 +315,7 @@
           color="white"
           class="cursor-pointer position-absolute"
           size="large"
-          style="top: 8%; right: 15%"
+          style="top: 9%; right: 19%"
           >mdi-close</v-icon
         >
       </v-dialog>
@@ -365,14 +365,16 @@ export default {
           subcategories: ["Cooking", "Nutrition", "Exercise"],
         },
         {
-          category: "Vietnamese Books",
+          category: "Science & Nature",
           subcategories: [
-            "Vietnamese Classics",
-            "Vietnamese Poetry",
-            "Vietnamese History",
-            "Translated Literature",
-            "Folktales & Mythology",
+            "Popular Science",
+            "Astronomy",
+            "Biology & Life Sciences",
           ],
+        },
+        {
+          category: "Business & Economics",
+          subcategories: ["Personal Finance", "Investing", "Entrepreneurship"],
         },
       ],
     };

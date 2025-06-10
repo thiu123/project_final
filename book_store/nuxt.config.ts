@@ -21,6 +21,7 @@ export default defineNuxtConfig({
               customblack: "#191b24",
               customyellow: "#DCF763",
               darkgreen: "#435058",
+              lightgreen: "#059669",
               whitesmoke:"#F1F2EE"
 						}
 					}

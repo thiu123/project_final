@@ -9,6 +9,8 @@ const bookSchema = new mongoose.Schema(
     authors: { type: [String], required: true },
     price: { type: Number, default: 0 },
     subjects: { type: [String], default: [] },
+    description: { type: String },
+    rating: { type: Number, min: 0, max: 5 },
   },
   { timestamps: true }
 );

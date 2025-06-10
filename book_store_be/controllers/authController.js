@@ -77,7 +77,7 @@ const authController = {
           .status(200)
           .json({ msg: "Login successful", accessToken, ...others });
       }
-    } catch {
+    } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
   },
