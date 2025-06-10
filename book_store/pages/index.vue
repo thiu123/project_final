@@ -3,7 +3,7 @@
   <div>
     <!-- Hero Section -->
     <v-container fluid class="pa-0">
-      <v-sheet class="bg-whitesmoke">
+      <v-sheet style="background:none;">
         <!-- Background decoration -->
         <div class="hero-decoration"></div>
 

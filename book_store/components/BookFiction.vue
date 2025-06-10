@@ -1,118 +1,149 @@
 <template>
   <v-container class="mt-8">
-    <v-card class="bg-white rounded-lg">
-      <v-toolbar class="w-100" color="customyellow" density="comfortable">
-        <v-toolbar-title class="font-weight-bold text-h5 text-darkgreen">Fiction</v-toolbar-title>
-        <v-spacer></v-spacer>
+    <!-- Header Section -->
+    <div class="d-flex justify-space-between align-center mb-6">
+      <h2 class="text-h5 font-weight-bold text-darkgreen">Fiction</h2>
+
+      <v-hover v-slot="{ isHovering, props }">
+        <v-btn
+          @click="$router.push(`/subjects/fiction`)"
+          v-bind="props"
+          icon
+          size="x-small"
+          :class="['custom-expand-btn', { 'is-hovering': isHovering }]"
+          color="darkgreen"
+          elevation="0"
+        >
+          <div class="d-flex align-center">
+            <span v-if="isHovering" class="text-subtitle-1 view-details">View All</span>
+            <v-icon>mdi-chevron-right</v-icon>
+          </div>
+        </v-btn>
+      </v-hover>
+    </div>
+
+    <!-- Loading Skeletons -->
+    <v-row v-if="!fictionBooks.length">
+      <v-col v-for="i in 6" :key="i" cols="6" sm="4" md="2">
+        <v-sheet
+          rounded="lg"
+          class="pa-0 h-100"
+          style="overflow: hidden; border: 1px solid rgba(0, 0, 0, 0.05)"
+        >
+          <v-skeleton-loader type="image" height="200"></v-skeleton-loader>
+          <div class="pa-3">
+            <v-skeleton-loader type="text@2,actions"></v-skeleton-loader>
+          </div>
+        </v-sheet>
+      </v-col>
+    </v-row>
+
+    <!-- Fiction Books Grid -->
+    <v-row v-else>
+      <v-col
+        v-for="(book, i) in limitedFictionBooks"
+        :key="i"
+        cols="6"
+        sm="4"
+        md="2"
+        class="d-flex"
+      >
         <v-hover v-slot="{ isHovering, props }">
-          <v-btn
-            @click="$router.push(`/subjects/fiction`)"
+          <v-sheet
             v-bind="props"
-            icon
-            size="x-small"
-            :class="['custom-expand-btn', { 'is-hovering': isHovering }]"
-            color="darkgreen"
-            elevation="0"
+            rounded="lg"
+            class="d-flex flex-column h-100 w-100"
+            :elevation="isHovering ? 4 : 1"
+            :style="{
+              transition: 'all 0.3s ease',
+              transform: isHovering ? 'translateY(-5px)' : 'none',
+              border: '1px solid rgba(0,0,0,0.05)',
+            }"
           >
-            <div class="d-flex align-center">
-              <span v-if="isHovering" class="text-subtitle-1 view-details">View Details</span>
-              <v-icon>mdi-chevron-right</v-icon>
-            </div>
-          </v-btn>
-        </v-hover>
-      </v-toolbar>
-
-      <v-card-text class="px-4">
-        <!-- Loading skeleton -->
-        <v-row v-if="!fictionBooks.length">
-          <v-col v-for="n in 6" :key="n" cols="6" sm="4" md="2">
-            <v-sheet class="h-100">
-              <v-skeleton-loader
-                class="rounded-xl"
-                type="image"
-                height="250"
-              ></v-skeleton-loader>
-              <div class="pa-2">
-                <v-skeleton-loader
-                  type="article"
-                  class="mt-2"
-                ></v-skeleton-loader>
-              </div>
-              <div class="pa-2">
-                <v-skeleton-loader
-                  type="button"
-                  class="mt-2"
-                ></v-skeleton-loader>
-              </div>
-            </v-sheet>
-          </v-col>
-        </v-row>
-
-        <!-- Actual content -->
-        <v-row v-else>
-          <v-col
-            v-for="(book, i) in limitedFictionBooks"
-            :key="i"
-            cols="6"
-            sm="4"
-            md="2"
-          >
-            <div class="h-100 bg-transparent" elevation="2">
-              <div class="position-relative">
-                <v-img
-                  class="rounded-xl cursor-pointer"
-                  :src="book.cover_url"
-                  height="250"
-                  cover
-                  @click="$router.push(`/details/${book._id}`)"
-                ></v-img>
-                <v-btn
-                  icon
-                  variant="text"
-                  color="white"
-                  class="position-absolute"
-                  style="top: 8px; right: 8px"
-                >
-                  <v-img width="28px" height="28px" src="../assets/heart.svg" />
-                </v-btn>
-              </div>
-              <v-card-text class="pa-2">
-                <div class="d-flex align-center mb-1">
-                  <v-rating
-                    :model-value="book.rating"
-                    color="amber"
-                    density="compact"
-                    size="small"
-                    readonly
-                  ></v-rating>
-                  <span class="text-caption ml-1">{{ book.reviews }}</span>
-                </div>
-                <div class="text-subtitle-2 text-truncate">
-                  {{ book.title }}
-                </div>
-                <div class="d-flex justify-space-between align-center mt-1">
-                  <div>
-                    <span class="text-subtitle-2">{{ book.price }} $</span>
+            <!-- Book Cover -->
+            <div class="position-relative">
+              <v-img
+                :src="book.cover_url"
+                height="200"
+                cover
+                class="rounded-t-lg"
+                @click="$router.push(`/details/${book._id}`)"
+              >
+                <template v-slot:placeholder>
+                  <div class="d-flex align-center justify-center fill-height">
+                    <v-progress-circular
+                      indeterminate
+                      color="customyellow"
+                    ></v-progress-circular>
                   </div>
-                </div>
-              </v-card-text>
-              <v-card-actions>
-                <v-btn
-                  color="darkgreen"
-                  variant="elevated"
-                  size="small"
-                  block
-                  class="text-body-2 mr-2"
-                >
-                  <v-icon start>mdi-cart</v-icon>
-                  Add to cart
-                </v-btn>
-              </v-card-actions>
+                </template>
+              </v-img>
+
+              <!-- Favorite Button -->
+              <v-btn
+                icon
+                variant="text"
+                color="white"
+                class="position-absolute"
+                style="top: 8px; right: 8px"
+              >
+                <v-img width="28px" height="28px" src="../assets/heart.svg" />
+              </v-btn>
             </div>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+
+            <!-- Book Details -->
+            <div class="px-3 pt-3 pb-2 flex-grow-1 d-flex flex-column">
+              <!-- Rating -->
+              <div class="d-flex align-center mb-1">
+                <v-rating
+                  :model-value="book.rating"
+                  color="amber"
+                  density="compact"
+                  size="small"
+                  readonly
+                  half-increments
+                ></v-rating>
+                <span class="text-caption text-medium-emphasis ml-1">{{ book.reviews }}</span>
+              </div>
+
+              <!-- Title -->
+              <div class="text-subtitle-2 text-truncate mb-1">
+                {{ book.title }}
+              </div>
+
+              <!-- Price -->
+              <div class="d-flex justify-space-between align-center mt-auto mb-2">
+                <div class="d-flex align-center">
+                  <span class="text-subtitle-1">${{ book.price }}</span>
+                </div>
+                <v-chip
+                  color="success"
+                  variant="flat"
+                  size="x-small"
+                  class="px-2"
+                >
+                  In Stock
+                </v-chip>
+              </div>
+            </div>
+
+            <!-- Add to Cart Button -->
+            <v-card-actions class="px-3 pb-3 pt-0">
+              <v-btn
+                color="darkgreen"
+                variant="elevated"
+                block
+                size="small"
+                class="text-subtitle-2 font-weight-medium"
+              >
+                <v-icon size="small" class="mr-1">mdi-cart</v-icon>
+                Add to Cart
+              </v-btn>
+            </v-card-actions>
+          </v-sheet>
+        </v-hover>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 

@@ -55,21 +55,47 @@ const bookController = {
     try {
       let subject = req.params.subject.replace(/_/g, " ");
 
-      // If not found, fetch from OpenLibrary
+      // Fetch sách theo subject
       const response = await axios.get(
-        `https://openlibrary.org/subjects/${subject}.json?limit=100`
+        `https://openlibrary.org/subjects/${subject}.json?limit=50`
       );
-      const books = response.data.works.map((book) => ({
-        key: book.key,
-        title: book.title,
-        cover_url: book.cover_id
-          ? `https://covers.openlibrary.org/b/id/${book.cover_id}-M.jpg`
-          : null,
-        first_publish_year: book.first_publish_year,
-        authors: book.authors.map((author) => author.name),
-        price: Math.floor(Math.random() * 50) + 10,
-        subjects: [subject],
-      }));
+
+      const books = await Promise.all(
+        response.data.works.map(async (book) => {
+          let description = null;
+
+          // Fetch thêm detail từ works để lấy description
+          try {
+            const workKey = book.key;
+            const workDetail = await axios.get(
+              `https://openlibrary.org${workKey}.json`
+            );
+
+            if (workDetail.data.description) {
+              description =
+                typeof workDetail.data.description === "string"
+                  ? workDetail.data.description
+                  : workDetail.data.description.value;
+            }
+          } catch (e) {
+            description = "No description available for this book.";
+          }
+
+          return {
+            key: book.key,
+            title: book.title,
+            cover_url: book.cover_id
+              ? `https://covers.openlibrary.org/b/id/${book.cover_id}-L.jpg`
+              : null,
+            first_publish_year: book.first_publish_year,
+            authors: book.authors.map((author) => author.name),
+            price: Math.floor(Math.random() * 50) + 10,
+            subjects: [subject],
+            description: description,
+            rating: (Math.random() * 2 + 3).toFixed(1),
+          };
+        })
+      );
 
       for (const book of books) {
         await Book.findOneAndUpdate({ key: book.key }, book, { upsert: true });
@@ -84,17 +110,16 @@ const bookController = {
     try {
       const query = req.query.title?.trim();
       if (!query) return res.status(200).json([]);
-  
+
       const books = await Book.find({
         title: { $regex: query, $options: "i" },
       });
-  
+
       return res.status(200).json(books);
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }
   },
-  
 };
 
 module.exports = bookController;
