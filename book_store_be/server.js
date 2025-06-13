@@ -6,6 +6,7 @@ const dotenv = require("dotenv");
 const bookRoute = require("./routes/book");
 const authRoute = require("./routes/auth");
 const userRoute = require("./routes/user");
+const cartRoute = require("./routes/cart");
 const cookieParser = require("cookie-parser");
 
 const PORT = process.env.PORT || 5000;
@@ -33,7 +34,7 @@ connectDB();
 app.use("/api/auth", authRoute);
 app.use("/api/users", userRoute);
 app.use("/api/books", bookRoute);
-
+app.use("/api/carts", cartRoute);
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

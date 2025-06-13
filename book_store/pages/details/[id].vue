@@ -18,7 +18,8 @@
             "
             alt="Book Cover"
             class="rounded-xl"
-            height="360"
+            min-height="470"
+            max-height="470"
             cover
           >
             <template v-slot:placeholder>
@@ -93,46 +94,46 @@
               </div>
 
               <!-- Quantity selector -->
-              <!-- <div class="mb-6">
-                  <v-label class="text-subtitle-1 font-weight-medium mb-2"
-                    >Quantity</v-label
+              <div class="mb-6">
+                <v-label class="text-subtitle-1 font-weight-bold mb-2"
+                  >Quantity</v-label
+                >
+                <div class="d-flex align-center">
+                  <v-btn
+                    icon
+                    variant="outlined"
+                    color="primary"
+                    size="large"
+                    @click="quantity > 1 ? quantity-- : 1"
+                    :disabled="quantity <= 1"
                   >
-                  <div class="d-flex align-center">
-                    <v-btn
-                      icon
-                      variant="outlined"
-                      color="primary"
-                      size="large"
-                      @click="quantity > 1 ? quantity-- : 1"
-                      :disabled="quantity <= 1"
-                    >
-                      <v-icon>mdi-minus</v-icon>
-                    </v-btn>
+                    <v-icon>mdi-minus</v-icon>
+                  </v-btn>
 
-                    <v-text-field
-                      v-model="quantity"
-                      type="number"
-                      variant="outlined"
-                      density="comfortable"
-                      hide-details
-                      class="mx-3"
-                      style="max-width: 80px"
-                      min="1"
-                      max="10"
-                    ></v-text-field>
+                  <v-text-field
+                    v-model="quantity"
+                    type="number"
+                    variant="outlined"
+                    density="comfortable"
+                    hide-details
+                    class="mx-3"
+                    style="max-width: 80px"
+                    min="1"
+                    max="10"
+                  ></v-text-field>
 
-                    <v-btn
-                      icon
-                      variant="outlined"
-                      color="primary"
-                      size="large"
-                      @click="quantity++"
-                      :disabled="quantity >= 10"
-                    >
-                      <v-icon>mdi-plus</v-icon>
-                    </v-btn>
-                  </div>
-                </div> -->
+                  <v-btn
+                    icon
+                    variant="outlined"
+                    color="primary"
+                    size="large"
+                    @click="quantity++"
+                    :disabled="quantity >= 10"
+                  >
+                    <v-icon>mdi-plus</v-icon>
+                  </v-btn>
+                </div>
+              </div>
 
               <!-- Action buttons -->
               <div class="d-flex flex-column flex-sm-row ga-3">
@@ -142,6 +143,7 @@
                   size="x-large"
                   class="text-none flex-grow-1"
                   rounded="lg"
+                  @click="handleAddToCart"
                 >
                   <v-icon start>mdi-cart-plus</v-icon>
                   Add to Cart
@@ -166,7 +168,10 @@
 
     <!-- Book details section -->
     <v-card class="mt-8" elevation="3" rounded="xl">
-      <v-card-title class="pa-6 text-white" style="background: linear-gradient(90deg, #2563eb 0%, #9333ea 100%);">
+      <v-card-title
+        class="pa-6 text-white"
+        style="background: linear-gradient(90deg, #2563eb 0%, #9333ea 100%)"
+      >
         <v-icon start class="mr-2">mdi-book-information-variant</v-icon>
         Book Details
       </v-card-title>
@@ -215,7 +220,6 @@
             </v-list-item-subtitle>
           </v-list-item>
 
-
           <!-- <v-list-item>
             <template v-slot:prepend>
               <v-icon color="primary">mdi-translate</v-icon>
@@ -236,7 +240,10 @@
       rounded="xl"
       v-if="detailsBooks.description"
     >
-      <v-card-title class="pa-6 text-white" style="background: linear-gradient(90deg, #9333ea 0%, #ec4899 100%);">
+      <v-card-title
+        class="pa-6 text-white"
+        style="background: linear-gradient(90deg, #9333ea 0%, #ec4899 100%)"
+      >
         <v-icon start class="mr-2">mdi-text-box</v-icon>
         Description
       </v-card-title>
@@ -344,7 +351,7 @@
 
 <script>
 import axios from "axios";
-
+import { mapActions } from "vuex";
 export default {
   data() {
     return {
@@ -355,6 +362,7 @@ export default {
     };
   },
   methods: {
+    ...mapActions("cart", ["addToCart"]),
     async getDetailsBooks() {
       try {
         this.isLoading = true;
@@ -384,13 +392,20 @@ export default {
         this.quantity--;
       }
     },
-    buyNow() {
-      console.log("Buy now clicked");
+    async handleAddToCart() {
+      try {
+        await this.addToCart({
+          bookId: this.detailsBooks._id,
+          quantity: this.quantity,
+        });
+        console.log("Book added to cart:", this.detailsBooks);
+      } catch (error) {
+        console.error("Error adding to cart:", error);
+      }
     },
   },
   async mounted() {
     await this.getDetailsBooks();
-    console.log(this.detailsBooks, "test detailsBooks");
   },
 };
 </script>

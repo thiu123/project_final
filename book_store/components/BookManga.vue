@@ -55,6 +55,7 @@
             v-bind="props"
             rounded="lg"
             class="d-flex flex-column h-100 w-100"
+            @click="$router.push(`/details/${book._id}`)"
             :elevation="isHovering ? 4 : 1"
             :style="{
               transition: 'all 0.3s ease',

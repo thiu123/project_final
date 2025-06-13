@@ -1,5 +1,5 @@
-const Cart = require("../model/Cart");
-const Book = require("../model/Book");
+const Cart = require("../../model/Cart");
+const Book = require("../../model/Book");
 
 const cartsController = {
   getCart: async (req, res) => {
@@ -8,7 +8,7 @@ const cartsController = {
         "items.bookId"
       );
       if (!cart) {
-        return res.status(404).json({ msg: "Cart not found" });
+        return res.status(200).json({ userId: req.user.id, items: [] });
       }
       return res.status(200).json(cart);
     } catch (err) {
