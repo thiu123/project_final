@@ -71,7 +71,7 @@
                     variant="elevated"
                     color="primary"
                     class="text-white font-weight-bold"
-                    @click="showBookDetails(books[0])"
+                    @click="$router.push(`/details/${books[0]._id}`)"
                     prepend-icon="mdi-information"
                   >
                     More Info

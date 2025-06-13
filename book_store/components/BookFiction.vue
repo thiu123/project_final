@@ -11,7 +11,7 @@
           icon
           size="x-small"
           :class="['custom-expand-btn', { 'is-hovering': isHovering }]"
-          color="darkgreen"
+          color="customyellow"
           elevation="0"
         >
           <div class="d-flex align-center">
@@ -177,7 +177,7 @@ export default {
 }
 
 .custom-expand-btn.is-hovering {
-  min-width: 150px !important;
+  min-width: 100px !important;
   border-radius: 20px;
 }
 </style>

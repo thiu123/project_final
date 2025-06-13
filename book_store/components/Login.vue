@@ -2,9 +2,7 @@
   <v-container class="h-screen position-relative" fluid>
     <v-row class="h-100 d-flex justify-center align-center">
       <v-col cols="12" sm="10" md="8" lg="7" xl="6">
-        <v-card
-          class="elevation-12 rounded-lg overflow-hidden"
-        >
+        <v-card class="elevation-12 rounded-lg overflow-hidden">
           <v-row class="h-100">
             <!-- Image section - hidden on xs screens -->
             <v-col cols="12" md="6" class="pa-0 d-none d-md-block">
@@ -231,17 +229,20 @@ export default {
   },
   computed: {
     ...mapState("auth", ["isFetching", "error", "currentUser"]),
+    ...mapState("cart", ["cart"]),
   },
   methods: {
     ...mapActions("auth", ["login"]),
+    ...mapActions("cart", ["fetchCart"]),
     async onSubmit() {
       try {
-        // console.log("Attempting to login with:", this.username, this.password);
-        const data = await this.login({
+        await this.login({
           username: this.username,
           password: this.password,
         });
-        // console.log("Login success", data);
+
+        await this.fetchCart();
+        console.log("cart", this.cart);
         this.$router.push("/");
       } catch (error) {
         console.error("Login failed:", error);

@@ -2,7 +2,7 @@
   <v-app-bar class="bg-waterblue elevation-0">
     <v-container
       class="d-flex align-center justify-space-between py-0"
-      style="width: 65%"
+      style="width: 65%;"
     >
       <div
         class="d-flex align-center cursor-pointer"
@@ -178,7 +178,7 @@
       </v-btn> -->
 
       <div class="d-flex align-center">
-        <v-btn icon class="ml-1">
+        <v-btn icon class="ml-1" @click="$router.push('/cart')">
           <v-img width="28px" height="28px" src="../assets/shopping_bag.svg" />
         </v-btn>
         <v-btn icon>
@@ -393,6 +393,7 @@ export default {
 
   methods: {
     ...mapActions("auth", ["logout", "restoreSession"]),
+    // ...mapActions("cart", ["fetchCart"]),
     openDialog(type) {
       if (this.currentUser) {
         this.dialogSignIn = false;
