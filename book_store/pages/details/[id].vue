@@ -377,7 +377,7 @@ export default {
           `http://localhost:5000/api/books/${bookId}`
         );
         this.detailsBooks = response.data;
-        console.log("Fetched Data:", response.data);
+        // console.log("Fetched Data:", response.data);
       } catch (error) {
         console.error("Fetch error:", error);
       } finally {
@@ -398,7 +398,7 @@ export default {
           bookId: this.detailsBooks._id,
           quantity: this.quantity,
         });
-        console.log("Book added to cart:", this.detailsBooks);
+        // console.log("Book added to cart:", this.detailsBooks);
       } catch (error) {
         console.error("Error adding to cart:", error);
       }
