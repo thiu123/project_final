@@ -37,12 +37,12 @@
                 </v-col>
                 <v-col cols="2" class="text-center">Quantity</v-col>
                 <v-col cols="3" class="text-end">Price</v-col>
-                <v-col cols="1"></v-col>
+                <v-col cols="1">Delete</v-col>
               </v-row>
 
               <!-- Empty Cart State -->
               <v-card
-                v-if="cartItems.length === 0"
+                v-if="!cartItems"
                 class="pa-8 text-center"
                 flat
               >
@@ -66,7 +66,7 @@
               </v-card>
 
               <!-- Cart Items -->
-              <v-slide-y-transition group>
+              <v-slide-y-transition group v-if="cartItems.length > 0">
                 <v-card
                   v-for="(item, index) in cartItems"
                   :key="index"
@@ -276,7 +276,7 @@
                       Valid from Dec 20, 2022 - Dec 27, 2022
                     </div>
 
-                    <div class="d-flex gap-2">
+                    <div class="d-flex ga-2">
                       <v-text-field
                         placeholder="Enter promotion code"
                         variant="outlined"

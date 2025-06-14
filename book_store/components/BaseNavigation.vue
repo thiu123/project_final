@@ -2,7 +2,7 @@
   <v-app-bar class="bg-waterblue elevation-0">
     <v-container
       class="d-flex align-center justify-space-between py-0"
-      style="width: 65%;"
+      style="width: 65%"
     >
       <div
         class="d-flex align-center cursor-pointer"
@@ -179,8 +179,9 @@
 
       <div class="d-flex align-center">
         <v-btn icon class="ml-1" @click="$router.push('/cart')">
-          <v-img width="28px" height="28px" src="../assets/shopping_bag.svg" />
+          <v-icon>mdi-cart-plus</v-icon>
         </v-btn>
+
         <v-btn icon>
           <v-img width="28px" height="28px" src="../assets/heart.svg" />
         </v-btn>
@@ -358,7 +359,7 @@ export default {
         },
         {
           category: "History",
-          subcategories: ["Ancient History", "World War II", "Modern History"],
+          subcategories: ["Ancient History", "Modern History"],
         },
         {
           category: "Health & Wellness",

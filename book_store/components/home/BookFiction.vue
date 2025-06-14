@@ -15,7 +15,9 @@
           elevation="0"
         >
           <div class="d-flex align-center">
-            <span v-if="isHovering" class="text-subtitle-1 view-details">View All</span>
+            <span v-if="isHovering" class="text-subtitle-1 view-details"
+              >View All</span
+            >
             <v-icon>mdi-chevron-right</v-icon>
           </div>
         </v-btn>
@@ -53,6 +55,7 @@
             v-bind="props"
             rounded="lg"
             class="d-flex flex-column h-100 w-100"
+            @click="$router.push(`/details/${book._id}`)"
             :elevation="isHovering ? 4 : 1"
             :style="{
               transition: 'all 0.3s ease',
@@ -67,7 +70,6 @@
                 height="200"
                 cover
                 class="rounded-t-lg"
-                @click="$router.push(`/details/${book._id}`)"
               >
                 <template v-slot:placeholder>
                   <div class="d-flex align-center justify-center fill-height">
@@ -103,7 +105,9 @@
                   readonly
                   half-increments
                 ></v-rating>
-                <span class="text-caption text-medium-emphasis ml-1">{{ book.reviews }}</span>
+                <span class="text-caption text-medium-emphasis ml-1">{{
+                  book.reviews
+                }}</span>
               </div>
 
               <!-- Title -->
@@ -112,7 +116,9 @@
               </div>
 
               <!-- Price -->
-              <div class="d-flex justify-space-between align-center mt-auto mb-2">
+              <div
+                class="d-flex justify-space-between align-center mt-auto mb-2"
+              >
                 <div class="d-flex align-center">
                   <span class="text-subtitle-1">${{ book.price }}</span>
                 </div>
@@ -135,8 +141,9 @@
                 block
                 size="small"
                 class="text-subtitle-2 font-weight-medium"
+                @click.stop="$emit('add-to-cart', book._id, 1)"
               >
-                <v-icon size="small" class="mr-1">mdi-cart</v-icon>
+                <v-icon size="small" class="mr-1">mdi-cart-plus</v-icon>
                 Add to Cart
               </v-btn>
             </v-card-actions>

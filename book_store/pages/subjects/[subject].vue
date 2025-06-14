@@ -10,12 +10,12 @@
           class="sticky-sidebar"
         >
           <!-- Categories Section -->
-          <v-card-title class="pa-4 bg-grey-lighten-4 d-flex align-center">
+          <v-card-title class="pa-4 d-flex align-center">
             <v-icon start class="mr-2">mdi-format-list-bulleted</v-icon>
             Category
           </v-card-title>
 
-          <v-list density="compact" class="pa-0">
+          <v-list density="compact" class="pa-0 bg-transparent">
             <v-list-item
               v-for="(item, i) in subjects"
               :key="i"
@@ -29,7 +29,7 @@
               class="category-item"
             >
               <template v-slot:prepend>
-                <v-icon size="small" color="grey-darken-1"
+                <v-icon size="small"
                   >mdi-book-outline</v-icon
                 >
               </template>
@@ -42,7 +42,7 @@
           <v-divider class="mx-2"></v-divider>
 
           <!-- Price Section -->
-          <v-card-title class="pa-4 bg-grey-lighten-4 d-flex align-center">
+          <v-card-title class="pa-4 d-flex align-center">
             <v-icon start class="mr-2">mdi-currency-usd</v-icon>
             Price
           </v-card-title>
@@ -67,7 +67,7 @@
       <v-col cols="12" sm="9">
         <v-card elevation="1" rounded="lg" variant="outlined">
           <!-- Enhanced Header -->
-          <v-card-title class="pa-4 bg-grey-lighten-4">
+          <v-card-title class="pa-4">
             <div class="d-flex justify-space-between align-center w-100">
               <div class="d-flex align-center">
                 <v-icon class="mr-2">mdi-book-multiple</v-icon>
@@ -299,11 +299,11 @@ export default {
       this.isLoading = true;
       try {
         const subject = this.$route.params.subject;
-        console.log("Subject:", subject);
+        // console.log("Subject:", subject);
         if (subject) {
           await this.getAllBooks(subject);
         }
-        console.log("Books:", this.books);
+        // console.log("Books:", this.books);
       } catch (error) {
         console.error("Error fetching books:", error);
       } finally {

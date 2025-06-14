@@ -2,99 +2,7 @@
   <!-- Header -->
   <div>
     <!-- Hero Section -->
-    <v-container fluid class="pa-0">
-      <v-sheet style="background:none;">
-        <!-- Background decoration -->
-        <div class="hero-decoration"></div>
-
-        <v-container class="position-relative">
-          <v-row align="center" justify="center">
-            <v-col cols="12" md="6" class="text-center">
-              <div class="book-showcase">
-                <div class="book-shadow"></div>
-                <v-img
-                  :src="books[0]?.cover_url"
-                  width="280"
-                  height="380"
-                  class="book-cover mx-auto rounded-xl"
-                  :alt="books[0]?.title"
-                  cover
-                >
-                  <template v-slot:placeholder>
-                    <v-row
-                      class="fill-height ma-0"
-                      align="center"
-                      justify="center"
-                    >
-                      <v-progress-circular
-                        indeterminate
-                        color="white"
-                      ></v-progress-circular>
-                    </v-row>
-                  </template>
-                </v-img>
-
-                <!-- Rating badge -->
-                <v-chip
-                  class="mt-2"
-                  color="amber"
-                  text-color="amber-darken-4"
-                  size="small"
-                >
-                  <v-icon start size="small">mdi-star</v-icon>
-                  4.8
-                </v-chip>
-              </div>
-            </v-col>
-
-            <v-col cols="12" md="6" class="text-center text-md-left">
-              <div class="hero-content">
-                <v-chip
-                  color="primary"
-                  variant="flat"
-                  class="mb-4 text-white font-weight-bold text-capitalize"
-                  size="small"
-                >
-                  {{ books[0]?.subjects[0] }}
-                </v-chip>
-
-                <h1 class="text-black mb-2">
-                  {{ books[0]?.title }}
-                </h1>
-
-                <p class="text-gray mb-2">By {{ books[0]?.authors[0] }}</p>
-                <div
-                  class="d-flex flex-column flex-sm-row ga-4 justify-center justify-md-start"
-                >
-                  <v-btn
-                    size="large"
-                    variant="elevated"
-                    color="primary"
-                    class="text-white font-weight-bold"
-                    @click="$router.push(`/details/${books[0]._id}`)"
-                    prepend-icon="mdi-information"
-                  >
-                    More Info
-                  </v-btn>
-
-                  <v-btn
-                    size="large"
-                    variant="flat"
-                    color="darkgreen"
-                    class="hero-btn-secondary"
-                    @click="addToCart(books[0])"
-                    append-icon="mdi-cart-plus"
-                  >
-                    Add to Cart
-                  </v-btn>
-                </div>
-              </div>
-            </v-col>
-          </v-row>
-        </v-container>
-      </v-sheet>
-    </v-container>
-
+    <HomeHeroSection :book="books[0]" :handleAddToCart="handleAddToCart" />
     <!-- Search Section -->
     <v-container class="search-section py-16">
       <v-row justify="center">
@@ -209,12 +117,7 @@
                   rounded="lg"
                   hover
                 >
-                  <v-img
-                    :src="book.cover"
-                    width="70"
-                    height="95"
-                    cover
-                  ></v-img>
+                  <v-img :src="book.cover" width="70" height="95" cover></v-img>
                 </v-card>
               </div>
             </div>
@@ -426,6 +329,7 @@
                             size="large"
                             class="font-weight-medium rounded-xl add-to-cart-btn"
                             elevation="2"
+                            @click.stop="handleAddToCart(book._id, 1)"
                           >
                             <v-icon start size="small">mdi-cart-plus</v-icon>
                             Add to Cart
@@ -461,7 +365,14 @@
       v-for="(bookComponent, index) in bookComponents"
       :key="index"
       :is="bookComponent"
+      @add-to-cart="handleAddToCart"
     ></component>
+
+    <HomeSnackbarAlert
+      v-model="showSnackbar"
+      :text="snackbarText"
+      :color="snackbarColor"
+    />
 
     <!-- Deals of the Day -->
     <!-- <v-container class="mt-8">
@@ -537,240 +448,7 @@
       </v-container> -->
 
     <!-- Why Shop With Us -->
-    <v-container
-      fluid
-      class="mt-12 py-16 why-shop-section"
-      style="background: linear-gradient(135deg, #dcf763 0%, #c8e6c9 100%)"
-    >
-      <v-container class="max-width-container">
-        <v-row align="center" class="min-height-row">
-          <!-- Enhanced Floating Books Section -->
-          <v-col cols="12" md="6" class="position-relative books-container">
-            <div class="floating-books-wrapper position-relative">
-              <!-- Background Decorative Elements -->
-              <div class="decorative-circle circle-1"></div>
-              <div class="decorative-circle circle-2"></div>
-              <div class="decorative-circle circle-3"></div>
-
-              <!-- Enhanced Floating Books -->
-              <div
-                class="position-absolute floating-book"
-                style="top: 50%; left: 50%; transform: translate(-50%, -50%);"
-              >
-                <div
-                  class="book-card rounded-xl"
-                  style="width: 210px; transition: all 0.3s ease"
-                  :style="{
-                    transform: 'rotate(-15deg)',
-                    boxShadow:
-                      '0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22)',
-                  }"
-                >
-                  <v-img
-                    :src="books[1]?.cover_url"
-                    class="rounded-xl book-image"
-                    height="320"
-                    cover
-                    style="filter: brightness(1.1)"
-                  >
-                    <template v-slot:placeholder>
-                      <div
-                        class="d-flex align-center justify-center fill-height"
-                      >
-                        <v-progress-circular
-                          color="primary"
-                          indeterminate
-                        ></v-progress-circular>
-                      </div>
-                    </template>
-
-                    <!-- Enhanced Glow Effect -->
-                    <div
-                      style="
-                        position: absolute;
-                        inset: 0;
-                        border-radius: 12px;
-                        background: radial-gradient(
-                          circle at 50% 50%,
-                          rgba(255, 255, 255, 0.2) 0%,
-                          rgba(255, 255, 255, 0) 70%
-                        );
-                        pointer-events: none;
-                      "
-                    ></div>
-                  </v-img>
-
-                  <!-- Enhanced Book Glow -->
-                  <div
-                    style="
-                      position: absolute;
-                      inset: -15px;
-                      border-radius: 16px;
-                      background: radial-gradient(
-                        circle at 50% 50%,
-                        rgba(76, 175, 80, 0.15) 0%,
-                        rgba(76, 175, 80, 0) 70%
-                      );
-                      filter: blur(15px);
-                      z-index: -1;
-                    "
-                  ></div>
-                </div>
-              </div>
-              <!-- Additional Floating Elements -->
-              <div class="floating-element star-1">
-                <v-icon color="amber" size="24">mdi-star</v-icon>
-              </div>
-              <div class="floating-element star-2">
-                <v-icon color="orange" size="20">mdi-star</v-icon>
-              </div>
-              <div class="floating-element heart-1">
-                <v-icon color="red" size="18">mdi-heart</v-icon>
-              </div>
-            </div>
-          </v-col>
-
-          <!-- Enhanced Content Section -->
-          <v-col cols="12" md="6" class="content-section">
-            <div class="content-wrapper">
-              <!-- Enhanced Header -->
-              <div class="mb-6">
-                <v-chip
-                  color="darkgreen"
-                  variant="elevated"
-                  size="large"
-                  class="mb-4 chip-badge"
-                >
-                  <v-icon start size="small">mdi-shield-check</v-icon>
-                  Why Choose Us
-                </v-chip>
-
-                <h2 class="display-1 font-weight-bold mb-4 main-title">
-                  Why Shop with Us?
-                </h2>
-              </div>
-
-              <!-- Enhanced Features List -->
-              <div class="features-list mb-8">
-                <div class="feature-item d-flex align-start mb-4">
-                  <v-avatar
-                    color="darkgreen"
-                    size="48"
-                    class="mr-4 feature-icon"
-                  >
-                    <v-icon color="white" size="24">mdi-truck-fast</v-icon>
-                  </v-avatar>
-                  <div>
-                    <h4 class="text-h6 font-weight-bold mb-2 text-darkgreen">
-                      Fast & Free Delivery
-                    </h4>
-                    <p class="text-body-1 text-grey-darken-1">
-                      Get your books delivered quickly with our free shipping on
-                      orders over $25.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="feature-item d-flex align-start mb-4">
-                  <v-avatar color="orange" size="48" class="mr-4 feature-icon">
-                    <v-icon color="white" size="24"
-                      >mdi-book-open-variant</v-icon
-                    >
-                  </v-avatar>
-                  <div>
-                    <h4 class="text-h6 font-weight-bold mb-2 text-darkgreen">
-                      Vast Collection
-                    </h4>
-                    <p class="text-body-1 text-grey-darken-1">
-                      Discover millions of books across all genres and
-                      categories in our extensive library.
-                    </p>
-                  </div>
-                </div>
-
-                <div class="feature-item d-flex align-start mb-4">
-                  <v-avatar color="blue" size="48" class="mr-4 feature-icon">
-                    <v-icon color="white" size="24">mdi-shield-star</v-icon>
-                  </v-avatar>
-                  <div>
-                    <h4 class="text-h6 font-weight-bold mb-2 text-darkgreen">
-                      Quality Guarantee
-                    </h4>
-                    <p class="text-body-1 text-grey-darken-1">
-                      All our books are carefully selected and quality-checked
-                      before shipping.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Enhanced Action Buttons -->
-              <div class="action-buttons d-flex flex-wrap ga-4">
-                <v-btn
-                  color="darkgreen"
-                  variant="elevated"
-                  size="x-large"
-                  rounded="xl"
-                  class="font-weight-bold action-btn primary-btn"
-                  elevation="4"
-                >
-                  <v-icon start size="small">mdi-rocket-launch</v-icon>
-                  Learn More
-                </v-btn>
-
-                <v-btn
-                  color="white"
-                  variant="elevated"
-                  size="x-large"
-                  rounded="xl"
-                  class="font-weight-bold action-btn secondary-btn text-darkgreen"
-                  elevation="2"
-                >
-                  <v-icon start size="small">mdi-phone</v-icon>
-                  Contact Us
-                </v-btn>
-              </div>
-
-              <!-- Stats Section -->
-              <div class="stats-section mt-8">
-                <v-row>
-                  <v-col cols="4">
-                    <div class="text-center stat-item">
-                      <h3 class="text-h4 font-weight-bold text-darkgreen">
-                        10K+
-                      </h3>
-                      <p class="text-caption text-grey-darken-1">
-                        Happy Customers
-                      </p>
-                    </div>
-                  </v-col>
-                  <v-col cols="4">
-                    <div class="text-center stat-item">
-                      <h3 class="text-h4 font-weight-bold text-darkgreen">
-                        50K+
-                      </h3>
-                      <p class="text-caption text-grey-darken-1">
-                        Books Available
-                      </p>
-                    </div>
-                  </v-col>
-                  <v-col cols="4">
-                    <div class="text-center stat-item">
-                      <h3 class="text-h4 font-weight-bold text-darkgreen">
-                        99%
-                      </h3>
-                      <p class="text-caption text-grey-darken-1">
-                        Satisfaction Rate
-                      </p>
-                    </div>
-                  </v-col>
-                </v-row>
-              </div>
-            </div>
-          </v-col>
-        </v-row>
-      </v-container>
-    </v-container>
+    <HomeWhyShopSection :books="books" />
 
     <!-- Newsletter -->
     <!-- <v-container class="my-12">
@@ -812,9 +490,9 @@
 </template>
 
 <script>
-import BookManga from "../components/BookManga.vue";
-import BookFiction from "../components/BookFiction.vue";
-import BookRomance from "../components/BookRomance.vue";
+import BookManga from "../components/home/BookManga.vue";
+import BookFiction from "../components/home/BookFiction.vue";
+import BookRomance from "../components/home/BookRomance.vue";
 import { mapState, mapActions, mapGetters } from "vuex";
 import axios from "axios";
 import debounce from "lodash/debounce";
@@ -830,11 +508,7 @@ export default {
       tab: "historical fiction",
       bookComponents: ["BookFiction", "BookManga", "BookRomance"],
       featuredBooks: Array(6).fill({ cover: this.getPlaceholderImage(70, 50) }),
-      bestSellerSubjects: [
-        "historical fiction",
-        "ancient history",
-        "cooking",
-      ],
+      bestSellerSubjects: ["historical fiction", "ancient history", "cooking"],
       companyLinks: [
         "About Us",
         "Publisher Partnership",
@@ -859,6 +533,9 @@ export default {
       ],
       searchQuery: "",
       searchResults: [],
+      showSnackbar: false,
+      snackbarText: "",
+      snackbarColor: "success",
     };
   },
   watch: {
@@ -919,6 +596,24 @@ export default {
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
+    ...mapActions("cart", ["addToCart"]),
+    async handleAddToCart(bookId, quantity) {
+      try {
+        await this.addToCart({
+          bookId,
+          quantity,
+        });
+        this.snackbarText = "Add to cart successfully!";
+        this.showSnackbar = true;
+        this.snackbarColor = "success";
+      } catch (error) {
+        console.error("Error adding to cart:", error);
+        this.snackbarText = "Failed to add to cart.";
+        this.showSnackbar = true;
+        this.snackbarColor = "error";
+      }
+    },
+
     getPlaceholderImage(width, height) {
       return `https://via.placeholder.com/${width}x${height}`;
     },

@@ -2,11 +2,11 @@
   <v-container class="mt-8">
     <!-- Header Section -->
     <div class="d-flex justify-space-between align-center mb-6">
-      <h2 class="text-h5 font-weight-bold text-darkgreen">Romance</h2>
+      <h2 class="text-h5 font-weight-bold text-darkgreen">Manga</h2>
 
       <v-hover v-slot="{ isHovering, props }">
         <v-btn
-          @click="$router.push(`/subjects/romance`)"
+          @click="$router.push(`/subjects/manga`)"
           v-bind="props"
           icon
           size="x-small"
@@ -25,7 +25,7 @@
     </div>
 
     <!-- Loading Skeletons -->
-    <v-row v-if="isLoading && romanceBooks.length === 0">
+    <v-row v-if="isLoading && mangaBooks.length === 0">
       <v-col v-for="i in 6" :key="i" cols="6" sm="4" md="2">
         <v-sheet
           rounded="lg"
@@ -40,10 +40,10 @@
       </v-col>
     </v-row>
 
-    <!-- Romance Books Grid -->
+    <!-- Manga Books Grid -->
     <v-row v-else>
       <v-col
-        v-for="(book, i) in limitedRomanceBooks"
+        v-for="(book, i) in limitedMangaBooks"
         :key="i"
         cols="6"
         sm="4"
@@ -91,6 +91,31 @@
               >
                 <v-img width="28px" height="28px" src="../assets/heart.svg" />
               </v-btn>
+
+              <!-- Quick View Overlay -->
+              <!-- <div
+                v-if="isHovering"
+                class="position-absolute d-flex align-center justify-center"
+                style="
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  bottom: 0;
+                  background: rgba(0, 0, 0, 0.3);
+                  backdrop-filter: blur(2px);
+                "
+              >
+                <v-btn
+                  color="white"
+                  variant="flat"
+                  size="small"
+                  rounded="pill"
+                  class="px-3 py-1"
+                >
+                  <v-icon size="small" class="mr-1">mdi-eye</v-icon>
+                  Quick View
+                </v-btn>
+              </div> -->
             </div>
 
             <!-- Book Details -->
@@ -120,7 +145,7 @@
                 class="d-flex justify-space-between align-center mt-auto mb-2"
               >
                 <div class="d-flex align-center">
-                  <span class="text-subtitle-1">${{ book.price }}</span>
+                  <span class="text-subtitle-1"> ${{ book.price }} </span>
                 </div>
                 <v-chip
                   color="success"
@@ -141,8 +166,9 @@
                 block
                 size="small"
                 class="text-subtitle-2 font-weight-medium"
+                @click.stop="$emit('add-to-cart', book._id, 1)"
               >
-                <v-icon size="small" class="mr-1">mdi-cart</v-icon>
+                <v-icon size="small" class="mr-1">mdi-cart-plus</v-icon>
                 Add to Cart
               </v-btn>
             </v-card-actions>
@@ -157,20 +183,29 @@
 import { mapState, mapActions } from "vuex";
 
 export default {
+  data() {
+    return {
+      isLoading: false,
+    };
+  },
   computed: {
-    ...mapState("book", ["romanceBooks"]),
-    limitedRomanceBooks() {
-      return this.romanceBooks.slice(0, 6);
+    ...mapState("book", ["mangaBooks"]),
+    limitedMangaBooks() {
+      return this.mangaBooks.slice(0, 6);
     },
   },
   methods: {
-    ...mapActions("book", ["getRomanceBooks"]),
+    ...mapActions("book", ["getMangaBooks"]),
   },
   async mounted() {
-    try {
-      await this.getRomanceBooks("contemporary romance");
-    } catch (error) {
-      console.error("Error fetching books:", error);
+    if (this.mangaBooks.length === 0) {
+      this.isLoading = true;
+      try {
+        await this.getMangaBooks("manga");
+      } catch (error) {
+        console.error("Error fetching books:", error);
+      }
+      this.isLoading = false;
     }
   },
 };

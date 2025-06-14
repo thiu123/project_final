@@ -16,9 +16,9 @@ export default {
     async fetchCart({ commit }) {
       try {
         const response = await axios.get("http://localhost:5000/api/carts", {
-            headers: {
-                token: `Bearer ${localStorage.getItem("accessToken")}`,
-            },
+          headers: {
+            token: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
         });
         commit("setCart", response.data);
         // console.log("Cart fetched successfully:", response.data);
@@ -28,7 +28,7 @@ export default {
     },
     addToCart({ dispatch }, { bookId, quantity }) {
       const token = localStorage.getItem("accessToken");
-    //   console.log("Adding to cart:", bookId, quantity, "with token:", token);
+      console.log("Adding to cart:", bookId, quantity, "with token:", token);
       return axios
         .post(
           "http://localhost:5000/api/carts/add",
@@ -44,7 +44,6 @@ export default {
         })
         .catch((error) => {
           console.error("Add to cart failed:", error);
-          throw error;
         });
     },
 
@@ -57,6 +56,21 @@ export default {
         dispatch("fetchCart");
       } catch (error) {
         console.error("Failed to update cart item", error);
+      }
+    },
+    async removeCartItem({ dispatch }, bookId) {
+      try {
+        await axios
+          .delete("http://localhost:5000/api/carts/delete", bookId, {
+            headers: {
+              token: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+          })
+          .then(() => {
+            dispatch("fetchCart");
+          });
+      } catch (error) {
+        console.error("Failed to remove cart item", error);
       }
     },
   },
