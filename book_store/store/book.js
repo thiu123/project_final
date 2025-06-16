@@ -1,4 +1,4 @@
-import axios from "axios";
+import { getBooksBySubject } from "@/api/bookApi";
 
 export default {
   namespaced: true,
@@ -23,7 +23,7 @@ export default {
     },
     clearBooks(state) {
       state.books = [];
-    }
+    },
   },
   getters: {
     getTitleBooks(state) {
@@ -32,16 +32,14 @@ export default {
         cover_url: book.cover_url,
         price: book.price,
         first_publish_year: book.first_publish_year,
-      }))
-    }
+      }));
+    },
   },
   actions: {
     async getAllBooks({ commit }, subject) {
       commit("clearBooks");
       try {
-        const response = await axios.get(`http://localhost:5000/api/books`, {
-          params: { subject }
-        });
+        const response = await getBooksBySubject(subject);
         commit("setBooks", response.data);
       } catch (error) {
         console.error("Failed to fetch books", error);
@@ -50,9 +48,7 @@ export default {
     async getFictionBooks({ commit }, subject) {
       commit("clearBooks");
       try {
-        const response = await axios.get(`http://localhost:5000/api/books`, {
-          params: { subject }
-        });
+        const response = await getBooksBySubject(subject);
         commit("setFictionBooks", response.data);
       } catch (error) {
         console.error("Failed to fetch books", error);
@@ -61,9 +57,7 @@ export default {
     async getMangaBooks({ commit }, subject) {
       commit("clearBooks");
       try {
-        const response = await axios.get(`http://localhost:5000/api/books`, {
-          params: { subject }
-        });
+        const response = await getBooksBySubject(subject);
         commit("setMangaBooks", response.data);
       } catch (error) {
         console.error("Failed to fetch books", error);
@@ -72,9 +66,7 @@ export default {
     async getRomanceBooks({ commit }, subject) {
       commit("clearBooks");
       try {
-        const response = await axios.get(`http://localhost:5000/api/books`, {
-          params: { subject }
-        });
+        const response = await getBooksBySubject(subject);
         commit("setRomanceBooks", response.data);
       } catch (error) {
         console.error("Failed to fetch books", error);
