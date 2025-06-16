@@ -1,5 +1,5 @@
 <template>
-  <v-main class="bg-grey-lighten-5">
+  <div>
     <v-container>
       <v-row>
         <!-- Cart Items Section -->
@@ -24,7 +24,7 @@
             <v-card-text class="pa-0">
               <!-- Cart Header -->
               <v-row
-                class="ma-0 pa-4 bg-grey-lighten-4 text-subtitle-1 font-weight-medium d-none d-sm-flex"
+                class="ma-0 pa-4 text-subtitle-1 font-weight-medium d-none d-sm-flex"
               >
                 <v-col cols="6" class="d-flex align-center">
                   <v-checkbox
@@ -41,11 +41,7 @@
               </v-row>
 
               <!-- Empty Cart State -->
-              <v-card
-                v-if="!cartItems"
-                class="pa-8 text-center"
-                flat
-              >
+              <v-card v-if="!cartItems" class="pa-8 text-center" flat>
                 <v-img
                   src="https://cdn.vuetifyjs.com/images/cards/cooking.png"
                   height="150"
@@ -73,134 +69,125 @@
                   class="mb-2 transition-fast-in-fast-out"
                   elevation="0"
                   rounded="0"
-                  :class="{
-                    'bg-primary-lighten-5': selectedItems.includes(
-                      item.bookId._id
-                    ),
-                  }"
                 >
-                  <v-hover v-slot="{ isHovering, props }">
-                    <v-row class="ma-0 pa-4 align-center" v-bind="props">
-                      <!-- Checkbox and Image -->
-                      <v-col cols="12" sm="6" class="d-flex align-center">
-                        <v-checkbox
-                          v-model="selectedItems"
-                          :value="item.bookId._id"
-                          hide-details
-                          density="compact"
-                          color="primary"
-                          class="mr-2"
-                        ></v-checkbox>
+                  <v-row class="ma-0 pa-4 align-center" v-bind="props">
+                    <!-- Checkbox and Image -->
+                    <v-col cols="6" sm="6" class="d-flex align-center">
+                      <v-checkbox
+                        v-model="selectedItems"
+                        :value="item.bookId._id"
+                        hide-details
+                        density="compact"
+                        color="primary"
+                        class="mr-2"
+                      ></v-checkbox>
 
-                        <v-img
-                          :src="item?.bookId?.cover_url"
-                          max-height="120"
-                          max-width="85"
-                          class="rounded-lg mr-4"
-                          cover
-                          :class="{ 'elevation-3': isHovering }"
-                        >
-                          <template v-slot:placeholder>
-                            <v-row
-                              class="fill-height ma-0"
-                              align="center"
-                              justify="center"
-                            >
-                              <v-progress-circular
-                                indeterminate
-                                color="primary"
-                              ></v-progress-circular>
-                            </v-row>
-                          </template>
-                        </v-img>
-
-                        <div>
-                          <div
-                            class="text-subtitle-1 font-weight-medium mb-1 text-truncate"
-                            style="max-width: 200px"
-                          >
-                            {{ item?.bookId?.title || "Product name" }}
-                          </div>
-                          <div
-                            class="text-body-2 text-primary-darken-1 mb-2 d-sm-none font-weight-bold"
-                          >
-                            {{ item?.bookId?.price || "0" }} $
-                          </div>
-                          <v-chip
-                            size="small"
-                            color="primary"
-                            variant="outlined"
-                            class="text-caption text-capitalize"
-                            v-if="
-                              item.bookId.subjects &&
-                              item.bookId.subjects.length > 0
-                            "
-                          >
-                            {{ item?.bookId?.subjects[0] }}
-                          </v-chip>
-                        </div>
-                      </v-col>
-
-                      <!-- Quantity -->
-                      <v-col
-                        cols="6"
-                        sm="2"
-                        class="d-flex justify-center align-center"
+                      <v-img
+                        :src="item?.bookId?.cover_url"
+                        max-height="120"
+                        max-width="85"
+                        class="rounded-lg mr-4"
+                        cover
+                        :class="{ 'elevation-3': isHovering }"
                       >
-                        <v-btn
-                          icon="mdi-minus"
-                          variant="tonal"
-                          size="small"
-                          color="grey-darken-1"
-                          density="comfortable"
-                          @click="decreaseQuantity(item)"
-                          :disabled="item.quantity <= 1"
-                        ></v-btn>
-                        <v-text-field
-                          v-model="item.quantity"
-                          type="number"
-                          variant="outlined"
-                          density="comfortable"
-                          hide-details
-                          class="mx-3"
-                          style="min-width: 60px"
-                        ></v-text-field>
+                        <template v-slot:placeholder>
+                          <v-row
+                            class="fill-height ma-0"
+                            align="center"
+                            justify="center"
+                          >
+                            <v-progress-circular
+                              indeterminate
+                              color="primary"
+                            ></v-progress-circular>
+                          </v-row>
+                        </template>
+                      </v-img>
 
-                        <v-btn
-                          icon="mdi-plus"
-                          variant="tonal"
-                          size="small"
-                          color="primary"
-                          density="comfortable"
-                          @click="increaseQuantity(item)"
-                        ></v-btn>
-                      </v-col>
-
-                      <!-- Price -->
-                      <v-col cols="4" sm="3" class="text-end d-none d-sm-block">
+                      <div>
                         <div
-                          class="text-subtitle-1 font-weight-bold text-primary-darken-1"
+                          class="text-subtitle-1 font-weight-medium mb-1 text-truncate"
+                          style="max-width: 200px"
+                        >
+                          {{ item?.bookId?.title || "Product name" }}
+                        </div>
+                        <div
+                          class="text-body-2 text-primary-darken-1 mb-2 d-sm-none font-weight-bold"
                         >
                           {{ item?.bookId?.price || "0" }} $
                         </div>
-                      </v-col>
-
-                      <!-- Delete Button -->
-                      <v-col cols="2" sm="1" class="text-end">
-                        <v-btn
-                          icon="mdi-delete-outline"
-                          variant="text"
-                          :color="isHovering ? 'error' : 'grey-darken-1'"
+                        <v-chip
                           size="small"
-                          @click="confirmDelete = true"
+                          color="primary"
+                          variant="outlined"
+                          class="text-caption text-capitalize"
+                          v-if="
+                            item.bookId.subjects &&
+                            item.bookId.subjects.length > 0
+                          "
                         >
-                          <v-tooltip activator="parent" location="top"
-                            >Delete</v-tooltip
-                          >
-                        </v-btn>
-                      </v-col>
-                    </v-row>
-                  </v-hover>
+                          {{ item?.bookId?.subjects[0] }}
+                        </v-chip>
+                      </div>
+                    </v-col>
+
+                    <!-- Quantity -->
+                    <v-col
+                      cols="6"
+                      sm="2"
+                      class="d-flex justify-center align-center"
+                    >
+                      <v-btn
+                        icon="mdi-minus"
+                        variant="tonal"
+                        size="small"
+                        color="grey-darken-1"
+                        density="comfortable"
+                        @click="decreaseQuantity(item)"
+                        :disabled="item.quantity <= 1"
+                      ></v-btn>
+                      <v-text-field
+                        v-model="item.quantity"
+                        type="number"
+                        variant="outlined"
+                        density="comfortable"
+                        hide-details
+                        class="mx-3"
+                        style="min-width: 60px"
+                      ></v-text-field>
+
+                      <v-btn
+                        icon="mdi-plus"
+                        variant="tonal"
+                        size="small"
+                        color="primary"
+                        density="comfortable"
+                        @click="increaseQuantity(item)"
+                      ></v-btn>
+                    </v-col>
+
+                    <!-- Price -->
+                    <v-col cols="4" sm="3" class="text-end d-none d-sm-block">
+                      <div
+                        class="text-subtitle-1 font-weight-bold text-primary-darken-1"
+                      >
+                        {{ item?.bookId?.price || "0" }} $
+                      </div>
+                    </v-col>
+
+                    <!-- Delete Button -->
+                    <v-col cols="2" sm="1">
+                      <v-btn
+                        variant="flat"
+                        :ripple="false"
+                        icon
+                        size="small"
+                        @click="confirmDeleteItem(item.bookId._id)"
+                      >
+                        <v-icon color="red">mdi-trash-can-outline</v-icon>
+                      </v-btn>
+                    </v-col>
+                  </v-row>
                   <v-divider v-if="index < cartItems.length - 1"></v-divider>
                 </v-card>
               </v-slide-y-transition>
@@ -467,7 +454,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </v-main>
+  </div>
 </template>
 
 <script>
@@ -480,6 +467,7 @@ export default {
       selectAll: true,
       selectedItems: [],
       confirmDelete: false,
+      itemToDelete: null,
     };
   },
   computed: {
@@ -502,7 +490,7 @@ export default {
     },
   },
   methods: {
-    ...mapActions("cart", ["fetchCart"]),
+    ...mapActions("cart", ["fetchCart", "removeCartItem"]),
     increaseQuantity(item) {
       item.quantity++;
     },
@@ -511,10 +499,32 @@ export default {
         item.quantity--;
       }
     },
-    deleteItem() {
-      // Implement delete functionality here
-      this.confirmDelete = false;
+    confirmDeleteItem(bookId) {
+      console.log("Deleting item with bookId:", bookId);
+      this.itemToDelete = bookId;
+      this.confirmDelete = true;
     },
+    async deleteItem() {
+      try {
+        if (this.itemToDelete) {
+          await this.removeCartItem(this.itemToDelete);
+          this.confirmDelete = false;
+          this.itemToDelete = null;
+        }
+      } catch (error) {
+        console.error("Error deleting item:", error);
+      }
+    },
+    // async deleteSelectedItems() {
+    //   try {
+    //     for (const bookId of this.selectedItems) {
+    //       await this.removeCartItem(bookId);
+    //     }
+    //     this.selectedItems = [];
+    //   } catch (error) {
+    //     console.error("Error deleting selected items:", error);
+    //   }
+    // },
   },
   async mounted() {
     await this.fetchCart();
@@ -524,6 +534,7 @@ export default {
   },
 };
 </script>
+// ... existing code ...
 
 <style>
 .sticky-card {
