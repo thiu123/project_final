@@ -29,9 +29,7 @@
               class="category-item"
             >
               <template v-slot:prepend>
-                <v-icon size="small"
-                  >mdi-book-outline</v-icon
-                >
+                <v-icon size="small">mdi-book-outline</v-icon>
               </template>
               <v-list-item-title class="text-body-2">{{
                 item
@@ -160,15 +158,17 @@
                     <!-- Enhanced Wishlist Button -->
                     <v-btn
                       icon
-                      variant="flat"
+                      variant="text"
                       color="white"
+                      :ripple="false"
                       size="small"
-                      class="wishlist-btn"
-                      elevation="2"
+                      class="position-absolute top-0 right-0 mt-2 mr-2"
                     >
-                      <v-icon color="grey-darken-1" size="small"
-                        >mdi-heart-outline</v-icon
-                      >
+                      <v-img
+                        width="28px"
+                        height="28px"
+                        src="../../assets/heart.svg"
+                      />
                     </v-btn>
                   </div>
 
@@ -228,24 +228,24 @@
     <!-- Enhanced Pagination -->
     <div class="d-flex justify-center align-center mt-6">
       <v-pagination
-      v-model="page"
-      :length="totalPages"
-      :total-visible="7"
-      rounded="lg"
-      color="grey-darken-3"
-      variant="outlined"
-      class="d-flex align-center"
+        v-model="page"
+        :length="totalPages"
+        :total-visible="7"
+        rounded="lg"
+        color="grey-darken-3"
+        variant="outlined"
+        class="d-flex align-center"
       >
-      <template v-slot:prev>
-        <div class="d-flex justify-center align-center h-100">
-        <v-icon>mdi-chevron-left</v-icon>
-        </div>
-      </template>
-      <template v-slot:next>
-        <div class="d-flex justify-center align-center h-100">
-        <v-icon>mdi-chevron-right</v-icon>
-        </div>
-      </template>
+        <template v-slot:prev>
+          <div class="d-flex justify-center align-center h-100">
+            <v-icon>mdi-chevron-left</v-icon>
+          </div>
+        </template>
+        <template v-slot:next>
+          <div class="d-flex justify-center align-center h-100">
+            <v-icon>mdi-chevron-right</v-icon>
+          </div>
+        </template>
       </v-pagination>
     </div>
   </v-container>

@@ -1,4 +1,4 @@
-import axios from "axios";
+import { loginUser, registerUser } from "@/api/authApi";
 
 export default {
   namespaced: true,
@@ -45,14 +45,12 @@ export default {
       state.accessToken = localStorage.getItem("accessToken") || "";
     },
   },
+
   actions: {
     async login({ commit }, user) {
       try {
         commit("loginStart");
-        const res = await axios.post(
-          "http://localhost:5000/api/auth/login",
-          user
-        );
+        const res = await loginUser(user); // dùng hàm từ authApi
         commit("loginSuccess", res.data);
         return res.data;
       } catch (error) {
@@ -69,13 +67,10 @@ export default {
     },
     async register(_, user) {
       try {
-        const res = await axios.post(
-          "http://localhost:5000/api/auth/register",
-          user
-        );
+        const res = await registerUser(user); // dùng hàm từ authApi
         return res.data;
       } catch (error) {
-        throw error.response.data;
+        throw error.response?.data || error.message;
       }
     },
     restoreSession({ commit }) {
@@ -83,3 +78,4 @@ export default {
     },
   },
 };
+
