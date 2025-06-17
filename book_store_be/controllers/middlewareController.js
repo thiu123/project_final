@@ -28,6 +28,5 @@ const middlewareController = {
             }
         })
     }
-    
 }   
 module.exports = middlewareController;

@@ -26,7 +26,7 @@
               <v-row
                 class="ma-0 pa-4 text-subtitle-1 font-weight-medium d-none d-sm-flex"
               >
-                <v-col cols="6" class="d-flex align-center">
+                <v-col cols="5" class="d-flex align-center">
                   <v-checkbox
                     v-model="selectAll"
                     :label="`Select all ${cartItems.length} items`"
@@ -37,7 +37,7 @@
                 </v-col>
                 <v-col cols="2" class="text-center">Quantity</v-col>
                 <v-col cols="3" class="text-end">Price</v-col>
-                <v-col cols="1">Delete</v-col>
+                <v-col cols="2">Delete</v-col>
               </v-row>
 
               <!-- Empty Cart State -->
@@ -72,7 +72,7 @@
                 >
                   <v-row class="ma-0 pa-4 align-center" v-bind="props">
                     <!-- Checkbox and Image -->
-                    <v-col cols="6" sm="6" class="d-flex align-center">
+                    <v-col cols="6" sm="5" class="d-flex align-center">
                       <v-checkbox
                         v-model="selectedItems"
                         :value="item.bookId._id"
@@ -153,6 +153,7 @@
                         density="comfortable"
                         hide-details
                         class="mx-3"
+                        :hide-spin-buttons="true"
                         style="min-width: 60px"
                       ></v-text-field>
 
@@ -176,7 +177,7 @@
                     </v-col>
 
                     <!-- Delete Button -->
-                    <v-col cols="2" sm="1">
+                    <v-col cols="2" sm="2">
                       <v-btn
                         variant="flat"
                         :ripple="false"

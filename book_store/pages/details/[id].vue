@@ -39,7 +39,9 @@
         <div class="book-details">
           <!-- Title and Author -->
           <div class="mb-6">
-            <h1 class="text-h3 font-weight-bold mb-3 text-primary">
+            <h1
+              class="text-h3 font-weight-bold mb-3 text-primary text-truncate"
+            >
               {{ detailsBooks.title }}
             </h1>
 
@@ -323,9 +325,10 @@
             size="large"
             rounded="lg"
             class="text-none"
+            @click="handleWriteReview(detailsBooks._id, detailsBooks.rating, comment)"
           >
             <v-icon start>mdi-pencil</v-icon>
-            Write a Review
+            Write a review
           </v-btn>
         </div>
       </v-card-text>
@@ -363,6 +366,15 @@ export default {
   },
   methods: {
     ...mapActions("cart", ["addToCart"]),
+    ...mapActions("review", ["createReview"]),
+    // async handleWriteReview(bookId, rating, comment) {
+    //   try {
+    //     await this.createReview({ bookId, rating, comment });
+    //     console.log
+    //   } catch (error) {
+    //     console.error("Error writing review:", error);
+    //   }
+    // },
     async getDetailsBooks() {
       try {
         this.isLoading = true;

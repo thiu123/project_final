@@ -36,7 +36,6 @@ export default {
         console.error("Add to cart failed:", error);
       }
     },
-
     async updateCartItem({ dispatch }, { bookId, quantity }) {
       try {
         await updateCartItemApi(bookId, quantity);

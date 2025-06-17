@@ -1,4 +1,4 @@
-import Review from "../../models/Review.js";
+const Review = require("../../model/Review");
 
 const reviewsController = {
   getAllReviews: async (req, res) => {
@@ -36,3 +36,5 @@ const reviewsController = {
     }
   }
 }
+
+module.exports = reviewsController;

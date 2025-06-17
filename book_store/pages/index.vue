@@ -110,15 +110,48 @@
               </h3>
 
               <div class="d-flex justify-center flex-wrap ga-4">
-                <v-card
-                  v-for="(book, i) in featuredBooks"
-                  :key="i"
-                  elevation="4"
-                  rounded="lg"
-                  hover
-                >
-                  <v-img :src="book.cover" width="70" height="95" cover></v-img>
-                </v-card>
+                <template v-if="books.length">
+                  <v-card
+                    v-for="(book, i) in books.slice(50, 56)"
+                    :key="i"
+                    elevation="4"
+                    rounded="lg"
+                    hover
+                  >
+                    <v-img
+                      v-if="book.cover_url"
+                      @click="$router.push(`details/${book._id}`)"
+                      :src="book.cover_url"
+                      width="70"
+                      height="95"
+                      cover
+                    >
+                      <template v-slot:placeholder>
+                        <div class="d-flex align-center justify-center fill-height">
+                          <v-progress-circular
+                            color="grey-lighten-4"
+                            indeterminate
+                          ></v-progress-circular>
+                        </div>
+                      </template>
+                    </v-img>
+                  </v-card>
+                </template>
+                <template v-else>
+                  <v-card
+                    v-for="n in 6"
+                    :key="n"
+                    elevation="4"
+                    rounded="lg"
+                    width="70"
+                    height="95"
+                  >
+                    <v-skeleton-loader
+                      type="image"
+                      height="100%"
+                    ></v-skeleton-loader>
+                  </v-card>
+                </template>
               </div>
             </div>
           </v-card>
@@ -368,7 +401,7 @@
       @add-to-cart="handleAddToCart"
     ></component>
 
-    <HomeSnackbarAlert
+    <SnackbarAlert
       v-model="showSnackbar"
       :text="snackbarText"
       :color="snackbarColor"
@@ -507,7 +540,6 @@ export default {
     return {
       tab: "historical fiction",
       bookComponents: ["BookFiction", "BookManga", "BookRomance"],
-      featuredBooks: Array(6).fill({ cover: this.getPlaceholderImage(70, 50) }),
       bestSellerSubjects: ["historical fiction", "ancient history", "cooking"],
       companyLinks: [
         "About Us",
