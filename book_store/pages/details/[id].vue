@@ -288,7 +288,7 @@
             </div>
           </v-col>
 
-          <v-col cols="12" md="8">
+          <v-col cols="12" md="4">
             <div class="rating-breakdown">
               <div
                 class="d-flex align-center mb-2"
@@ -314,23 +314,27 @@
               </div>
             </div>
           </v-col>
+
+          <v-col class="d-flex justify-center align-center" cols="12" md="4">
+            <v-btn
+              color="primary"
+              variant="outlined"
+              size="large"
+              rounded="lg"
+              class="text-none"
+              @click="
+                handleWriteReview(
+                  detailsBooks._id,
+                  detailsBooks.rating,
+                  comment
+                )
+              "
+            >
+              <v-icon start>mdi-pencil</v-icon>
+              Write a review
+            </v-btn>
+          </v-col>
         </v-row>
-
-        <v-divider class="my-4"></v-divider>
-
-        <div class="text-center">
-          <v-btn
-            color="primary"
-            variant="outlined"
-            size="large"
-            rounded="lg"
-            class="text-none"
-            @click="handleWriteReview(detailsBooks._id, detailsBooks.rating, comment)"
-          >
-            <v-icon start>mdi-pencil</v-icon>
-            Write a review
-          </v-btn>
-        </div>
       </v-card-text>
     </v-card>
   </v-container>
