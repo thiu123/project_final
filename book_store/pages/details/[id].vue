@@ -322,14 +322,7 @@
               size="large"
               rounded="lg"
               class="text-none"
-              @click="
-                handleWriteReview(
-                  detailsBooks._id,
-                  detailsBooks.rating,
-                  comment
-                )
-              "
-            >
+              @click="$router.push(`/reviews/${detailsBooks._id}`)">
               <v-icon start>mdi-pencil</v-icon>
               Write a review
             </v-btn>
@@ -354,6 +347,11 @@
     ></v-progress-circular>
     <div class="text-h6 text-grey-darken-1">Loading book details...</div>
   </v-container>
+  <SnackbarAlert
+    v-model="showSnackbar"
+    :text="snackbarText"
+    :color="snackbarColor"
+  />
 </template>
 
 <script>
@@ -366,19 +364,13 @@ export default {
       isLoading: false,
       quantity: 1,
       authors: [],
+      showSnackbar: false,
+      snackbarText: "",
+      snackbarColor: "success",
     };
   },
   methods: {
     ...mapActions("cart", ["addToCart"]),
-    ...mapActions("review", ["createReview"]),
-    // async handleWriteReview(bookId, rating, comment) {
-    //   try {
-    //     await this.createReview({ bookId, rating, comment });
-    //     console.log
-    //   } catch (error) {
-    //     console.error("Error writing review:", error);
-    //   }
-    // },
     async getDetailsBooks() {
       try {
         this.isLoading = true;
@@ -408,15 +400,20 @@ export default {
         this.quantity--;
       }
     },
-    async handleAddToCart() {
+    async handleAddToCart(bookId, quantity) {
       try {
         await this.addToCart({
-          bookId: this.detailsBooks._id,
-          quantity: this.quantity,
+          bookId,
+          quantity,
         });
-        // console.log("Book added to cart:", this.detailsBooks);
+        this.snackbarText = "Add to cart successfully!";
+        this.showSnackbar = true;
+        this.snackbarColor = "success";
       } catch (error) {
         console.error("Error adding to cart:", error);
+        this.snackbarText = "Failed to add to cart.";
+        this.showSnackbar = true;
+        this.snackbarColor = "error";
       }
     },
   },
