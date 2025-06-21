@@ -39,200 +39,164 @@
                 <v-col cols="2">Delete</v-col>
               </v-row>
 
-              <v-row
-                v-if="loading && !isLoaded"
-                align="center"
-                justify="center"
-                class="my-10"
-              >
-                <v-col cols="auto">
-                  <v-progress-circular indeterminate color="primary" />
-                </v-col>
-              </v-row>
-              <template>
-                <div>
-                  <!-- Loading Spinner -->
-                  <v-row
-                    v-if="loading && !isLoaded"
-                    align="center"
-                    justify="center"
-                    class="my-10"
-                  >
-                    <v-col cols="auto">
-                      <v-progress-circular indeterminate color="primary" />
+              <v-card v-if="!cartItems.length" class="pa-8 text-center" flat>
+                <v-img
+                  src="https://cdn.vuetifyjs.com/images/cards/cooking.png"
+                  width="100"
+                  height="100"
+                  class="mx-auto mb-4"
+                  contain
+                ></v-img>
+                <h3 class="text-h6 mb-2">Your cart is empty</h3>
+                <p class="text-body-2 text-grey-darken-1 mb-4">
+                  Add items to cart to continue shopping
+                </p>
+                <v-btn
+                  color="primary"
+                  prepend-icon="mdi-shopping"
+                  variant="elevated"
+                  to="/"
+                >
+                  Continue Shopping
+                </v-btn>
+              </v-card>
+
+              <!-- Cart Items -->
+              <v-slide-y-transition group v-if="cartItems.length > 0">
+                <v-card
+                  v-for="(item, index) in cartItems"
+                  :key="index"
+                  class="mb-2 transition-fast-in-fast-out"
+                  elevation="0"
+                  rounded="0"
+                >
+                  <v-row class="ma-0 pa-4 align-center">
+                    <!-- Checkbox and Image -->
+                    <v-col
+                      cols="12"
+                      sm="5"
+                      md="4"
+                      lg="5"
+                      class="d-flex align-center"
+                    >
+                      <v-checkbox
+                        v-model="selectedItems"
+                        :value="item.bookId._id"
+                        hide-details
+                        density="compact"
+                        color="primary"
+                        class="mr-2 d-none d-sm-flex"
+                      ></v-checkbox>
+                      <div class="book-image-container mr-4">
+                        <v-img
+                          :src="item?.bookId?.cover_url"
+                          width="80"
+                          height="120"
+                          class="rounded-lg"
+                          cover
+                        >
+                          <template v-slot:placeholder>
+                            <v-row
+                              class="fill-height ma-0"
+                              align="center"
+                              justify="center"
+                            >
+                              <v-progress-circular
+                                indeterminate
+                                color="primary"
+                              ></v-progress-circular>
+                            </v-row>
+                          </template>
+                        </v-img>
+                      </div>
+
+                      <div class="flex-grow-1 min-width-0">
+                        <div
+                          class="text-subtitle-1 font-weight-medium mb-1 text-truncate"
+                        >
+                          {{ item?.bookId?.title || "Product name" }}
+                        </div>
+                        <div
+                          class="text-body-2 text-primary-darken-1 mb-2 d-sm-none font-weight-bold"
+                        >
+                          {{ item?.bookId?.price || "0" }} $
+                        </div>
+                        <v-chip
+                          size="small"
+                          color="primary"
+                          variant="outlined"
+                          class="text-caption text-capitalize"
+                          v-if="
+                            item.bookId.subjects &&
+                            item.bookId.subjects.length > 0
+                          "
+                        >
+                          {{ item?.bookId?.subjects[0] }}
+                        </v-chip>
+                      </div>
+                    </v-col>
+
+                    <!-- Quantity -->
+                    <v-col
+                      cols="7"
+                      sm="2"
+                      class="d-flex justify-sm-center align-center"
+                    >
+                      <v-btn
+                        icon="mdi-minus"
+                        variant="tonal"
+                        size="x-small"
+                        color="grey-darken-1"
+                        density="comfortable"
+                        @click="decreaseQuantity(item)"
+                        :disabled="item.quantity <= 1"
+                      ></v-btn>
+                      <v-text-field
+                        v-model="item.quantity"
+                        type="number"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                        class="mx-2"
+                        :hide-spin-buttons="true"
+                        style="min-width: 45px; max-width: 60px"
+                      ></v-text-field>
+
+                      <v-btn
+                        icon="mdi-plus"
+                        variant="tonal"
+                        size="x-small"
+                        color="primary"
+                        density="comfortable"
+                        @click="increaseQuantity(item)"
+                      ></v-btn>
+                    </v-col>
+
+                    <!-- Price -->
+                    <v-col cols="3" sm="3" class="text-end d-none d-sm-block">
+                      <div
+                        class="text-subtitle-1 font-weight-bold text-primary-darken-1"
+                      >
+                        {{ item?.bookId?.price || "0" }} $
+                      </div>
+                    </v-col>
+
+                    <!-- Delete Button -->
+                    <v-col cols="5" sm="2" class="text-end text-sm-start">
+                      <v-btn
+                        variant="flat"
+                        :ripple="false"
+                        icon
+                        size="small"
+                        @click="confirmDeleteItem(item.bookId._id)"
+                      >
+                        <v-icon color="red">mdi-trash-can-outline</v-icon>
+                      </v-btn>
                     </v-col>
                   </v-row>
-
-                  <template v-else-if="isLoaded">
-                    <!-- Empty Cart State -->
-                    <v-card
-                      v-if="!cartItems.length"
-                      class="pa-8 text-center"
-                      flat
-                    >
-                      <v-img
-                        src="https://cdn.vuetifyjs.com/images/cards/cooking.png"
-                        width="100"
-                        height="100"
-                        class="mx-auto mb-4"
-                        contain
-                      />
-                      <h3 class="text-h6 mb-2">Your cart is empty</h3>
-                      <p class="text-body-2 text-grey-darken-1 mb-4">
-                        Add items to cart to continue shopping
-                      </p>
-                      <v-btn
-                        color="primary"
-                        prepend-icon="mdi-shopping"
-                        variant="elevated"
-                        to="/"
-                      >
-                        Continue Shopping
-                      </v-btn>
-                    </v-card>
-
-                    <!-- Cart Items -->
-                    <v-slide-y-transition group v-else>
-                      <v-card
-                        v-for="(item, index) in cartItems"
-                        :key="index"
-                        class="mb-2 transition-fast-in-fast-out"
-                        elevation="0"
-                        rounded="0"
-                      >
-                        <v-row class="ma-0 pa-4 align-center">
-                          <!-- Checkbox and Image -->
-                          <v-col
-                            cols="12"
-                            sm="5"
-                            md="4"
-                            lg="5"
-                            class="d-flex align-center"
-                          >
-                            <v-checkbox
-                              v-model="selectedItems"
-                              :value="item.bookId._id"
-                              hide-details
-                              density="compact"
-                              color="primary"
-                              class="mr-2 d-none d-sm-flex"
-                            />
-                            <div class="book-image-container mr-4">
-                              <v-img
-                                :src="item?.bookId?.cover_url"
-                                width="80"
-                                height="120"
-                                class="rounded-lg"
-                                cover
-                              >
-                                <template v-slot:placeholder>
-                                  <v-row
-                                    class="fill-height ma-0"
-                                    align="center"
-                                    justify="center"
-                                  >
-                                    <v-progress-circular
-                                      indeterminate
-                                      color="primary"
-                                    />
-                                  </v-row>
-                                </template>
-                              </v-img>
-                            </div>
-
-                            <div class="flex-grow-1 min-width-0">
-                              <div
-                                class="text-subtitle-1 font-weight-medium mb-1 text-truncate"
-                              >
-                                {{ item?.bookId?.title || "Product name" }}
-                              </div>
-                              <div
-                                class="text-body-2 text-primary-darken-1 mb-2 d-sm-none font-weight-bold"
-                              >
-                                {{ item?.bookId?.price || "0" }} $
-                              </div>
-                              <v-chip
-                                size="small"
-                                color="primary"
-                                variant="outlined"
-                                class="text-caption text-capitalize"
-                                v-if="
-                                  item.bookId.subjects &&
-                                  item.bookId.subjects.length > 0
-                                "
-                              >
-                                {{ item?.bookId?.subjects[0] }}
-                              </v-chip>
-                            </div>
-                          </v-col>
-
-                          <!-- Quantity -->
-                          <v-col
-                            cols="7"
-                            sm="2"
-                            class="d-flex justify-sm-center align-center"
-                          >
-                            <v-btn
-                              icon="mdi-minus"
-                              variant="tonal"
-                              size="x-small"
-                              color="grey-darken-1"
-                              density="comfortable"
-                              @click="decreaseQuantity(item)"
-                              :disabled="item.quantity <= 1"
-                            />
-                            <v-text-field
-                              v-model="item.quantity"
-                              type="number"
-                              variant="outlined"
-                              density="compact"
-                              hide-details
-                              class="mx-2"
-                              :hide-spin-buttons="true"
-                              style="min-width: 45px; max-width: 60px"
-                            />
-                            <v-btn
-                              icon="mdi-plus"
-                              variant="tonal"
-                              size="x-small"
-                              color="primary"
-                              density="comfortable"
-                              @click="increaseQuantity(item)"
-                            />
-                          </v-col>
-
-                          <!-- Price -->
-                          <v-col
-                            cols="3"
-                            sm="3"
-                            class="text-end d-none d-sm-block"
-                          >
-                            <div
-                              class="text-subtitle-1 font-weight-bold text-primary-darken-1"
-                            >
-                              {{ item?.bookId?.price || "0" }} $
-                            </div>
-                          </v-col>
-
-                          <!-- Delete Button -->
-                          <v-col cols="5" sm="2" class="text-end text-sm-start">
-                            <v-btn
-                              variant="flat"
-                              :ripple="false"
-                              icon
-                              size="small"
-                              @click="confirmDeleteItem(item.bookId._id)"
-                            >
-                              <v-icon color="red">mdi-trash-can-outline</v-icon>
-                            </v-btn>
-                          </v-col>
-                        </v-row>
-                        <v-divider v-if="index < cartItems.length - 1" />
-                      </v-card>
-                    </v-slide-y-transition>
-                  </template>
-                </div>
-              </template>
+                  <v-divider v-if="index < cartItems.length - 1"></v-divider>
+                </v-card>
+              </v-slide-y-transition>
 
               <v-divider></v-divider>
             </v-card-text>
@@ -558,9 +522,6 @@ export default {
 
     try {
       await this.fetchCart();
-      if (this.cartItems.length > 0) {
-        this.selectedItems = this.cartItems.map((item) => item.bookId._id);
-      }
     } catch (err) {
       console.error("Error fetching cart:", err);
     } finally {
