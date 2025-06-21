@@ -50,7 +50,7 @@ export default {
     async login({ commit }, user) {
       try {
         commit("loginStart");
-        const res = await loginUser(user); // dùng hàm từ authApi
+        const res = await loginUser(user);
         commit("loginSuccess", res.data);
         return res.data;
       } catch (error) {
@@ -67,8 +67,9 @@ export default {
     },
     async register(_, user) {
       try {
-        const res = await registerUser(user); // dùng hàm từ authApi
+        const res = await registerUser(user);
         return res.data;
+        console.log("Registration successful:", res.data);
       } catch (error) {
         throw error.response?.data || error.message;
       }

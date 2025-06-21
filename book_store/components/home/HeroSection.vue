@@ -78,6 +78,7 @@
                   color="darkgreen"
                   class="hero-btn-secondary"
                   append-icon="mdi-cart-plus"
+                  @click="handleAddToCart"
                 >
                   Add to Cart
                 </v-btn>
@@ -91,6 +92,8 @@
 </template>
 
 <script>
+import book from '~/store/book';
+
 export default {
   props: {
     book: {
