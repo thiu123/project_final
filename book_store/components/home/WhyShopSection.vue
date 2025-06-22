@@ -1,7 +1,6 @@
 <template>
   <v-container
-    fluid
-    class="mt-12 py-16 why-shop-section"
+    class="my-12 py-16 why-shop-section rounded-xl"
     style="background: linear-gradient(135deg, #dcf763 0%, #c8e6c9 100%)"
   >
     <v-container class="max-width-container">
