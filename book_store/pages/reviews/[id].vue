@@ -2,13 +2,15 @@
   <v-container fluid class="pa-0">
     <!-- Header Section -->
     <v-card flat class="reviews-container my-5 rounded-xl">
-      <v-card-title class="header-section"> REVIEWS </v-card-title>
+      <v-card-title class="header-section text-h5 font-weight-bold">
+        REVIEWS
+      </v-card-title>
 
       <!-- Rating Summary -->
       <v-card-text class="rating-summary pa-6">
         <v-row align="center" no-gutters>
           <v-col cols="auto">
-            <div class="overall-rating">
+            <div class="overall-rating text-h4">
               <span class="rating-number">4.0</span>
               <span class="rating-total">/5</span>
             </div>
@@ -46,13 +48,14 @@
               class="write-review-btn"
               @click="showCreateReviewsDialog = true"
             >
-              <v-icon start>mdi-edit</v-icon>
+              <v-icon start>mdi-pencil</v-icon>
               Write a Review
             </v-btn>
           </v-col>
         </v-row>
       </v-card-text>
-      <v-dialog v-model="showCreateReviewsDialog" max-width="700">
+
+      <v-dialog v-model="showCreateReviewsDialog" max-width="600">
         <v-card rounded="xl">
           <v-card-title class="justify-center text-h6"
             >WRITE A BOOK REVIEW</v-card-title
@@ -71,6 +74,7 @@
               variant="outlined"
               rows="4"
               auto-grow
+              outlined
             />
           </v-card-text>
 
@@ -82,7 +86,7 @@
             <v-btn
               color="red"
               @click="handleWriteReview($route.params.id, rating, comment)"
-              >Submit Reviews</v-btn
+              >Submit Review</v-btn
             >
           </v-card-actions>
         </v-card>
@@ -93,7 +97,6 @@
       <!-- Reviews List -->
       <v-card-text class="pa-0">
         <template v-if="isLoaded">
-
           <v-list v-if="loading">
             <v-row class="fill-height ma-0" align="center" justify="center">
               <v-col cols="auto">
@@ -104,7 +107,6 @@
               </v-col>
             </v-row>
           </v-list>
-
 
           <v-list v-else-if="reviews && reviews.length > 0">
             <div
@@ -120,7 +122,7 @@
                       <h3 class="reviewer-name mb-1">
                         {{ review.userId?.username || "Anonymous" }}
                       </h3>
-                      <div class="d-flex align-center">
+                      <div class="">
                         <v-rating
                           :model-value="review.rating"
                           color="amber"
@@ -128,7 +130,7 @@
                           readonly
                           size="small"
                         ></v-rating>
-                        <div class="review-date ml-3">
+                        <div class="review-date">
                           {{ review.createdAt }}
                         </div>
                       </div>
@@ -149,7 +151,6 @@
               <v-divider v-if="index < reviews.length - 1"></v-divider>
             </div>
           </v-list>
-
 
           <v-list v-else>
             <v-row class="fill-height ma-0" align="center" justify="center">
