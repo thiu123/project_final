@@ -1,0 +1,18 @@
+# Node
+node_modules
+dist
+.cache
+.nuxt
+.output
+
+# Env
+.env
+.env.*
+
+# IDE
+.vscode
+.idea
+.DS_Store
+
+# Logs
+*.log

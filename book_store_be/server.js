@@ -8,6 +8,7 @@ const authRoute = require("./routes/auth");
 const userRoute = require("./routes/user");
 const cartRoute = require("./routes/cart");
 const reviewRoute = require("./routes/review");
+const orderRoute = require("./routes/order");
 const cookieParser = require("cookie-parser");
 
 const PORT = process.env.PORT || 5000;
@@ -37,6 +38,7 @@ app.use("/api/users", userRoute);
 app.use("/api/books", bookRoute);
 app.use("/api/carts", cartRoute);
 app.use("/api/reviews", reviewRoute);
+app.use("/api/order", orderRoute);
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

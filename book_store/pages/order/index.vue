@@ -107,14 +107,15 @@
           </v-card-title>
           <v-card-text class="pa-4">
             <v-radio-group v-model="selectedShipping" hide-details>
-              <v-radio
-                value="standard"
-                color="primary"
-              >
+              <v-radio value="standard" color="primary">
                 <template v-slot:label>
                   <div>
-                    <div class="font-weight-medium">Giao hàng tiêu chuẩn: 22.000 Đ</div>
-                    <div class="text-caption text-grey">Dự kiến giao hàng: Thứ sáu 23/12</div>
+                    <div class="font-weight-medium">
+                      Giao hàng tiêu chuẩn: 22.000 Đ
+                    </div>
+                    <div class="text-caption text-grey">
+                      Dự kiến giao hàng: Thứ sáu 23/12
+                    </div>
                   </div>
                 </template>
               </v-radio>
@@ -135,11 +136,15 @@
                   <div class="d-flex align-center">
                     <v-img src="" width="24" height="24" class="mr-2"></v-img>
                     <span>Ví ZaloPay</span>
-                    <a href="#" class="ml-2 text-primary text-decoration-underline">Chi tiết</a>
+                    <a
+                      href="#"
+                      class="ml-2 text-primary text-decoration-underline"
+                      >Chi tiết</a
+                    >
                   </div>
                 </template>
               </v-radio>
-              
+
               <v-radio value="moca" color="primary" class="mb-2">
                 <template v-slot:label>
                   <div class="d-flex align-center">
@@ -148,7 +153,7 @@
                   </div>
                 </template>
               </v-radio>
-              
+
               <v-radio value="shopeepay" color="primary" class="mb-2">
                 <template v-slot:label>
                   <div class="d-flex align-center">
@@ -157,17 +162,21 @@
                   </div>
                 </template>
               </v-radio>
-              
+
               <v-radio value="vnpay" color="primary" class="mb-2">
                 <template v-slot:label>
                   <div class="d-flex align-center">
                     <v-img src="" width="24" height="24" class="mr-2"></v-img>
                     <span>VNPay</span>
-                    <a href="#" class="ml-2 text-primary text-decoration-underline">Chi tiết</a>
+                    <a
+                      href="#"
+                      class="ml-2 text-primary text-decoration-underline"
+                      >Chi tiết</a
+                    >
                   </div>
                 </template>
               </v-radio>
-              
+
               <v-radio value="momo" color="primary" class="mb-2">
                 <template v-slot:label>
                   <div class="d-flex align-center">
@@ -176,7 +185,7 @@
                   </div>
                 </template>
               </v-radio>
-              
+
               <v-radio value="banking" color="primary" class="mb-2">
                 <template v-slot:label>
                   <div class="d-flex align-center">
@@ -185,7 +194,7 @@
                   </div>
                 </template>
               </v-radio>
-              
+
               <v-radio value="cash" color="primary">
                 <template v-slot:label>
                   <div class="d-flex align-center">
@@ -215,7 +224,9 @@
                 class="flex-grow-1"
               ></v-text-field>
               <v-btn color="primary" variant="flat">Áp dụng</v-btn>
-              <v-btn variant="outlined" color="primary">Chọn mã khuyến mãi</v-btn>
+              <v-btn variant="outlined" color="primary"
+                >Chọn mã khuyến mãi</v-btn
+              >
             </div>
             <div class="text-caption text-grey">
               <v-icon size="small" class="mr-1">mdi-information</v-icon>
@@ -247,13 +258,18 @@
             ></v-checkbox>
             <div class="text-caption">
               <v-icon size="small" class="mr-1">mdi-check</v-icon>
-              Bằng việc tiến hành đặt mua, khách hàng đồng ý với các 
-              <a href="#" class="text-primary">Điều khoản Giao Dịch Chung</a> được ban hành bởi Sách50: 
+              Bằng việc tiến hành đặt mua, khách hàng đồng ý với các
+              <a href="#" class="text-primary">Điều khoản Giao Dịch Chung</a>
+              được ban hành bởi Sách50:
               <a href="#" class="text-primary">Điều khoản sử dụng</a> |
-              <a href="#" class="text-primary">Chính sách bảo mật thành toán</a> |
-              <a href="#" class="text-primary">Chính sách bảo mật thông tin cá nhân</a> |
-              <a href="#" class="text-primary">Chính sách vận chuyển</a> |
-              <a href="#" class="text-primary">Chính sách Đổi trả - hoàn tiền</a>.
+              <a href="#" class="text-primary">Chính sách bảo mật thành toán</a>
+              |
+              <a href="#" class="text-primary"
+                >Chính sách bảo mật thông tin cá nhân</a
+              >
+              | <a href="#" class="text-primary">Chính sách vận chuyển</a> |
+              <a href="#" class="text-primary">Chính sách Đổi trả - hoàn tiền</a
+              >.
             </div>
           </v-card-text>
         </v-card>
@@ -266,19 +282,25 @@
           </v-card-title>
           <v-card-text class="pa-4">
             <div class="d-flex align-center gap-4 mb-4">
-              <v-img
-                width="80"
-                height="100"
-                class="flex-shrink-0"
-              ></v-img>
+              <v-img width="80" height="100" class="flex-shrink-0"></v-img>
               <div class="flex-grow-1">
-                <div class="font-weight-medium mb-1">Sword Art Online Progressive Vol 7</div>
+                <div class="font-weight-medium mb-1">
+                  Sword Art Online Progressive Vol 7
+                </div>
                 <div class="d-flex align-center justify-space-between">
                   <span class="text-h6 text-primary">120.000 Đ</span>
                   <div class="d-flex align-center gap-2">
-                    <v-btn size="small" variant="outlined" icon="mdi-minus"></v-btn>
+                    <v-btn
+                      size="small"
+                      variant="outlined"
+                      icon="mdi-minus"
+                    ></v-btn>
                     <span class="px-3">1</span>
-                    <v-btn size="small" variant="outlined" icon="mdi-plus"></v-btn>
+                    <v-btn
+                      size="small"
+                      variant="outlined"
+                      icon="mdi-plus"
+                    ></v-btn>
                   </div>
                   <span class="text-h6">120.000 Đ</span>
                 </div>
@@ -316,11 +338,7 @@
           >
             Quay về đơn hàng
           </v-btn>
-          <v-btn
-            color="primary"
-            size="large"
-            class="flex-grow-1"
-          >
+          <v-btn color="primary" size="large" class="flex-grow-1">
             XÁC NHẬN THANH TOÁN
           </v-btn>
         </div>
@@ -330,24 +348,24 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from "vue";
 
 const form = ref({
-  fullName: '',
-  email: '',
-  phone: '',
-  country: 'Việt Nam',
-  city: '',
-  district: '',
-  ward: '',
-  address: ''
-})
+  fullName: "",
+  email: "",
+  phone: "",
+  country: "Việt Nam",
+  city: "",
+  district: "",
+  ward: "",
+  address: "",
+});
 
-const selectedShipping = ref('standard')
-const selectedPayment = ref('cash')
-const promoCode = ref('')
-const giftNote = ref(false)
-const invoice = ref(false)
+const selectedShipping = ref("standard");
+const selectedPayment = ref("cash");
+const promoCode = ref("");
+const giftNote = ref(false);
+const invoice = ref(false);
 </script>
 
 <style scoped>
