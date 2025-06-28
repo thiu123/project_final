@@ -1,36 +1,30 @@
-// src/api/orderApi.js
-
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/orders";
+const API_URL = "http://localhost:5000/api/order";
 
 const token = () => `Bearer ${localStorage.getItem("accessToken")}`;
 
 const orderApi = {
   getCartPreview: async () => {
     const res = await axios.get(`${API_URL}/preview`, {
-      headers: {
-        Authorization: token(),
-      },
+      headers: { token: token() },
     });
+    return res.data;
+  },
+
+  getOrderById: async (orderId) => {
+    const res = await axios.get(`${API_URL}/${orderId}`, {
+      headers: { token: token() },
+    });
+    if (!res.data) {
+      throw new Error("Order not found");
+    }
     return res.data;
   },
 
   createOrderFromCart: async () => {
     const res = await axios.post(`${API_URL}/checkout`, null, {
-      headers: {
-        Authorization: token(),
-      },
-    });
-    return res.data;
-  },
-
-  handleVnpayReturn: async (query) => {
-    const res = await axios.get(`${API_URL}/vnpay_return`, {
-      headers: {
-        Authorization: token(),
-      },
-      params: query,
+      headers: { token: token() },
     });
     return res.data;
   },

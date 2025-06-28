@@ -5,6 +5,7 @@ const middlewareController = require("../controllers/middlewareController");
 
 router.post("/checkout", middlewareController.verifyToken, orderController.createOrderFromCart);
 router.get("/preview", middlewareController.verifyToken, orderController.getCartPreview);
-router.get("/vnpay_return", middlewareController.verifyToken, orderController.vnpayReturn);
+router.get("/vnpay_return", orderController.vnpayReturn);
+router.get("/:id", orderController.getOrderById);
 
 module.exports = router;

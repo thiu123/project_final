@@ -9,7 +9,7 @@ const orderController = {
 
       const cart = await Cart.findOne({ userId }).populate("items.bookId");
       if (!cart || cart.items.length === 0) {
-        return res.status(400).json({ msg: "Giỏ hàng trống" });
+        return res.status(400).json({ msg: "Cart is empty" });
       }
 
       const exchange_rate = 24;
@@ -26,13 +26,31 @@ const orderController = {
     }
   },
 
+  getOrderById: async (req, res) => {
+    try {
+      const { id } = req.params;
+      console.log("Fetching order with ID:", id);
+      const order = await Order.findOne({ orderId: id }).populate(
+        "items.bookId"
+      );
+      if (!order) {
+        return res.status(404).json({ msg: "Order not found" });
+      }
+
+      console.log("Order details:", order);
+      return res.status(200).json(order);
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+
   createOrderFromCart: async (req, res) => {
     try {
       const userId = req.user.id;
 
       const cart = await Cart.findOne({ userId }).populate("items.bookId");
       if (!cart || cart.items.length === 0) {
-        return res.status(400).json({ msg: "Giỏ hàng trống" });
+        return res.status(400).json({ msg: "Cart is empty" });
       }
 
       const exchange_rate = 24;
@@ -40,14 +58,16 @@ const orderController = {
         return sum + item.bookId.price * item.quantity * exchange_rate;
       }, 0);
 
-      const orderId = Date.now().toString();
+      const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
       const newOrder = new Order({
         userId,
+        orderId,
         items: cart.items,
         total: totalAmount,
         paymentMethod: "Vnpay",
       });
+
       await newOrder.save();
 
       const paymentUrl = await vnpayController.buildPaymentUrl({
@@ -55,7 +75,6 @@ const orderController = {
         amount: totalAmount,
       });
 
-      console.log("Payment URL:", newOrder);
       return res.status(200).json({ paymentUrl });
     } catch (err) {
       return res.status(500).json({ msg: err.message });
@@ -64,25 +83,23 @@ const orderController = {
 
   vnpayReturn: async (req, res) => {
     try {
-      const { vnp_ResponseCode, vnp_TxnRef } = req.query;
+      const queryData = req.query;
+      const { vnp_ResponseCode, vnp_TxnRef } = queryData;
 
       const order = await Order.findOne({ orderId: vnp_TxnRef });
-      if (!order) return res.status(404).send("Order not found");
+      if (order) {
+        order.status = vnp_ResponseCode === "00" ? "Paid" : "Failed";
+        order.vnpayData = queryData;
+        await order.save();
 
-      if (vnp_ResponseCode === "00") {
-        order.status = "Paid";
-      } else {
-        order.status = "Failed";
+        if (order.status === "Paid") {
+          await Cart.findOneAndDelete({ userId: order.userId });
+        }
       }
-
-      await order.save();
-      return res.send(
-        vnp_ResponseCode === "00"
-          ? "Thanh toán thành công!"
-          : "Thanh toán thất bại!"
-      );
+      return res.redirect(`http://localhost:3000/order/status/${vnp_TxnRef}`);
     } catch (err) {
-      return res.status(500).send("Lỗi xử lý thanh toán");
+      console.error("Payment processing error:", err);
+      return res.redirect(`http://localhost:3000/order/status/unknown`);
     }
   },
 };
