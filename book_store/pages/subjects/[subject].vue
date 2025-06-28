@@ -16,25 +16,71 @@
           </v-card-title>
 
           <v-list density="compact" class="pa-0 bg-transparent">
-            <v-list-item
-              v-for="(item, i) in subjects"
-              :key="i"
-              @click="
-                $router.push(
-                  `/subjects/${encodeURIComponent(
-                    item.toLowerCase().replace(/\s+/g, '_')
-                  )}`
-                )
-              "
-              class="category-item"
-            >
-              <template v-slot:prepend>
-                <v-icon size="small">mdi-book-outline</v-icon>
-              </template>
-              <v-list-item-title class="text-body-2">{{
-                item
-              }}</v-list-item-title>
-            </v-list-item>
+            <template v-for="(category, index) in bookSubjects" :key="index">
+              <!-- Categories with subcategories -->
+              <v-list-group v-if="category.subcategories">
+                <template v-slot:activator="{ props }">
+                  <v-list-item v-bind="props">
+                    <template v-slot:prepend>
+                      <v-icon size="small">mdi-book-outline</v-icon>
+                    </template>
+                    <v-list-item-title class="text-body-2">{{
+                      category.category
+                    }}</v-list-item-title>
+                  </v-list-item>
+                </template>
+
+                <template
+                  v-for="(subcategory, subIndex) in category.subcategories"
+                  :key="subIndex"
+                >
+                  <v-list-item
+                    @click="
+                      $router.push(
+                        `/subjects/${encodeURIComponent(
+                          subcategory.toLowerCase()
+                        )}`
+                      )
+                    "
+                    class="category-item"
+                  >
+                    <v-list-item-title class="text-body-2">{{
+                      subcategory
+                    }}</v-list-item-title>
+                  </v-list-item>
+
+                  <v-divider
+                    v-if="subIndex < category.subcategories.length - 1"
+                    class="opacity-25"
+                  ></v-divider>
+                </template>
+              </v-list-group>
+
+              <!-- Categories without subcategories -->
+              <v-list-item
+                v-else
+                @click="
+                  $router.push(
+                    `/subjects/${encodeURIComponent(
+                      category.category.toLowerCase()
+                    )}`
+                  )
+                "
+                class="category-item"
+              >
+                <template v-slot:prepend>
+                  <v-icon size="small">mdi-book-outline</v-icon>
+                </template>
+                <v-list-item-title class="text-body-2">{{
+                  category.category
+                }}</v-list-item-title>
+              </v-list-item>
+
+              <v-divider
+                v-if="index < bookSubjects.length - 1"
+                class="opacity-25"
+              ></v-divider>
+            </template>
           </v-list>
 
           <v-divider class="mx-2"></v-divider>
@@ -263,16 +309,46 @@ export default {
         { title: "From A to Z" },
         { title: "From Z to A" },
       ],
-      subjects: [
-        "Fiction",
-        "Mystery",
-        "Fantasy",
-        "Romance",
-        "Manga",
-        "Self-Help",
-        "Biography",
-        "History",
-        "IT & Programming",
+      bookSubjects: [
+        {
+          category: "Fiction",
+          subcategories: [
+            "Literary Fiction",
+            "Historical Fiction",
+            "Contemporary Fiction",
+          ],
+        },
+        {
+          category: "Romance",
+          subcategories: ["Contemporary Romance", "Historical Romance"],
+        },
+        {
+          category: "Manga",
+        },
+        {
+          category: "Biography & Memoir",
+          subcategories: ["Historical Figures", "Political Leaders"],
+        },
+        {
+          category: "History",
+          subcategories: ["Ancient History", "Modern History"],
+        },
+        {
+          category: "Health & Wellness",
+          subcategories: ["Cooking", "Nutrition", "Exercise"],
+        },
+        {
+          category: "Science & Nature",
+          subcategories: [
+            "Popular Science",
+            "Astronomy",
+            "Biology & Life Sciences",
+          ],
+        },
+        {
+          category: "Business & Economics",
+          subcategories: ["Personal Finance", "Investing", "Entrepreneurship"],
+        },
       ],
       prices: ["Under $10", "$10 - $20", "$20 - $30", "Above $50"],
       selectedPrice: [],
@@ -299,11 +375,11 @@ export default {
       this.isLoading = true;
       try {
         const subject = this.$route.params.subject;
-        // console.log("Subject:", subject);
+        console.log("Subject:", subject);
         if (subject) {
           await this.getAllBooks(subject);
         }
-        // console.log("Books:", this.books);
+        console.log("Books:", this.books);
       } catch (error) {
         console.error("Error fetching books:", error);
       } finally {

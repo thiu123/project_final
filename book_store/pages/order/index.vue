@@ -1,78 +1,65 @@
 <template>
   <v-app>
     <v-main>
-      <v-container class="pa-4">
-        <!-- Login Alert -->
-        <!-- <v-alert
-          type="warning"
-          variant="tonal"
-          class="mb-6"
-          icon="mdi-account-alert"
-        >
-          <template v-slot:text>
-            Bạn đã là thành viên? 
-            <a href="#" class="text-decoration-underline">Đăng nhập ngay</a>
-          </template>
-        </v-alert> -->
-
+      <v-container class="pa-2 pa-md-4">
         <!-- Delivery Information -->
-        <v-card class="mb-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4">
-            <v-icon class="mr-2">mdi-map-marker</v-icon>
-            ĐỊA CHỈ GIAO HÀNG
+        <v-card class="mb-4 mb-md-6" elevation="1">
+          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
+            <v-icon class="mr-2" size="small">mdi-map-marker</v-icon>
+            DELIVERY ADDRESS
           </v-card-title>
-          <v-card-text class="pa-4">
+          <v-card-text class="pa-2 pa-md-4">
             <v-row>
-              <v-col cols="12" md="6">
+              <v-col cols="12" sm="6">
                 <v-text-field
                   v-model="form.fullName"
-                  label="Họ và tên người nhận"
-                  placeholder="Nhập họ và tên người nhận"
+                  label="Recipient's full name"
+                  placeholder="Enter recipient's full name"
                   variant="outlined"
                   density="compact"
                 ></v-text-field>
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="12" sm="6">
                 <v-text-field
                   v-model="form.email"
                   label="Email"
-                  placeholder="Nhập email"
+                  placeholder="Enter email"
                   variant="outlined"
                   density="compact"
                 ></v-text-field>
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="12" sm="6">
                 <v-text-field
                   v-model="form.phone"
-                  label="Số điện thoại"
-                  placeholder="Ví dụ: 0979123xxx (10 chữ số)"
+                  label="Phone number"
+                  placeholder="Example: 0979123xxx (10 digits)"
                   variant="outlined"
                   density="compact"
                 ></v-text-field>
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="12" sm="6">
                 <v-select
                   v-model="form.country"
-                  label="Quốc gia"
-                  :items="['Việt Nam']"
+                  label="Country"
+                  :items="['Vietnam']"
                   variant="outlined"
                   density="compact"
                 ></v-select>
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="12" sm="6">
                 <v-text-field
                   v-model="form.city"
-                  label="Tỉnh/Thành phố"
-                  placeholder="Chọn tỉnh/thành phố"
+                  label="Province/City"
+                  placeholder="Select province/city"
                   variant="outlined"
                   density="compact"
                 ></v-text-field>
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col cols="12" sm="6">
                 <v-text-field
                   v-model="form.district"
-                  label="Quận/Huyện"
-                  placeholder="Chọn quận/huyện"
+                  label="District"
+                  placeholder="Select district"
                   variant="outlined"
                   density="compact"
                 ></v-text-field>
@@ -80,8 +67,8 @@
               <v-col cols="12">
                 <v-text-field
                   v-model="form.ward"
-                  label="Phường/Xã"
-                  placeholder="Chọn phường/xã"
+                  label="Ward"
+                  placeholder="Select ward"
                   variant="outlined"
                   density="compact"
                 ></v-text-field>
@@ -89,8 +76,8 @@
               <v-col cols="12">
                 <v-text-field
                   v-model="form.address"
-                  label="Địa chỉ nhận hàng"
-                  placeholder="Nhập địa chỉ giao hàng"
+                  label="Delivery address"
+                  placeholder="Enter delivery address"
                   variant="outlined"
                   density="compact"
                 ></v-text-field>
@@ -100,21 +87,21 @@
         </v-card>
 
         <!-- Shipping Method -->
-        <v-card class="mb-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4">
-            <v-icon class="mr-2">mdi-truck</v-icon>
-            PHƯƠNG THỨC VẬN CHUYỂN
+        <v-card class="mb-4 mb-md-6" elevation="1">
+          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
+            <v-icon class="mr-2" size="small">mdi-truck</v-icon>
+            SHIPPING METHOD
           </v-card-title>
-          <v-card-text class="pa-4">
+          <v-card-text class="pa-2 pa-md-4">
             <v-radio-group v-model="selectedShipping" hide-details>
               <v-radio value="standard" color="primary">
                 <template v-slot:label>
-                  <div>
+                  <div class="text-body-2 text-sm-body-1">
                     <div class="font-weight-medium">
-                      Giao hàng tiêu chuẩn: 22.000 Đ
+                      Standard shipping: {{ formatPrice(shippingFee) }}
                     </div>
                     <div class="text-caption text-grey">
-                      Dự kiến giao hàng: Thứ sáu 23/12
+                      Estimated delivery: Friday 12/23
                     </div>
                   </div>
                 </template>
@@ -124,73 +111,65 @@
         </v-card>
 
         <!-- Payment Methods -->
-        <v-card class="mb-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4">
-            <v-icon class="mr-2">mdi-credit-card</v-icon>
-            PHƯƠNG THỨC THANH TOÁN
+        <v-card class="mb-4 mb-md-6" elevation="1">
+          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
+            <v-icon class="mr-2" size="small">mdi-credit-card</v-icon>
+            PAYMENT METHOD
           </v-card-title>
-          <v-card-text class="pa-4">
+          <v-card-text class="pa-2 pa-md-4">
             <v-radio-group v-model="selectedPayment" hide-details>
-              <v-radio value="zalopay" color="primary" class="mb-2">
+              <!-- <v-radio value="zalopay" color="primary" class="mb-2">
                 <template v-slot:label>
-                  <div class="d-flex align-center">
-                    <v-img src="" width="24" height="24" class="mr-2"></v-img>
-                    <span>Ví ZaloPay</span>
+                  <div class="d-flex align-center flex-wrap">
+                    <v-avatar size="24" class="mr-2 flex-shrink-0">
+                    </v-avatar>
+                    <span class="text-body-2 text-sm-body-1 mr-2"
+                      >ZaloPay Wallet</span
+                    >
                     <a
                       href="#"
-                      class="ml-2 text-primary text-decoration-underline"
-                      >Chi tiết</a
+                      class="text-primary text-decoration-underline text-caption text-sm-body-2"
+                      >Details</a
                     >
                   </div>
                 </template>
-              </v-radio>
-
-              <v-radio value="moca" color="primary" class="mb-2">
-                <template v-slot:label>
-                  <div class="d-flex align-center">
-                    <v-img src="" width="24" height="24" class="mr-2"></v-img>
-                    <span>Ví Moca trên ứng dụng Grab</span>
-                  </div>
-                </template>
-              </v-radio>
-
-              <v-radio value="shopeepay" color="primary" class="mb-2">
-                <template v-slot:label>
-                  <div class="d-flex align-center">
-                    <v-img src="" width="24" height="24" class="mr-2"></v-img>
-                    <span>Ví ShopeePay</span>
-                  </div>
-                </template>
-              </v-radio>
+              </v-radio> -->
 
               <v-radio value="vnpay" color="primary" class="mb-2">
                 <template v-slot:label>
-                  <div class="d-flex align-center">
-                    <v-img src="" width="24" height="24" class="mr-2"></v-img>
-                    <span>VNPay</span>
+                  <div class="d-flex align-center flex-wrap">
+                    <v-avatar size="80" class="mr-2 flex-shrink-0">
+                      <v-img src="../../assets/vnpay-logo-inkythuatso.svg"></v-img>
+                    </v-avatar>
+                    <span class="text-body-2 text-sm-body-1 mr-2">VNPay</span>
                     <a
                       href="#"
-                      class="ml-2 text-primary text-decoration-underline"
-                      >Chi tiết</a
+                      class="text-primary text-decoration-underline text-caption text-sm-body-2"
+                      >Details</a
                     >
                   </div>
                 </template>
               </v-radio>
 
-              <v-radio value="momo" color="primary" class="mb-2">
+              <!-- <v-radio value="momo" color="primary" class="mb-2">
                 <template v-slot:label>
                   <div class="d-flex align-center">
-                    <v-img src="" width="24" height="24" class="mr-2"></v-img>
-                    <span>Ví Momo</span>
+                    <v-avatar size="24" class="mr-2 flex-shrink-0">
+                    </v-avatar>
+                    <span class="text-body-2 text-sm-body-1">Momo Wallet</span>
                   </div>
                 </template>
-              </v-radio>
+              </v-radio> -->
 
               <v-radio value="banking" color="primary" class="mb-2">
                 <template v-slot:label>
                   <div class="d-flex align-center">
-                    <v-img src="" width="24" height="24" class="mr-2"></v-img>
-                    <span>ATM / Internet Banking</span>
+                    <v-avatar size="24" class="mr-2 flex-shrink-0">
+                      <!-- <v-img src="/placeholder.svg?height=24&width=24"></v-img> -->
+                    </v-avatar>
+                    <span class="text-body-2 text-sm-body-1"
+                      >ATM / Internet Banking</span
+                    >
                   </div>
                 </template>
               </v-radio>
@@ -198,8 +177,12 @@
               <v-radio value="cash" color="primary">
                 <template v-slot:label>
                   <div class="d-flex align-center">
-                    <v-img src="" width="24" height="24" class="mr-2"></v-img>
-                    <span>Thanh toán bằng tiền mặt khi nhận hàng</span>
+                    <v-avatar size="24" class="mr-2 flex-shrink-0">
+                      <!-- <v-img src="/placeholder.svg?height=24&width=24"></v-img> -->
+                    </v-avatar>
+                    <span class="text-body-2 text-sm-body-1"
+                      >Cash on delivery</span
+                    >
                   </div>
                 </template>
               </v-radio>
@@ -208,101 +191,187 @@
         </v-card>
 
         <!-- Promotion Code -->
-        <v-card class="mb-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4">
-            <v-icon class="mr-2">mdi-tag</v-icon>
-            MÃ KHUYẾN MÃI/MÃ QUÀ TẶNG
+        <v-card class="mb-4 mb-md-6" elevation="1">
+          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
+            <v-icon class="mr-2" size="small">mdi-tag</v-icon>
+            PROMOTION CODE/GIFT CODE
           </v-card-title>
-          <v-card-text class="pa-4">
-            <div class="d-flex gap-2 mb-2">
+          <v-card-text class="pa-2 pa-md-4">
+            <div class="d-flex flex-column flex-sm-row ga-2 mb-2">
               <v-text-field
                 v-model="promoCode"
-                placeholder="Nhập mã khuyến mãi/quà tặng"
+                placeholder="Enter promotion/gift code"
                 variant="outlined"
                 density="compact"
                 hide-details
                 class="flex-grow-1"
               ></v-text-field>
-              <v-btn color="primary" variant="flat">Áp dụng</v-btn>
-              <v-btn variant="outlined" color="primary"
-                >Chọn mã khuyến mãi</v-btn
-              >
+              <div class="d-flex ga-2">
+                <v-btn
+                  color="primary"
+                  variant="flat"
+                  :size="$vuetify.display.xs ? 'small' : 'default'"
+                  class="flex-shrink-0"
+                >
+                  Apply
+                </v-btn>
+                <v-btn
+                  variant="outlined"
+                  color="primary"
+                  :size="$vuetify.display.xs ? 'small' : 'default'"
+                  class="flex-shrink-0"
+                >
+                  <span class="d-none d-sm-inline">Choose promotion code</span>
+                  <span class="d-sm-none">Choose code</span>
+                </v-btn>
+              </div>
             </div>
             <div class="text-caption text-grey">
               <v-icon size="small" class="mr-1">mdi-information</v-icon>
-              Có thể áp dụng đồng thời nhiều mã
+              Multiple codes can be applied simultaneously
             </div>
           </v-card-text>
         </v-card>
 
         <!-- Additional Options -->
-        <v-card class="mb-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4">
-            <v-icon class="mr-2">mdi-information</v-icon>
-            THÔNG TIN KHÁC
+        <v-card class="mb-4 mb-md-6" elevation="1">
+          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
+            <v-icon class="mr-2" size="small">mdi-information</v-icon>
+            ADDITIONAL INFORMATION
           </v-card-title>
-          <v-card-text class="pa-4">
+          <v-card-text class="pa-2 pa-md-4">
             <v-checkbox
               v-model="giftNote"
-              label="Ghi chú"
+              label="Add a note"
               color="primary"
               hide-details
               class="mb-2"
+              density="compact"
             ></v-checkbox>
             <v-checkbox
               v-model="invoice"
-              label="Xuất hóa đơn GTGT"
+              label="Request VAT invoice"
               color="primary"
               hide-details
               class="mb-3"
+              density="compact"
             ></v-checkbox>
             <div class="text-caption">
               <v-icon size="small" class="mr-1">mdi-check</v-icon>
-              Bằng việc tiến hành đặt mua, khách hàng đồng ý với các
-              <a href="#" class="text-primary">Điều khoản Giao Dịch Chung</a>
-              được ban hành bởi Sách50:
-              <a href="#" class="text-primary">Điều khoản sử dụng</a> |
-              <a href="#" class="text-primary">Chính sách bảo mật thành toán</a>
+              By proceeding with the purchase, the customer agrees to the
+              <a href="#" class="text-primary">General Transaction Terms</a>
+              issued by Book50:
+              <a href="#" class="text-primary">Terms of use</a> |
+              <a href="#" class="text-primary">Payment security policy</a>
               |
               <a href="#" class="text-primary"
-                >Chính sách bảo mật thông tin cá nhân</a
+                >Personal information privacy policy</a
               >
-              | <a href="#" class="text-primary">Chính sách vận chuyển</a> |
-              <a href="#" class="text-primary">Chính sách Đổi trả - hoàn tiền</a
-              >.
+              | <a href="#" class="text-primary">Shipping policy</a> |
+              <a href="#" class="text-primary">Return and refund policy</a>.
             </div>
           </v-card-text>
         </v-card>
 
         <!-- Order Review -->
-        <v-card class="mb-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4">
-            <v-icon class="mr-2">mdi-cart</v-icon>
-            KIỂM TRA LẠI ĐƠN HÀNG
+        <v-card class="mb-4 mb-md-6" elevation="1">
+          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
+            <v-icon class="mr-2" size="small">mdi-cart</v-icon>
+            REVIEW YOUR ORDER
           </v-card-title>
-          <v-card-text class="pa-4">
-            <div class="d-flex align-center gap-4 mb-4">
-              <v-img width="80" height="100" class="flex-shrink-0"></v-img>
-              <div class="flex-grow-1">
-                <div class="font-weight-medium mb-1">
-                  Sword Art Online Progressive Vol 7
+          <v-card-text v-if="cartItems.length" class="pa-2 pa-md-4">
+            <!-- Loop through cartItems -->
+            <div
+              v-for="(item, index) in cartItems"
+              :key="item._id"
+              class="mb-4"
+              :class="{ 'border-bottom pb-4': index < cartItems.length - 1 }"
+            >
+              <!-- Mobile Layout -->
+              <div class="d-flex d-sm-none flex-column gap-3">
+                <div class="d-flex gap-3">
+                  <v-img
+                    :src="item.bookId.cover_url"
+                    width="60"
+                    height="80"
+                    class="flex-shrink-0 rounded"
+                    :alt="item.bookId.title"
+                  ></v-img>
+                  <div class="flex-grow-1 min-width-0">
+                    <div class="font-weight-medium mb-1 text-body-2">
+                      {{ item.bookId.title }}
+                    </div>
+                    <div class="text-caption text-grey mb-2">
+                      Author: {{ item.bookId.authors.join(", ") }}
+                    </div>
+                    <div class="text-subtitle-2 text-primary">
+                      {{ formatPrice(item.bookId.price) }}
+                    </div>
+                  </div>
                 </div>
                 <div class="d-flex align-center justify-space-between">
-                  <span class="text-h6 text-primary">120.000 Đ</span>
                   <div class="d-flex align-center gap-2">
                     <v-btn
-                      size="small"
+                      size="x-small"
                       variant="outlined"
                       icon="mdi-minus"
+                      @click="updateQuantity(item, -1)"
+                      :disabled="item.quantity <= 1"
                     ></v-btn>
-                    <span class="px-3">1</span>
+                    <span class="px-2 text-body-2">{{ item.quantity }}</span>
                     <v-btn
-                      size="small"
+                      size="x-small"
                       variant="outlined"
                       icon="mdi-plus"
+                      @click="updateQuantity(item, 1)"
                     ></v-btn>
                   </div>
-                  <span class="text-h6">120.000 Đ</span>
+                  <span class="text-subtitle-2 font-weight-bold">
+                    {{ formatPrice(item.bookId.price * item.quantity) }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Desktop/Tablet Layout -->
+              <div class="d-none d-sm-flex align-center gap-4">
+                <v-img
+                  :src="item.bookId.cover_url"
+                  width="80"
+                  height="100"
+                  class="flex-shrink-0 rounded"
+                  :alt="item.bookId.title"
+                ></v-img>
+                <div class="flex-grow-1">
+                  <div class="font-weight-medium mb-1">
+                    {{ item.bookId.title }}
+                  </div>
+                  <div class="text-caption text-grey mb-2">
+                    Author: {{ item.bookId.authors.join(", ") }}
+                  </div>
+                  <div class="d-flex align-center justify-space-between">
+                    <span class="text-h6 text-primary">{{
+                      formatPrice(item.bookId.price)
+                    }}</span>
+                    <div class="d-flex align-center gap-2">
+                      <v-btn
+                        size="small"
+                        variant="outlined"
+                        icon="mdi-minus"
+                        @click="updateQuantity(item, -1)"
+                        :disabled="item.quantity <= 1"
+                      ></v-btn>
+                      <span class="px-3">{{ item.quantity }}</span>
+                      <v-btn
+                        size="small"
+                        variant="outlined"
+                        icon="mdi-plus"
+                        @click="updateQuantity(item, 1)"
+                      ></v-btn>
+                    </div>
+                    <span class="text-h6">{{
+                      formatPrice(item.bookId.price * item.quantity)
+                    }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -310,36 +379,45 @@
         </v-card>
 
         <!-- Order Summary -->
-        <v-card class="mb-6" elevation="1">
-          <v-card-text class="pa-4">
-            <div class="d-flex justify-space-between mb-2">
-              <span>Thành tiền</span>
-              <span>120.000 Đ</span>
+        <v-card class="mb-4 mb-md-6" elevation="1">
+          <v-card-text class="pa-2 pa-md-4">
+            <div class="d-flex justify-space-between mb-2 text-body-2">
+              <span>Subtotal</span>
+              <span>{{ formatPrice(subtotal) }}</span>
             </div>
-            <div class="d-flex justify-space-between mb-2">
-              <span>Phí vận chuyển (Giao hàng tiêu chuẩn)</span>
-              <span>22.000 Đ</span>
+            <div class="d-flex justify-space-between mb-2 text-body-2">
+              <span>Shipping fee (Standard shipping)</span>
+              <span>{{ formatPrice(shippingFee) }}</span>
             </div>
             <v-divider class="my-3"></v-divider>
-            <div class="d-flex justify-space-between text-h6 font-weight-bold">
-              <span>Tổng số tiền (gồm VAT)</span>
-              <span class="text-primary">142.000 Đ</span>
+            <div
+              class="d-flex justify-space-between text-subtitle-1 text-md-h6 font-weight-bold"
+            >
+              <span>Total amount (including VAT)</span>
+              <span class="text-primary">{{ formatPrice(total) }}</span>
             </div>
           </v-card-text>
         </v-card>
 
         <!-- Action Buttons -->
-        <div class="d-flex ga-3">
+        <div class="d-flex flex-column flex-sm-row ga-3">
           <v-btn
             variant="outlined"
-            size="large"
+            :size="$vuetify.display.xs ? 'default' : 'large'"
             prepend-icon="mdi-arrow-left"
-            class="flex-grow-1"
+            class="flex-grow-1 order-2 order-sm-1"
           >
-            Quay về đơn hàng
+            <span class="d-none d-sm-inline">Back to order</span>
+            <span class="d-sm-none">Back</span>
           </v-btn>
-          <v-btn color="primary" size="large" class="flex-grow-1">
-            XÁC NHẬN THANH TOÁN
+          <v-btn
+            color="primary"
+            :size="$vuetify.display.xs ? 'default' : 'large'"
+            class="flex-grow-1 order-1 order-sm-2"
+            @click="handleConfirmPayment"
+          >
+            <span class="d-none d-sm-inline">CONFIRM PAYMENT</span>
+            <span class="d-sm-none">CONFIRM</span>
           </v-btn>
         </div>
       </v-container>
@@ -347,25 +425,59 @@
   </v-app>
 </template>
 
-<script setup>
-import { ref } from "vue";
+<script>
+import { mapState, mapActions } from "vuex";
 
-const form = ref({
-  fullName: "",
-  email: "",
-  phone: "",
-  country: "Việt Nam",
-  city: "",
-  district: "",
-  ward: "",
-  address: "",
-});
-
-const selectedShipping = ref("standard");
-const selectedPayment = ref("cash");
-const promoCode = ref("");
-const giftNote = ref(false);
-const invoice = ref(false);
+export default {
+  data() {
+    return {
+      form: {
+        fullName: "",
+        email: "",
+        phone: "",
+        country: "Việt Nam",
+        city: "",
+        district: "",
+        ward: "",
+        address: "",
+      },
+      selectedShipping: "standard",
+      selectedPayment: "cash",
+      promoCode: "",
+      giftNote: false,
+      invoice: false,
+      shippingFee: 30000,
+      subtotal: 250000,
+      total: 280000,
+    };
+  },
+  computed: {
+    ...mapState("order", ["cartItems"]),
+  },
+  async mounted() {
+    await this.fetchCartPreview();
+    console.log(this.cartItems, "Cart items loaded");
+  },
+  methods: {
+    ...mapActions("order", ["fetchCartPreview", "createOrder"]),
+    formatPrice(price) {
+      return new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(price);
+    },
+    updateQuantity(item, change) {
+      // Implement quantity update logic
+      item.quantity += change;
+    },
+    async handleConfirmPayment() {
+      if (this.selectedPayment === "vnpay") {
+        const paymentUrl = await this.createOrder();
+        window.location.href = paymentUrl;
+      }
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -375,11 +487,28 @@ const invoice = ref(false);
   padding: 12px 16px;
 }
 
+@media (max-width: 599px) {
+  .v-card-title {
+    padding: 8px 12px;
+    font-size: 0.875rem;
+  }
+}
+
 .v-radio :deep(.v-selection-control__wrapper) {
   margin-right: 8px;
 }
 
-.v-img {
-  border-radius: 4px;
+.rounded {
+  border-radius: 8px;
+}
+
+.min-width-0 {
+  min-width: 0;
+}
+
+@media (max-width: 599px) {
+  .text-caption {
+    font-size: 0.75rem;
+  }
 }
 </style>
