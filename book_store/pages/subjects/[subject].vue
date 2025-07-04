@@ -209,12 +209,18 @@
                       :ripple="false"
                       size="small"
                       class="position-absolute top-0 right-0 mt-2 mr-2"
+                      @click.stop="toggleFavoriteBook(book._id)"
                     >
-                      <v-img
-                        width="28px"
-                        height="28px"
-                        src="../../assets/heart.svg"
-                      />
+                      <v-icon
+                        :color="isFavorite(book._id) ? 'red' : 'white'"
+                        size="28"
+                      >
+                        {{
+                          isFavorite(book._id)
+                            ? "mdi-heart"
+                            : "mdi-heart-outline"
+                        }}
+                      </v-icon>
                     </v-btn>
                   </div>
 
@@ -358,7 +364,7 @@ export default {
   },
   computed: {
     ...mapState("book", ["books"]),
-
+    ...mapState("favorite", ["favorites"]),
     paginatedBooks() {
       const start = (this.page - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
@@ -371,21 +377,50 @@ export default {
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
+    ...mapActions("favorite", ["toggleFavorites", "getFavoritesForEachUser"]),
     async fetchBooks() {
       this.isLoading = true;
       try {
         const subject = this.$route.params.subject;
-        console.log("Subject:", subject);
+        // console.log("Subject:", subject);
         if (subject) {
           await this.getAllBooks(subject);
         }
-        console.log("Books:", this.books);
+        // console.log("Books:", this.books);
       } catch (error) {
         console.error("Error fetching books:", error);
       } finally {
         this.isLoading = false;
       }
     },
+    async fetchFavorites() {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+          await this.getFavoritesForEachUser();
+        }
+      } catch (error) {
+        console.error("Error fetching favorites:", error);
+      }
+    },
+    async toggleFavoriteBook(bookId) {
+      try {
+        await this.toggleFavorites(bookId);
+      } catch (error) {
+        console.error("Error toggling favorite:", error);
+      }
+    },
+    isFavorite(bookId) {
+      return this.favorites.some((favorite) => {
+        // Handle case where bookId is populated (contains full book object)
+        const favoriteBookId = favorite.bookId?._id || favorite.bookId;
+        return favoriteBookId === bookId;
+      });
+    },
+  },
+  async mounted() {
+    await this.fetchBooks();
+    await this.fetchFavorites();
   },
   watch: {
     "$route.params.subject": {

@@ -39,7 +39,11 @@
                 <v-col cols="2">Delete</v-col>
               </v-row>
 
-              <v-card v-if="!cartItems.length" class="pa-8 text-center" flat>
+              <v-card
+                v-if="isLoaded && !cartItems.length"
+                class="pa-8 text-center"
+                flat
+              >
                 <v-img
                   src="https://cdn.vuetifyjs.com/images/cards/cooking.png"
                   width="100"

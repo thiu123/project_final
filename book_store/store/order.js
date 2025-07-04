@@ -8,7 +8,8 @@ export default {
     cartItems: [],
     total: 0,
     orderStatus: "",
-    order: null
+    order: null, // order detail 
+    userOrders: [], // all orders of user
   },
   mutations: {
     setCart(state, { items, total }) {
@@ -17,7 +18,10 @@ export default {
     },
     setOrder(state, order) {
       state.order = order;
-    } 
+    },
+    setUserOrders(state, orders) {
+      state.userOrders = orders;
+    },
   },
   actions: {
     async fetchCartPreview({ commit }) {
@@ -26,6 +30,16 @@ export default {
         commit("setCart", { items, total });
       } catch (error) {
         console.error("Error loading cart:", error);
+      }
+    },
+
+    async fetchUserOrders({ commit }) {
+      try {
+        const orders = await orderApi.getUserOrders();
+        commit("setUserOrders", orders);
+        return orders;
+      } catch (error) {
+        console.error("Error loading user orders:", error);
       }
     },
 

@@ -59,7 +59,7 @@
 
           <v-list>
             <template v-for="(category, index) in bookSubjects" :key="index">
-              <!-- Categories with subcategories -->
+              <!-- Categories with subcategories --> 
               <v-list-group v-if="category.subcategories">
                 <template v-slot:activator="{ props }">
                   <v-list-item v-bind="props">
@@ -182,7 +182,7 @@
           <v-icon>mdi-cart-plus</v-icon>
         </v-btn>
 
-        <v-btn icon>
+        <v-btn icon @click="$router.push('/favorites')">
           <v-img width="28px" height="28px" src="../assets/heart.svg" />
         </v-btn>
         <v-menu
