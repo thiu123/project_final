@@ -69,7 +69,6 @@ export default {
       try {
         const res = await registerUser(user);
         return res.data;
-        console.log("Registration successful:", res.data);
       } catch (error) {
         throw error.response?.data || error.message;
       }

@@ -12,6 +12,13 @@ const orderApi = {
     return res.data;
   },
 
+  getUserOrders: async () => {
+    const res = await axios.get(`${API_URL}/user`, {
+      headers: { token: token() },
+    });
+    return res.data;
+  },
+
   getOrderById: async (orderId) => {
     const res = await axios.get(`${API_URL}/${orderId}`, {
       headers: { token: token() },
