@@ -12,6 +12,6 @@ export default {
   },
   mounted() {
     this.restoreSession();
-  }
+  },
 };
 </script>

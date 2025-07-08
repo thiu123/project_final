@@ -43,6 +43,9 @@ export default {
   },
   watch: {
     activeTab(newTab) {
+      // Update URL query parameter
+      this.$router.replace({ query: { ...this.$route.query, tab: newTab } });
+
       if (newTab === "orders") {
         this.loadUserOrders();
       }
@@ -58,10 +61,26 @@ export default {
     if (!this.currentUser) {
       this.$router.push("/login");
     }
+
+    // Handle tab parameter from URL query
+    const tabParam = this.$route.query.tab;
+    if (tabParam && this.isValidTab(tabParam)) {
+      this.activeTab = tabParam;
+    }
   },
   methods: {
     ...mapActions("order", ["fetchUserOrders"]),
     ...mapActions("favorite", ["getFavoritesForEachUser"]),
+    isValidTab(tab) {
+      const validTabs = [
+        "personal",
+        "orders",
+        "wishlist",
+        "reviews",
+        "password",
+      ];
+      return validTabs.includes(tab);
+    },
     async loadUserOrders() {
       this.loadingOrders = true;
       try {
