@@ -9,7 +9,7 @@ export default {
   },
   mutations: {
     setReviews(state, reviews) {
-      state.reviews = reviews || [];;
+      state.reviews = reviews || [];
     },
     addReview(state, review) {
       if (review) state.reviews.push(review);

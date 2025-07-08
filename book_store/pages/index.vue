@@ -10,10 +10,15 @@
           <v-card class="search-card pa-8" elevation="24" rounded="xl">
             <!-- Search Header -->
             <div class="text-center mb-8">
-              <h2 class="text-h4 font-weight-bold text-primary mb-3">
+              <div class="d-flex justify-center mb-4">
+                <v-avatar color="customyellow" size="64" class="mr-4">
+                  <v-icon color="darkgreen" size="32">mdi-magnify</v-icon>
+                </v-avatar>
+              </div>
+              <h2 class="text-h3 font-weight-bold text-customblack mb-3">
                 Discover Your Next Great Read
               </h2>
-              <p class="text-subtitle-1 text-medium-emphasis">
+              <p class="text-h6 text-medium-emphasis">
                 Search through thousands of books to find your perfect match
               </p>
             </div>
@@ -30,13 +35,14 @@
                   hide-details
                   @focus="showSearchResults = true"
                   @input="handleSearchInput"
+                  rounded="xl"
                 >
                   <template v-slot:append-inner>
                     <v-btn
                       icon="mdi-microphone"
                       variant="text"
                       size="small"
-                      color="primary"
+                      color="waterblue"
                     ></v-btn>
                   </template>
                 </v-text-field>
@@ -45,9 +51,10 @@
                 <v-btn
                   block
                   size="large"
-                  color="primary"
+                  color="waterblue"
                   variant="elevated"
-                  class="search-btn"
+                  class="search-btn font-weight-bold"
+                  rounded="xl"
                   @click="performSearch"
                 >
                   Search
@@ -58,14 +65,15 @@
             <!-- Search Results -->
             <v-expand-transition>
               <v-card
-                v-if="searchQuery"
+                v-if="searchQuery && searchResults.length > 0"
                 class="search-results mb-6"
                 variant="outlined"
-                rounded="lg"
+                rounded="xl"
+                elevation="8"
               >
                 <v-list class="py-0">
                   <v-list-item
-                    v-for="(book, index) in searchResults"
+                    v-for="(book, index) in searchResults.slice(0, 5)"
                     :key="index"
                     class="search-result-item"
                     @click="$router.push(`/details/${book._id}`)"
@@ -80,12 +88,15 @@
                       </v-avatar>
                     </template>
 
-                    <v-list-item-title class="font-weight-bold mb-1">
+                    <v-list-item-title
+                      class="font-weight-bold mb-1 text-customblack"
+                    >
                       {{ book.title }}
                     </v-list-item-title>
 
                     <v-list-item-subtitle class="mb-2">
-                      {{ book.author }} • {{ book.first_publish_year }}
+                      {{ book.authors?.join(", ") || "Unknown Author" }} •
+                      {{ book.first_publish_year }}
                     </v-list-item-subtitle>
 
                     <template v-slot:append>
@@ -105,7 +116,7 @@
 
             <!-- Featured Books -->
             <div class="text-center">
-              <h3 class="text-h6 font-weight-bold mb-6 text-medium-emphasis">
+              <h3 class="text-h5 font-weight-bold mb-6 text-customblack">
                 Trending This Week
               </h3>
 
@@ -115,21 +126,25 @@
                     v-for="(book, i) in books.slice(50, 56)"
                     :key="i"
                     elevation="4"
-                    rounded="lg"
+                    rounded="xl"
                     hover
+                    class="trending-book-card"
+                    @click="$router.push(`details/${book._id}`)"
                   >
                     <v-img
                       v-if="book.cover_url"
-                      @click="$router.push(`details/${book._id}`)"
                       :src="book.cover_url"
-                      width="70"
-                      height="95"
+                      width="80"
+                      height="110"
                       cover
+                      class="rounded-xl"
                     >
                       <template v-slot:placeholder>
-                        <div class="d-flex align-center justify-center fill-height">
+                        <div
+                          class="d-flex align-center justify-center fill-height"
+                        >
                           <v-progress-circular
-                            color="grey-lighten-4"
+                            color="waterblue"
                             indeterminate
                           ></v-progress-circular>
                         </div>
@@ -142,9 +157,9 @@
                     v-for="n in 6"
                     :key="n"
                     elevation="4"
-                    rounded="lg"
-                    width="70"
-                    height="95"
+                    rounded="xl"
+                    width="80"
+                    height="110"
                   >
                     <v-skeleton-loader
                       type="image"
@@ -162,67 +177,65 @@
     <!-- Best Selling Books -->
     <v-container class="mt-8">
       <v-card
-        elevation="8"
-        class="pa-6 rounded-xl"
+        elevation="12"
+        class="pa-8 rounded-xl best-sellers-card"
         style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
       >
         <!-- Enhanced Header -->
-        <div class="d-flex justify-space-between align-center mb-6">
+        <div class="d-flex justify-space-between align-center mb-8">
           <div class="d-flex align-center">
-            <v-avatar color="amber-lighten-2" size="48" class="mr-4">
-              <v-icon color="darkgreen" size="28">mdi-trophy</v-icon>
+            <v-avatar color="customyellow" size="56" class="mr-4">
+              <v-icon color="darkgreen" size="32">mdi-trophy</v-icon>
             </v-avatar>
             <div>
-              <h2 class="text-h4 text-darkgreen font-weight-bold mb-1">
+              <h2 class="text-h3 text-customblack font-weight-bold mb-2">
                 Best Selling Books
               </h2>
-              <p class="text-subtitle-1 text-grey-darken-1 ma-0">
+              <p class="text-subtitle-1 text-medium-emphasis ma-0">
                 Discover our most popular titles across all categories
               </p>
             </div>
           </div>
 
-          <!-- <v-btn
-            color="darkgreen"
+          <v-btn
+            color="waterblue"
             variant="outlined"
             rounded="xl"
-            class="font-weight-medium"
+            class="font-weight-bold"
+            size="large"
           >
             <v-icon start size="small">mdi-eye</v-icon>
             View All
-          </v-btn> -->
+          </v-btn>
         </div>
 
         <v-row>
           <v-col cols="12">
             <!-- Enhanced Tabs Card -->
-            <v-card elevation="4" class="rounded-xl overflow-hidden">
+            <v-card elevation="8" class="rounded-xl overflow-hidden">
               <!-- Enhanced Tabs Navigation -->
               <v-tabs
                 v-model="tab"
-                color="darkgreen"
+                color="waterblue"
                 align-tabs="start"
                 class="enhanced-tabs"
                 bg-color="grey-lighten-5"
-                slider-color="darkgreen"
-                height="64"
+                slider-color="waterblue"
+                height="72"
               >
                 <v-tab
                   v-for="(subject, i) in bestSellerSubjects"
                   :key="i"
                   :value="subject"
-                  class="text-capitalize font-weight-medium tab-item"
+                  class="text-capitalize font-weight-bold tab-item"
                   rounded="lg"
                 >
-                  <!-- <v-icon start size="small" class="mr-2">
-                    {{ getSubjectIcon(subject) }}
-                  </v-icon> -->
                   {{ subject }}
                 </v-tab>
               </v-tabs>
 
               <!-- Enhanced Tabs Content -->
-              <v-tabs-window class="pa-4" v-model="tab">
+              <v-tabs-window class="pa-6" v-model="tab">
                 <v-tabs-window-item
                   v-for="subject in bestSellerSubjects"
                   :key="subject"
@@ -241,11 +254,11 @@
                       <v-card
                         class="book-card h-100 rounded-xl position-relative cursor-pointer"
                         @click="$router.push(`/details/${book._id}`)"
-                        elevation="3"
+                        elevation="4"
                         hover
                       >
                         <!-- Bestseller Badge -->
-                        <!-- <v-chip
+                        <v-chip
                           color="red"
                           size="small"
                           class="bestseller-badge"
@@ -253,13 +266,13 @@
                         >
                           <v-icon start size="x-small">mdi-fire</v-icon>
                           #{{ i + 1 }}
-                        </v-chip> -->
+                        </v-chip>
 
                         <!-- Enhanced Book Cover -->
                         <div class="position-relative book-cover-container">
                           <v-img
                             :src="book?.cover_url"
-                            height="280"
+                            height="300"
                             cover
                             class="book-cover"
                           >
@@ -268,7 +281,7 @@
                                 class="d-flex align-center justify-center fill-height"
                               >
                                 <v-progress-circular
-                                  color="grey-lighten-4"
+                                  color="waterblue"
                                   indeterminate
                                 ></v-progress-circular>
                               </div>
@@ -277,9 +290,9 @@
                         </div>
 
                         <!-- Enhanced Card Content -->
-                        <v-card-text class="pa-3 d-flex flex-column">
+                        <v-card-text class="pa-4 d-flex flex-column">
                           <!-- Rating Section -->
-                          <div class="d-flex align-center mb-2">
+                          <div class="d-flex align-center mb-3">
                             <v-rating
                               :model-value="4.5"
                               color="amber"
@@ -299,25 +312,25 @@
 
                           <!-- Book Title -->
                           <div
-                            class="text-subtitle-1 text-truncate font-weight-bold mb-1 text-darkgreen"
+                            class="text-subtitle-1 text-truncate font-weight-bold mb-2 text-customblack"
                           >
                             {{ book.title }}
                           </div>
 
                           <!-- Author -->
                           <div
-                            v-for="(author, index) in book.authors.slice(0, 1)"
+                            v-for="(author, index) in book.authors?.slice(0, 1)"
                             :key="index"
-                            class="text-caption text-grey-darken-1 mb-2"
+                            class="text-caption text-medium-emphasis mb-3"
                           >
                             <span class="text-truncate">{{ author }}</span>
                           </div>
 
                           <!-- Genre Tag -->
                           <v-chip
-                            size="x-small"
+                            size="small"
                             variant="outlined"
-                            color="darkgreen"
+                            color="waterblue"
                             class="mb-3 align-self-start text-capitalize"
                           >
                             {{ subject }}
@@ -327,18 +340,18 @@
 
                           <!-- Price Section -->
                           <div
-                            class="d-flex justify-space-between align-center mb-2"
+                            class="d-flex justify-space-between align-center mb-3"
                           >
                             <div class="d-flex align-center">
                               <span
-                                class="text-h6 font-weight-bold text-darkgreen"
+                                class="text-h6 font-weight-bold text-customblack"
                               >
-                                $19.99
+                                ${{ book.price || "19.99" }}
                               </span>
                               <span
                                 class="text-caption text-grey text-decoration-line-through ml-2"
                               >
-                                $24.99
+                                ${{ (book.price * 1.25 || 24.99).toFixed(2) }}
                               </span>
                             </div>
 
@@ -354,13 +367,13 @@
                         </v-card-text>
 
                         <!-- Enhanced Card Actions -->
-                        <v-card-actions class="pa-3 pt-0">
+                        <v-card-actions class="pa-4 pt-0">
                           <v-btn
                             block
-                            color="darkgreen"
+                            color="waterblue"
                             variant="elevated"
                             size="large"
-                            class="font-weight-medium rounded-xl add-to-cart-btn"
+                            class="font-weight-bold rounded-xl add-to-cart-btn"
                             elevation="2"
                             @click.stop="handleAddToCart(book._id, 1)"
                           >
@@ -373,20 +386,79 @@
                   </v-row>
 
                   <!-- Load More Section -->
-                  <!-- <div class="text-center mt-6">
+                  <div class="text-center mt-8">
                     <v-btn
-                      color="darkgreen"
+                      color="waterblue"
                       variant="outlined"
                       size="large"
                       rounded="xl"
-                      class="font-weight-medium"
+                      class="font-weight-bold"
                     >
                       <v-icon start>mdi-plus</v-icon>
                       Load More Books
                     </v-btn>
-                  </div> -->
+                  </div>
                 </v-tabs-window-item>
               </v-tabs-window>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-card>
+    </v-container>
+
+    <!-- New Categories Showcase Section -->
+    <v-container class="mt-8">
+      <v-card
+        elevation="12"
+        class="pa-8 rounded-xl categories-card"
+        style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)"
+      >
+        <div class="text-center mb-8">
+          <h2 class="text-h3 font-weight-bold text-customblack mb-3">
+            Explore by Category
+          </h2>
+          <p class="text-subtitle-1 text-medium-emphasis">
+            Find your perfect book in our carefully curated categories
+          </p>
+        </div>
+
+        <v-row>
+          <v-col
+            v-for="(category, index) in categories"
+            :key="index"
+            cols="12"
+            sm="6"
+            md="4"
+            lg="3"
+          >
+            <v-card
+              class="category-card h-100 rounded-xl cursor-pointer"
+              @click="$router.push(`/subjects/${category.route}`)"
+              elevation="4"
+              hover
+            >
+              <v-img
+                :src="category.image"
+                height="200"
+                cover
+                class="category-image"
+              >
+                <div
+                  class="category-overlay d-flex align-center justify-center"
+                >
+                  <div class="text-center">
+                    <v-icon size="48" color="white" class="mb-3">{{
+                      category.icon
+                    }}</v-icon>
+                    <h3 class="text-h5 font-weight-bold text-white">
+                      {{ category.name }}
+                    </h3>
+                    <p class="text-white text-caption">
+                      {{ category.count }} books
+                    </p>
+                  </div>
+                </div>
+              </v-img>
             </v-card>
           </v-col>
         </v-row>
@@ -401,124 +473,63 @@
       @add-to-cart="handleAddToCart"
     ></component>
 
+    <!-- Enhanced Newsletter Section -->
+    <v-container class="my-12">
+      <v-row justify="center">
+        <v-col cols="12" lg="8">
+          <v-card class="newsletter-card pa-8 rounded-xl" elevation="12">
+            <div class="text-center">
+              <v-avatar color="customyellow" size="80" class="mb-4">
+                <v-icon color="darkgreen" size="40"
+                  >mdi-email-newsletter</v-icon
+                >
+              </v-avatar>
+              <h2 class="text-h3 font-weight-bold text-customblack mb-3">
+                Stay Updated
+              </h2>
+              <p class="text-subtitle-1 text-medium-emphasis mb-6">
+                Subscribe to our newsletter for the latest releases, exclusive
+                offers, and reading recommendations.
+              </p>
+
+              <v-row justify="center">
+                <v-col cols="12" md="8">
+                  <div class="d-flex">
+                    <v-text-field
+                      v-model="newsletterEmail"
+                      variant="outlined"
+                      label="Enter your email address"
+                      hide-details
+                      class="mr-3"
+                      rounded="xl"
+                    ></v-text-field>
+                    <v-btn
+                      color="waterblue"
+                      variant="elevated"
+                      size="large"
+                      rounded="xl"
+                      class="font-weight-bold"
+                      @click="subscribeNewsletter"
+                    >
+                      Subscribe
+                    </v-btn>
+                  </div>
+                </v-col>
+              </v-row>
+            </div>
+          </v-card>
+        </v-col>
+      </v-row>
+    </v-container>
+
+    <!-- Why Shop With Us -->
+    <HomeWhyShopSection :books="books" />
+
     <SnackbarAlert
       v-model="showSnackbar"
       :text="snackbarText"
       :color="snackbarColor"
     />
-
-    <!-- Deals of the Day -->
-    <!-- <v-container class="mt-8">
-        <div class="d-flex justify-space-between align-center mb-4">
-          <div class="d-flex align-center">
-            <h2 class="text-h5 font-weight-bold mr-4">Deals of the Day</h2>
-            <v-chip color="error" class="font-weight-bold">20:15:43:22</v-chip>
-          </div>
-          <div>
-            <v-btn icon variant="text" density="comfortable">
-              <v-icon>mdi-chevron-left</v-icon>
-            </v-btn>
-            <v-btn icon variant="text" density="comfortable">
-              <v-icon>mdi-chevron-right</v-icon>
-            </v-btn>
-          </div>
-        </div>
-        <v-row>
-          <v-col
-            v-for="(book, i) in dealsOfDay"
-            :key="i"
-            cols="12"
-            sm="6"
-            md="4"
-          >
-            <v-card class="d-flex" flat>
-              <v-img
-                :src="book.cover"
-                max-width="120"
-                height="180"
-                cover
-                class="rounded-lg"
-              ></v-img>
-              <div class="ml-4">
-                <div class="text-overline">By {{ book.author }}</div>
-                <div class="text-subtitle-1 font-weight-medium">
-                  {{ book.title }}
-                </div>
-                <div class="d-flex align-center my-2">
-                  <v-rating
-                    :model-value="book.rating"
-                    color="amber"
-                    density="compact"
-                    size="small"
-                    readonly
-                  ></v-rating>
-                  <span class="text-caption ml-1">{{ book.reviews }}</span>
-                </div>
-                <div class="d-flex align-center mb-2">
-                  <span
-                    class="text-caption text-decoration-line-through mr-2"
-                    >{{ book.oldPrice }}</span
-                  >
-                  <span class="text-subtitle-1 font-weight-bold text-error">{{
-                    book.price
-                  }}</span>
-                </div>
-                <v-card-actions>
-                  <v-btn
-                    block
-                    color="white"
-                    class="bg-darkgreen rounded-xl"
-                    size="small"
-                  >
-                    Add To Cart
-                    <v-icon class="ml-1">mdi-cart</v-icon>
-                  </v-btn>
-                </v-card-actions>
-              </div>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container> -->
-
-    <!-- Why Shop With Us -->
-    <HomeWhyShopSection :books="books" />
-
-    <!-- Newsletter -->
-    <!-- <v-container class="my-12">
-        <v-row justify="center">
-          <v-col cols="12" md="8">
-            <v-card class="pa-6" flat>
-              <div class="d-flex flex-column flex-md-row">
-                <div class="mr-md-6 mb-6 mb-md-0">
-                  <v-img
-                    :src="getPlaceholderImage(150, 100)"
-                    max-width="150"
-                  ></v-img>
-                </div>
-                <div class="flex-grow-1">
-                  <h3 class="text-h5 font-weight-bold mb-2">
-                    Join News Letter
-                  </h3>
-                  <p class="text-body-2 mb-4">
-                    Lorem ipsum is simply dummy text of the printing and
-                    typesetting industry.
-                  </p>
-                  <div class="d-flex">
-                    <v-text-field
-                      density="compact"
-                      variant="outlined"
-                      label="Enter email id"
-                      hide-details
-                      class="mr-2"
-                    ></v-text-field>
-                    <v-btn color="secondary" rounded>Subscribe</v-btn>
-                  </div>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-container> -->
   </div>
 </template>
 
@@ -529,39 +540,55 @@ import BookRomance from "../components/home/BookRomance.vue";
 import { mapState, mapActions, mapGetters } from "vuex";
 import axios from "axios";
 import debounce from "lodash/debounce";
+import SnackbarAlert from "../components/SnackbarAlert.vue";
+
 export default {
   name: "Home",
   components: {
     BookFiction,
     BookManga,
     BookRomance,
+    SnackbarAlert,
   },
   data() {
     return {
       tab: "historical fiction",
       bookComponents: ["BookFiction", "BookManga", "BookRomance"],
       bestSellerSubjects: ["historical fiction", "ancient history", "cooking"],
-      companyLinks: [
-        "About Us",
-        "Publisher Partnership",
-        "Affiliate Program",
-        "Privacy Policy",
-        "Disclaimer",
-      ],
-      accountLinks: [
-        "My Orders",
-        "My Addresses",
-        "My Wishlist",
-        "Account Settings",
-        "Return Policy",
-      ],
-      supportLinks: [
-        "Terms of Use",
-        "How to Shop",
-        "Track Your Order",
-        "Frequently Asked Questions",
-        "Contact Us",
-        "Help & Support",
+      newsletterEmail: "",
+      categories: [
+        {
+          name: "Literary Fiction",
+          route: "literary fiction",
+          icon: "mdi-book-open-page-variant",
+          image:
+            "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=200&fit=crop",
+          count: "2,500+",
+        },
+        {
+          name: "Romance",
+          route: "romance",
+          icon: "mdi-heart",
+          image:
+            "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=200&fit=crop",
+          count: "1,800+",
+        },
+        {
+          name: "Manga",
+          route: "manga",
+          icon: "mdi-comic-speech-bubble",
+          image:
+            "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=200&fit=crop",
+          count: "3,200+",
+        },
+        {
+          name: "History",
+          route: "history",
+          icon: "mdi-castle",
+          image:
+            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=200&fit=crop",
+          count: "1,500+",
+        },
       ],
       searchQuery: "",
       searchResults: [],
@@ -622,9 +649,6 @@ export default {
   },
   async mounted() {
     await this.getAllBooks();
-    // console.log("Current tab:", this.tab);
-    // console.log("All books:", this.books);
-    // console.log("Filtered books:", this.bestSellersStories);
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
@@ -646,6 +670,24 @@ export default {
       }
     },
 
+    subscribeNewsletter() {
+      if (this.newsletterEmail) {
+        this.snackbarText = "Thank you for subscribing to our newsletter!";
+        this.showSnackbar = true;
+        this.snackbarColor = "success";
+        this.newsletterEmail = "";
+      }
+    },
+
+    performSearch() {
+      // Trigger search functionality
+      console.log("Performing search for:", this.searchQuery);
+    },
+
+    handleSearchInput() {
+      // Handle search input changes
+    },
+
     getPlaceholderImage(width, height) {
       return `https://via.placeholder.com/${width}x${height}`;
     },
@@ -653,12 +695,146 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 .position-relative {
   position: relative;
 }
 
 .position-absolute {
   position: absolute;
+}
+
+.search-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #dee2e6;
+}
+
+.search-input {
+  border-radius: 12px;
+}
+
+.search-btn {
+  border-radius: 12px;
+}
+
+.search-results {
+  border: 1px solid #e9ecef;
+}
+
+.search-result-item {
+  transition: background-color 0.2s ease;
+}
+
+.search-result-item:hover {
+  background-color: #f8f9fa;
+}
+
+.trending-book-card {
+  transition: transform 0.2s ease;
+}
+
+.trending-book-card:hover {
+  transform: translateY(-4px);
+}
+
+.best-sellers-card {
+  border: 1px solid #dee2e6;
+}
+
+.enhanced-tabs {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.tab-item {
+  font-size: 1rem;
+  padding: 16px 24px;
+}
+
+.book-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e9ecef;
+}
+
+.book-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+.bestseller-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 2;
+}
+
+.book-cover-container {
+  overflow: hidden;
+}
+
+.book-cover {
+  transition: transform 0.3s ease;
+}
+
+.book-card:hover .book-cover {
+  transform: scale(1.05);
+}
+
+.add-to-cart-btn {
+  transition: all 0.2s ease;
+}
+
+.add-to-cart-btn:hover {
+  transform: translateY(-2px);
+}
+
+.categories-card {
+  border: 1px solid #dee2e6;
+}
+
+.category-card {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.category-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
+}
+
+.category-image {
+  position: relative;
+}
+
+.category-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(82, 149, 208, 0.8) 0%,
+    rgba(67, 80, 88, 0.8) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.category-card:hover .category-overlay {
+  opacity: 1;
+}
+
+.newsletter-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border: 1px solid #dee2e6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tab-item {
+    font-size: 0.875rem;
+    padding: 12px 16px;
+  }
+
+  .book-card {
+    margin-bottom: 16px;
+  }
 }
 </style>

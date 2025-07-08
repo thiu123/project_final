@@ -59,7 +59,7 @@
 
           <v-list>
             <template v-for="(category, index) in bookSubjects" :key="index">
-              <!-- Categories with subcategories --> 
+              <!-- Categories with subcategories -->
               <v-list-group v-if="category.subcategories">
                 <template v-slot:activator="{ props }">
                   <v-list-item v-bind="props">
@@ -286,8 +286,48 @@
 
               <v-divider></v-divider>
 
+              <v-list-item @click="goToProfile('personal')">
+                <template v-slot:prepend>
+                  <v-icon icon="mdi-account" size="20"></v-icon>
+                </template>
+                <v-list-item-title>Personal Info</v-list-item-title>
+              </v-list-item>
+
+              <v-list-item @click="goToProfile('orders')">
+                <template v-slot:prepend>
+                  <v-icon icon="mdi-package-variant" size="20"></v-icon>
+                </template>
+                <v-list-item-title>Orders</v-list-item-title>
+              </v-list-item>
+
+              <v-list-item @click="goToProfile('wishlist')">
+                <template v-slot:prepend>
+                  <v-icon icon="mdi-heart" size="20"></v-icon>
+                </template>
+                <v-list-item-title>Wishlist</v-list-item-title>
+              </v-list-item>
+
+              <v-list-item @click="goToProfile('reviews')">
+                <template v-slot:prepend>
+                  <v-icon icon="mdi-star" size="20"></v-icon>
+                </template>
+                <v-list-item-title>My Reviews</v-list-item-title>
+              </v-list-item>
+
+              <v-list-item @click="goToProfile('password')">
+                <template v-slot:prepend>
+                  <v-icon icon="mdi-lock" size="20"></v-icon>
+                </template>
+                <v-list-item-title>Change Password</v-list-item-title>
+              </v-list-item>
+
+              <v-divider></v-divider>
+
               <v-list-item @click="handleLogout">
-                <v-list-item-title>Logout</v-list-item-title>
+                <template v-slot:prepend>
+                  <v-icon icon="mdi-logout" size="20" color="error"></v-icon>
+                </template>
+                <v-list-item-title class="text-error">Logout</v-list-item-title>
               </v-list-item>
             </v-list>
           </v-card>
@@ -420,6 +460,10 @@ export default {
     handleLogout() {
       this.logout();
       this.$router.push("/");
+    },
+    goToProfile(tab) {
+      this.accountMenu = false;
+      this.$router.push(`/profiles?tab=${tab}`);
     },
   },
   computed: {
