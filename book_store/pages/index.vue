@@ -538,7 +538,7 @@ import BookManga from "../components/home/BookManga.vue";
 import BookFiction from "../components/home/BookFiction.vue";
 import BookRomance from "../components/home/BookRomance.vue";
 import { mapState, mapActions, mapGetters } from "vuex";
-import axios from "axios";
+import { searchBooksByTitle } from "@/api/bookApi";
 import debounce from "lodash/debounce";
 import SnackbarAlert from "../components/SnackbarAlert.vue";
 
@@ -605,16 +605,11 @@ export default {
       }
 
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/books/search",
-          {
-            params: { title: newQuery },
-          }
-        );
+        const response = await searchBooksByTitle(newQuery);
 
         this.searchResults = response.data || [];
 
-        console.log("Search Results:", this.searchResults);
+        // console.log("Search Results:", this.searchResults);
       } catch (error) {
         console.error("Error when searching", error);
       }
