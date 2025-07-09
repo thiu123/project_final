@@ -231,9 +231,17 @@
                     size="small"
                     color="red"
                     class="favorite-btn"
-                    @click="removeFromFavorites(favorite.bookId._id)"
+                    @click="
+                      confirmRemoveFromFavorites(
+                        favorite.bookId._id,
+                        favorite.bookId.title
+                      )
+                    "
                   >
                     <v-icon>mdi-heart</v-icon>
+                    <v-tooltip activator="parent" location="top">
+                      Remove from favorites
+                    </v-tooltip>
                   </v-btn>
 
                   <!-- Rating Badge -->
@@ -316,9 +324,17 @@
                         size="small"
                         color="red"
                         variant="text"
-                        @click="removeFromFavorites(favorite.bookId._id)"
+                        @click="
+                          confirmRemoveFromFavorites(
+                            favorite.bookId._id,
+                            favorite.bookId.title
+                          )
+                        "
                       >
                         <v-icon>mdi-heart</v-icon>
+                        <v-tooltip activator="parent" location="top">
+                          Remove from favorites
+                        </v-tooltip>
                       </v-btn>
                     </div>
 
@@ -382,6 +398,53 @@
           </v-card>
         </v-dialog>
 
+        <!-- Remove Confirmation Dialog -->
+        <v-dialog v-model="removeDialog.show" max-width="450" persistent>
+          <v-card rounded="xl" class="elevation-8">
+            <v-card-title
+              class="text-h6 text-center pa-6 pb-4 bg-error text-white"
+            >
+              <v-icon start color="white" class="me-2">mdi-heart-broken</v-icon>
+              Remove from Favorites
+            </v-card-title>
+
+            <v-card-text class="pa-6 text-center">
+              <v-icon color="error" size="large" class="mb-4"
+                >mdi-alert-circle</v-icon
+              >
+              <div class="text-body-1 mb-2">
+                Are you sure you want to remove
+                <strong>"{{ removeDialog.bookTitle }}"</strong> from your
+                favorites?
+              </div>
+              <div class="text-caption text-medium-emphasis">
+                You can always add it back later by clicking the heart icon on
+                the book.
+              </div>
+            </v-card-text>
+
+            <v-card-actions class="pa-6 pt-0">
+              <v-spacer></v-spacer>
+              <v-btn
+                variant="text"
+                @click="removeDialog.show = false"
+                class="me-3"
+              >
+                Cancel
+              </v-btn>
+              <v-btn
+                color="error"
+                variant="elevated"
+                @click="confirmRemove"
+                :loading="removeDialog.loading"
+              >
+                <v-icon start>mdi-delete</v-icon>
+                Remove
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
         <!-- Snackbar for notifications -->
         <SnackbarAlert
           v-model="snackbar.show"
@@ -405,6 +468,10 @@ export default {
       type: Boolean,
       default: false,
     },
+    toggleFavorites: {
+      type: Function,
+      required: true,
+    },
   },
   data() {
     return {
@@ -416,18 +483,36 @@ export default {
         message: "",
         color: "success",
       },
+      removeDialog: {
+        show: false,
+        loading: false,
+        bookId: null,
+        bookTitle: "",
+      },
     };
   },
   methods: {
-    removeFromFavorites(bookId) {
-      const favoriteIndex = this.favorites.findIndex(
-        (favorite) => favorite.bookId._id === bookId
-      );
-      if (favoriteIndex > -1) {
-        const removedFavorite = this.favorites.splice(favoriteIndex, 1)[0];
+    async removeFromFavorites(bookId) {
+      try {
+        const favoriteIndex = this.favorites.findIndex(
+          (favorite) => favorite.bookId._id === bookId
+        );
+
+        if (favoriteIndex > -1) {
+          const removedFavorite = this.favorites[favoriteIndex];
+
+g          await this.toggleFavorites(bookId);
+
+          this.showSnackbar(
+            `"${removedFavorite.bookId.title}" removed from favorites`,
+            "info"
+          );
+        }
+      } catch (error) {
+        console.error("Error removing from favorites:", error);
         this.showSnackbar(
-          `"${removedFavorite.bookId.title}" removed from favorites`,
-          "info"
+          "Failed to remove book from favorites. Please try again.",
+          "error"
         );
       }
     },
@@ -435,6 +520,36 @@ export default {
       this.snackbar.message = message;
       this.snackbar.color = color;
       this.snackbar.show = true;
+    },
+    async confirmRemove() {
+      this.removeDialog.loading = true;
+      try {
+        await this.toggleFavorites(this.removeDialog.bookId);
+        const favoriteIndex = this.favorites.findIndex(
+          (favorite) => favorite.bookId._id === this.removeDialog.bookId
+        );
+        if (favoriteIndex > -1) {
+          this.favorites.splice(favoriteIndex, 1);
+        }
+        this.showSnackbar(
+          `"${this.removeDialog.bookTitle}" removed from favorites`,
+          "info"
+        );
+      } catch (error) {
+        console.error("Error confirming remove:", error);
+        this.showSnackbar(
+          "Failed to remove book from favorites. Please try again.",
+          "error"
+        );
+      } finally {
+        this.removeDialog.show = false;
+        this.removeDialog.loading = false;
+      }
+    },
+    confirmRemoveFromFavorites(bookId, bookTitle) {
+      this.removeDialog.bookId = bookId;
+      this.removeDialog.bookTitle = bookTitle;
+      this.removeDialog.show = true;
     },
   },
   mounted() {

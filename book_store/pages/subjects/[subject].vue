@@ -288,10 +288,10 @@
                         readonly
                         class="mr-2"
                       ></v-rating>
-                      <span
+                      <!-- <span
                         class="text-caption text-grey-darken-1 font-weight-medium"
                         >{{ book.reviews }} reviews</span
-                      >
+                      > -->
                     </div>
 
                     <!-- Enhanced Title -->

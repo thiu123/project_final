@@ -7,3 +7,9 @@ export const getBooksBySubject = (subject) => {
     params: { subject },
   });
 };
+
+export const searchBooksByTitle = (title) => {
+  return axios.get(`${API_URL}/search`, {
+    params: { title },
+  });
+};

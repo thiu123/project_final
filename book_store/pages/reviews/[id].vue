@@ -1,38 +1,69 @@
 <template>
   <v-container fluid class="pa-0">
     <!-- Header Section -->
-    <v-card flat class="reviews-container my-5 rounded-xl">
-      <v-card-title class="header-section text-h5 font-weight-bold">
+    <v-card flat class="reviews-container my-8 rounded-xl elevation-2">
+      <v-card-title
+        class="header-section text-h5 font-weight-bold d-flex align-center"
+      >
+        <v-icon start color="white" size="large" class="me-3"
+          >mdi-star-outline</v-icon
+        >
         REVIEWS
       </v-card-title>
 
       <!-- Rating Summary -->
-      <v-card-text class="rating-summary pa-6">
+      <v-card-text class="rating-summary pa-8">
         <v-row align="center" no-gutters>
           <v-col cols="auto">
-            <div class="overall-rating text-h4">
-              <span class="rating-number">4.0</span>
-              <span class="rating-total">/5</span>
+            <div class="overall-rating text-center">
+              <div class="text-h2 font-weight-bold text-primary mb-2">
+                <span class="rating-number">4.0</span>
+                <span class="text-h5 text-medium-emphasis">/5</span>
+              </div>
+              <v-rating
+                :model-value="4"
+                color="amber"
+                density="compact"
+                readonly
+                size="small"
+                class="mb-2"
+              ></v-rating>
+              <div class="text-caption text-medium-emphasis">
+                Based on 24 reviews
+              </div>
             </div>
           </v-col>
 
-          <v-col cols="auto" class="mx-6">
+          <v-col cols="auto" class="mx-8">
             <div class="rating-breakdown">
               <v-row
                 v-for="(rating, index) in ratingBreakdown"
                 :key="index"
                 align="center"
                 no-gutters
-                class="rating-row"
+                class="rating-row mb-1"
               >
-                <v-col cols="auto">
-                  <span class="star-number">{{ 5 - index }}</span>
+                <v-col cols="auto" class="me-2">
+                  <span class="text-body-2 font-weight-medium">{{
+                    5 - index
+                  }}</span>
                 </v-col>
-                <v-col cols="auto" class="mx-2">
-                  <v-icon color="orange" size="small">mdi-star</v-icon>
+                <v-col cols="auto" class="me-2">
+                  <v-icon color="amber" size="small">mdi-star</v-icon>
                 </v-col>
                 <v-col cols="auto">
-                  <span class="rating-count">({{ rating.count }})</span>
+                  <v-progress-linear
+                    :model-value="(rating.count / 24) * 100"
+                    color="amber"
+                    height="8"
+                    rounded
+                    class="me-3"
+                  ></v-progress-linear>
+                </v-col>
+                <v-col cols="auto">
+                  <span class="text-caption text-medium-emphasis"
+                    >({{ rating.count }})</span
+                  >
                 </v-col>
               </v-row>
             </div>
@@ -45,49 +76,125 @@
               color="primary"
               variant="elevated"
               rounded="lg"
-              class="write-review-btn"
+              size="large"
+              class="write-review-btn elevation-2"
               @click="showCreateReviewsDialog = true"
             >
-              <v-icon start>mdi-pencil</v-icon>
+              <v-icon start>mdi-pencil-plus</v-icon>
               Write a Review
             </v-btn>
           </v-col>
         </v-row>
       </v-card-text>
 
-      <v-dialog v-model="showCreateReviewsDialog" max-width="600">
-        <v-card rounded="xl">
-          <v-card-title class="justify-center text-h6"
-            >WRITE A BOOK REVIEW</v-card-title
+      <!-- Create Review Dialog -->
+      <v-dialog v-model="showCreateReviewsDialog" max-width="600" persistent>
+        <v-card rounded="xl" class="elevation-8">
+          <v-card-title
+            class="text-h6 text-center pa-6 pb-4 bg-primary text-white"
           >
+            <v-icon start color="white" class="me-2">mdi-pencil</v-icon>
+            WRITE A BOOK REVIEW
+          </v-card-title>
 
-          <!-- Rating -->
-          <v-card-text class="text-center mt-4">
-            <v-rating v-model="rating" color="amber" length="5" size="32" />
-          </v-card-text>
+          <v-card-text class="pa-6">
+            <!-- Rating -->
+            <div class="text-center mb-6">
+              <div class="text-body-1 text-medium-emphasis mb-3">
+                Rate this book:
+              </div>
+              <v-rating
+                v-model="rating"
+                color="amber"
+                length="5"
+                size="40"
+                hover
+                class="mb-2"
+              />
+              <div class="text-caption text-medium-emphasis">
+                {{
+                  rating > 0
+                    ? `${rating} star${rating > 1 ? "s" : ""}`
+                    : "Select rating"
+                }}
+              </div>
+            </div>
 
-          <!-- Comment box -->
-          <v-card-text class="px-4 pt-0">
+            <!-- Comment box -->
             <v-textarea
               v-model="comment"
-              label="Enter your review of the product"
+              label="Share your thoughts about this book..."
               variant="outlined"
               rows="4"
               auto-grow
-              outlined
+              color="primary"
+              class="mb-4"
+              :rules="[(v) => !!v || 'Review comment is required']"
             />
           </v-card-text>
 
           <!-- Buttons -->
-          <v-card-actions class="justify-end px-4 pb-4">
-            <v-btn variant="text" @click="showCreateReviewsDialog = false"
-              >Cancel</v-btn
-            >
+          <v-card-actions class="pa-6 pt-0">
+            <v-spacer></v-spacer>
             <v-btn
-              color="red"
-              @click="handleWriteReview($route.params.id, rating, comment)"
-              >Submit Review</v-btn
+              variant="text"
+              @click="showCreateReviewsDialog = false"
+              class="me-3"
             >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              variant="elevated"
+              @click="handleWriteReview($route.params.id, rating, comment)"
+              :disabled="!rating || !comment.trim()"
+              :loading="loading"
+            >
+              <v-icon start>mdi-send</v-icon>
+              Submit Review
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
+      <!-- Delete Confirmation Dialog -->
+      <v-dialog v-model="showDeleteDialog" max-width="450" persistent>
+        <v-card rounded="xl" class="elevation-8">
+          <v-card-title
+            class="text-h6 text-center pa-6 pb-4 bg-error text-white"
+          >
+            <v-icon start color="white" class="me-2">mdi-delete-alert</v-icon>
+            Delete Review
+          </v-card-title>
+          <v-card-text class="pa-6 text-center">
+            <v-icon color="error" size="large" class="mb-4"
+              >mdi-alert-circle</v-icon
+            >
+            <div class="text-body-1 mb-2">
+              Are you sure you want to delete this review?
+            </div>
+            <div class="text-caption text-medium-emphasis">
+              This action cannot be undone.
+            </div>
+          </v-card-text>
+          <v-card-actions class="pa-6 pt-0">
+            <v-spacer></v-spacer>
+            <v-btn
+              variant="text"
+              @click="showDeleteDialog = false"
+              class="me-3"
+            >
+              Cancel
+            </v-btn>
+            <v-btn
+              color="error"
+              variant="elevated"
+              @click="confirmDeleteReview"
+              :loading="deleteLoading"
+            >
+              <v-icon start>mdi-delete</v-icon>
+              Delete
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -97,44 +204,83 @@
       <!-- Reviews List -->
       <v-card-text class="pa-0">
         <template v-if="isLoaded">
-          <v-list v-if="loading">
+          <v-list v-if="loading" class="pa-8">
             <v-row class="fill-height ma-0" align="center" justify="center">
-              <v-col cols="auto">
+              <v-col cols="auto" class="text-center">
                 <v-progress-circular
                   indeterminate
                   color="primary"
+                  size="64"
                 ></v-progress-circular>
+                <div class="text-body-1 text-medium-emphasis mt-4">
+                  Loading reviews...
+                </div>
               </v-col>
             </v-row>
           </v-list>
 
-          <v-list v-else-if="reviews && reviews.length > 0">
+          <v-list v-else-if="reviews && reviews.length > 0" class="pa-0">
             <div
               v-for="(review, index) in reviews"
               :key="index"
               class="review-item"
             >
-              <v-container>
+              <v-container class="pa-6">
                 <!-- Reviewer Info -->
-                <v-row class="mb-2">
-                  <v-col cols="12">
-                    <div class="reviewer-info d-flex flex-column">
-                      <h3 class="reviewer-name mb-1">
-                        {{ review.userId?.username || "Anonymous" }}
-                      </h3>
-                      <div class="">
-                        <v-rating
-                          :model-value="review.rating"
-                          color="amber"
-                          density="compact"
-                          readonly
-                          size="small"
-                        ></v-rating>
-                        <div class="review-date">
-                          {{ review.createdAt }}
+                <v-row class="mb-4" align="center">
+                  <v-col cols="11">
+                    <div class="d-flex align-center">
+                      <v-avatar color="primary" size="40" class="me-3">
+                        <v-icon color="white" size="20">mdi-account</v-icon>
+                      </v-avatar>
+                      <div class="flex-grow-1">
+                        <div class="d-flex align-center mb-1">
+                          <h3
+                            class="text-h6 font-weight-bold text-primary mb-0 me-3"
+                          >
+                            {{ review.userId?.username || "Anonymous" }}
+                          </h3>
+                          <v-chip
+                            size="small"
+                            color="success"
+                            variant="tonal"
+                            class="text-caption"
+                          >
+                            Verified
+                          </v-chip>
+                        </div>
+                        <div class="d-flex align-center">
+                          <v-rating
+                            :model-value="review.rating"
+                            color="amber"
+                            density="compact"
+                            readonly
+                            size="small"
+                            class="me-2"
+                          ></v-rating>
+                          <span class="text-caption text-medium-emphasis">
+                            {{ formatDate(review.createdAt) }}
+                          </span>
                         </div>
                       </div>
                     </div>
+                  </v-col>
+                  <v-col cols="1" class="d-flex justify-end">
+                    <!-- Delete button - only show for current user's reviews -->
+                    <v-btn
+                      v-if="isCurrentUserReview(review)"
+                      icon
+                      size="small"
+                      color="error"
+                      variant="text"
+                      @click="showDeleteConfirmation(review._id)"
+                      class="delete-btn"
+                    >
+                      <v-icon size="small">mdi-delete</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Delete my review
+                      </v-tooltip>
+                    </v-btn>
                   </v-col>
                 </v-row>
 
@@ -142,7 +288,9 @@
                 <v-row>
                   <v-col cols="12">
                     <div class="review-content">
-                      <p class="review-text">{{ review.comment }}</p>
+                      <p class="text-body-1 text-high-emphasis line-height-1-6">
+                        {{ review.comment }}
+                      </p>
                     </div>
                   </v-col>
                 </v-row>
@@ -152,23 +300,35 @@
             </div>
           </v-list>
 
-          <v-list v-else>
+          <v-list v-else class="pa-8">
             <v-row class="fill-height ma-0" align="center" justify="center">
-              <v-col cols="auto">
-                <p class="text-center">No reviews available for this book.</p>
+              <v-col cols="auto" class="text-center">
+                <v-icon color="grey-lighten-1" size="64" class="mb-4"
+                  >mdi-comment-outline</v-icon
+                >
+                <div class="text-h6 text-medium-emphasis mb-2">
+                  No reviews yet
+                </div>
+                <div class="text-body-2 text-medium-emphasis">
+                  Be the first to share your thoughts about this book!
+                </div>
               </v-col>
             </v-row>
           </v-list>
         </template>
 
         <template v-else>
-          <v-list>
+          <v-list class="pa-8">
             <v-row class="fill-height ma-0" align="center" justify="center">
-              <v-col cols="auto">
+              <v-col cols="auto" class="text-center">
                 <v-progress-circular
                   indeterminate
                   color="primary"
+                  size="64"
                 ></v-progress-circular>
+                <div class="text-body-1 text-medium-emphasis mt-4">
+                  Loading...
+                </div>
               </v-col>
             </v-row>
           </v-list>
@@ -185,7 +345,11 @@ export default {
   data() {
     return {
       rating: 0,
+      comment: "",
       showCreateReviewsDialog: false,
+      showDeleteDialog: false,
+      deleteLoading: false,
+      reviewToDelete: null,
       ratingBreakdown: [
         { count: 20 },
         { count: 2 },
@@ -199,6 +363,7 @@ export default {
   },
   computed: {
     ...mapState("review", ["reviews"]),
+    ...mapState("auth", ["currentUser"]),
   },
   watch: {
     reviews(newVal) {
@@ -221,7 +386,55 @@ export default {
   },
 
   methods: {
-    ...mapActions("review", ["addNewReview", "loadReviews"]),
+    ...mapActions("review", ["addNewReview", "loadReviews", "deleteReview"]),
+
+    // Format date for display
+    formatDate(dateString) {
+      if (!dateString) return "";
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    },
+
+    // Check if the review belongs to the current user
+    isCurrentUserReview(review) {
+      return (
+        this.currentUser &&
+        review.userId &&
+        (review.userId._id === this.currentUser._id ||
+          review.userId === this.currentUser._id)
+      );
+    },
+
+    // Show delete confirmation dialog
+    showDeleteConfirmation(reviewId) {
+      this.reviewToDelete = reviewId;
+      this.showDeleteDialog = true;
+    },
+
+    // Confirm and delete the review
+    async confirmDeleteReview() {
+      if (!this.reviewToDelete) return;
+
+      this.deleteLoading = true;
+      try {
+        await this.deleteReview(this.reviewToDelete);
+        console.log("Review deleted successfully");
+        this.showDeleteDialog = false;
+        this.reviewToDelete = null;
+        // Reload reviews to update the list
+        await this.loadReviews(this.$route.params.id);
+      } catch (error) {
+        console.error("Error deleting review:", error);
+        // You might want to show an error message to the user here
+      } finally {
+        this.deleteLoading = false;
+      }
+    },
+
     async handleWriteReview(bookId, rating, comment) {
       this.loading = true;
       try {
@@ -246,98 +459,72 @@ export default {
 .reviews-container {
   max-width: 1200px;
   margin: 0 auto;
-  background-color: #f5f5f5;
+  background-color: #fafafa;
 }
 
 .header-section {
-  background-color: #4a90e2 !important;
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
   color: white !important;
   font-size: 18px !important;
   font-weight: bold !important;
   letter-spacing: 1px !important;
-  padding: 15px 25px !important;
+  padding: 20px 30px !important;
+  border-radius: 12px 12px 0 0 !important;
 }
 
 .rating-summary {
   background-color: white !important;
-  border-bottom: 2px solid #e0e0e0;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .overall-rating {
   display: flex;
-  align-items: baseline;
-  gap: 5px;
+  flex-direction: column;
+  align-items: center;
 }
 
 .rating-number {
   font-size: 48px;
   font-weight: bold;
-  color: #333;
-}
-
-.rating-total {
-  font-size: 24px;
-  color: #666;
+  color: #1976d2;
 }
 
 .rating-breakdown .rating-row {
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
-
-.star-number {
-  font-weight: bold;
-  color: #333;
-  min-width: 12px;
-}
-
-.rating-count {
-  color: #666;
-  font-size: 14px;
-}
-
-/* .write-review-btn {
-  text-transform: none !important;
-  font-weight: bold !important;
-} */
 
 .review-item {
   background-color: white;
-  padding: 25px 0;
+  transition: all 0.3s ease;
 }
 
-.reviewer-info {
-  margin-bottom: 15px;
-}
-
-.reviewer-name {
-  font-size: 18px;
-  font-weight: bold;
-  color: #333;
-  margin: 0 0 8px 0;
-}
-
-.review-date {
-  color: #666;
-  font-size: 14px;
+.review-item:hover {
+  background-color: #f8f9fa;
 }
 
 .review-content {
   line-height: 1.6;
 }
 
-.review-text {
-  color: #333;
-  margin: 0;
-  font-size: 14px;
-  text-align: justify;
+.line-height-1-6 {
   line-height: 1.6;
+}
+
+.delete-btn {
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .rating-summary .v-row {
     flex-direction: column !important;
-    align-items: flex-start !important;
+    align-items: center !important;
   }
 
   .rating-summary .v-col:last-child {
@@ -345,8 +532,18 @@ export default {
     margin-top: 20px;
   }
 
-  /* .write-review-btn {
-    width: 100%;
-  } */
+  .header-section {
+    padding: 15px 20px !important;
+  }
+
+  .rating-summary {
+    padding: 20px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .reviews-container {
+    margin: 0 10px;
+  }
 }
 </style>
