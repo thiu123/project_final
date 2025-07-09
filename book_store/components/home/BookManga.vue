@@ -107,12 +107,18 @@
                 class="position-absolute favorite-btn"
                 style="top: 12px; right: 12px"
                 size="small"
+                @click.stop="handleToggleFavorites(book._id)"
               >
-                <v-img width="40" height="30" src="@/assets/heart.svg" />
+                <v-icon
+                  :color="isFavorite(book._id) ? 'red' : 'grey-lighten-4'"
+                  size="24"
+                >
+                  {{ isFavorite(book._id) ? "mdi-heart" : "mdi-heart-outline" }}
+                </v-icon>
               </v-btn>
 
               <!-- Quick View Overlay -->
-              <div
+              <!-- <div
                 v-if="isHovering"
                 class="position-absolute d-flex align-center justify-center quick-view-overlay"
               >
@@ -127,7 +133,7 @@
                   <v-icon size="small" class="mr-2">mdi-eye</v-icon>
                   Quick View
                 </v-btn>
-              </div>
+              </div> -->
 
               <!-- Stock Badge -->
               <!-- <v-chip
@@ -165,7 +171,6 @@
                   half-increments
                   class="mr-2"
                 ></v-rating>
-              
               </div>
 
               <!-- Enhanced Title -->
@@ -225,6 +230,16 @@ export default {
       isLoading: false,
     };
   },
+  props: {
+    toggleFavorites: {
+      type: Function,
+      required: true,
+    },
+    favorites: {
+      type: Array,
+      default: () => [],
+    },
+  },
   computed: {
     ...mapState("book", ["mangaBooks"]),
     limitedMangaBooks() {
@@ -233,6 +248,19 @@ export default {
   },
   methods: {
     ...mapActions("book", ["getMangaBooks"]),
+    async handleToggleFavorites(bookId) {
+      try {
+        await this.toggleFavorites(bookId);
+      } catch (error) {
+        console.error("Error toggling favorites:", error);
+      }
+    },
+    isFavorite(bookId) {
+      return this.favorites.some((favorite) => {
+        const favoriteBookId = favorite.bookId?._id || favorite.bookId;
+        return favoriteBookId === bookId;
+      });
+    },
   },
   async mounted() {
     if (this.mangaBooks.length === 0) {

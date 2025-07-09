@@ -109,12 +109,18 @@
                 class="position-absolute favorite-btn"
                 style="top: 12px; right: 12px"
                 size="small"
+                @click.stop="handleToggleFavorites(book._id)"
               >
-                <v-img width="40" height="30" src="@/assets/heart.svg" />
+                <v-icon
+                  :color="isFavorite(book._id) ? 'red' : 'grey-lighten-5'"
+                  size="24"
+                >
+                  {{ isFavorite(book._id) ? "mdi-heart" : "mdi-heart-outline" }}
+                </v-icon>
               </v-btn>
 
               <!-- Quick View Overlay -->
-              <div
+              <!-- <div
                 v-if="isHovering"
                 class="position-absolute d-flex align-center justify-center quick-view-overlay"
               >
@@ -129,7 +135,7 @@
                   <v-icon size="small" class="mr-2">mdi-eye</v-icon>
                   Quick View
                 </v-btn>
-              </div>
+              </div> -->
 
               <!-- Stock Badge -->
               <!-- <v-chip
@@ -216,8 +222,33 @@ export default {
       return this.fictionBooks.slice(0, 6);
     },
   },
+  props: {
+    favorites: {
+      type: Array,
+      default: () => [],
+    },
+    toggleFavorites: {
+      type: Function,
+      required: true,
+    },
+  },
   methods: {
     ...mapActions("book", ["getFictionBooks"]),
+    ...mapActions("favorite", ["toggleFavorites"]),
+    async handleToggleFavorites(bookId) {
+      try {
+        await this.toggleFavorites(bookId);
+      } catch (error) {
+        console.error("Error toggling favorites:", error);
+      }
+    },
+    isFavorite(bookId) {
+      return this.favorites.some((favorite) => {
+        // Handle case where bookId is populated (contains full book object)
+        const favoriteBookId = favorite.bookId?._id || favorite.bookId;
+        return favoriteBookId === bookId;
+      });
+    },
   },
   async mounted() {
     try {
