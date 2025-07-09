@@ -147,27 +147,8 @@
           </div>
         </div>
 
-        <!-- Empty State -->
-        <v-card
-          v-else-if="favorites.length === 0"
-          class="text-center pa-12"
-          elevation="2"
-        >
-          <v-icon size="80" color="grey-lighten-1" class="mb-4"
-            >mdi-heart-outline</v-icon
-          >
-          <h2 class="text-h5 mb-2">No favorites yet</h2>
-          <p class="text-body-1 text-medium-emphasis mb-4">
-            Start adding books to your favorites to see them here
-          </p>
-          <v-btn color="primary" size="large" @click="browseBooksDialog = true">
-            <v-icon start>mdi-book-search</v-icon>
-            Browse Books
-          </v-btn>
-        </v-card>
-
         <!-- Favorites Grid -->
-        <div v-else>
+        <div>
           <!-- Stats Bar -->
           <v-card class="mb-6 pa-4" elevation="1">
             <v-row align="center">
@@ -229,7 +210,9 @@
                   <v-btn
                     icon
                     size="small"
-                    color="red"
+                    :color="
+                      isFavorite(favorite.bookId._id) ? 'red' : 'grey-darken-2'
+                    "
                     class="favorite-btn"
                     @click="
                       confirmRemoveFromFavorites(
@@ -238,9 +221,19 @@
                       )
                     "
                   >
-                    <v-icon>mdi-heart</v-icon>
+                    <v-icon>
+                      {{
+                        isFavorite(favorite.bookId._id)
+                          ? "mdi-heart"
+                          : "mdi-heart-outline"
+                      }}
+                    </v-icon>
                     <v-tooltip activator="parent" location="top">
-                      Remove from favorites
+                      {{
+                        isFavorite(favorite.bookId._id)
+                          ? "Remove from favorites"
+                          : "Add to favorites"
+                      }}
                     </v-tooltip>
                   </v-btn>
 
@@ -322,7 +315,11 @@
                       <v-btn
                         icon
                         size="small"
-                        color="red"
+                        :color="
+                          isFavorite(favorite.bookId._id)
+                            ? 'red'
+                            : 'grey-darken-2'
+                        "
                         variant="text"
                         @click="
                           confirmRemoveFromFavorites(
@@ -331,9 +328,19 @@
                           )
                         "
                       >
-                        <v-icon>mdi-heart</v-icon>
+                        <v-icon>
+                          {{
+                            isFavorite(favorite.bookId._id)
+                              ? "mdi-heart"
+                              : "mdi-heart-outline"
+                          }}
+                        </v-icon>
                         <v-tooltip activator="parent" location="top">
-                          Remove from favorites
+                          {{
+                            isFavorite(favorite.bookId._id)
+                              ? "Remove from favorites"
+                              : "Add to favorites"
+                          }}
                         </v-tooltip>
                       </v-btn>
                     </div>
@@ -550,6 +557,9 @@ export default {
       this.removeDialog.bookId = bookId;
       this.removeDialog.bookTitle = bookTitle;
       this.removeDialog.show = true;
+    },
+    isFavorite(bookId) {
+      return this.favorites.some((favorite) => favorite.bookId._id === bookId);
     },
   },
   mounted() {

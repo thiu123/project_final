@@ -96,8 +96,20 @@
                       In Stock
                     </v-chip>
                   </div>
-                  <v-btn icon variant="outlined" color="pink" size="large">
-                    <v-icon>mdi-heart-outline</v-icon>
+                  <v-btn
+                    icon
+                    variant="outlined"
+                    :color="isFavorite(detailsBooks._id) ? 'red' : 'pink'"
+                    size="large"
+                    @click="handleToggleFavorites(detailsBooks._id)"
+                  >
+                    <v-icon>
+                      {{
+                        isFavorite(detailsBooks._id)
+                          ? "mdi-heart"
+                          : "mdi-heart-outline"
+                      }}
+                    </v-icon>
                   </v-btn>
                 </div>
 
@@ -369,7 +381,7 @@
 
 <script>
 import axios from "axios";
-import { mapActions } from "vuex";
+import { mapActions, mapState } from "vuex";
 export default {
   data() {
     return {
@@ -382,8 +394,12 @@ export default {
       snackbarColor: "success",
     };
   },
+  computed: {
+    ...mapState("favorite", ["favorites"]),
+  },
   methods: {
     ...mapActions("cart", ["addToCart"]),
+    ...mapActions("favorite", ["toggleFavorites"]),
     async getDetailsBooks() {
       try {
         this.isLoading = true;
@@ -428,6 +444,28 @@ export default {
         this.showSnackbar = true;
         this.snackbarColor = "error";
       }
+    },
+    async handleToggleFavorites(bookId) {
+      try {
+        await this.toggleFavorites(bookId);
+        this.snackbarText = this.isFavorite(bookId)
+          ? "Removed from favorites!"
+          : "Added to favorites!";
+        this.showSnackbar = true;
+        this.snackbarColor = "success";
+      } catch (error) {
+        console.error("Error toggling favorites:", error);
+        this.snackbarText = "Failed to update favorites.";
+        this.showSnackbar = true;
+        this.snackbarColor = "error";
+      }
+    },
+    isFavorite(bookId) {
+      return this.favorites.some((favorite) => {
+        // Handle case where bookId is populated (contains full book object)
+        const favoriteBookId = favorite.bookId?._id || favorite.bookId;
+        return favoriteBookId === bookId;
+      });
     },
   },
   async mounted() {

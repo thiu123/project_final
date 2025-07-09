@@ -287,6 +287,29 @@
                               </div>
                             </template>
                           </v-img>
+
+                          <!-- Favorite Button -->
+                          <!-- <v-btn
+                            icon
+                            variant="text"
+                            class="position-absolute favorite-btn"
+                            style="top: 12px; right: 12px"
+                            size="small"
+                            @click.stop="handleToggleFavorites(book._id)"
+                          >
+                            <v-icon
+                              :color="
+                                isFavorite(book._id) ? 'red' : 'grey-lighten-2'
+                              "
+                              size="24"
+                            >
+                              {{
+                                isFavorite(book._id)
+                                  ? "mdi-heart"
+                                  : "mdi-heart-outline"
+                              }}
+                            </v-icon>
+                          </v-btn> -->
                         </div>
 
                         <!-- Enhanced Card Content -->
@@ -470,6 +493,8 @@
       v-for="(bookComponent, index) in bookComponents"
       :key="index"
       :is="bookComponent"
+      :toggle-favorites="toggleFavorites"
+      :favorites="favorites"
       @add-to-cart="handleAddToCart"
     ></component>
 
@@ -621,6 +646,7 @@ export default {
   computed: {
     ...mapGetters("book", ["getTitleBooks"]),
     ...mapState("book", ["books"]),
+    ...mapState("favorite", ["favorites"]),
     bestSellersStories() {
       if (!this.books?.length) {
         return [];
@@ -643,11 +669,13 @@ export default {
     },
   },
   async mounted() {
+    await this.getFavoritesForEachUser();
     await this.getAllBooks();
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
     ...mapActions("cart", ["addToCart"]),
+    ...mapActions("favorite", ["toggleFavorites", "getFavoritesForEachUser"]),
     async handleAddToCart(bookId, quantity) {
       try {
         await this.addToCart({
@@ -663,6 +691,21 @@ export default {
         this.showSnackbar = true;
         this.snackbarColor = "error";
       }
+    },
+
+    async handleToggleFavorites(bookId) {
+      try {
+        await this.toggleFavorites(bookId);
+      } catch (error) {
+        console.error("Error toggling favorites:", error);
+      }
+    },
+
+    isFavorite(bookId) {
+      return this.favorites.some((favorite) => {
+        const favoriteBookId = favorite.bookId?._id || favorite.bookId;
+        return favoriteBookId === bookId;
+      });
     },
 
     subscribeNewsletter() {
