@@ -501,7 +501,7 @@ export default {
         if (favoriteIndex > -1) {
           const removedFavorite = this.favorites[favoriteIndex];
 
-g          await this.toggleFavorites(bookId);
+          await this.toggleFavorites(bookId);
 
           this.showSnackbar(
             `"${removedFavorite.bookId.title}" removed from favorites`,
