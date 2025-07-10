@@ -9,6 +9,12 @@ export const fetchReviews = (id) => {
   });
 };
 
+export const fetchUserReviews = () => {
+  return axios.get(`${API_URL}/user/reviews`, {
+    headers: { token: token() },
+  });
+};
+
 export const createReview = (bookId, rating, comment) => {
   return axios.post(
     `${API_URL}/create`,
