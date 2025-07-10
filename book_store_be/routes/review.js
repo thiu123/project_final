@@ -13,6 +13,11 @@ router.delete(
   reviewController.deleteReview
 );
 router.get(
+  "/user/reviews",
+  middlewareController.verifyToken,
+  reviewController.getReviewsByUser
+);
+router.get(
   "/:id",
   middlewareController.verifyToken,
   reviewController.getAllReviews

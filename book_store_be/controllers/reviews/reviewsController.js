@@ -19,6 +19,20 @@ const reviewsController = {
     }
   },
 
+  getReviewsByUser: async (req, res) => {
+    try {
+      const userId = req.user.id;
+
+      const reviews = await Review.find({ userId })
+        .populate("bookId")
+        .sort({ createdAt: -1 });
+
+      res.status(200).json(reviews);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+  },
+
   createReview: async (req, res) => {
     try {
       const { bookId, rating, comment } = req.body;

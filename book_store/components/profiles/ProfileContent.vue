@@ -245,49 +245,117 @@
       <div v-if="activeTab === 'reviews'" class="content-section">
         <h2 class="text-h4 mb-6 font-weight-bold">My Reviews</h2>
 
-        <v-card
-          v-for="review in reviews"
-          :key="review.id"
-          elevation="2"
-          class="mb-4"
-        >
-          <v-card-text class="pa-6">
-            <div class="d-flex mb-4">
-              <v-img
-                :src="review.bookImage"
-                width="60"
-                height="80"
-                class="rounded mr-4"
-              ></v-img>
-              <div class="flex-grow-1">
-                <h3 class="text-h6 font-weight-bold">
-                  {{ review.bookTitle }}
-                </h3>
-                <p class="text-body-2 text-grey-darken-1">
-                  by {{ review.bookAuthor }}
-                </p>
-                <div class="d-flex align-center mt-2">
-                  <v-rating
-                    v-model="review.rating"
-                    readonly
-                    size="small"
-                    color="amber"
-                  ></v-rating>
-                  <span class="text-body-2 ml-2">{{ review.date }}</span>
+        <!-- Loading State -->
+        <div v-if="loadingReviews" class="text-center pa-8">
+          <v-progress-circular
+            indeterminate
+            color="primary"
+          ></v-progress-circular>
+          <p class="mt-4">Loading reviews...</p>
+        </div>
+
+        <!-- Reviews List -->
+        <div v-else-if="userReviews && userReviews.length > 0">
+          <v-card
+            v-for="review in userReviews"
+            :key="review._id"
+            elevation="2"
+            class="mb-4"
+          >
+            <v-card-text class="pa-6">
+              <div class="d-flex align-start mb-4">
+                <div class="flex-shrink-0 mr-4">
+                  <v-img
+                    :src="
+                      review?.bookId?.cover_url ||
+                      'https://via.placeholder.com/80x120'
+                    "
+                    width="80"
+                    height="120"
+                    class="rounded-lg elevation-3 transition-transform"
+                    cover
+                    :aspect-ratio="2 / 3"
+                  >
+                    <template v-slot:placeholder>
+                      <div
+                        class="d-flex align-center justify-center fill-height bg-grey-lighten-3"
+                      >
+                        <v-icon color="grey-lighten-1" size="24"
+                          >mdi-book-open-variant</v-icon
+                        >
+                      </div>
+                    </template>
+                  </v-img>
+                </div>
+                <div class="flex-grow-1">
+                  <div class="d-flex justify-space-between align-start mb-2">
+                    <div>
+                      <h3 class="text-h6 font-weight-bold mb-1">
+                        {{ review.bookId?.title || "Unknown Book" }}
+                      </h3>
+                      <p class="text-body-2 text-grey-darken-1 mb-2">
+                        by
+                        {{
+                          review.bookId?.authors?.join(", ") || "Unknown Author"
+                        }}
+                      </p>
+                    </div>
+                    <v-btn
+                      icon
+                      variant="text"
+                      color="error"
+                      size="small"
+                      @click="
+                        confirmDeleteReview(review._id, review.bookId?.title)
+                      "
+                    >
+                      <v-icon>mdi-delete</v-icon>
+                      <v-tooltip activator="parent" location="top">
+                        Delete Review
+                      </v-tooltip>
+                    </v-btn>
+                  </div>
+
+                  <div class="d-flex align-center mb-3">
+                    <v-rating
+                      :model-value="review.rating"
+                      readonly
+                      size="small"
+                      color="amber"
+                      density="compact"
+                    ></v-rating>
+                    <span class="text-caption text-grey-darken-1 ml-2">
+                      {{ new Date(review.createdAt).toLocaleDateString() }}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <p class="text-body-1">{{ review.comment }}</p>
+              <v-divider class="mb-4"></v-divider>
 
-            <div class="mt-4">
-              <v-btn variant="outlined" size="small" class="mr-2">Edit</v-btn>
-              <v-btn variant="outlined" color="error" size="small"
-                >Delete</v-btn
+              <div
+                class="bg-grey-lighten-5 pa-4 rounded-lg border-l-4 border-primary"
               >
-            </div>
-          </v-card-text>
-        </v-card>
+                <p class="text-body-1 mb-0">{{ review.comment }}</p>
+              </div>
+            </v-card-text>
+          </v-card>
+        </div>
+
+        <!-- No Reviews Message -->
+        <div v-else class="text-center pa-8">
+          <v-icon size="64" color="grey-lighten-1" class="mb-4"
+            >mdi-star-outline</v-icon
+          >
+          <h3 class="text-h6 mb-2">No reviews yet</h3>
+          <p class="text-body-2 text-grey-darken-1 mb-4">
+            You haven't written any reviews yet. Start reading and share your
+            thoughts!
+          </p>
+          <v-btn color="primary" variant="elevated" to="/">
+            Browse Books
+          </v-btn>
+        </div>
       </div>
 
       <!-- Change Password Section -->
@@ -351,45 +419,14 @@ export default {
       type: Boolean,
       default: false,
     },
+    loadingReviews: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ["toggle-drawer"],
   data() {
     return {
-      reviews: [
-        {
-          id: 1,
-          bookTitle: "The Great Gatsby",
-          bookAuthor: "F. Scott Fitzgerald",
-          bookImage:
-            "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=200&h=300&fit=crop",
-          rating: 5,
-          date: "March 20, 2024",
-          comment:
-            "An absolutely brilliant masterpiece! Fitzgerald's writing is poetic and the story is both tragic and beautiful. The symbolism and themes are incredibly deep and thought-provoking.",
-        },
-        {
-          id: 2,
-          bookTitle: "To Kill a Mockingbird",
-          bookAuthor: "Harper Lee",
-          bookImage:
-            "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=200&h=300&fit=crop",
-          rating: 4,
-          date: "March 18, 2024",
-          comment:
-            "A powerful and important book that deals with serious themes of racism and moral growth. Scout is a wonderful narrator and the story is both heartbreaking and inspiring.",
-        },
-        {
-          id: 3,
-          bookTitle: "1984",
-          bookAuthor: "George Orwell",
-          bookImage:
-            "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=200&h=300&fit=crop",
-          rating: 5,
-          date: "March 12, 2024",
-          comment:
-            "Chilling and prophetic. Orwell's vision of a dystopian future feels more relevant than ever. The concepts of Big Brother and thoughtcrime are terrifyingly plausible.",
-        },
-      ],
       passwordForm: {
         current: "",
         new: "",
@@ -401,9 +438,11 @@ export default {
     ...mapState("auth", ["currentUser"]),
     ...mapState("order", ["userOrders"]),
     ...mapState("favorite", ["favorites"]),
+    ...mapState("review", ["userReviews"]),
   },
   methods: {
     ...mapActions("favorite", ["toggleFavorites"]),
+    ...mapActions("review", ["deleteReview"]),
     getStatusColor(status) {
       switch (status?.toLowerCase()) {
         case "paid":
@@ -420,6 +459,15 @@ export default {
     },
     removeFromFavorites(bookId) {
       this.toggleFavorites(bookId);
+    },
+    confirmDeleteReview(reviewId, bookTitle) {
+      if (
+        confirm(
+          `Are you sure you want to delete your review for "${bookTitle}"? This action cannot be undone.`
+        )
+      ) {
+        this.deleteReview(reviewId);
+      }
     },
   },
 };
