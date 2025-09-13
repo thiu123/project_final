@@ -304,7 +304,7 @@
 
                     <!-- Author -->
                     <div class="text-body-2 text-grey-darken-1 mb-3">
-                      by {{ book.author || "Unknown Author" }}
+                      by {{ book.authors[0] || "Unknown Author" }}
                     </div>
                   </v-card-text>
 

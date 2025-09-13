@@ -1,4 +1,4 @@
-import { loginUser, registerUser } from "@/api/authApi";
+import { loginUser, registerUser, changePassword } from "@/api/authApi";
 
 export default {
   namespaced: true,
@@ -68,6 +68,14 @@ export default {
     async register(_, user) {
       try {
         const res = await registerUser(user);
+        return res.data;
+      } catch (error) {
+        throw error.response?.data || error.message;
+      }
+    },
+    async changePassword(_, passwordData) {
+      try {
+        const res = await changePassword(passwordData);
         return res.data;
       } catch (error) {
         throw error.response?.data || error.message;

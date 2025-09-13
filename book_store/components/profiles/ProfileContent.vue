@@ -6,18 +6,35 @@
       color="white"
       elevation="1"
       density="compact"
+      class="border-b border-grey-lighten-3"
     >
       <v-app-bar-nav-icon @click="$emit('toggle-drawer')"></v-app-bar-nav-icon>
-      <v-toolbar-title class="text-h6">My Profile</v-toolbar-title>
+      <v-toolbar-title class="text-h6 font-weight-bold text-customblack"
+        >My Profile</v-toolbar-title
+      >
     </v-app-bar>
 
     <v-container class="pa-6">
       <!-- Personal Info Section -->
       <div v-if="activeTab === 'personal'" class="content-section">
-        <h2 class="text-h4 mb-6 font-weight-bold">Personal Information</h2>
+        <div class="d-flex align-center mb-6">
+          <v-icon
+            icon="mdi-account-circle"
+            size="32"
+            color="waterblue"
+            class="mr-3"
+          ></v-icon>
+          <h2 class="text-h4 font-weight-bold text-customblack">
+            Personal Information
+          </h2>
+        </div>
 
-        <v-card elevation="2" class="mb-6">
-          <v-card-text class="pa-6">
+        <v-card
+          elevation="4"
+          class="rounded-xl overflow-hidden"
+          style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
+        >
+          <v-card-text class="pa-8">
             <v-form>
               <v-row>
                 <v-col cols="12" md="6">
@@ -26,6 +43,9 @@
                     label="First Name"
                     variant="outlined"
                     density="comfortable"
+                    rounded="lg"
+                    color="waterblue"
+                    class="mb-4"
                   ></v-text-field>
                 </v-col>
                 <v-col cols="12" md="6">
@@ -35,10 +55,21 @@
                     type="email"
                     variant="outlined"
                     density="comfortable"
+                    rounded="lg"
+                    color="waterblue"
+                    class="mb-4"
                   ></v-text-field>
                 </v-col>
               </v-row>
-              <v-btn color="primary" size="large" class="mt-4">
+              <v-btn
+                color="waterblue"
+                size="large"
+                class="mt-4 font-weight-bold text-white"
+                rounded="lg"
+                elevation="2"
+                hover
+              >
+                <v-icon start class="mr-2">mdi-content-save</v-icon>
                 Update Information
               </v-btn>
             </v-form>
@@ -48,50 +79,70 @@
 
       <!-- Orders Section -->
       <div v-if="activeTab === 'orders'" class="content-section">
-        <h2 class="text-h4 mb-6 font-weight-bold">Order History</h2>
+        <div class="d-flex align-center mb-6">
+          <v-icon
+            icon="mdi-package-variant"
+            size="32"
+            color="waterblue"
+            class="mr-3"
+          ></v-icon>
+          <h2 class="text-h4 font-weight-bold text-customblack">
+            Order History
+          </h2>
+        </div>
 
         <!-- Loading State -->
-        <div v-if="loadingOrders" class="text-center pa-8">
+        <div v-if="loadingOrders" class="text-center pa-12">
           <v-progress-circular
             indeterminate
-            color="primary"
+            color="waterblue"
+            size="64"
           ></v-progress-circular>
-          <p class="mt-4">Loading orders...</p>
+          <p class="mt-6 text-body-1 text-grey-darken-1">Loading orders...</p>
         </div>
 
         <!-- Orders List -->
-        <div v-else-if="userOrders && userOrders.length > 0">
+        <div v-else-if="userOrdersPaid && userOrdersPaid.length > 0">
           <v-card
-            v-for="order in userOrders"
+            v-for="order in userOrdersPaid"
             :key="order._id"
-            elevation="2"
-            class="mb-4"
+            elevation="3"
+            class="mb-6 rounded-xl overflow-hidden transition-all duration-300 hover:elevation-6"
+            style="
+              background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            "
           >
-            <v-card-text class="pa-6">
-              <div class="d-flex justify-space-between align-center mb-4">
+            <v-card-text class="pa-8">
+              <div class="d-flex justify-space-between align-center mb-6">
                 <div>
-                  <h3 class="text-h6 font-weight-bold">
+                  <h3 class="text-h5 font-weight-bold text-customblack mb-2">
                     Order #{{ order.orderId }}
                   </h3>
                   <p class="text-body-2 text-grey-darken-1">
+                    <v-icon icon="mdi-calendar" size="16" class="mr-1"></v-icon>
                     {{ new Date(order.createdAt).toLocaleDateString() }}
                   </p>
                 </div>
                 <v-chip
                   :color="getStatusColor(order.status)"
                   variant="flat"
-                  size="small"
+                  size="large"
+                  class="font-weight-bold"
                 >
+                  <v-icon start size="16" class="mr-1">{{
+                    getStatusIcon(order.status)
+                  }}</v-icon>
                   {{ order.status || "Pending" }}
                 </v-chip>
               </div>
 
-              <v-divider class="mb-4"></v-divider>
+              <v-divider class="mb-6"></v-divider>
 
               <div
                 v-for="item in order.items"
                 :key="item._id"
-                class="d-flex mb-3"
+                class="d-flex align-center mb-4 p-4 rounded-lg"
+                style="background: rgba(82, 149, 208, 0.05)"
               >
                 <div class="book-image-container mr-4">
                   <v-img
@@ -101,13 +152,15 @@
                     "
                     width="60"
                     height="80"
-                    class="rounded"
+                    class="rounded-lg elevation-2"
                     cover
                     :aspect-ratio="3 / 4"
                   ></v-img>
                 </div>
                 <div class="flex-grow-1">
-                  <h4 class="text-subtitle-1 font-weight-medium">
+                  <h4
+                    class="text-subtitle-1 font-weight-bold text-customblack mb-1"
+                  >
                     {{ item.bookId?.title || "Unknown Book" }}
                   </h4>
                   <p class="text-body-2 text-grey-darken-1">
@@ -115,41 +168,60 @@
                   </p>
                 </div>
                 <div class="text-right">
-                  <p class="text-h6 font-weight-bold">
+                  <p class="text-h6 font-weight-bold text-waterblue">
                     ${{ (item.bookId?.price * item.quantity).toFixed(2) }}
                   </p>
                 </div>
               </div>
 
-              <v-divider class="my-4"></v-divider>
+              <v-divider class="my-6"></v-divider>
 
               <div class="d-flex justify-space-between align-center">
                 <v-btn
                   variant="outlined"
-                  size="small"
+                  color="waterblue"
+                  size="large"
+                  rounded="lg"
                   :to="`/order/status/${order.orderId}`"
+                  class="font-weight-bold"
                 >
+                  <v-icon start class="mr-2">mdi-eye</v-icon>
                   View Details
                 </v-btn>
-                <p class="text-h6 font-weight-bold">
-                  Total: ${{ (order.total / 24).toFixed(2) }}
-                </p>
+                <div class="text-right">
+                  <p class="text-caption text-grey-darken-1 mb-1">
+                    Total Amount
+                  </p>
+                  <p class="text-h5 font-weight-bold text-customblack">
+                    ${{ (order.total / 24).toFixed(2) }}
+                  </p>
+                </div>
               </div>
             </v-card-text>
           </v-card>
         </div>
 
         <!-- No Orders Message -->
-        <div v-else class="text-center pa-8">
-          <v-icon size="64" color="grey-lighten-1" class="mb-4"
+        <div v-else class="text-center pa-12">
+          <v-icon size="80" color="grey-lighten-2" class="mb-6"
             >mdi-package-variant</v-icon
           >
-          <h3 class="text-h6 mb-2">No orders yet</h3>
-          <p class="text-body-2 text-grey-darken-1 mb-4">
+          <h3 class="text-h5 font-weight-bold text-customblack mb-3">
+            No orders yet
+          </h3>
+          <p class="text-body-1 text-grey-darken-1 mb-6 max-width-400 mx-auto">
             You haven't placed any orders yet. Start shopping to see your order
             history here.
           </p>
-          <v-btn color="primary" variant="elevated" to="/">
+          <v-btn
+            color="waterblue"
+            variant="elevated"
+            size="large"
+            rounded="lg"
+            to="/"
+            class="font-weight-bold text-white"
+          >
+            <v-icon start class="mr-2">mdi-shopping</v-icon>
             Start Shopping
           </v-btn>
         </div>
@@ -157,15 +229,26 @@
 
       <!-- Wishlist Section -->
       <div v-if="activeTab === 'wishlist'" class="content-section">
-        <h2 class="text-h4 mb-6 font-weight-bold">My Wishlist</h2>
+        <div class="d-flex align-center mb-6">
+          <v-icon
+            icon="mdi-heart"
+            size="32"
+            color="waterblue"
+            class="mr-3"
+          ></v-icon>
+          <h2 class="text-h4 font-weight-bold text-customblack">My Wishlist</h2>
+        </div>
 
         <!-- Loading State -->
-        <div v-if="loadingFavorites" class="text-center pa-8">
+        <div v-if="loadingFavorites" class="text-center pa-12">
           <v-progress-circular
             indeterminate
-            color="primary"
+            color="waterblue"
+            size="64"
           ></v-progress-circular>
-          <p class="mt-4">Loading favorites...</p>
+          <p class="mt-6 text-body-1 text-grey-darken-1">
+            Loading favorites...
+          </p>
         </div>
 
         <!-- Favorites List -->
@@ -179,7 +262,13 @@
               md="4"
               lg="3"
             >
-              <v-card elevation="2" class="h-100">
+              <v-card
+                elevation="3"
+                class="h-100 rounded-xl overflow-hidden transition-all duration-300 hover:elevation-6"
+                style="
+                  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+                "
+              >
                 <v-img
                   :src="
                     favorite.bookId?.cover_url ||
@@ -189,35 +278,39 @@
                   cover
                   class="book-cover"
                 ></v-img>
-                <v-card-text class="pa-4">
+                <v-card-text class="pa-6">
                   <h4
-                    class="text-subtitle-1 font-weight-bold mb-2 text-truncate"
+                    class="text-subtitle-1 font-weight-bold text-customblack mb-2 text-truncate"
                   >
                     {{ favorite.bookId?.title || "Unknown Book" }}
                   </h4>
-                  <p class="text-body-2 text-grey-darken-1 mb-2">
+                  <p class="text-body-2 text-grey-darken-1 mb-3">
                     by {{ favorite.bookId?.author || "Unknown Author" }}
                   </p>
-                  <p class="text-h6 font-weight-bold text-primary">
+                  <p class="text-h6 font-weight-bold text-waterblue mb-4">
                     ${{ favorite.bookId?.price?.toFixed(2) || "0.00" }}
                   </p>
                 </v-card-text>
-                <v-card-actions class="pa-4 pt-0">
+                <v-card-actions class="pa-6 pt-0">
                   <v-btn
-                    color="primary"
+                    color="waterblue"
                     variant="flat"
-                    size="small"
+                    size="large"
                     block
+                    rounded="lg"
                     :to="`/details/${favorite.bookId?._id}`"
+                    class="font-weight-bold text-white mb-3"
                   >
+                    <v-icon start class="mr-2">mdi-eye</v-icon>
                     View Details
                   </v-btn>
                   <v-btn
                     icon="mdi-heart"
                     color="red"
                     variant="text"
-                    size="small"
+                    size="large"
                     @click="removeFromFavorites(favorite.bookId?._id)"
+                    class="transition-all duration-300 hover:scale-110"
                   ></v-btn>
                 </v-card-actions>
               </v-card>
@@ -226,16 +319,26 @@
         </div>
 
         <!-- No Favorites Message -->
-        <div v-else class="text-center pa-8">
-          <v-icon size="64" color="grey-lighten-1" class="mb-4"
+        <div v-else class="text-center pa-12">
+          <v-icon size="80" color="grey-lighten-2" class="mb-6"
             >mdi-heart</v-icon
           >
-          <h3 class="text-h6 mb-2">No favorites yet</h3>
-          <p class="text-body-2 text-grey-darken-1 mb-4">
+          <h3 class="text-h5 font-weight-bold text-customblack mb-3">
+            No favorites yet
+          </h3>
+          <p class="text-body-1 text-grey-darken-1 mb-6 max-width-400 mx-auto">
             You haven't added any books to your wishlist yet. Start exploring to
             find your favorite books!
           </p>
-          <v-btn color="primary" variant="elevated" to="/">
+          <v-btn
+            color="waterblue"
+            variant="elevated"
+            size="large"
+            rounded="lg"
+            to="/"
+            class="font-weight-bold text-white"
+          >
+            <v-icon start class="mr-2">mdi-magnify</v-icon>
             Browse Books
           </v-btn>
         </div>
@@ -243,15 +346,24 @@
 
       <!-- Reviews Section -->
       <div v-if="activeTab === 'reviews'" class="content-section">
-        <h2 class="text-h4 mb-6 font-weight-bold">My Reviews</h2>
+        <div class="d-flex align-center mb-6">
+          <v-icon
+            icon="mdi-star"
+            size="32"
+            color="waterblue"
+            class="mr-3"
+          ></v-icon>
+          <h2 class="text-h4 font-weight-bold text-customblack">My Reviews</h2>
+        </div>
 
         <!-- Loading State -->
-        <div v-if="loadingReviews" class="text-center pa-8">
+        <div v-if="loadingReviews" class="text-center pa-12">
           <v-progress-circular
             indeterminate
-            color="primary"
+            color="waterblue"
+            size="64"
           ></v-progress-circular>
-          <p class="mt-4">Loading reviews...</p>
+          <p class="mt-6 text-body-1 text-grey-darken-1">Loading reviews...</p>
         </div>
 
         <!-- Reviews List -->
@@ -259,12 +371,15 @@
           <v-card
             v-for="review in userReviews"
             :key="review._id"
-            elevation="2"
-            class="mb-4"
+            elevation="3"
+            class="mb-6 rounded-xl overflow-hidden transition-all duration-300 hover:elevation-6"
+            style="
+              background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            "
           >
-            <v-card-text class="pa-6">
-              <div class="d-flex align-start mb-4">
-                <div class="flex-shrink-0 mr-4">
+            <v-card-text class="pa-8">
+              <div class="d-flex align-start mb-6">
+                <div class="flex-shrink-0 mr-6">
                   <v-img
                     :src="
                       review?.bookId?.cover_url ||
@@ -272,7 +387,7 @@
                     "
                     width="80"
                     height="120"
-                    class="rounded-lg elevation-3 transition-transform"
+                    class="rounded-lg elevation-3 transition-transform hover:scale-105"
                     cover
                     :aspect-ratio="2 / 3"
                   >
@@ -288,12 +403,14 @@
                   </v-img>
                 </div>
                 <div class="flex-grow-1">
-                  <div class="d-flex justify-space-between align-start mb-2">
+                  <div class="d-flex justify-space-between align-start mb-3">
                     <div>
-                      <h3 class="text-h6 font-weight-bold mb-1">
+                      <h3
+                        class="text-h5 font-weight-bold text-customblack mb-2"
+                      >
                         {{ review.bookId?.title || "Unknown Book" }}
                       </h3>
-                      <p class="text-body-2 text-grey-darken-1 mb-2">
+                      <p class="text-body-2 text-grey-darken-1 mb-3">
                         by
                         {{
                           review.bookId?.authors?.join(", ") || "Unknown Author"
@@ -304,10 +421,11 @@
                       icon
                       variant="text"
                       color="error"
-                      size="small"
+                      size="large"
                       @click="
                         confirmDeleteReview(review._id, review.bookId?.title)
                       "
+                      class="transition-all duration-300 hover:scale-110"
                     >
                       <v-icon>mdi-delete</v-icon>
                       <v-tooltip activator="parent" location="top">
@@ -316,7 +434,7 @@
                     </v-btn>
                   </div>
 
-                  <div class="d-flex align-center mb-3">
+                  <div class="d-flex align-center mb-4">
                     <v-rating
                       :model-value="review.rating"
                       readonly
@@ -324,35 +442,52 @@
                       color="amber"
                       density="compact"
                     ></v-rating>
-                    <span class="text-caption text-grey-darken-1 ml-2">
+                    <span class="text-caption text-grey-darken-1 ml-3">
+                      <v-icon
+                        icon="mdi-calendar"
+                        size="14"
+                        class="mr-1"
+                      ></v-icon>
                       {{ new Date(review.createdAt).toLocaleDateString() }}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <v-divider class="mb-4"></v-divider>
+              <v-divider class="mb-6"></v-divider>
 
               <div
-                class="bg-grey-lighten-5 pa-4 rounded-lg border-l-4 border-primary"
+                class="bg-grey-lighten-5 pa-6 rounded-xl border-l-4 border-waterblue"
               >
-                <p class="text-body-1 mb-0">{{ review.comment }}</p>
+                <p class="text-body-1 mb-0 text-customblack">
+                  {{ review.comment }}
+                </p>
               </div>
             </v-card-text>
           </v-card>
         </div>
 
         <!-- No Reviews Message -->
-        <div v-else class="text-center pa-8">
-          <v-icon size="64" color="grey-lighten-1" class="mb-4"
+        <div v-else class="text-center pa-12">
+          <v-icon size="80" color="grey-lighten-2" class="mb-6"
             >mdi-star-outline</v-icon
           >
-          <h3 class="text-h6 mb-2">No reviews yet</h3>
-          <p class="text-body-2 text-grey-darken-1 mb-4">
+          <h3 class="text-h5 font-weight-bold text-customblack mb-3">
+            No reviews yet
+          </h3>
+          <p class="text-body-1 text-grey-darken-1 mb-6 max-width-400 mx-auto">
             You haven't written any reviews yet. Start reading and share your
             thoughts!
           </p>
-          <v-btn color="primary" variant="elevated" to="/">
+          <v-btn
+            color="waterblue"
+            variant="elevated"
+            size="large"
+            rounded="lg"
+            to="/"
+            class="font-weight-bold text-white"
+          >
+            <v-icon start class="mr-2">mdi-magnify</v-icon>
             Browse Books
           </v-btn>
         </div>
@@ -360,18 +495,36 @@
 
       <!-- Change Password Section -->
       <div v-if="activeTab === 'password'" class="content-section">
-        <h2 class="text-h4 mb-6 font-weight-bold">Change Password</h2>
+        <div class="d-flex align-center mb-6">
+          <v-icon
+            icon="mdi-lock"
+            size="32"
+            color="waterblue"
+            class="mr-3"
+          ></v-icon>
+          <h2 class="text-h4 font-weight-bold text-customblack">
+            Change Password
+          </h2>
+        </div>
 
-        <v-card elevation="2" class="mb-6">
-          <v-card-text class="pa-6">
-            <v-form>
+        <v-card
+          elevation="4"
+          class="rounded-xl overflow-hidden"
+          style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
+        >
+          <v-card-text class="pa-8">
+            <v-form ref="passwordForm" v-model="passwordFormValid">
               <v-text-field
                 v-model="passwordForm.current"
                 label="Current Password"
                 type="password"
                 variant="outlined"
                 density="comfortable"
-                class="mb-4"
+                rounded="lg"
+                color="waterblue"
+                class="mb-6"
+                :rules="[(v) => !!v || 'Current password is required']"
+                required
               ></v-text-field>
 
               <v-text-field
@@ -380,7 +533,15 @@
                 type="password"
                 variant="outlined"
                 density="comfortable"
-                class="mb-4"
+                rounded="lg"
+                color="waterblue"
+                class="mb-6"
+                :rules="[
+                  (v) => !!v || 'New password is required',
+                  (v) =>
+                    v.length >= 6 || 'Password must be at least 6 characters',
+                ]"
+                required
               ></v-text-field>
 
               <v-text-field
@@ -389,10 +550,29 @@
                 type="password"
                 variant="outlined"
                 density="comfortable"
-                class="mb-4"
+                rounded="lg"
+                color="waterblue"
+                class="mb-6"
+                :rules="[
+                  (v) => !!v || 'Please confirm your password',
+                  (v) => v === passwordForm.new || 'Passwords do not match',
+                ]"
+                required
               ></v-text-field>
 
-              <v-btn color="primary" size="large"> Update Password </v-btn>
+              <v-btn
+                color="waterblue"
+                size="large"
+                rounded="lg"
+                class="font-weight-bold text-white"
+                elevation="2"
+                :loading="changingPassword"
+                :disabled="!passwordFormValid"
+                @click="updatePassword"
+              >
+                <v-icon start class="mr-2">mdi-lock-reset</v-icon>
+                Update Password
+              </v-btn>
             </v-form>
           </v-card-text>
         </v-card>
@@ -424,7 +604,7 @@ export default {
       default: false,
     },
   },
-  emits: ["toggle-drawer"],
+  emits: ["toggle-drawer", "show-snackbar"],
   data() {
     return {
       passwordForm: {
@@ -432,6 +612,8 @@ export default {
         new: "",
         confirm: "",
       },
+      passwordFormValid: false,
+      changingPassword: false,
     };
   },
   computed: {
@@ -439,10 +621,17 @@ export default {
     ...mapState("order", ["userOrders"]),
     ...mapState("favorite", ["favorites"]),
     ...mapState("review", ["userReviews"]),
+    userOrdersPaid() {
+      return this.userOrders.filter((order) => order.status === "Paid");
+    },
+  },
+  mounted() {
+    console.log(this.userOrdersPaid, "czxczxcxz");
   },
   methods: {
     ...mapActions("favorite", ["toggleFavorites"]),
     ...mapActions("review", ["deleteReview"]),
+    ...mapActions("auth", ["changePassword"]),
     getStatusColor(status) {
       switch (status?.toLowerCase()) {
         case "paid":
@@ -457,6 +646,20 @@ export default {
           return "grey";
       }
     },
+    getStatusIcon(status) {
+      switch (status?.toLowerCase()) {
+        case "paid":
+          return "mdi-check-circle";
+        case "pending":
+          return "mdi-clock";
+        case "processing":
+          return "mdi-cog";
+        case "failed":
+          return "mdi-close-circle";
+        default:
+          return "mdi-help-circle";
+      }
+    },
     removeFromFavorites(bookId) {
       this.toggleFavorites(bookId);
     },
@@ -469,6 +672,53 @@ export default {
         this.deleteReview(reviewId);
       }
     },
+    async updatePassword() {
+      console.log("updatePassword called");
+      try {
+        // Validate form
+        const { valid } = await this.$refs.passwordForm.validate();
+        console.log("Form validation result:", valid);
+        if (!valid) return;
+
+        this.changingPassword = true;
+        console.log("Starting password change...");
+
+        const result = await this.changePassword({
+          currentPassword: this.passwordForm.current,
+          newPassword: this.passwordForm.new,
+        });
+        console.log("Password change result:", result);
+
+        // Show success message
+        console.log("Emitting success snackbar");
+        this.$emit("show-snackbar", {
+          message: "Password updated successfully!",
+          color: "success",
+        });
+
+        // Reset form
+        this.passwordForm = {
+          current: "",
+          new: "",
+          confirm: "",
+        };
+        this.$refs.passwordForm.reset();
+      } catch (error) {
+        console.error("Error changing password:", error);
+
+        // Show error message
+        console.log("Emitting error snackbar");
+        this.$emit("show-snackbar", {
+          message:
+            error.message ||
+            error.msg ||
+            "Failed to update password. Please try again.",
+          color: "error",
+        });
+      } finally {
+        this.changingPassword = false;
+      }
+    },
   },
 };
 </script>
@@ -479,7 +729,7 @@ export default {
 }
 
 .profile-content {
-  background-color: #fafafa;
+  background: linear-gradient(115deg, #ffffff, #d4dfed);
   min-height: 100vh;
 }
 
@@ -489,12 +739,24 @@ export default {
   }
 }
 
-.v-card {
+.transition-all {
   transition: all 0.3s ease;
 }
 
-.v-card:hover {
-  transform: translateY(-2px);
+.duration-300 {
+  transition-duration: 300ms;
+}
+
+.hover\:elevation-6:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+}
+
+.hover\:scale-105:hover {
+  transform: scale(1.05);
+}
+
+.hover\:scale-110:hover {
+  transform: scale(1.1);
 }
 
 .book-image-container {
@@ -506,5 +768,13 @@ export default {
 .book-image-container .v-img {
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.max-width-400 {
+  max-width: 400px;
+}
+
+.transition-transform {
+  transition: transform 0.3s ease;
 }
 </style>

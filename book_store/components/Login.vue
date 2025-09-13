@@ -218,8 +218,10 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+
 export default {
   name: "Login",
+  emits: ["show-snackbar", "toggleLinkSignUp"],
   data() {
     return {
       username: "",
@@ -242,10 +244,29 @@ export default {
         });
 
         await this.fetchCart();
-        console.log("cart", this.cart);
-        this.$router.push("/");
+
+        // Emit success snackbar
+        this.$emit("show-snackbar", {
+          message: `Welcome back, ${this.currentUser?.username || "User"}!`,
+          color: "success",
+        });
+
+        // Delay redirect để user thấy được thông báo
+        setTimeout(() => {
+          this.$router.push("/");
+        }, 1500);
       } catch (error) {
         console.error("Login failed:", error);
+
+        // Emit error snackbar
+        const errorMessage =
+          error.response?.data?.message ||
+          error.message ||
+          "Login failed. Please check your credentials.";
+        this.$emit("show-snackbar", {
+          message: errorMessage,
+          color: "error",
+        });
       }
     },
   },

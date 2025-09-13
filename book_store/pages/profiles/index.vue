@@ -1,35 +1,42 @@
 <template>
-  <v-container fluid class="pa-0">
-    <v-row no-gutters>
-      <!-- Left Sidebar -->
-      <v-col cols="12" md="3" lg="2">
-        <ProfileSidebar v-model:drawer="drawer" v-model:activeTab="activeTab" />
-      </v-col>
+  <div class="profile-page">
+    <v-container fluid class="pa-0">
+      <v-row no-gutters>
+        <!-- Left Sidebar -->
+        <v-col class="bg-transparent" cols="12" md="3" lg="1">
+          <ProfilesProfileSidebar
+            v-model:drawer="drawer"
+            v-model:activeTab="activeTab"
+          />
+        </v-col>
 
-      <!-- Main Content -->
-      <v-col cols="12" md="9" lg="10">
-        <ProfileContent
-          :active-tab="activeTab"
-          :loading-orders="loadingOrders"
-          :loading-favorites="loadingFavorites"
-          :loading-reviews="loadingReviews"
-          @toggle-drawer="drawer = !drawer"
-        />
-      </v-col>
-    </v-row>
-  </v-container>
+        <!-- Main Content -->
+        <v-col cols="12" md="9" lg="11">
+          <ProfilesProfileContent
+            :active-tab="activeTab"
+            :loading-orders="loadingOrders"
+            :loading-favorites="loadingFavorites"
+            :loading-reviews="loadingReviews"
+            @toggle-drawer="drawer = !drawer"
+            @show-snackbar="showSnackbar"
+          />
+        </v-col>
+      </v-row>
+    </v-container>
+
+    <SnackbarAlert
+      v-model="snackbar.show"
+      :text="snackbar.message"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+    />
+  </div>
 </template>
 
 <script>
 import { mapState, mapActions } from "vuex";
-import ProfileSidebar from "~/components/profiles/ProfileSidebar.vue";
-import ProfileContent from "~/components/profiles/ProfileContent.vue";
 
 export default {
-  components: {
-    ProfileSidebar,
-    ProfileContent,
-  },
   data() {
     return {
       drawer: true,
@@ -37,16 +44,20 @@ export default {
       loadingOrders: false,
       loadingFavorites: false,
       loadingReviews: false,
+      snackbar: {
+        show: false,
+        message: "",
+        color: "success",
+        timeout: 4000,
+      },
     };
   },
   computed: {
     ...mapState("auth", ["currentUser"]),
-    ...mapState("order", ["userOrders", "order"]),
   },
   watch: {
     activeTab(newTab) {
-      // Update URL query parameter
-      this.$router.replace({ query: { ...this.$route.query, tab: newTab } });
+      this.$router.replace({ query: { tab: newTab } });
 
       if (newTab === "orders") {
         this.loadUserOrders();
@@ -60,8 +71,6 @@ export default {
     },
   },
   mounted() {
-    // console.log(this.currentUser, "currentUser");
-    // console.log(this.userOrders, "userOrders");
     // Check if user is authenticated
     if (!this.currentUser) {
       this.$router.push("/login");
@@ -69,7 +78,7 @@ export default {
 
     // Handle tab parameter from URL query
     const tabParam = this.$route.query.tab;
-    if (tabParam && this.isValidTab(tabParam)) {
+    if (tabParam) {
       this.activeTab = tabParam;
     }
   },
@@ -77,16 +86,7 @@ export default {
     ...mapActions("order", ["fetchUserOrders"]),
     ...mapActions("favorite", ["getFavoritesForEachUser"]),
     ...mapActions("review", ["loadUserReviewsAction"]),
-    isValidTab(tab) {
-      const validTabs = [
-        "personal",
-        "orders",
-        "wishlist",
-        "reviews",
-        "password",
-      ];
-      return validTabs.includes(tab);
-    },
+
     async loadUserOrders() {
       this.loadingOrders = true;
       try {
@@ -117,50 +117,25 @@ export default {
         this.loadingReviews = false;
       }
     },
+    showSnackbar(data) {
+      console.log("showSnackbar called with:", data);
+      this.snackbar.message = data.message;
+      this.snackbar.color = data.color || "success";
+      this.snackbar.show = true;
+    },
   },
 };
 </script>
 
 <style scoped>
-.profile-sidebar {
-  border-right: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-.content-section {
-  min-height: 80vh;
-}
-
-.profile-content {
-  background-color: #fafafa;
+.profile-page {
+  background: linear-gradient(115deg, #ffffff, #d4dfed);
   min-height: 100vh;
 }
 
 @media (max-width: 960px) {
-  .profile-content {
+  .profile-page {
     padding-top: 64px;
   }
-}
-
-.v-card {
-  transition: all 0.3s ease;
-}
-
-.v-card:hover {
-  transform: translateY(-2px);
-}
-
-.border-b {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-}
-
-.book-image-container {
-  min-width: 60px;
-  display: flex;
-  align-items: center;
-}
-
-.book-image-container .v-img {
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 </style>
