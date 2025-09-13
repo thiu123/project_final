@@ -1,19 +1,16 @@
-import { defineNuxtConfig } from 'nuxt/config'
+import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
-  compatibilityDate: '2024-11-01',
+  compatibilityDate: "2024-11-01",
   devtools: { enabled: true },
-  modules: [
-    'vuetify-nuxt-module',
-    'nuxt3-vuex-module',
-  ],
-  css: ['@/assets/styles/main.css'],
+  modules: ["vuetify-nuxt-module", "nuxt3-vuex-module"],
+  css: ["@/assets/styles/main.css"],
   app: {
     head: {
       link: [
         {
-          rel: 'stylesheet',
-          href: 'https://fonts.googleapis.com/css2?family=Poppins&display=swap',
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap",
         },
       ],
     },
@@ -36,11 +33,11 @@ export default defineNuxtConfig({
               whitesmoke: "#F1F2EE",
             },
             variables: {
-              'font-family': 'Poppins, sans-serif',
+              "font-family": "Geist, sans-serif",
             },
           },
         },
       },
     },
   },
-})
+});

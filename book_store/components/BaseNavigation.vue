@@ -335,7 +335,11 @@
       </div>
 
       <v-dialog v-model="dialogSignIn">
-        <Login class="position-relative" @toggleLinkSignUp="openDialog" />
+        <Login
+          class="position-relative"
+          @toggleLinkSignUp="openDialog"
+          @show-snackbar="showSnackbar"
+        />
         <v-icon
           @click="dialogSignIn = false"
           class="cursor-pointer position-absolute"
@@ -361,6 +365,14 @@
         >
       </v-dialog>
     </v-container>
+
+    <!-- Snackbar Alert -->
+    <SnackbarAlert
+      v-model="snackbar.show"
+      :text="snackbar.message"
+      :color="snackbar.color"
+      :timeout="snackbar.timeout"
+    />
   </v-app-bar>
 </template>
 <script>
@@ -369,7 +381,12 @@ definePageMeta({
 });
 import { mapState } from "vuex";
 import { mapActions } from "vuex";
+import SnackbarAlert from "~/components/SnackbarAlert.vue";
+
 export default {
+  components: {
+    SnackbarAlert,
+  },
   data() {
     return {
       dialogSignUp: false,
@@ -377,6 +394,12 @@ export default {
       menu: false,
       accountMenu: false,
       isSessionRestored: false,
+      snackbar: {
+        show: false,
+        message: "",
+        color: "success",
+        timeout: 3000,
+      },
       bookSubjects: [
         {
           category: "Fiction",
@@ -464,6 +487,15 @@ export default {
     goToProfile(tab) {
       this.accountMenu = false;
       this.$router.push(`/profiles?tab=${tab}`);
+    },
+    showSnackbar(data) {
+      this.snackbar.message = data.message;
+      this.snackbar.color = data.color;
+      this.snackbar.show = true;
+
+      if (data.color === "success") {
+        this.dialogSignIn = false;
+      }
     },
   },
   computed: {

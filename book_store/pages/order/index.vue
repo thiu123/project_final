@@ -139,7 +139,9 @@
                 <template v-slot:label>
                   <div class="d-flex align-center flex-wrap">
                     <v-avatar size="80" class="mr-2 flex-shrink-0">
-                      <v-img src="../../assets/vnpay-logo-inkythuatso.svg"></v-img>
+                      <v-img
+                        src="../../assets/vnpay-logo-inkythuatso.svg"
+                      ></v-img>
                     </v-avatar>
                     <span class="text-body-2 text-sm-body-1 mr-2">VNPay</span>
                     <a
@@ -290,13 +292,13 @@
               <!-- Mobile Layout -->
               <div class="d-flex d-sm-none flex-column gap-3">
                 <div class="d-flex gap-3">
-                  <v-img
+                  <img
                     :src="item.bookId.cover_url"
                     width="60"
                     height="80"
                     class="flex-shrink-0 rounded"
                     :alt="item.bookId.title"
-                  ></v-img>
+                  />
                   <div class="flex-grow-1 min-width-0">
                     <div class="font-weight-medium mb-1 text-body-2">
                       {{ item.bookId.title }}
@@ -333,14 +335,14 @@
               </div>
 
               <!-- Desktop/Tablet Layout -->
-              <div class="d-none d-sm-flex align-center gap-4">
-                <v-img
+              <div class="d-none d-sm-flex align-center ga-4">
+                <img
                   :src="item.bookId.cover_url"
-                  width="80"
-                  height="100"
+                  width="180"
+                  height="200"
                   class="flex-shrink-0 rounded"
                   :alt="item.bookId.title"
-                ></v-img>
+                />
                 <div class="flex-grow-1">
                   <div class="font-weight-medium mb-1">
                     {{ item.bookId.title }}

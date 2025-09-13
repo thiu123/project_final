@@ -22,6 +22,30 @@ const authController = {
       return res.status(500).json({ msg: err.message });
     }
   },
+  changePassword: async (req, res) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(400).json({ msg: "User not found" });
+      }
+
+      const isMatch = await bcrypt.compare(currentPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ msg: "Invalid current password" });
+      }
+
+      // Hash the new password before saving
+      const salt = await bcrypt.genSalt(10);
+      const hashedNewPassword = await bcrypt.hash(newPassword, salt);
+
+      user.password = hashedNewPassword;
+      await user.save();
+      return res.status(200).json({ msg: "Password changed successfully" });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
 
   generateAccessToken: (user) => {
     return jwt.sign(
