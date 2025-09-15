@@ -670,7 +670,7 @@ export default {
   },
   async mounted() {
     await this.getFavoritesForEachUser();
-    await this.getAllBooks();
+    await this.getAllBooks({ subject: null, half: true }); // Chỉ lấy một nửa sách
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),

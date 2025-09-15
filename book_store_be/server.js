@@ -10,6 +10,7 @@ const cartRoute = require("./routes/cart");
 const reviewRoute = require("./routes/review");
 const orderRoute = require("./routes/order");
 const favoriteRoute = require("./routes/favorite");
+const chatbotRoute = require("./routes/chatbot");
 const cookieParser = require("cookie-parser");
 
 const PORT = process.env.PORT || 5000;
@@ -41,6 +42,7 @@ app.use("/api/carts", cartRoute);
 app.use("/api/reviews", reviewRoute);
 app.use("/api/order", orderRoute);
 app.use("/api/favorite", favoriteRoute);
+app.use("/api/chatbot", chatbotRoute);
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

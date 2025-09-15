@@ -482,6 +482,7 @@
                 class="text-h6 font-weight-bold mt-6 text-white"
                 prepend-icon="mdi-cash-register"
                 rounded="lg"
+                @click="$router.push('/order')"
               >
                 CHECKOUT
               </v-btn>

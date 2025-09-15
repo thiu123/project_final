@@ -36,37 +36,37 @@ export default {
     },
   },
   actions: {
-    async getAllBooks({ commit }, subject) {
+    async getAllBooks({ commit }, { subject, half = false }) {
       commit("clearBooks");
       try {
-        const response = await getBooksBySubject(subject);
+        const response = await getBooksBySubject(subject, half);
         commit("setBooks", response.data);
       } catch (error) {
         console.error("Failed to fetch books", error);
       }
     },
-    async getFictionBooks({ commit }, subject) {
+    async getFictionBooks({ commit }, { subject, half = false }) {
       commit("clearBooks");
       try {
-        const response = await getBooksBySubject(subject);
+        const response = await getBooksBySubject(subject, half);
         commit("setFictionBooks", response.data);
       } catch (error) {
         console.error("Failed to fetch books", error);
       }
     },
-    async getMangaBooks({ commit }, subject) {
+    async getMangaBooks({ commit }, { subject, half = false }) {
       commit("clearBooks");
       try {
-        const response = await getBooksBySubject(subject);
+        const response = await getBooksBySubject(subject, half);
         commit("setMangaBooks", response.data);
       } catch (error) {
         console.error("Failed to fetch books", error);
       }
     },
-    async getRomanceBooks({ commit }, subject) {
+    async getRomanceBooks({ commit }, { subject, half = false }) {
       commit("clearBooks");
       try {
-        const response = await getBooksBySubject(subject);
+        const response = await getBooksBySubject(subject, half);
         commit("setRomanceBooks", response.data);
       } catch (error) {
         console.error("Failed to fetch books", error);

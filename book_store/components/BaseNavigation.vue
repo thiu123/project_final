@@ -486,7 +486,9 @@ export default {
     },
     goToProfile(tab) {
       this.accountMenu = false;
-      this.$router.push(`/profiles?tab=${tab}`);
+      this.$nextTick(() => {
+        this.$router.push(`/profiles?tab=${tab}`);
+      });
     },
     showSnackbar(data) {
       this.snackbar.message = data.message;

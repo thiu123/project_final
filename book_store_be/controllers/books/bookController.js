@@ -1,11 +1,23 @@
 const axios = require("axios");
 const Book = require("../../model/Book");
-
+const removeMd = require("remove-markdown");
 const bookController = {
   getAllBooks: async (req, res) => {
     try {
       const filter = req.query.subject ? { subjects: req.query.subject } : {};
-      const books = await Book.find(filter);
+
+      // Tổng số sách trong DB
+      const total = await Book.countDocuments(filter);
+
+      let query = Book.find(filter);
+
+      // Nếu có query half=true → chỉ lấy 1 nửa
+      if (req.query.half === "true") {
+        const half = Math.ceil(total / 3);
+        query = query.limit(half);
+      }
+
+      const books = await query;
       return res.status(200).json(books);
     } catch (err) {
       return res.status(500).json({ msg: err.message });
@@ -53,52 +65,71 @@ const bookController = {
   },
   getBooksBySubject: async (req, res) => {
     try {
-      let subject = req.params.subject.replace(/_/g, " ");
+      const subject = req.params.subject.replace(/_/g, " ");
 
-      // Fetch sách theo subject
-      const response = await axios.get(
+      // Check text có phải English không
+      const isEnglishText = (text) => {
+        if (!text) return false;
+        const cleaned = text.replace(/[\d\s.,;:!?'"()\[\]{}<>–—…]/g, "");
+        const englishChars = (cleaned.match(/[a-zA-Z]/g) || []).length;
+        const nonEnglishChars = (cleaned.match(/[^\x00-\x7F]/g) || []).length;
+        const total = englishChars + nonEnglishChars;
+        return total > 0 && englishChars / total >= 0.9;
+      };
+
+      // Clean markdown
+      const cleanMarkdown = (text) =>
+        text
+          ? removeMd(text, { stripListLeaders: true, gfm: true })
+              .replace(/\r?\n|\r/g, " ")
+              .trim()
+          : text;
+
+      // Fetch subject
+      const { data } = await axios.get(
         `https://openlibrary.org/subjects/${subject}.json?limit=50`
       );
 
-      const books = await Promise.all(
-        response.data.works.map(async (book) => {
-          let description = null;
+      const books = [];
 
-          // Fetch thêm detail từ works để lấy description
-          try {
-            const workKey = book.key;
-            const workDetail = await axios.get(
-              `https://openlibrary.org${workKey}.json`
-            );
+      for (const book of data.works) {
+        try {
+          const workDetail = await axios.get(
+            `https://openlibrary.org${book.key}.json`
+          );
 
-            if (workDetail.data.description) {
-              description =
-                typeof workDetail.data.description === "string"
-                  ? workDetail.data.description
-                  : workDetail.data.description.value;
-            }
-          } catch (e) {
-            description = "No description available for this book.";
-          }
+          if (!workDetail.data.description) continue;
 
-          return {
+          const rawDesc =
+            typeof workDetail.data.description === "string"
+              ? workDetail.data.description
+              : workDetail.data.description.value;
+
+          if (!isEnglishText(rawDesc) && !isEnglishText(book.title)) continue;
+
+          const description = cleanMarkdown(rawDesc);
+
+          const bookData = {
             key: book.key,
             title: book.title,
             cover_url: book.cover_id
               ? `https://covers.openlibrary.org/b/id/${book.cover_id}-L.jpg`
               : null,
             first_publish_year: book.first_publish_year,
-            authors: book.authors.map((author) => author.name),
+            authors: book.authors.map((a) => a.name),
             price: Math.floor(Math.random() * 50) + 10,
             subjects: [subject],
-            description: description,
+            description,
             rating: (Math.random() * 2 + 3).toFixed(1),
           };
-        })
-      );
 
-      for (const book of books) {
-        await Book.findOneAndUpdate({ key: book.key }, book, { upsert: true });
+          books.push(bookData);
+          await Book.findOneAndUpdate({ key: book.key }, bookData, {
+            upsert: true,
+          });
+        } catch {
+          continue;
+        }
       }
 
       return res.status(200).json(books);
@@ -106,6 +137,7 @@ const bookController = {
       return res.status(500).json({ msg: err.message });
     }
   },
+
   searchBooksByTitle: async (req, res) => {
     try {
       const query = req.query.title?.trim();
