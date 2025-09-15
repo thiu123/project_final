@@ -7,6 +7,8 @@
       <base-navigation class="w-100" style="z-index: 9" />
       <slot />
       <Footer />
+      <!-- Chatbot Widget -->
+      <ChatbotWidget />
     </v-main>
   </v-app>
 </template>

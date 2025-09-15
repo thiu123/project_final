@@ -138,15 +138,15 @@
               </div> -->
 
               <!-- Stock Badge -->
-              <!-- <v-chip
-                color="success"
+              <v-chip
+                color="customyellow"
                 variant="flat"
                 size="x-small"
-                class="position-absolute stock-badge"
-                style="top: 12px; left: 12px"
+                class="position-absolute"
+                style="bottom: 12px; left: 12px"
               >
-                In Stock
-              </v-chip> -->
+                Literary Fiction
+              </v-chip>
             </div>
 
             <!-- Enhanced Book Details -->
@@ -252,7 +252,7 @@ export default {
   },
   async mounted() {
     try {
-      await this.getFictionBooks("literary fiction");
+      await this.getFictionBooks({ subject: "literary fiction", half: true });
     } catch (error) {
       console.error("Error fetching books:", error);
     }

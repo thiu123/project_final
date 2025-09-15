@@ -1,279 +1,320 @@
 <template>
-  <div>
-    <!-- Main content area -->
-    <v-container class="py-6" v-if="!isLoading">
+  <div class="book-details-page">
+    <!-- Loading State -->
+    <v-container
+      v-if="isLoading"
+      class="d-flex justify-center align-center"
+      style="min-height: 50vh"
+    >
+      <div class="text-center">
+        <v-progress-circular
+          indeterminate
+          color="primary"
+          size="60"
+          width="4"
+          class="mb-4"
+        ></v-progress-circular>
+        <p class="text-h6 text-grey-darken-2">Loading book details...</p>
+      </div>
+    </v-container>
+
+    <!-- Main Content -->
+    <v-container v-else class="py-6" fluid>
       <!-- Breadcrumb -->
-      <v-breadcrumbs
-        :items="breadcrumbItems"
-        class="px-0 mb-4"
-        density="compact"
-      >
+      <v-breadcrumbs :items="breadcrumbItems" class="px-0 mb-6">
         <template v-slot:divider>
-          <v-icon>mdi-chevron-right</v-icon>
+          <v-icon size="small">mdi-chevron-right</v-icon>
         </template>
       </v-breadcrumbs>
 
-      <v-row>
-        <!-- Left side - Book image -->
-        <v-col cols="12" md="4" lg="3">
-          <v-card class="book-image-card" elevation="8" rounded="xl">
-            <v-img
-              :src="
-                detailsBooks.cover_url ||
-                '/placeholder.svg?height=400&width=260'
-              "
-              alt="Book Cover"
-              class="rounded-xl"
-              min-height="470"
-              max-height="470"
-              cover
-            >
-              <template v-slot:placeholder>
-                <div class="d-flex align-center justify-center fill-height">
-                  <v-progress-circular
-                    color="grey-lighten-4"
-                    indeterminate
-                  ></v-progress-circular>
+      <!-- Book Overview Section -->
+      <v-card class="mb-6" elevation="2" rounded="lg">
+        <v-card-text class="pa-6">
+          <v-row>
+            <!-- Book Cover -->
+            <v-col cols="12" md="4">
+              <div class="text-center">
+                <v-img
+                  :src="
+                    detailsBooks.cover_url ||
+                    '/placeholder.svg?height=400&width=260'
+                  "
+                  alt="Book Cover"
+                  class="rounded-lg mx-auto"
+                  max-width="380"
+                  height="480"
+                  cover
+                >
+                  <template v-slot:placeholder>
+                    <v-skeleton-loader
+                      type="image"
+                      width="280"
+                      height="380"
+                    ></v-skeleton-loader>
+                  </template>
+                </v-img>
+              </div>
+            </v-col>
+
+            <!-- Book Info -->
+            <v-col cols="12" md="8">
+              <div class="book-info">
+                <!-- Title -->
+                <h1 class="text-h4 font-weight-bold mb-4 text-primary">
+                  {{ detailsBooks.title }}
+                </h1>
+
+                <!-- Author -->
+                <div class="d-flex align-center mb-4">
+                  <v-icon color="grey-darken-2" class="mr-2"
+                    >mdi-account-edit</v-icon
+                  >
+                  <span class="text-subtitle-1 text-grey-darken-2 mr-2"
+                    >by</span
+                  >
+                  <v-chip color="primary" variant="outlined" size="default">
+                    {{ detailsBooks.authors?.[0] }}
+                  </v-chip>
                 </div>
-              </template>
-            </v-img>
-          </v-card>
-        </v-col>
 
-        <!-- Right side - Book details -->
-        <v-col cols="12" md="8" lg="9">
-          <div class="book-details">
-            <!-- Title and Author -->
-            <div class="mb-6">
-              <h1
-                class="text-h3 font-weight-bold mb-3 text-primary text-truncate"
-              >
-                {{ detailsBooks.title }}
-              </h1>
+                <!-- Rating -->
+                <div class="d-flex align-center mb-6">
+                  <v-rating
+                    :model-value="4"
+                    color="amber"
+                    density="compact"
+                    readonly
+                    size="small"
+                    class="mr-2"
+                  ></v-rating>
+                  <span class="text-subtitle-1 font-weight-medium mr-1"
+                    >4.0</span
+                  >
+                  <span class="text-body-2 text-grey-darken-1"
+                    >(24 reviews)</span
+                  >
+                </div>
 
-              <div class="d-flex align-center mb-3">
-                <v-icon color="grey-darken-1" class="mr-2"
-                  >mdi-account-edit</v-icon
-                >
-                <span class="text-h6 text-grey-darken-1 mr-2">by</span>
-                <v-chip
-                  color="primary"
-                  variant="outlined"
-                  size="large"
-                  class="font-weight-medium"
-                >
-                  {{ detailsBooks.authors?.[0] }}
-                </v-chip>
-              </div>
-
-              <!-- Rating -->
-              <div class="d-flex align-center mb-4">
-                <v-rating
-                  :model-value="4"
-                  color="amber"
-                  density="compact"
-                  readonly
-                  size="large"
-                  class="mr-3"
-                ></v-rating>
-                <span class="text-h6 font-weight-medium">4.0</span>
-                <span class="text-body-1 text-grey-darken-1 ml-2"
-                  >(24 reviews)</span
-                >
-              </div>
-            </div>
-
-            <!-- Price and Availability -->
-            <v-card class="mb-6" elevation="2" rounded="lg">
-              <v-card-text class="pa-6">
-                <div class="d-flex align-center justify-space-between mb-4">
-                  <div>
-                    <div class="text-h4 font-weight-bold text-success mb-1">
-                      ${{ detailsBooks.price || "120.00" }}
+                <!-- Price & Stock -->
+                <div class="price-section mb-6">
+                  <div class="d-flex align-center justify-space-between mb-4">
+                    <div>
+                      <div class="text-h3 font-weight-bold text-success mb-2">
+                        ${{ detailsBooks.price || "120.00" }}
+                      </div>
+                      <v-chip
+                        color="success"
+                        size="small"
+                        prepend-icon="mdi-check-circle"
+                      >
+                        In Stock
+                      </v-chip>
                     </div>
-                    <v-chip color="success" size="small" variant="flat">
-                      <v-icon start>mdi-check-circle</v-icon>
-                      In Stock
-                    </v-chip>
-                  </div>
-                  <v-btn
-                    icon
-                    variant="outlined"
-                    :color="isFavorite(detailsBooks._id) ? 'red' : 'pink'"
-                    size="large"
-                    @click="handleToggleFavorites(detailsBooks._id)"
-                  >
-                    <v-icon>
-                      {{
+                    <v-btn
+                      :icon="
                         isFavorite(detailsBooks._id)
-                          ? "mdi-heart"
-                          : "mdi-heart-outline"
-                      }}
-                    </v-icon>
-                  </v-btn>
-                </div>
-
-                <!-- Quantity selector -->
-                <div class="mb-6">
-                  <v-label class="text-subtitle-1 font-weight-bold mb-2"
-                    >Quantity</v-label
-                  >
-                  <div class="d-flex align-center">
-                    <v-btn
-                      icon
+                          ? 'mdi-heart'
+                          : 'mdi-heart-outline'
+                      "
+                      :color="isFavorite(detailsBooks._id) ? 'red' : 'grey'"
                       variant="outlined"
-                      color="primary"
-                      size="large"
-                      @click="quantity > 1 ? quantity-- : 1"
-                      :disabled="quantity <= 1"
-                    >
-                      <v-icon>mdi-minus</v-icon>
-                    </v-btn>
-
-                    <v-text-field
-                      v-model="quantity"
-                      type="number"
-                      variant="outlined"
-                      density="comfortable"
-                      hide-details
-                      class="mx-3"
-                      style="max-width: 80px"
-                      min="1"
-                      max="10"
-                    ></v-text-field>
-
-                    <v-btn
-                      icon
-                      variant="outlined"
-                      color="primary"
-                      size="large"
-                      @click="quantity++"
-                      :disabled="quantity >= 10"
-                    >
-                      <v-icon>mdi-plus</v-icon>
-                    </v-btn>
+                      @click="handleToggleFavorites(detailsBooks._id)"
+                    ></v-btn>
                   </div>
                 </div>
 
-                <!-- Action buttons -->
-                <div class="d-flex flex-column flex-sm-row ga-3">
-                  <v-btn
-                    color="primary"
-                    variant="flat"
-                    size="x-large"
-                    class="text-none flex-grow-1"
-                    rounded="lg"
-                    @click="handleAddToCart(detailsBooks._id, quantity)"
-                  >
-                    <v-icon start>mdi-cart-plus</v-icon>
-                    Add to Cart
-                  </v-btn>
+                <!-- Quantity & Actions -->
+                <div class="purchase-section">
+                  <!-- Quantity -->
+                  <div class="mb-4">
+                    <v-label class="text-subtitle-2 font-weight-medium mb-2"
+                      >Quantity</v-label
+                    >
+                    <div class="d-flex align-center" style="max-width: 200px">
+                      <v-btn
+                        icon="mdi-minus"
+                        variant="outlined"
+                        size="small"
+                        @click="quantity > 1 ? quantity-- : 1"
+                        :disabled="quantity <= 1"
+                      ></v-btn>
+                      <v-text-field
+                        v-model="quantity"
+                        type="number"
+                        variant="outlined"
+                        density="compact"
+                        hide-details
+                        class="mx-2"
+                        style="max-width: 80px"
+                        min="1"
+                        max="10"
+                      ></v-text-field>
+                      <v-btn
+                        icon="mdi-plus"
+                        variant="outlined"
+                        size="small"
+                        @click="quantity++"
+                        :disabled="quantity >= 10"
+                      ></v-btn>
+                    </div>
+                  </div>
 
-                  <v-btn
-                    color="darkgreen"
-                    variant="flat"
-                    size="x-large"
-                    class="text-none flex-grow-1"
-                    rounded="lg"
-                  >
-                    <v-icon start>mdi-lightning-bolt</v-icon>
-                    Buy Now
-                  </v-btn>
+                  <!-- Action Buttons -->
+                  <div class="d-flex flex-column flex-sm-row ga-3">
+                    <v-btn
+                      color="primary"
+                      variant="flat"
+                      size="large"
+                      class="flex-grow-1"
+                      prepend-icon="mdi-cart-plus"
+                      @click="handleAddToCart(detailsBooks._id, quantity)"
+                    >
+                      Add to Cart
+                    </v-btn>
+                    <v-btn
+                      color="success"
+                      variant="flat"
+                      size="large"
+                      class="flex-grow-1"
+                      prepend-icon="mdi-lightning-bolt"
+                    >
+                      Buy Now
+                    </v-btn>
+                  </div>
                 </div>
-              </v-card-text>
-            </v-card>
-          </div>
-        </v-col>
-      </v-row>
-
-      <!-- Book details section -->
-      <v-card class="mt-8" elevation="3" rounded="xl">
-        <v-card-title
-          class="pa-6 text-white"
-          style="background: linear-gradient(90deg, #2563eb 0%, #9333ea 100%)"
-        >
-          <v-icon start class="mr-2">mdi-book-information-variant</v-icon>
-          Book Details
-        </v-card-title>
-
-        <v-card-text class="pa-0">
-          <v-list lines="two">
-            <v-list-item>
-              <template v-slot:prepend>
-                <v-icon color="primary">mdi-identifier</v-icon>
-              </template>
-              <v-list-item-title class="font-weight-medium"
-                >Book ID</v-list-item-title
-              >
-              <v-list-item-subtitle>
-                {{ detailsBooks.key?.split("/").pop() || "8935250707640" }}
-              </v-list-item-subtitle>
-            </v-list-item>
-
-            <v-divider></v-divider>
-
-            <v-list-item>
-              <template v-slot:prepend>
-                <v-icon color="primary">mdi-account-edit</v-icon>
-              </template>
-              <v-list-item-title class="font-weight-medium"
-                >Author</v-list-item-title
-              >
-              <v-list-item-subtitle>
-                <v-chip
-                  color="primary"
-                  variant="text"
-                  size="small"
-                  class="pa-0"
-                >
-                  {{ detailsBooks.authors?.[0] }}
-                </v-chip>
-              </v-list-item-subtitle>
-            </v-list-item>
-
-            <v-divider></v-divider>
-
-            <v-list-item>
-              <template v-slot:prepend>
-                <v-icon color="primary">mdi-calendar</v-icon>
-              </template>
-              <v-list-item-title class="font-weight-medium"
-                >Publication Year</v-list-item-title
-              >
-              <v-list-item-subtitle>
-                {{ detailsBooks.first_publish_year }}
-              </v-list-item-subtitle>
-            </v-list-item>
-
-            <!-- <v-list-item>
-            <template v-slot:prepend>
-              <v-icon color="primary">mdi-translate</v-icon>
-            </template>
-            <v-list-item-title class="font-weight-medium"
-              >Language</v-list-item-title
-            >
-            <v-list-item-subtitle>English</v-list-item-subtitle>
-          </v-list-item> -->
-          </v-list>
+              </div>
+            </v-col>
+          </v-row>
         </v-card-text>
       </v-card>
 
-      <!-- Book description -->
+      <v-row>
+        <!-- Book Details -->
+        <v-col cols="12" md="6">
+          <v-card elevation="2" rounded="lg" height="100%">
+            <v-card-title class="bg-primary text-white">
+              <v-icon class="mr-2">mdi-book-information-variant</v-icon>
+              Book Details
+            </v-card-title>
+            <v-card-text class="pa-0">
+              <v-list>
+                <v-list-item>
+                  <template v-slot:prepend>
+                    <v-icon color="primary">mdi-identifier</v-icon>
+                  </template>
+                  <v-list-item-title>Book ID</v-list-item-title>
+                  <v-list-item-subtitle>
+                    {{ detailsBooks.key?.split("/").pop() || "8935250707640" }}
+                  </v-list-item-subtitle>
+                </v-list-item>
+
+                <v-divider></v-divider>
+
+                <v-list-item>
+                  <template v-slot:prepend>
+                    <v-icon color="primary">mdi-account-edit</v-icon>
+                  </template>
+                  <v-list-item-title>Author</v-list-item-title>
+                  <v-list-item-subtitle>
+                    {{ detailsBooks.authors?.[0] }}
+                  </v-list-item-subtitle>
+                </v-list-item>
+
+                <v-divider></v-divider>
+
+                <v-list-item>
+                  <template v-slot:prepend>
+                    <v-icon color="primary">mdi-calendar</v-icon>
+                  </template>
+                  <v-list-item-title>Publication Year</v-list-item-title>
+                  <v-list-item-subtitle>
+                    {{ detailsBooks.first_publish_year }}
+                  </v-list-item-subtitle>
+                </v-list-item>
+              </v-list>
+            </v-card-text>
+          </v-card>
+        </v-col>
+
+        <!-- Customer Reviews -->
+        <v-col cols="12" md="6">
+          <v-card elevation="2" rounded="lg" height="100%">
+            <v-card-title class="bg-amber text-white">
+              <v-icon class="mr-2">mdi-star</v-icon>
+              Customer Reviews
+            </v-card-title>
+            <v-card-text class="pa-4">
+              <div class="text-center mb-4">
+                <div class="text-h3 font-weight-bold text-amber mb-2">
+                  4.0<span class="text-h5 text-grey-darken-1">/5</span>
+                </div>
+                <v-rating
+                  :model-value="4"
+                  color="amber"
+                  readonly
+                  size="small"
+                  class="mb-2"
+                ></v-rating>
+                <div class="text-body-2 text-grey-darken-1">
+                  Based on 24 reviews
+                </div>
+              </div>
+
+              <!-- Rating Breakdown -->
+              <div class="rating-breakdown mb-4">
+                <div
+                  class="d-flex align-center mb-1"
+                  v-for="(rating, index) in ratingBreakdown"
+                  :key="index"
+                >
+                  <span class="text-caption mr-2" style="min-width: 15px">{{
+                    5 - index
+                  }}</span>
+                  <v-icon color="amber" size="x-small" class="mr-2"
+                    >mdi-star</v-icon
+                  >
+                  <v-progress-linear
+                    :model-value="rating.percentage"
+                    color="amber"
+                    height="6"
+                    rounded
+                    class="flex-grow-1 mr-2"
+                  ></v-progress-linear>
+                  <span class="text-caption" style="min-width: 25px"
+                    >({{ rating.count }})</span
+                  >
+                </div>
+              </div>
+
+              <div class="text-center">
+                <v-btn
+                  color="primary"
+                  variant="outlined"
+                  size="small"
+                  prepend-icon="mdi-pencil"
+                  @click="$router.push(`/reviews/${detailsBooks._id}`)"
+                >
+                  Write Review
+                </v-btn>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+
+      <!-- Description -->
       <v-card
-        class="mt-6"
-        elevation="3"
-        rounded="xl"
         v-if="detailsBooks.description"
+        class="mt-6"
+        elevation="2"
+        rounded="lg"
       >
-        <v-card-title
-          class="pa-6 text-white"
-          style="background: linear-gradient(90deg, #9333ea 0%, #ec4899 100%)"
-        >
-          <v-icon start class="mr-2">mdi-text-box</v-icon>
+        <v-card-title class="bg-secondary text-white">
+          <v-icon class="mr-2">mdi-text-box</v-icon>
           Description
         </v-card-title>
-        <v-card-text class="pa-6">
-          <p class="text-body-1 line-height-relaxed">
+        <v-card-text class="pa-4">
+          <p class="text-body-1 line-height-1-6">
             {{
               typeof detailsBooks.description === "object"
                 ? detailsBooks.description.value
@@ -282,95 +323,9 @@
           </p>
         </v-card-text>
       </v-card>
-
-      <!-- Rating section -->
-      <v-card class="mt-6" elevation="3" rounded="xl">
-        <v-card-title class="pa-6 bg-amber text-white">
-          <v-icon start class="mr-2">mdi-star</v-icon>
-          Customer Reviews
-        </v-card-title>
-
-        <v-card-text class="pa-6">
-          <v-row>
-            <v-col cols="12" md="4">
-              <div class="text-center">
-                <div class="text-h2 font-weight-bold text-amber mb-2">
-                  4.0<span class="text-h4 text-grey-darken-1">/5</span>
-                </div>
-                <v-rating
-                  :model-value="4"
-                  color="amber"
-                  density="comfortable"
-                  readonly
-                  size="large"
-                  class="mb-2"
-                ></v-rating>
-                <div class="text-body-2 text-grey-darken-1">
-                  Based on 24 reviews
-                </div>
-              </div>
-            </v-col>
-
-            <v-col cols="12" md="4">
-              <div class="rating-breakdown">
-                <div
-                  class="d-flex align-center mb-2"
-                  v-for="(rating, index) in ratingBreakdown"
-                  :key="index"
-                >
-                  <span class="text-body-2 mr-2" style="min-width: 20px">{{
-                    5 - index
-                  }}</span>
-                  <v-icon color="amber" size="small" class="mr-2"
-                    >mdi-star</v-icon
-                  >
-                  <v-progress-linear
-                    :model-value="rating.percentage"
-                    color="amber"
-                    height="8"
-                    rounded
-                    class="flex-grow-1 mr-3"
-                  ></v-progress-linear>
-                  <span class="text-body-2" style="min-width: 30px"
-                    >({{ rating.count }})</span
-                  >
-                </div>
-              </div>
-            </v-col>
-
-            <v-col class="d-flex justify-center align-center" cols="12" md="4">
-              <v-btn
-                color="primary"
-                variant="outlined"
-                size="large"
-                rounded="lg"
-                class="text-none"
-                @click="$router.push(`/reviews/${detailsBooks._id}`)"
-              >
-                <v-icon start>mdi-pencil</v-icon>
-                Write a review
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
     </v-container>
 
-    <!-- Enhanced Loading state -->
-    <v-container
-      v-else
-      class="d-flex flex-column justify-center align-center"
-      style="min-height: 60vh"
-    >
-      <v-progress-circular
-        indeterminate
-        color="primary"
-        size="80"
-        width="6"
-        class="mb-4"
-      ></v-progress-circular>
-      <div class="text-h6 text-grey-darken-1">Loading book details...</div>
-    </v-container>
+    <!-- Snackbar -->
     <SnackbarAlert
       v-model="showSnackbar"
       :text="snackbarText"
@@ -382,6 +337,7 @@
 <script>
 import axios from "axios";
 import { mapActions, mapState } from "vuex";
+
 export default {
   data() {
     return {
@@ -392,10 +348,23 @@ export default {
       showSnackbar: false,
       snackbarText: "",
       snackbarColor: "success",
+      ratingBreakdown: [
+        { percentage: 70, count: 12 },
+        { percentage: 20, count: 5 },
+        { percentage: 8, count: 2 },
+        { percentage: 2, count: 1 },
+        { percentage: 0, count: 0 },
+      ],
     };
   },
   computed: {
     ...mapState("favorite", ["favorites"]),
+    breadcrumbItems() {
+      return [
+        { title: "Home", disabled: false, href: "/" },
+        { title: this.detailsBooks.title || "Book Details", disabled: true },
+      ];
+    },
   },
   methods: {
     ...mapActions("cart", ["addToCart"]),
@@ -475,15 +444,28 @@ export default {
 </script>
 
 <style scoped>
-.min-width-200 {
-  min-width: 200px;
+.book-details-page {
+  background-color: #fafafa;
+  min-height: 100vh;
 }
 
-.border-b {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+.line-height-1-6 {
+  line-height: 1.6;
 }
 
-/* Make sure the rating stars are properly sized */
+.price-section {
+  background-color: #f5f5f5;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+.purchase-section {
+  background-color: #ffffff;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
 :deep(.v-rating .v-icon) {
   padding: 0;
 }

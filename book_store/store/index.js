@@ -1,17 +1,20 @@
-// import { createStore } from "vuex";
-// import auth from "./auth";
-// import book from "./book";
-// import cart from "./cart";
-// import review from "./review";
-// import order from "./order";
-// const store = createStore({
-//   modules: {
-//     auth,
-//     book,
-//     cart,
-//     review,
-//     order
-//   },
-// });
+import { createStore } from "vuex";
+import auth from "./auth";
+import book from "./book";
+import cart from "./cart";
+import review from "./review";
+import order from "./order";
+import favorite from "./favorite";
 
-// export default store;
+const store = createStore({
+  modules: {
+    auth,
+    book,
+    cart,
+    review,
+    order,
+    favorite,
+  },
+});
+
+export default store;

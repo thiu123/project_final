@@ -510,6 +510,17 @@ export default {
   line-height: 1.6;
 }
 
+.ai-review-btn {
+  background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 100%) !important;
+  color: white !important;
+  transition: all 0.3s ease;
+}
+
+.ai-review-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(106, 27, 154, 0.3) !important;
+}
+
 .delete-btn {
   opacity: 0.6;
   transition: all 0.2s ease;

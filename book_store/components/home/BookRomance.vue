@@ -266,7 +266,10 @@ export default {
     if (this.romanceBooks.length === 0) {
       this.isLoading = true;
       try {
-        await this.getRomanceBooks("contemporary romance");
+        await this.getRomanceBooks({
+          subject: "contemporary romance",
+          half: true,
+        });
       } catch (error) {
         console.error("Error fetching books:", error);
       }

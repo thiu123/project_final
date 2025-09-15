@@ -462,7 +462,7 @@ export default {
         const subject = this.$route.params.subject;
         // console.log("Subject:", subject);
         if (subject) {
-          await this.getAllBooks(subject);
+          await this.getAllBooks({ subject: subject }, false);
         }
         // console.log("Books:", this.books);
       } catch (error) {
