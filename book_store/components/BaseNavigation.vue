@@ -224,7 +224,15 @@
               >
                 <div class="d-flex align-center">
                   <v-avatar color="info" size="30">
-                    <v-icon icon="mdi-account-circle" size="24"></v-icon>
+                    <v-img
+                      :src="currentUser.avatar_url"
+                      cover
+                      :alt="currentUser.name + ' avatar'"
+                    >
+                      <template v-slot:placeholder>
+                        <v-icon icon="mdi-account-circle" size="24"></v-icon>
+                      </template>
+                    </v-img>
                   </v-avatar>
                   <span
                     class="ml-2 text-subtitle-1 font-weight-bold text-white"
