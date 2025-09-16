@@ -4,11 +4,7 @@
     <AdminBookManagement v-if="currentTab === 'book-management'" />
 
     <!-- User Management Component (Placeholder) -->
-    <div v-else-if="currentTab === 'user-management'" class="text-center pa-8">
-      <v-icon size="80" color="grey-lighten-2">mdi-account-multiple</v-icon>
-      <h2 class="text-h4 mt-4 mb-2">User Management</h2>
-      <p class="text-grey">Feature under development...</p>
-    </div>
+    <AdminUserManagement v-else-if="currentTab === 'user-management'" />
 
     <!-- Order Management Component (Placeholder) -->
     <div v-else-if="currentTab === 'order-management'" class="text-center pa-8">
