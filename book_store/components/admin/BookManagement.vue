@@ -112,7 +112,7 @@
             size="small"
             class="font-mono"
           >
-            {{ item.key?.slice(-8) || "N/A" }}
+            {{ item._id?.slice(-8) || "N/A" }}
           </v-chip>
         </template>
 
@@ -220,7 +220,7 @@
               variant="text"
               size="small"
               color="error"
-              @click="deleteBook(item)"
+              @click="confirmDelete(item)"
             ></v-btn>
           </div>
         </template>
@@ -243,6 +243,475 @@
         </template>
       </v-data-table>
     </v-card>
+
+    <!-- Add/Edit Book Dialog -->
+    <v-dialog v-model="dialog" max-width="900px" persistent scrollable>
+      <v-card class="dialog-card" elevation="8">
+        <!-- Header -->
+        <v-card-title class="px-6 py-4 bg-primary text-white">
+          <div class="d-flex align-center justify-space-between">
+            <div class="d-flex align-center">
+              <v-icon class="mr-3" size="large">
+                {{ isEditing ? "mdi-pencil" : "mdi-plus" }}
+              </v-icon>
+              <span class="text-h5 font-weight-medium">{{ dialogTitle }}</span>
+            </div>
+            <v-btn
+              icon="mdi-close"
+              variant="text"
+              color="white"
+              @click="closeDialog"
+            ></v-btn>
+          </div>
+        </v-card-title>
+
+        <v-divider></v-divider>
+
+        <!-- Content -->
+        <v-card-text class="pa-0" style="max-height: 70vh">
+          <v-container class="py-6">
+            <v-form>
+              <!-- Basic Information Section -->
+              <div class="mb-6">
+                <h3
+                  class="text-h6 font-weight-medium mb-4 text-primary d-flex align-center"
+                >
+                  <v-icon class="mr-2">mdi-information</v-icon>
+                  Basic Information
+                </h3>
+                <v-row>
+                  <v-col cols="12">
+                    <v-text-field
+                      v-model="editedItem.title"
+                      label="Book Title"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-book"
+                      :error-messages="errors.title"
+                      required
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-combobox
+                      v-model="editedItem.authors"
+                      label="Authors"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-account-edit"
+                      multiple
+                      chips
+                      closable-chips
+                      :error-messages="errors.authors"
+                    ></v-combobox>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="editedItem.cover_url"
+                      label="Cover Image URL"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-image"
+                      :error-messages="errors.cover_url"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+              </div>
+
+              <v-divider class="mb-6"></v-divider>
+
+              <!-- Categories & Classification -->
+              <div class="mb-6">
+                <h3
+                  class="text-h6 font-weight-medium mb-4 text-secondary d-flex align-center"
+                >
+                  <v-icon class="mr-2">mdi-tag</v-icon>
+                  Categories & Classification
+                </h3>
+                <v-row>
+                  <v-col cols="12">
+                    <v-combobox
+                      v-model="editedItem.subjects"
+                      label="Categories"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-tag-multiple"
+                      multiple
+                      chips
+                      closable-chips
+                      :items="subjects"
+                      :error-messages="errors.subjects"
+                    ></v-combobox>
+                  </v-col>
+                </v-row>
+              </div>
+
+              <v-divider class="mb-6"></v-divider>
+
+              <!-- Publication Details -->
+              <div class="mb-6">
+                <h3
+                  class="text-h6 font-weight-medium mb-4 text-info d-flex align-center"
+                >
+                  <v-icon class="mr-2">mdi-calendar</v-icon>
+                  Publication Details
+                </h3>
+                <v-row>
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model.number="editedItem.first_publish_year"
+                      label="Publication Year"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-calendar"
+                      type="number"
+                      :error-messages="errors.first_publish_year"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="4">
+                    <v-select
+                      v-model="editedItem.language"
+                      label="Language"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-translate"
+                      :items="languageOptions"
+                      :error-messages="errors.language"
+                    ></v-select>
+                  </v-col>
+
+                  <v-col cols="12" md="4">
+                    <v-text-field
+                      v-model.number="editedItem.page_count"
+                      label="Page Count"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-file-document"
+                      type="number"
+                      :error-messages="errors.page_count"
+                    ></v-text-field>
+                  </v-col>
+                </v-row>
+              </div>
+
+              <v-divider class="mb-6"></v-divider>
+
+              <!-- Pricing & Description -->
+              <div class="mb-6">
+                <h3
+                  class="text-h6 font-weight-medium mb-4 text-success d-flex align-center"
+                >
+                  <v-icon class="mr-2">mdi-currency-usd</v-icon>
+                  Pricing & Description
+                </h3>
+                <v-row>
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model.number="editedItem.price"
+                      label="Price"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-currency-usd"
+                      type="number"
+                      prefix="$"
+                      :error-messages="errors.price"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12">
+                    <v-textarea
+                      v-model="editedItem.description"
+                      label="Description"
+                      variant="outlined"
+                      prepend-inner-icon="mdi-text-box"
+                      rows="4"
+                      auto-grow
+                      counter
+                      :error-messages="errors.description"
+                    ></v-textarea>
+                  </v-col>
+                </v-row>
+              </div>
+            </v-form>
+          </v-container>
+        </v-card-text>
+
+        <!-- Actions -->
+        <v-divider></v-divider>
+        <v-card-actions class="px-6 py-4 bg-grey-lighten-4">
+          <v-spacer></v-spacer>
+          <v-btn
+            color="grey-darken-2"
+            variant="outlined"
+            size="large"
+            @click="closeDialog"
+            class="mr-3"
+          >
+            <v-icon start>mdi-close</v-icon>
+            Cancel
+          </v-btn>
+          <v-btn
+            color="primary"
+            variant="flat"
+            size="large"
+            @click="saveBook"
+            :loading="saving"
+            elevation="2"
+          >
+            <v-icon start>{{ isEditing ? "mdi-check" : "mdi-plus" }}</v-icon>
+            {{ isEditing ? "Update Book" : "Add Book" }}
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Delete Confirmation Dialog -->
+    <v-dialog v-model="deleteDialog" max-width="500px" persistent>
+      <v-card class="text-center" elevation="8" rounded="xl">
+        <!-- Icon -->
+        <div class="pt-8 pb-4">
+          <v-avatar size="80" color="error" class="mb-4">
+            <v-icon size="40" color="white">mdi-delete-alert</v-icon>
+          </v-avatar>
+
+          <v-card-title class="text-h5 font-weight-bold text-center px-4">
+            Confirm Deletion
+          </v-card-title>
+        </div>
+
+        <!-- Content -->
+        <v-card-text class="px-6 pb-4">
+          <p class="text-body-1 mb-3">
+            Are you sure you want to delete this book?
+          </p>
+
+          <v-alert
+            type="warning"
+            variant="tonal"
+            class="ma-3 text-left"
+            density="compact"
+          >
+            <div class="font-weight-medium">{{ bookToDelete?.title }}</div>
+            <div class="text-caption text-grey-darken-1">
+              This action cannot be undone.
+            </div>
+          </v-alert>
+        </v-card-text>
+
+        <!-- Actions -->
+        <v-card-actions class="justify-center px-6 pb-8">
+          <v-btn
+            color="grey"
+            variant="outlined"
+            size="large"
+            @click="deleteDialog = false"
+            class="mr-3"
+            min-width="100"
+          >
+            Cancel
+          </v-btn>
+          <v-btn
+            color="error"
+            variant="flat"
+            size="large"
+            @click="deleteBookConfirmed"
+            :loading="deleting"
+            min-width="100"
+            elevation="2"
+          >
+            <v-icon start>mdi-delete</v-icon>
+            Delete
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- View Book Dialog -->
+    <v-dialog v-model="viewDialog" max-width="700px" scrollable>
+      <v-card v-if="viewedBook" elevation="8" rounded="lg">
+        <!-- Header with Book Cover Background -->
+        <div class="book-header position-relative">
+          <div class="book-header-overlay"></div>
+          <v-card-title class="pa-6 text-white position-relative">
+            <div class="d-flex align-center justify-space-between">
+              <div class="d-flex align-center">
+                <v-icon class="mr-3" size="large"
+                  >mdi-book-open-page-variant</v-icon
+                >
+                <div>
+                  <div class="text-h5 font-weight-bold">
+                    {{ viewedBook.title }}
+                  </div>
+                  <div class="text-subtitle-1 opacity-90">
+                    by {{ viewedBook.authors?.join(", ") || "Unknown Author" }}
+                  </div>
+                </div>
+              </div>
+              <v-btn
+                icon="mdi-close"
+                variant="text"
+                color="white"
+                @click="viewDialog = false"
+              ></v-btn>
+            </div>
+          </v-card-title>
+        </div>
+
+        <v-divider></v-divider>
+
+        <!-- Content -->
+        <v-card-text class="pa-0" style="max-height: 60vh">
+          <v-container class="py-4">
+            <v-row>
+              <!-- Book Cover -->
+              <v-col cols="12" md="4" v-if="viewedBook.cover_url">
+                <div class="text-center">
+                  <v-img
+                    :src="viewedBook.cover_url"
+                    :alt="viewedBook.title"
+                    aspect-ratio="0.7"
+                    max-width="200"
+                    cover
+                    class="rounded-lg mx-auto elevation-4"
+                  >
+                    <template v-slot:placeholder>
+                      <v-skeleton-loader type="image"></v-skeleton-loader>
+                    </template>
+                  </v-img>
+                </div>
+              </v-col>
+
+              <!-- Book Details -->
+              <v-col :cols="viewedBook.cover_url ? 8 : 12">
+                <v-card variant="tonal" color="primary" class="mb-4">
+                  <v-card-text class="pa-4">
+                    <div class="d-flex align-center mb-2">
+                      <v-icon color="success" class="mr-2"
+                        >mdi-currency-usd</v-icon
+                      >
+                      <span class="text-h5 font-weight-bold text-success">
+                        ${{ viewedBook.price?.toFixed(2) || "0.00" }}
+                      </span>
+                    </div>
+
+                    <v-chip
+                      color="success"
+                      variant="flat"
+                      size="small"
+                      prepend-icon="mdi-check-circle"
+                    >
+                      Available
+                    </v-chip>
+                  </v-card-text>
+                </v-card>
+
+                <!-- Details List -->
+                <v-list class="pa-0">
+                  <v-list-item class="px-0">
+                    <template v-slot:prepend>
+                      <v-icon color="primary">mdi-calendar</v-icon>
+                    </template>
+                    <v-list-item-title>Publication Year</v-list-item-title>
+                    <v-list-item-subtitle>
+                      {{ viewedBook.first_publish_year || "N/A" }}
+                    </v-list-item-subtitle>
+                  </v-list-item>
+
+                  <v-list-item class="px-0">
+                    <template v-slot:prepend>
+                      <v-icon color="primary">mdi-translate</v-icon>
+                    </template>
+                    <v-list-item-title>Language</v-list-item-title>
+                    <v-list-item-subtitle>
+                      {{ viewedBook.language || "English" }}
+                    </v-list-item-subtitle>
+                  </v-list-item>
+
+                  <v-list-item class="px-0">
+                    <template v-slot:prepend>
+                      <v-icon color="primary">mdi-file-document</v-icon>
+                    </template>
+                    <v-list-item-title>Pages</v-list-item-title>
+                    <v-list-item-subtitle>
+                      {{ viewedBook.page_count || "N/A" }}
+                    </v-list-item-subtitle>
+                  </v-list-item>
+                </v-list>
+              </v-col>
+            </v-row>
+
+            <!-- Categories Section -->
+            <v-row v-if="viewedBook.subjects?.length" class="mt-4">
+              <v-col cols="12">
+                <v-card variant="outlined" class="pa-4">
+                  <h4
+                    class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center"
+                  >
+                    <v-icon class="mr-2" color="primary"
+                      >mdi-tag-multiple</v-icon
+                    >
+                    Categories
+                  </h4>
+                  <div class="d-flex flex-wrap ga-2">
+                    <v-chip
+                      v-for="subject in viewedBook.subjects"
+                      :key="subject"
+                      color="primary"
+                      variant="tonal"
+                      size="small"
+                    >
+                      {{ subject }}
+                    </v-chip>
+                  </div>
+                </v-card>
+              </v-col>
+            </v-row>
+
+            <!-- Description Section -->
+            <v-row v-if="viewedBook.description" class="mt-4">
+              <v-col cols="12">
+                <v-card variant="outlined" class="pa-4">
+                  <h4
+                    class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center"
+                  >
+                    <v-icon class="mr-2" color="primary">mdi-text-box</v-icon>
+                    Description
+                  </h4>
+                  <p class="text-body-2 line-height-1-6 mb-0">
+                    {{ viewedBook.description }}
+                  </p>
+                </v-card>
+              </v-col>
+            </v-row>
+          </v-container>
+        </v-card-text>
+
+        <!-- Actions -->
+        <v-divider></v-divider>
+        <v-card-actions class="justify-end pa-4 bg-grey-lighten-5">
+          <v-btn
+            color="primary"
+            variant="flat"
+            @click="viewDialog = false"
+            size="large"
+            min-width="100"
+          >
+            <v-icon start>mdi-check</v-icon>
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Snackbar Alert -->
+    <SnackbarAlert
+      v-model="snackbar.show"
+      :text="snackbar.text"
+      :color="snackbar.color"
+      :timeout="3000"
+    />
   </div>
 </template>
 
@@ -260,6 +729,24 @@ export default {
       showThemSach: true,
       page: 1,
       itemsPerPage: 10,
+
+      // Dialog states
+      dialog: false,
+      deleteDialog: false,
+      viewDialog: false,
+
+      // Form data
+      editedIndex: -1,
+      editedItem: this.getDefaultItem(),
+      bookToDelete: null,
+      viewedBook: null,
+
+      // Form validation
+      errors: {},
+
+      // Loading states
+      saving: false,
+      deleting: false,
 
       headers: [
         {
@@ -322,6 +809,19 @@ export default {
         "biography",
       ],
 
+      languageOptions: [
+        { title: "English", value: "en" },
+        { title: "Spanish", value: "es" },
+        { title: "French", value: "fr" },
+        { title: "German", value: "de" },
+        { title: "Italian", value: "it" },
+        { title: "Portuguese", value: "pt" },
+        { title: "Russian", value: "ru" },
+        { title: "Japanese", value: "ja" },
+        { title: "Chinese", value: "zh" },
+        { title: "Korean", value: "ko" },
+      ],
+
       sortOptions: [
         { title: "Newest", value: "newest" },
         { title: "Oldest", value: "oldest" },
@@ -330,11 +830,26 @@ export default {
         { title: "Price Low to High", value: "price-asc" },
         { title: "Price High to Low", value: "price-desc" },
       ],
+
+      // Notification
+      snackbar: {
+        show: false,
+        text: "",
+        color: "success",
+      },
     };
   },
 
   computed: {
-    ...mapState("book", ["books"]),
+    ...mapState("book", ["books", "loading"]),
+
+    dialogTitle() {
+      return this.editedIndex === -1 ? "Add New Book" : "Edit Book";
+    },
+
+    isEditing() {
+      return this.editedIndex !== -1;
+    },
 
     filteredBooks() {
       let filtered = [...this.books];
@@ -387,7 +902,26 @@ export default {
   },
 
   methods: {
-    ...mapActions("book", ["getAllBooks"]),
+    ...mapActions("book", [
+      "getAllBooks",
+      "deleteBookById",
+      "createBook",
+      "updateBook",
+    ]),
+
+    getDefaultItem() {
+      return {
+        title: "",
+        authors: [],
+        subjects: [],
+        price: 0,
+        first_publish_year: new Date().getFullYear(),
+        cover_url: "",
+        description: "",
+        language: "en",
+        page_count: 0,
+      };
+    },
 
     async refreshBooks() {
       this.loading = true;
@@ -395,6 +929,7 @@ export default {
         await this.getAllBooks({ subject: null, half: false });
       } catch (error) {
         console.error("Error fetching books:", error);
+        this.showSnackbar("Failed to load books", "error");
       } finally {
         this.loading = false;
       }
@@ -409,28 +944,132 @@ export default {
     },
 
     openAddDialog() {
-      // Handle add book
-      console.log("Open add book dialog");
+      this.editedIndex = -1;
+      this.editedItem = this.getDefaultItem();
+      this.errors = {};
+      this.dialog = true;
+    },
+
+    openDialog(action, item = null) {
+      if (action === "add") {
+        this.editedIndex = -1;
+        this.editedItem = this.getDefaultItem();
+      } else if (action === "edit" && item) {
+        this.editedIndex = this.books.findIndex(
+          (book) => book._id === item._id
+        );
+        this.editedItem = { ...item };
+      }
+      this.errors = {};
+      this.dialog = true;
+    },
+
+    closeDialog() {
+      this.dialog = false;
+      this.$nextTick(() => {
+        this.editedItem = this.getDefaultItem();
+        this.editedIndex = -1;
+        this.errors = {};
+      });
+    },
+
+    validateForm() {
+      this.errors = {};
+
+      if (!this.editedItem.title?.trim()) {
+        this.errors.title = ["Title is required"];
+      }
+
+      if (!this.editedItem.authors?.length) {
+        this.errors.authors = ["At least one author is required"];
+      }
+
+      if (this.editedItem.price < 0) {
+        this.errors.price = ["Price must be non-negative"];
+      }
+
+      if (
+        this.editedItem.first_publish_year &&
+        (this.editedItem.first_publish_year < 1000 ||
+          this.editedItem.first_publish_year > new Date().getFullYear() + 1)
+      ) {
+        this.errors.first_publish_year = [
+          "Please enter a valid publication year",
+        ];
+      }
+
+      return Object.keys(this.errors).length === 0;
+    },
+
+    async saveBook() {
+      if (!this.validateForm()) return;
+
+      this.saving = true;
+      try {
+        if (this.isEditing) {
+          await this.updateBook({
+            id: this.editedItem._id,
+            bookData: this.editedItem,
+          });
+          this.showSnackbar("Book updated successfully");
+        } else {
+          await this.createBook(this.editedItem);
+          this.showSnackbar("Book added successfully");
+        }
+        this.closeDialog();
+      } catch (error) {
+        this.showSnackbar("Failed to save book", "error");
+      } finally {
+        this.saving = false;
+      }
     },
 
     viewBook(book) {
-      // Handle view book
-      console.log("View book:", book.title);
+      this.viewedBook = book;
+      this.viewDialog = true;
     },
 
     editBook(book) {
-      // Handle edit book
-      console.log("Edit book:", book.title);
+      this.openDialog("edit", book);
     },
 
-    deleteBook(book) {
-      // Handle delete book
-      console.log("Delete book:", book.title);
+    confirmDelete(item) {
+      this.bookToDelete = item;
+      this.deleteDialog = true;
+    },
+
+    async deleteBookConfirmed() {
+      if (!this.bookToDelete) return;
+
+      this.deleting = true;
+      try {
+        await this.deleteBookById({ id: this.bookToDelete._id });
+        this.showSnackbar("Book deleted successfully");
+        this.deleteDialog = false;
+        this.bookToDelete = null;
+      } catch (error) {
+        this.showSnackbar("Failed to delete book", "error");
+      } finally {
+        this.deleting = false;
+      }
     },
 
     toggleAdvancedFilter() {
-      // Handle advanced filter
       console.log("Toggle advanced filter");
+    },
+
+    showSnackbar(text, color = "success") {
+      this.snackbar = {
+        show: true,
+        text,
+        color,
+      };
+    },
+  },
+
+  watch: {
+    dialog(val) {
+      val || this.closeDialog();
     },
   },
 

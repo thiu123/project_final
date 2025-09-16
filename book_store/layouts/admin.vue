@@ -22,13 +22,8 @@
         </v-btn>
 
         <div v-if="!rail" class="d-flex align-center">
-          <v-avatar color="primary" size="40" class="mr-3">
-            <v-icon color="white">mdi-shield-crown</v-icon>
-          </v-avatar>
-          <div>
-            <div class="text-h6 font-weight-bold text-primary">Admin Panel</div>
-            <div class="text-caption text-grey">THBookStore</div>
-          </div>
+          <div class="text-h6 font-weight-bold text-primary">Admin Panel</div>
+          <div class="text-caption text-grey">THBookStore</div>
         </div>
       </div>
 
@@ -48,11 +43,6 @@
           class="mb-1"
           :class="{ 'v-list-item--active': activeTab === item.value }"
         >
-          <template v-if="item.badge" v-slot:append>
-            <v-chip :color="item.badge.color" size="x-small" variant="flat">
-              {{ item.badge.text }}
-            </v-chip>
-          </template>
         </v-list-item>
       </v-list>
 
@@ -62,9 +52,9 @@
         <div class="pa-4">
           <v-list-item
             v-if="!rail"
-            :prepend-avatar="userAvatar"
-            :title="userName"
-            :subtitle="userRole"
+            :prepend-avatar="currentUser?.avatar_url"
+            :title="currentUser?.username || 'Admin User'"
+            :subtitle="'Administrator'"
             class="px-0"
           >
             <template v-slot:append>
@@ -72,13 +62,13 @@
                 icon="mdi-logout"
                 variant="text"
                 size="small"
-                @click="logout"
+                @click="handleLogout"
               ></v-btn>
             </template>
           </v-list-item>
 
           <div v-else class="text-center">
-            <v-btn icon variant="text" size="small" @click="logout">
+            <v-btn icon variant="text" size="small" @click="handleLogout">
               <v-icon>mdi-logout</v-icon>
             </v-btn>
           </div>
@@ -89,7 +79,7 @@
     <!-- Main Content -->
     <v-main class="admin-main">
       <!-- Top Bar -->
-      <v-app-bar color="white" elevation="1" height="80" class="admin-topbar">
+      <v-app-bar color="white" elevation="0" height="80" class="admin-topbar">
         <v-app-bar-title class="ml-4">
           <div class="d-flex align-center">
             <v-icon
@@ -105,21 +95,16 @@
 
         <!-- Top Bar Actions -->
         <div class="d-flex align-center mr-4">
-          <v-btn icon variant="text" class="mr-2">
+          <!-- <v-btn icon variant="text" class="mr-2">
             <v-icon>mdi-bell</v-icon>
             <v-badge color="red" content="3" overlap></v-badge>
           </v-btn>
 
           <v-btn icon variant="text" class="mr-2">
             <v-icon>mdi-cog</v-icon>
-          </v-btn>
+          </v-btn> -->
 
           <v-divider vertical class="mx-3"></v-divider>
-
-          <v-chip :color="getStatusColor()" variant="flat" size="small">
-            <v-icon start size="small">mdi-circle</v-icon>
-            Online
-          </v-chip>
         </div>
       </v-app-bar>
 
@@ -132,6 +117,8 @@
 </template>
 
 <script>
+import { mapState, mapActions } from "vuex";
+
 export default {
   name: "AdminLayout",
   data() {
@@ -144,33 +131,16 @@ export default {
           title: "Book Management",
           value: "book-management",
           icon: "mdi-book-multiple",
-          badge: {
-            text: "1240",
-            color: "primary",
-          },
         },
         {
           title: "User Management",
           value: "user-management",
           icon: "mdi-account-multiple",
-          badge: {
-            text: "856",
-            color: "success",
-          },
         },
         {
           title: "Order Management",
           value: "order-management",
           icon: "mdi-package-variant",
-          badge: {
-            text: "124",
-            color: "warning",
-          },
-        },
-        {
-          title: "Analytics",
-          value: "analytics",
-          icon: "mdi-chart-line",
         },
         {
           title: "Settings",
@@ -178,12 +148,11 @@ export default {
           icon: "mdi-cog",
         },
       ],
-      userName: "Admin User",
-      userRole: "Super Administrator",
-      userAvatar: "https://cdn.vuetifyjs.com/images/john.jpg",
     };
   },
   computed: {
+    ...mapState("auth", ["currentUser"]),
+    ...mapState("book", ["books"]),
     currentTabTitle() {
       const item = this.menuItems.find((item) => item.value === this.activeTab);
       return item ? item.title : "Dashboard";
@@ -192,8 +161,12 @@ export default {
       const item = this.menuItems.find((item) => item.value === this.activeTab);
       return item ? item.icon : "mdi-view-dashboard";
     },
+    bookCount() {
+      return this.books.length;
+    },
   },
   methods: {
+    ...mapActions("auth", ["logout", "restoreSession"]),
     setActiveTab(tab) {
       this.activeTab = tab;
       this.$router.push(`/admin?tab=${tab}`);
@@ -201,12 +174,14 @@ export default {
     getStatusColor() {
       return "success";
     },
-    logout() {
-      // Handle logout logic
+    handleLogout() {
+      this.logout();
       this.$router.push("/");
     },
   },
   mounted() {
+    this.restoreSession();
+    console.log(this.currentUser, "current user in admin layout");
     // Get tab from query params
     const tab = this.$route.query.tab;
     if (tab && this.menuItems.find((item) => item.value === tab)) {

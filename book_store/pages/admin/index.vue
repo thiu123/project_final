@@ -43,6 +43,7 @@
 <script>
 definePageMeta({
   layout: "admin",
+  middleware: "admin",
 });
 
 export default {
@@ -55,6 +56,7 @@ export default {
   watch: {
     "$route.query.tab": {
       handler(newTab) {
+        // console.log(newTab, 'new tabbbb');
         if (newTab) {
           this.currentTab = newTab;
         }

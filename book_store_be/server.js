@@ -3,6 +3,11 @@ const app = express();
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
+const cookieParser = require("cookie-parser");
+
+// Load environment variables first
+dotenv.config();
+
 const bookRoute = require("./routes/book");
 const authRoute = require("./routes/auth");
 const userRoute = require("./routes/user");
@@ -11,15 +16,12 @@ const reviewRoute = require("./routes/review");
 const orderRoute = require("./routes/order");
 const favoriteRoute = require("./routes/favorite");
 const chatbotRoute = require("./routes/chatbot");
-const cookieParser = require("cookie-parser");
 
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
-
-dotenv.config();
 // Connect to MongoDB
 const connectDB = async () => {
   try {
