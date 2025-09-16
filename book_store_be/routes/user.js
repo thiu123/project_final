@@ -1,10 +1,27 @@
-const middlewareController = require('../controllers/middlewareController');
-const userController = require('../controllers/userController');
 const router = require("express").Router();
+const middlewareController = require("../controllers/middlewareController");
+const userController = require("../controllers/userController");
+const multer = require("multer");
 
-// GET ALL USERS
-router.get('/',middlewareController.verifyToken, userController.getAllUsers);
-// DELETE USER
-router.delete("/:id",middlewareController.verifyTokenAndAdmin, userController.deleteUser);
+// Multer config (lưu file tạm để upload lên Cloudinary)
+const upload = multer({ dest: "tmp/" });
+
+// GET all users
+router.get("/", middlewareController.verifyToken, userController.getAllUsers);
+
+// DELETE user
+router.delete(
+  "/:id",
+  middlewareController.verifyTokenAndAdmin,
+  userController.deleteUser
+);
+
+// UPLOAD images (ví dụ upload avatar hoặc nhiều ảnh)
+router.post(
+  "/upload-images",
+  middlewareController.verifyToken, // chỉ user đã login
+  upload.single("image"), // field name phải là "images"
+  userController.uploadImages
+);
 
 module.exports = router;

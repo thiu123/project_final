@@ -35,6 +35,67 @@
           style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
         >
           <v-card-text class="pa-8">
+            <!-- Avatar Upload Section -->
+            <div class="d-flex align-center mb-8">
+              <v-avatar size="120" class="mr-6 elevation-4">
+                <v-img
+                  :src="
+                    currentUser?.avatar_url ||
+                    'https://cdn.vuetifyjs.com/images/john.jpg'
+                  "
+                  cover
+                >
+                  <template v-slot:placeholder>
+                    <div
+                      class="d-flex align-center justify-center fill-height bg-grey-lighten-3"
+                    >
+                      <v-icon size="40" color="grey">mdi-account</v-icon>
+                    </div>
+                  </template>
+                </v-img>
+              </v-avatar>
+
+              <div>
+                <h3 class="text-h5 mb-2">
+                  {{ currentUser?.username || "User" }}
+                </h3>
+                <p class="text-body-2 text-grey-darken-1 mb-4">
+                  {{ currentUser?.email || "" }}
+                </p>
+
+                <v-btn
+                  color="waterblue"
+                  :loading="uploadingAvatar"
+                  @click="$refs.avatarInput.click()"
+                  prepend-icon="mdi-camera"
+                  class="mr-3"
+                >
+                  Change Avatar
+                </v-btn>
+
+                <v-btn
+                  v-if="currentUser?.avatar_url"
+                  variant="outlined"
+                  color="error"
+                  @click="removeAvatar"
+                  prepend-icon="mdi-delete"
+                >
+                  Remove
+                </v-btn>
+
+                <!-- Hidden file input -->
+                <input
+                  ref="avatarInput"
+                  type="file"
+                  accept="image/*"
+                  style="display: none"
+                  @change="handleAvatarUpload"
+                />
+              </div>
+            </div>
+
+            <v-divider class="mb-8"></v-divider>
+
             <v-form>
               <v-row>
                 <v-col cols="12" md="6">
@@ -583,6 +644,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { uploadAvatar } from "@/api/userApi";
 
 export default {
   name: "ProfileContent",
@@ -614,6 +676,7 @@ export default {
       },
       passwordFormValid: false,
       changingPassword: false,
+      uploadingAvatar: false,
     };
   },
   computed: {
@@ -717,6 +780,77 @@ export default {
         });
       } finally {
         this.changingPassword = false;
+      }
+    },
+    async handleAvatarUpload(event) {
+      const file = event.target.files[0];
+      console.log(file, "Selected file for avatar upload");
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        this.$emit("show-snackbar", {
+          message: "Please select a valid image file",
+          color: "error",
+        });
+        return;
+      }
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        this.$emit("show-snackbar", {
+          message: "File size must be less than 5MB",
+          color: "error",
+        });
+        return;
+      }
+
+      try {
+        this.uploadingAvatar = true;
+
+        // Gửi file lên API (single)
+        const response = await uploadAvatar(file);
+
+        // Vì BE trả về 1 object user sau khi update avatar
+        const updatedUser = response.data.data;
+
+        if (updatedUser && updatedUser.avatar_url) {
+          // Cập nhật store
+          this.$store.commit("auth/loginSuccess", {
+            ...this.currentUser,
+            avatar_url: updatedUser.avatar_url,
+          });
+
+          this.$emit("show-snackbar", {
+            message: "Avatar updated successfully!",
+            color: "success",
+          });
+        }
+      } catch (error) {
+        console.error("Avatar upload error:", error);
+        this.$emit("show-snackbar", {
+          message: error.response?.data?.msg || "Failed to upload avatar",
+          color: "error",
+        });
+      } finally {
+        this.uploadingAvatar = false;
+        // Reset file input
+        this.$refs.avatarInput.value = "";
+      }
+    },
+
+    removeAvatar() {
+      if (confirm("Are you sure you want to remove your avatar?")) {
+        // Update current user in store to remove avatar
+        this.$store.commit("auth/loginSuccess", {
+          ...this.currentUser,
+          avatar_url: null,
+        });
+
+        this.$emit("show-snackbar", {
+          message: "Avatar removed successfully!",
+          color: "success",
+        });
       }
     },
   },

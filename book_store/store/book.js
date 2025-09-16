@@ -1,4 +1,9 @@
-import { getBooksBySubject } from "@/api/bookApi";
+import {
+  getBooksBySubject,
+  deleteBookById,
+  createBook,
+  updateBook,
+} from "@/api/bookApi";
 
 export default {
   namespaced: true,
@@ -7,6 +12,7 @@ export default {
     fictionBooks: [],
     mangaBooks: [],
     romanceBooks: [],
+    loading: false,
   }),
   mutations: {
     setBooks(state, books) {
@@ -23,6 +29,23 @@ export default {
     },
     clearBooks(state) {
       state.books = [];
+    },
+    removeBookById(state, id) {
+      state.books = state.books.filter((book) => book._id !== id);
+    },
+    addBook(state, book) {
+      state.books.unshift(book);
+    },
+    updateBookInList(state, updatedBook) {
+      const index = state.books.findIndex(
+        (book) => book._id === updatedBook._id
+      );
+      if (index !== -1) {
+        state.books.splice(index, 1, updatedBook);
+      }
+    },
+    setLoading(state, loading) {
+      state.loading = loading;
     },
   },
   getters: {
@@ -70,6 +93,41 @@ export default {
         commit("setRomanceBooks", response.data);
       } catch (error) {
         console.error("Failed to fetch books", error);
+      }
+    },
+    async deleteBookById({ commit }, { id }) {
+      try {
+        await deleteBookById(id);
+        commit("removeBookById", id);
+      } catch (error) {
+        console.error("Failed to delete book", error);
+        throw error;
+      }
+    },
+    async createBook({ commit }, bookData) {
+      commit("setLoading", true);
+      try {
+        const response = await createBook(bookData);
+        commit("addBook", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Failed to create book", error);
+        throw error;
+      } finally {
+        commit("setLoading", false);
+      }
+    },
+    async updateBook({ commit }, { id, bookData }) {
+      commit("setLoading", true);
+      try {
+        const response = await updateBook(id, bookData);
+        commit("updateBookInList", response.data);
+        return response.data;
+      } catch (error) {
+        console.error("Failed to update book", error);
+        throw error;
+      } finally {
+        commit("setLoading", false);
       }
     },
   },

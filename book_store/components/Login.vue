@@ -192,7 +192,7 @@
                         <v-icon color="#DB4437" class="me-2">mdi-google</v-icon>
                         Google
                       </v-btn>
-                      <v-btn
+                      <!-- <v-btn
                         variant="elevated"
                         rounded="lg"
                         color="surface-variant"
@@ -203,7 +203,7 @@
                           >mdi-facebook</v-icon
                         >
                         Facebook
-                      </v-btn>
+                      </v-btn> -->
                     </div>
                   </div>
                 </v-form>
