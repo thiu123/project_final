@@ -12,7 +12,7 @@
       <div class="mb-4">
         <v-avatar size="100" class="elevation-4 border-4 border-white">
           <v-img
-            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face"
+            :src="currentUser?.avatar_url || 'https://via.placeholder.com/100'"
             alt="User Avatar"
             cover
           />
