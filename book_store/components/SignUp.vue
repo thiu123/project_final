@@ -277,6 +277,16 @@ export default {
         console.log(error);
       }
     },
+    async socialSignup(provider) {
+      if (provider === "google") {
+        try {
+          // Redirect to Google OAuth (same endpoint for login/signup)
+          window.location.href = "http://localhost:5000/api/auth/google";
+        } catch (error) {
+          console.error("Google signup error:", error);
+        }
+      }
+    },
   },
 };
 </script>

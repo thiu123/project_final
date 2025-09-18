@@ -11,6 +11,12 @@ export const registerUser = (user) => {
   return axios.post(`${BASE_URL}/register`, user);
 };
 
+export const loginWithGoogle = (googleToken) => {
+  return axios.post(`${BASE_URL}/google`, {
+    token: googleToken,
+  });
+};
+
 export const changePassword = (passwordData) => {
   return axios.put(`${BASE_URL}/change-password`, passwordData, {
     headers: {

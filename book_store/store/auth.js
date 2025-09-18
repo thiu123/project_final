@@ -1,4 +1,9 @@
-import { loginUser, registerUser, changePassword } from "@/api/authApi";
+import {
+  loginUser,
+  registerUser,
+  changePassword,
+  loginWithGoogle,
+} from "@/api/authApi";
 
 export default {
   namespaced: true,
@@ -71,6 +76,21 @@ export default {
         return res.data;
       } catch (error) {
         throw error.response?.data || error.message;
+      }
+    },
+    async loginWithGoogle({ commit }, googleToken) {
+      try {
+        commit("loginStart");
+        const res = await loginWithGoogle(googleToken);
+        commit("loginSuccess", res.data);
+        return res.data;
+      } catch (error) {
+        commit("loginFailure");
+        console.error(
+          "Google login error:",
+          error.response ? error.response.data : error.message
+        );
+        throw error;
       }
     },
     async changePassword(_, passwordData) {

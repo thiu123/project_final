@@ -1,3 +1,4 @@
+// controllers/bookAIController.js
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Book = require("../../model/Book");
 
@@ -5,13 +6,37 @@ const Book = require("../../model/Book");
 const genAI = new GoogleGenerativeAI("AIzaSyCa39PwllE3HtLncHvq69YasJhqIJC5mfs");
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
-// Controller for smart book suggestions
+// Config limits
+const MAX_BOOKS = 20;
+const MAX_KEYWORDS = 5;
+
+/**
+ * Controller: Suggest books based on user preference
+ */
 const getSuggestionBooks = async (req, res) => {
   try {
-    const { userPreferences } = req.body;
+    let { userPreferences } = req.body;
 
-    // Get all books from database
-    const allBooks = await Book.find();
+    if (!userPreferences || userPreferences.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide your preferences.",
+      });
+    }
+
+    // Limit number of keywords
+    const keywords = userPreferences
+      .split(",")
+      .map((kw) => kw.trim())
+      .slice(0, MAX_KEYWORDS);
+    userPreferences = keywords.join(",");
+
+    // Filter DB: top MAX_BOOKS by rating or matching subjects
+    const allBooks = await Book.find({
+      subjects: { $regex: userPreferences, $options: "i" },
+    })
+      .sort({ rating: -1 })
+      .limit(MAX_BOOKS);
 
     if (allBooks.length === 0) {
       return res.status(200).json({
@@ -20,51 +45,49 @@ const getSuggestionBooks = async (req, res) => {
           suggestions: [
             {
               title: "No books available",
-              reason: "The store currently has no books.",
+              reason: "No books match your preferences.",
             },
           ],
         },
       });
     }
 
-    // Build context with book info
+    // Build book context for AI
     const booksContext = allBooks
       .map(
         (book) =>
-          `- "${book.title}" by ${book.authors || "Unknown"} (${
-            book.subjects || "No subject"
-          })`
+          `- Title: ${book.title}\n  Subjects: ${book.subjects.join(", ")}`
       )
       .join("\n");
 
-    const prompt = `Based on the request: "${userPreferences}"
+    const prompt = `User preferences: "${userPreferences}"
 
 Available books:
 ${booksContext}
 
-Please suggest 3–5 books that best match. Answer in simple English.`;
+Suggest 3–5 books that best match the user's preferences. 
+Answer in English briefly and provide a short reason for each suggestion.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
+    const suggestionText = response.text();
 
-    // Fallback: random books if AI fails
-    const randomBooks = allBooks.sort(() => 0.5 - Math.random()).slice(0, 3);
+    // Map AI response to books (fallback: top 3)
+    const suggestions = allBooks.slice(0, 5).map((book, index) => ({
+      title: book.title,
+      subjects: book.subjects,
+      reason: suggestionText
+        ? suggestionText.split("\n")[index] || "Suggested book"
+        : `Suggested book: ${book.title}`,
+      bookId: book._id,
+    }));
 
     res.status(200).json({
       success: true,
-      data: {
-        suggestions: randomBooks.map((book) => ({
-          title: book.title,
-          authors: book.authors,
-          subjects: book.subjects,
-          reason: text || `Suggested book: ${book.title}`,
-          bookId: book._id,
-        })),
-      },
+      data: { suggestions },
     });
   } catch (error) {
-    console.error("Error in getSuggestionBooks:", error);
+    console.error("Error in suggestBooks:", error);
     res.status(500).json({
       success: false,
       message: "Error while suggesting books",
@@ -73,35 +96,43 @@ Please suggest 3–5 books that best match. Answer in simple English.`;
   }
 };
 
-// Controller for smart book review
+/**
+ * Controller: Generate a short AI review for 1 book
+ */
 const generateSmartReview = async (req, res) => {
   try {
     const { bookQuery } = req.body;
 
-    // Search book in DB
+    if (!bookQuery || bookQuery.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide the book title or subject.",
+      });
+    }
+
     const book = await Book.findOne({
       $or: [
         { title: { $regex: bookQuery, $options: "i" } },
-        { authors: { $regex: bookQuery, $options: "i" } },
+        { subjects: { $regex: bookQuery, $options: "i" } },
       ],
     });
 
     if (!book) {
       return res.status(404).json({
         success: false,
-        message: `Book "${bookQuery}" was not found in the store.`,
+        message: `Sorry, we couldn’t find the book "${bookQuery}" in our store.`,
       });
     }
 
-    const prompt = `Please review the book "${book.title}" by ${book.authors}.
-Genre: ${book.subjects}
-Description: ${book.description || "No description"}
+    const prompt = `Write a short review (3–5 sentences) for the book:
+Title: "${book.title}"
+Subjects: ${book.subjects.join(", ")}
 
-Write a short review in English (3–5 sentences).`;
+Write the review in simple English, as if recommending it to a reader.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const reviewText = response.text();
+    const reviewText = response.text() || "This book is worth reading.";
 
     res.status(200).json({
       success: true,
@@ -111,13 +142,12 @@ Write a short review in English (3–5 sentences).`;
         bookInfo: {
           id: book._id,
           title: book.title,
-          authors: book.authors,
           subjects: book.subjects,
         },
       },
     });
   } catch (error) {
-    console.error("Error in generateSmartReview:", error);
+    console.error("Error in generateReview:", error);
     res.status(500).json({
       success: false,
       message: "Error while generating review",
@@ -126,47 +156,7 @@ Write a short review in English (3–5 sentences).`;
   }
 };
 
-// Controller for general book chat
-const chatAboutBooks = async (req, res) => {
-  try {
-    const { message } = req.body;
-
-    // Get some books for context
-    const allBooks = await Book.find().limit(10);
-    const booksContext = allBooks
-      .map((book) => `- ${book.title} (${book.authors})`)
-      .join("\n");
-
-    const prompt = `User asks: "${message}"
-
-Books available in the store:
-${booksContext}
-
-Answer the question in English, briefly and helpfully.`;
-
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const replyText = response.text();
-
-    res.status(200).json({
-      success: true,
-      data: {
-        reply: replyText,
-        timestamp: new Date(),
-      },
-    });
-  } catch (error) {
-    console.error("Error in chatAboutBooks:", error);
-    res.status(500).json({
-      success: false,
-      message: "Error during chat",
-      error: error.message,
-    });
-  }
-};
-
 module.exports = {
   getSuggestionBooks,
   generateSmartReview,
-  chatAboutBooks,
 };

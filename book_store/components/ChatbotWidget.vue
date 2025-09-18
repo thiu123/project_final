@@ -57,13 +57,107 @@
               max-width="80%"
             >
               <v-card-text class="pa-3">
+                <!-- Regular text message -->
                 <div
-                  :class="message.type === 'user' ? 'text-white' : 'text-black'"
-                  class="text-body-2"
-                  style="white-space: pre-wrap; line-height: 1.5"
+                  v-if="!message.suggestions && !message.review"
+                  class="text-black"
+                  style="
+                    white-space: pre-wrap;
+                    line-height: 1.5;
+                    color: #000000 !important;
+                  "
                 >
                   {{ message.text }}
                 </div>
+
+                <!-- Book Suggestions Display -->
+                <div
+                  v-if="message.suggestions"
+                  class="text-black"
+                  style="color: #000000 !important"
+                >
+                  <div
+                    class="text-body-2 mb-3"
+                    style="color: #000000 !important"
+                  >
+                    {{ message.text }}
+                  </div>
+                  <div
+                    v-for="(book, idx) in message.suggestions"
+                    :key="idx"
+                    class="book-suggestion mb-2"
+                  >
+                    <v-card
+                      color="blue-lighten-5"
+                      variant="outlined"
+                      class="pa-2"
+                    >
+                      <div
+                        class="text-subtitle-2 font-weight-bold text-primary"
+                        style="color: #000000 !important"
+                      >
+                        📚 {{ book.title }}
+                      </div>
+                      <div
+                        class="text-caption text-grey-darken-1 mb-1"
+                        style="color: #000000 !important"
+                      >
+                        <strong>Subjects:</strong>
+                        {{
+                          Array.isArray(book.subjects)
+                            ? book.subjects.join(", ")
+                            : book.subjects
+                        }}
+                      </div>
+                      <div
+                        class="text-body-2"
+                        style="color: #000000 !important"
+                      >
+                        {{ book.reason }}
+                      </div>
+                    </v-card>
+                  </div>
+                </div>
+
+                <!-- Book Review Display -->
+                <div
+                  v-if="message.review"
+                  class="text-black"
+                  style="color: #000000 !important"
+                >
+                  <div
+                    class="text-body-2 mb-3"
+                    style="color: #000000 !important"
+                  >
+                    {{ message.text }}
+                  </div>
+                  <v-card
+                    color="green-lighten-5"
+                    variant="outlined"
+                    class="pa-3"
+                  >
+                    <div
+                      class="text-subtitle-2 font-weight-bold text-success mb-2"
+                      style="color: #000000 !important"
+                    >
+                      ⭐ {{ message.review.bookInfo.title }}
+                    </div>
+                    <div
+                      class="text-caption text-grey-darken-1 mb-2"
+                      style="color: #000000 !important"
+                    >
+                      <strong>Subjects:</strong>
+                      {{ message.review.bookInfo.subjects.join(", ") }}
+                    </div>
+                    <div
+                      class="text-body-2"
+                      style="line-height: 1.6; color: #000000 !important"
+                    >
+                      {{ message.review.generatedReview }}
+                    </div>
+                  </v-card>
+                </div>
+
                 <div
                   :class="
                     message.type === 'user'
@@ -95,7 +189,7 @@
                     width="2"
                     color="primary"
                   ></v-progress-circular>
-                  <span class="text-caption ml-2">Typing...</span>
+                  <span class="text-caption ml-2">Thinking...</span>
                 </div>
               </v-card-text>
             </v-card>
@@ -111,7 +205,11 @@
             </div>
             <div class="d-flex flex-wrap ga-2">
               <v-chip
-                @click="sendQuickMessage('Recommend some good books for me')"
+                @click="
+                  sendQuickMessage(
+                    'I want fantasy, adventure books for teenagers'
+                  )
+                "
                 color="primary"
                 variant="outlined"
                 size="small"
@@ -119,21 +217,10 @@
                 clickable
                 class="quick-action-chip"
               >
-                Book recommendations
+                Book suggestions
               </v-chip>
               <v-chip
-                @click="sendQuickMessage('I want to find programming books')"
-                color="secondary"
-                variant="outlined"
-                size="small"
-                prepend-icon="mdi-book-search"
-                clickable
-                class="quick-action-chip"
-              >
-                Search by category
-              </v-chip>
-              <v-chip
-                @click="sendQuickMessage('Is Naruto manga good?')"
+                @click="sendQuickMessage('review Naruto')"
                 color="success"
                 variant="outlined"
                 size="small"
@@ -152,7 +239,7 @@
           <v-card-actions class="pa-4 pt-2">
             <v-text-field
               v-model="newMessage"
-              placeholder="Ask me anything: book recommendations, reviews, search..."
+              placeholder="Try: 'fantasy books' or 'review Harry Potter'"
               variant="outlined"
               density="compact"
               hide-details
@@ -180,7 +267,7 @@
 
 <script>
 import { mapState } from "vuex";
-import { chatWithBot } from "@/api/chatbotApi";
+import { getBookSuggestions, generateSmartReview } from "@/api/chatbotApi";
 
 export default {
   name: "ChatbotWidget",
@@ -190,7 +277,7 @@ export default {
       messages: [
         {
           type: "bot",
-          text: "Hello! I'm your AI Book Advisor. I can help you with:\n\n📚 Personalized book recommendations\n⭐ Book reviews and ratings\n🔍 Book search by your preferences\n💬 General book discussions\n\nWhat can I help you with today?",
+          text: "Hello! I'm your AI Book Advisor. I can help you with:\n\n📚 Book recommendations (just tell me your preferences)\n⭐ Book reviews (type 'review [book title]')\n🔍 Book search by subjects\n\nExamples:\n• 'fantasy, adventure, magic'\n• 'review Harry Potter'\n• 'programming, javascript'\n\nWhat can I help you with today?",
           timestamp: new Date(),
         },
       ],
@@ -226,7 +313,7 @@ export default {
       };
 
       this.messages.push(userMessage);
-      const messageText = this.newMessage;
+      const messageText = this.newMessage.trim();
       this.newMessage = "";
       this.isTyping = true;
 
@@ -234,18 +321,13 @@ export default {
       this.scrollToBottom();
 
       try {
-        const context = this.messages
-          .slice(-5)
-          .map((m) => `${m.type}: ${m.text}`)
-          .join("\n");
-
-        const response = await chatWithBot(messageText, context);
-
-        this.messages.push({
-          type: "bot",
-          text: response.data.reply,
-          timestamp: new Date(),
-        });
+        // Detect if user wants a review
+        if (messageText.toLowerCase().startsWith("review")) {
+          await this.handleReviewRequest(messageText);
+        } else {
+          // Otherwise, treat as book recommendation request
+          await this.handleBookSuggestions(messageText);
+        }
       } catch (error) {
         console.error("Chat error:", error);
         this.messages.push({
@@ -256,6 +338,95 @@ export default {
       } finally {
         this.isTyping = false;
         this.scrollToBottom();
+      }
+    },
+
+    async handleBookSuggestions(userPreferences) {
+      try {
+        const response = await getBookSuggestions(userPreferences);
+
+        if (
+          response.success &&
+          response.data.suggestions &&
+          response.data.suggestions.length > 0
+        ) {
+          // Check if no books found
+          if (
+            response.data.suggestions.length === 1 &&
+            response.data.suggestions[0].title === "No books available"
+          ) {
+            this.messages.push({
+              type: "bot",
+              text: "I couldn't find any books matching your preferences. Please try different keywords or broader categories.",
+              timestamp: new Date(),
+            });
+          } else {
+            this.messages.push({
+              type: "bot",
+              text: "Here are my book recommendations for you:",
+              suggestions: response.data.suggestions,
+              timestamp: new Date(),
+            });
+          }
+        } else {
+          this.messages.push({
+            type: "bot",
+            text: "I couldn't find any books matching your preferences. Please try different keywords.",
+            timestamp: new Date(),
+          });
+        }
+      } catch (error) {
+        console.error("Book suggestions error:", error);
+        this.messages.push({
+          type: "bot",
+          text: "Sorry, I couldn't process your book recommendation request. Please try again.",
+          timestamp: new Date(),
+        });
+      }
+    },
+
+    async handleReviewRequest(messageText) {
+      try {
+        // Extract book query from "review book name"
+        const bookQuery = messageText.substring(6).trim(); // Remove "review" prefix
+
+        if (!bookQuery) {
+          this.messages.push({
+            type: "bot",
+            text: "Please specify a book title after 'review'. For example: 'review Harry Potter'",
+            timestamp: new Date(),
+          });
+          return;
+        }
+
+        const response = await generateSmartReview({ bookQuery });
+
+        if (response.success && response.data.bookFound) {
+          this.messages.push({
+            type: "bot",
+            text: "Here's my review for the book:",
+            review: response.data,
+            timestamp: new Date(),
+          });
+        } else {
+          this.messages.push({
+            type: "bot",
+            text:
+              response.message ||
+              `Sorry, I couldn't find the book "${bookQuery}" in our store.`,
+            timestamp: new Date(),
+          });
+        }
+      } catch (error) {
+        console.error("Review generation error:", error);
+        const errorMessage =
+          error.message ||
+          "Sorry, I couldn't generate a review for that book. Please try again.";
+        this.messages.push({
+          type: "bot",
+          text: errorMessage,
+          timestamp: new Date(),
+        });
       }
     },
 
@@ -378,6 +549,22 @@ export default {
 .quick-action-chip:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Book suggestion styles */
+.book-suggestion {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Custom scrollbar */
