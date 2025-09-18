@@ -65,7 +65,7 @@ const orderController = {
         return res.status(400).json({ msg: "Cart is empty" });
       }
 
-      const exchange_rate = 24;
+      const exchange_rate = 24000;
       const totalAmount = cart.items.reduce((sum, item) => {
         return sum + item.bookId.price * item.quantity * exchange_rate;
       }, 0);

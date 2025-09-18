@@ -234,7 +234,7 @@ export default {
     ...mapState("cart", ["cart"]),
   },
   methods: {
-    ...mapActions("auth", ["login"]),
+    ...mapActions("auth", ["login", "loginWithGoogle"]),
     ...mapActions("cart", ["fetchCart"]),
     async onSubmit() {
       try {
@@ -267,6 +267,20 @@ export default {
           message: errorMessage,
           color: "error",
         });
+      }
+    },
+    async socialLogin(provider) {
+      if (provider === "google") {
+        try {
+          // Redirect to Google OAuth
+          window.location.href = "http://localhost:5000/api/auth/google";
+        } catch (error) {
+          console.error("Google login error:", error);
+          this.$emit("show-snackbar", {
+            message: "Google login failed. Please try again.",
+            color: "error",
+          });
+        }
       }
     },
   },

@@ -1,5 +1,4 @@
 import {
-  chatWithBot,
   getBookSuggestions,
   generateSmartReview,
 } from "@/api/chatbotApi";
@@ -119,8 +118,7 @@ export default {
           .map((m) => `${m.type}: ${m.text}`)
           .join("\n");
 
-        // Send to AI
-        const response = await chatWithBot(message, context);
+
 
         // Add bot response
         commit("addMessage", {

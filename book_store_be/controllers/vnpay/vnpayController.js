@@ -37,7 +37,7 @@ const vnpayController = {
     return vnpay.buildPaymentUrl({
       vnp_TxnRef: orderId,
       vnp_OrderInfo: `Thanh toán đơn hàng #${orderId}`,
-      vnp_Amount: amount * 1000,
+      vnp_Amount: amount * 100,
       vnp_Locale: VnpLocale.VN,
       vnp_CurrCode: "VND",
       vnp_OrderType: ProductCode.Other,

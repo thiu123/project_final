@@ -1,6 +1,9 @@
 const User = require("../model/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const passport = require("passport");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
+
 // const cookieParser = require('cookie-parser');
 
 const authController = {
@@ -126,6 +129,60 @@ const authController = {
       });
       res.status(200).json({ accessToken: newAccessToken });
     });
+  },
+  googleAuth: async (req, res) => {
+    passport.use(
+      new GoogleStrategy(
+        {
+          clientID: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+          callbackURL: "http://localhost:5000/api/auth/google/callback",
+        },
+        async (accessToken, refreshToken, profile, cb) => {
+          try {
+            // Try to find existing user
+            let user = await User.findOne({ googleId: profile.id });
+
+            if (!user) {
+              // Create new user if not exists
+              user = new User({
+                username: profile.displayName,
+                googleId: profile.id,
+                email: profile.emails[0].value,
+                avatar_url: profile.photos[0].value,
+              });
+              await user.save();
+            }
+            return cb(null, user);
+          } catch (err) {
+            return cb(err);
+          }
+        }
+      )
+    );
+    passport.serializeUser((user, cb) => {
+      cb(null, user.id);
+    });
+    passport.deserializeUser(async (id, done) => {
+      const user = await User.findById(id);
+      done(null, user);
+    });
+  },
+  googleCallback: async (req, res) => {
+    const user = req.user;
+    const accessToken = authController.generateAccessToken(user);
+    const refreshToken = authController.generateRefreshToken(user);
+
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      sameSite: "strict",
+    });
+
+    // Redirect về frontend với token trong URL
+    const frontendURL = `http://localhost:3000?googleAuth=success&token=${accessToken}&user=${encodeURIComponent(
+      JSON.stringify(user)
+    )}`;
+    res.redirect(frontendURL);
   },
 };
 

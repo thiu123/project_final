@@ -669,13 +669,58 @@ export default {
     },
   },
   async mounted() {
+    // Xử lý Google Auth callback
+    await this.handleGoogleAuthCallback(); 
     await this.getFavoritesForEachUser();
     await this.getAllBooks({ subject: null, half: true }); // Chỉ lấy một nửa sách
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
-    ...mapActions("cart", ["addToCart"]),
+    ...mapActions("cart", ["addToCart", "fetchCart"]),
     ...mapActions("favorite", ["toggleFavorites", "getFavoritesForEachUser"]),
+
+    async handleGoogleAuthCallback() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const googleAuth = urlParams.get("googleAuth");
+      const token = urlParams.get("token");
+      const userStr = urlParams.get("user");
+
+      if (googleAuth === "success" && token && userStr) {
+        try {
+          const user = JSON.parse(decodeURIComponent(userStr));
+
+          // Save to localStorage and Vuex
+          localStorage.setItem("accessToken", token);
+          localStorage.setItem("currentUser", JSON.stringify(user));
+
+          this.$store.commit("auth/loginSuccess", {
+            ...user,
+            accessToken: token,
+          });
+
+          // Fetch cart
+          await this.fetchCart();
+
+          // Show success message
+          this.snackbarText = `Welcome back, ${user.username}!`;
+          this.snackbarColor = "success";
+          this.showSnackbar = true;
+
+          // Remove URL params
+          const url = new URL(window.location);
+          url.searchParams.delete("googleAuth");
+          url.searchParams.delete("token");
+          url.searchParams.delete("user");
+          window.history.replaceState({}, document.title, url.pathname);
+        } catch (error) {
+          console.error("Google auth callback error:", error);
+          this.snackbarText = "Login failed. Please try again.";
+          this.snackbarColor = "error";
+          this.showSnackbar = true;
+        }
+      }
+    },
+
     async handleAddToCart(bookId, quantity) {
       try {
         await this.addToCart({
