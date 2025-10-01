@@ -27,26 +27,68 @@ const userController = {
         return res.status(400).json({ msg: "No file uploaded" });
       }
 
+      const uploadType = req.query.type || req.body.type || "avatar";
+
+      const folderMap = {
+        avatar: "avatars",
+        book: "books",
+      };
+
+      // Upload lên Cloudinary
       const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "product",
+        folder: folderMap[uploadType] || "uploads",
         resource_type: "image",
       });
 
-      fs.unlinkSync(req.file.path); // Xoá file tạm sau khi upload
+      // Xóa file tạm sau khi upload
+      fs.unlinkSync(req.file.path);
 
-      const updatedUser = await User.findByIdAndUpdate(
-        req.user.id,
-        { avatar_url: result.secure_url },
-        { new: true }
-      ).select("-password");
+      let responseData = {
+        url: result.secure_url,
+        public_id: result.public_id,
+        type: uploadType,
+      };
+
+      switch (uploadType) {
+        case "avatar":
+          // Cập nhật avatar của user
+          const updatedUser = await User.findByIdAndUpdate(
+            req.user.id,
+            { avatar_url: result.secure_url },
+            { new: true }
+          ).select("-password");
+
+          responseData = updatedUser;
+          break;
+
+        case "book":
+          responseData = {
+            url: result.secure_url,
+            public_id: result.public_id,
+            type: "book",
+          };
+          break;
+      }
 
       res.status(200).json({
-        message: "Upload images successfully",
-        data: updatedUser,
+        message: `Upload ${uploadType} successfully`,
+        data: responseData,
       });
     } catch (err) {
-      console.error(err);
-      res.status(500).json({ msg: err.message });
+      console.error(`Upload ${req.query.type || "file"} error:`, err);
+
+      // Đảm bảo xóa file tạm nếu có lỗi
+      if (req.file && req.file.path) {
+        try {
+          fs.unlinkSync(req.file.path);
+        } catch (unlinkError) {
+          console.error("Error deleting temp file:", unlinkError);
+        }
+      }
+
+      res.status(500).json({
+        msg: err.message || "Upload failed",
+      });
     }
   },
 };

@@ -130,9 +130,9 @@
           <template v-slot:item.avatar_url="{ item }">
             <v-avatar size="40" class="my-2">
               <v-img
-                v-if="item.avatar_url"
-                :src="item.avatar_url"
-                :alt="item.username"
+                v-if="item?.avatar_url"
+                :src="item?.avatar_url"
+                :alt="item?.username"
               ></v-img>
               <v-icon v-else>mdi-account-circle</v-icon>
             </v-avatar>

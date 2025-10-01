@@ -15,7 +15,6 @@ const vnpay = new VNPay({
   loggerFn: ignoreLogger,
 });
 
-// ✅ Export đúng dạng object với hàm buildPaymentUrl
 const vnpayController = {
   // createPaymentUrl: async (req, res) => {
   //   const vnpayResponse = await vnpay.buildPaymentUrl({
@@ -37,7 +36,7 @@ const vnpayController = {
     return vnpay.buildPaymentUrl({
       vnp_TxnRef: orderId,
       vnp_OrderInfo: `Thanh toán đơn hàng #${orderId}`,
-      vnp_Amount: amount * 100,
+      vnp_Amount: amount,
       vnp_Locale: VnpLocale.VN,
       vnp_CurrCode: "VND",
       vnp_OrderType: ProductCode.Other,

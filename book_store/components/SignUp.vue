@@ -124,7 +124,7 @@
                     @click:append-inner="showPassword = !showPassword"
                   ></v-text-field>
 
-                  <!-- <v-text-field
+                  <v-text-field
                     v-model="confirmPassword"
                     label="Confirm Password"
                     :rules="confirmPasswordRules"
@@ -144,9 +144,9 @@
                     @click:append-inner="
                       showConfirmPassword = !showConfirmPassword
                     "
-                  ></v-text-field> -->
+                  ></v-text-field>
 
-                  <!-- <div class="d-flex justify-space-between align-center mb-6">
+                  <div class="d-flex justify-space-between align-center mb-6">
                     <v-checkbox
                       v-model="agreeToTerms"
                       color="primary"
@@ -158,12 +158,12 @@
                         <span class="text-caption">
                           I agree to the
                           <a href="#" class="text-primary text-decoration-none"
-                            >Terms</a
+                            >Terms of Use</a
                           >
                         </span>
                       </template>
                     </v-checkbox>
-                  </div> -->
+                  </div>
 
                   <v-btn
                     color="primary"
@@ -189,6 +189,20 @@
                       @click:close="errorMessage = ''"
                     >
                       {{ errorMessage }}
+                    </v-alert>
+                  </v-expand-transition>
+                  
+                  <v-expand-transition>
+                    <v-alert
+                      v-if="successMessage"
+                      type="success"
+                      variant="tonal"
+                      closable
+                      class="mb-6"
+                      density="compact"
+                      @click:close="successMessage = ''"
+                    >
+                      {{ successMessage }}
                     </v-alert>
                   </v-expand-transition>
 
@@ -259,22 +273,101 @@ export default {
       username: "",
       email: "",
       password: "",
+      confirmPassword: "",
       isSignUp: false,
+      showPassword: false,
+      showConfirmPassword: false,
+      isFormValid: false,
+      agreeToTerms: false,
+      emailError: "",
+      usernameError: "",
+      passwordError: "",
+      confirmPasswordError: "",
+      errorMessage: "",
+      successMessage: "",
+      // Email validation rules
+      emailRules: [
+        v => !!v || "Email is required",
+        v => /^\S+@\S+\.\S+$/.test(v) || "Email is invalid"
+      ],
+      // Username validation rules
+      usernameRules: [
+        v => !!v || "Username is required",
+        v => v.length >= 3 || "Username must be at least 3 characters",
+        v => /^[a-zA-Z0-9_]+$/.test(v) || "Username can only contain letters, numbers, and underscores"
+      ],
+      // Password validation rules
+      passwordRules: [
+        v => !!v || "Password is required",
+        v => v.length >= 6 || "Password must be at least 6 characters",
+        v => /[A-Z]/.test(v) || "Password must contain at least 1 uppercase letter",
+        v => /[0-9]/.test(v) || "Password must contain at least 1 number"
+      ],
+      // Confirm password validation rules
+      confirmPasswordRules: [
+        v => !!v || "Please confirm your password",
+        v => v === this.password || "Passwords don't match"
+      ],
+      // Terms of use validation rules
+      termsRules: [
+        v => v || "You must agree to the terms of use to continue"
+      ],
     };
   },
   methods: {
     ...mapActions("auth", ["register"]),
     async onSubmit() {
+      // Validate form before submitting
+       if (!this.$refs.form.validate()) {
+         this.errorMessage = "Please fill in all required fields and fix the errors";
+         return;
+       }
+
       try {
         const data = await this.register({
           username: this.username,
           email: this.email,
           password: this.password,
         });
-        this.$emit("checkIsSignUp", true);
+        
+        // Registration successful
+         this.successMessage = "Account registration successful! You can now log in.";
+         this.$emit("checkIsSignUp", true);
+         
+         // Reset form after successful registration
+         this.$refs.form.reset();
         return data;
       } catch (error) {
-        console.log(error);
+        console.error("Registration failed:", error);
+        
+        // Handle API errors
+         if (error.response) {
+           const { data } = error.response;
+           
+           // Handle specific server errors
+           if (data.message) {
+             this.errorMessage = data.message;
+           } else if (data.error) {
+             this.errorMessage = data.error;
+           } else {
+             this.errorMessage = "Registration failed. Please try again later.";
+           }
+           
+           // Handle errors for specific fields
+           if (data.errors) {
+             if (data.errors.email) {
+               this.emailError = data.errors.email;
+             }
+             if (data.errors.username) {
+               this.usernameError = data.errors.username;
+             }
+             if (data.errors.password) {
+               this.passwordError = data.errors.password;
+             }
+           }
+         } else {
+           this.errorMessage = "Connection error. Please try again later.";
+         }
       }
     },
     async socialSignup(provider) {

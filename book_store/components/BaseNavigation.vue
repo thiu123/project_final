@@ -120,8 +120,8 @@
         <v-btn
           :style="
             $route.path === '/contact'
-              ? 'backgroundColor: #435058'
-              : 'backgroundColor: transparent'
+              ? 'backgroundColor: #DCF763'
+              : 'backgroundColor:transparent'
           "
           :class="$route.path === '/contact' ? 'text-darkgreen' : 'text-white'"
           class="font-weight-bold text-subtitle-1"

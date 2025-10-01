@@ -52,10 +52,19 @@ export default {
       }
     },
 
+    async createMomoOrder() {
+      try {
+        const { paymentUrl } = await orderApi.createMomoOrderFromCart();
+        return paymentUrl;
+      } catch (error) {
+        console.error("Error creating MoMo order:", error);
+      }
+    },
+
     async fetchOrderById({ commit }, id) {
       try {
         const order = await orderApi.getOrderById(id);
-        commit("setOrder", order.data);
+        commit("setOrder", order);
         return order;
       } catch (error) {
         console.error("Error when retrieving order information:", error);

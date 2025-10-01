@@ -804,11 +804,11 @@ export default {
         });
         return;
       }
-
+      
       try {
         this.uploadingAvatar = true;
 
-        // Gửi file lên API (single)
+        // Gửi file lên API với type='avatar'
         const response = await uploadAvatar(file);
 
         // Vì BE trả về 1 object user sau khi update avatar

@@ -19,11 +19,25 @@ export const deleteUser = (userId) => {
   });
 };
 
+// Hàm upload avatar
 export const uploadAvatar = (file) => {
   const formData = new FormData();
   formData.append("image", file);
 
-  return axios.post(`${BASE_URL}/upload-images`, formData, {
+  return axios.post(`${BASE_URL}/upload-images?type=avatar`, formData, {
+    headers: {
+      token: token(),
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+// Hàm upload book image
+export const uploadBookImage = (file) => {
+  const formData = new FormData();
+  formData.append("image", file);
+
+  return axios.post(`${BASE_URL}/upload-images?type=book`, formData, {
     headers: {
       token: token(),
       "Content-Type": "multipart/form-data",

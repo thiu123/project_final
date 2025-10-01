@@ -3,7 +3,7 @@
     <v-main>
       <v-container class="pa-2 pa-md-4">
         <!-- Delivery Information -->
-        <v-card class="mb-4 mb-md-6" elevation="1">
+        <!-- <v-card class="mb-4 mb-md-6" elevation="1">
           <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
             <v-icon class="mr-2" size="small">mdi-map-marker</v-icon>
             DELIVERY ADDRESS
@@ -84,7 +84,7 @@
               </v-col>
             </v-row>
           </v-card-text>
-        </v-card>
+        </v-card> -->
 
         <!-- Shipping Method -->
         <v-card class="mb-4 mb-md-6" elevation="1">
@@ -98,7 +98,7 @@
                 <template v-slot:label>
                   <div class="text-body-2 text-sm-body-1">
                     <div class="font-weight-medium">
-                      Standard shipping: {{ formatPrice(shippingFee) }}
+                      Standard shipping: {{ shippingFee }}
                     </div>
                     <div class="text-caption text-grey">
                       Estimated delivery: Friday 12/23
@@ -143,12 +143,6 @@
                         src="../../assets/vnpay-logo-inkythuatso.svg"
                       ></v-img>
                     </v-avatar>
-                    <span class="text-body-2 text-sm-body-1 mr-2">VNPay</span>
-                    <a
-                      href="#"
-                      class="text-primary text-decoration-underline text-caption text-sm-body-2"
-                      >Details</a
-                    >
                   </div>
                 </template>
               </v-radio>
@@ -163,28 +157,14 @@
                 </template>
               </v-radio> -->
 
-              <v-radio value="banking" color="primary" class="mb-2">
+              <v-radio value="momo" color="primary" class="mb-2">
                 <template v-slot:label>
                   <div class="d-flex align-center">
-                    <v-avatar size="24" class="mr-2 flex-shrink-0">
-                      <!-- <v-img src="/placeholder.svg?height=24&width=24"></v-img> -->
+                    <v-avatar size="40" class="mr-2 flex-shrink-0">
+                      <v-img
+                        src="../../assets/Logo-MoMo-Square-300x300.png"
+                      ></v-img>
                     </v-avatar>
-                    <span class="text-body-2 text-sm-body-1"
-                      >ATM / Internet Banking</span
-                    >
-                  </div>
-                </template>
-              </v-radio>
-
-              <v-radio value="cash" color="primary">
-                <template v-slot:label>
-                  <div class="d-flex align-center">
-                    <v-avatar size="24" class="mr-2 flex-shrink-0">
-                      <!-- <v-img src="/placeholder.svg?height=24&width=24"></v-img> -->
-                    </v-avatar>
-                    <span class="text-body-2 text-sm-body-1"
-                      >Cash on delivery</span
-                    >
                   </div>
                 </template>
               </v-radio>
@@ -236,7 +216,7 @@
         </v-card>
 
         <!-- Additional Options -->
-        <v-card class="mb-4 mb-md-6" elevation="1">
+        <!-- <v-card class="mb-4 mb-md-6" elevation="1">
           <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
             <v-icon class="mr-2" size="small">mdi-information</v-icon>
             ADDITIONAL INFORMATION
@@ -273,7 +253,7 @@
               <a href="#" class="text-primary">Return and refund policy</a>.
             </div>
           </v-card-text>
-        </v-card>
+        </v-card> -->
 
         <!-- Order Review -->
         <v-card class="mb-4 mb-md-6" elevation="1">
@@ -307,7 +287,7 @@
                       Author: {{ item.bookId.authors.join(", ") }}
                     </div>
                     <div class="text-subtitle-2 text-primary">
-                      {{ formatPrice(item.bookId.price) }}
+                      {{ item.bookId.price }}
                     </div>
                   </div>
                 </div>
@@ -329,7 +309,7 @@
                     ></v-btn>
                   </div>
                   <span class="text-subtitle-2 font-weight-bold">
-                    {{ formatPrice(item.bookId.price * item.quantity) }}
+                    {{ item.bookId.price * item.quantity }}
                   </span>
                 </div>
               </div>
@@ -351,9 +331,9 @@
                     Author: {{ item.bookId.authors.join(", ") }}
                   </div>
                   <div class="d-flex align-center justify-space-between">
-                    <span class="text-h6 text-primary">{{
-                      formatPrice(item.bookId.price)
-                    }}</span>
+                    <span class="text-h6 text-primary"
+                      >{{ item.bookId.price }}$</span
+                    >
                     <div class="d-flex align-center gap-2">
                       <v-btn
                         size="small"
@@ -371,7 +351,7 @@
                       ></v-btn>
                     </div>
                     <span class="text-h6">{{
-                      formatPrice(item.bookId.price * item.quantity)
+                      item.bookId.price * item.quantity
                     }}</span>
                   </div>
                 </div>
@@ -385,18 +365,18 @@
           <v-card-text class="pa-2 pa-md-4">
             <div class="d-flex justify-space-between mb-2 text-body-2">
               <span>Subtotal</span>
-              <span>{{ formatPrice(subtotal) }}</span>
+              <span>{{ formattedSubtotal }}</span>
             </div>
             <div class="d-flex justify-space-between mb-2 text-body-2">
               <span>Shipping fee (Standard shipping)</span>
-              <span>{{ formatPrice(shippingFee) }}</span>
+              <span>{{ formattedShippingFee }}</span>
             </div>
             <v-divider class="my-3"></v-divider>
             <div
               class="d-flex justify-space-between text-subtitle-1 text-md-h6 font-weight-bold"
             >
               <span>Total amount (including VAT)</span>
-              <span class="text-primary">{{ formatPrice(total) }}</span>
+              <span class="text-primary">{{ formattedTotal }}</span>
             </div>
           </v-card-text>
         </v-card>
@@ -444,38 +424,92 @@ export default {
         address: "",
       },
       selectedShipping: "standard",
-      selectedPayment: "cash",
+      selectedPayment: "vnpay",
       promoCode: "",
       giftNote: false,
       invoice: false,
       shippingFee: 30000,
-      subtotal: 250000,
-      total: 280000,
+      exchangeRate: 24000, // USD to VND exchange rate
     };
   },
   computed: {
     ...mapState("order", ["cartItems"]),
+
+    subtotal() {
+      if (!this.cartItems || this.cartItems.length === 0) return 0;
+
+      return this.cartItems.reduce((sum, item) => {
+        return sum + item.bookId.price * item.quantity;
+      }, 0);
+    },
+
+    total() {
+      return this.subtotal + this.shippingFee / this.exchangeRate;
+    },
+
+    // Format currency display
+    formattedSubtotal() {
+      return `$${this.subtotal.toFixed(2)}`;
+    },
+
+    formattedShippingFee() {
+      return `$${(this.shippingFee / this.exchangeRate).toFixed(2)}`;
+    },
+
+    formattedTotal() {
+      return `$${this.total.toFixed(2)}`;
+    },
   },
   async mounted() {
     await this.fetchCartPreview();
     console.log(this.cartItems, "Cart items loaded");
   },
   methods: {
-    ...mapActions("order", ["fetchCartPreview", "createOrder"]),
-    formatPrice(price) {
-      return new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-      }).format(price);
-    },
+    ...mapActions("order", [
+      "fetchCartPreview",
+      "createOrder",
+      "createMomoOrder",
+    ]),
+
     updateQuantity(item, change) {
       // Implement quantity update logic
       item.quantity += change;
     },
     async handleConfirmPayment() {
-      if (this.selectedPayment === "vnpay") {
-        const paymentUrl = await this.createOrder();
-        window.location.href = paymentUrl;
+      try {
+        if (this.selectedPayment === "vnpay") {
+          console.log("Creating order with VNPay payment...");
+          const paymentUrl = await this.createOrder();
+          if (paymentUrl) {
+            console.log("Redirecting to VNPay payment URL:", paymentUrl);
+            window.location.href = paymentUrl;
+          } else {
+            console.error("Failed to get VNPay payment URL");
+            alert("Payment processing failed. Please try again.");
+          }
+        } else if (this.selectedPayment === "momo") {
+          console.log("Creating order with MoMo payment...");
+          const paymentUrl = await this.createMomoOrder();
+          if (paymentUrl) {
+            console.log("Redirecting to MoMo payment URL:", paymentUrl);
+            window.location.href = paymentUrl;
+          } else {
+            console.error("Failed to get MoMo payment URL");
+            alert("Payment processing failed. Please try again.");
+          }
+        } else {
+          // Handle other payment methods
+          console.log(
+            "Processing order with payment method:",
+            this.selectedPayment
+          );
+          // Implement other payment methods here
+        }
+      } catch (error) {
+        console.error("Error processing payment:", error);
+        alert(
+          "An error occurred while processing your payment. Please try again."
+        );
       }
     },
   },
