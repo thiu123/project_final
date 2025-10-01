@@ -29,12 +29,21 @@ const orderApi = {
     return res.data;
   },
 
+  // VNPAY checkout
   createOrderFromCart: async () => {
     const res = await axios.post(`${API_URL}/checkout`, null, {
       headers: { token: token() },
     });
     return res.data;
   },
+ 
+  // MoMo checkout
+  createMomoOrderFromCart: async () => {
+    const res = await axios.post(`${API_URL}/checkout_momo`, null, {
+      headers: { token: token() },
+    });
+    return res.data;
+  }
 };
 
 export default orderApi;

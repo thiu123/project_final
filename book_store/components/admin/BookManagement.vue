@@ -120,7 +120,7 @@
         <template v-slot:item.title="{ item }">
           <div class="d-flex align-center">
             <v-avatar size="40" rounded="lg" class="mr-3">
-              <v-img :src="item.cover_url" :alt="item.title" cover>
+              <v-img :src="item?.cover_url" :alt="item?.title" cover>
                 <template v-slot:placeholder>
                   <v-icon>mdi-book</v-icon>
                 </template>
@@ -280,7 +280,21 @@
                   Basic Information
                 </h3>
                 <v-row>
-                  <v-col cols="12">
+                  <!-- Book Key (auto-generated, readonly) -->
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model="editedItem.key"
+                      label="Book Key"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-key"
+                      readonly
+                      hint="Auto-generated unique identifier"
+                      persistent-hint
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
                     <v-text-field
                       v-model="editedItem.title"
                       label="Book Title"
@@ -307,14 +321,26 @@
                   </v-col>
 
                   <v-col cols="12" md="6">
-                    <v-text-field
-                      v-model="editedItem.cover_url"
-                      label="Cover Image URL"
+                    <v-file-input
+                      label="Cover Image"
                       variant="outlined"
                       density="comfortable"
-                      prepend-inner-icon="mdi-image"
+                      prepend-inner-icon="mdi-camera"
+                      accept="image/*"
+                      show-size
+                      @change="handleBookUpload"
                       :error-messages="errors.cover_url"
-                    ></v-text-field>
+                    ></v-file-input>
+                    <!-- Hiển thị URL ảnh hiện tại nếu có -->
+                    <div v-if="editedItem.cover_url" class="mt-2">
+                      <v-chip color="success" size="small">
+                        <v-icon start>mdi-check</v-icon>
+                        Image uploaded
+                      </v-chip>
+                      <div class="text-caption text-grey mt-1">
+                        {{ editedItem.cover_url.substring(0, 50) }}{{ editedItem.cover_url.length > 50 ? '...' : '' }}
+                      </div>
+                    </div>
                   </v-col>
                 </v-row>
               </div>
@@ -333,6 +359,7 @@
                   <v-col cols="12">
                     <v-combobox
                       v-model="editedItem.subjects"
+                      class="text-capitalize"
                       label="Categories"
                       variant="outlined"
                       density="comfortable"
@@ -369,42 +396,18 @@
                       :error-messages="errors.first_publish_year"
                     ></v-text-field>
                   </v-col>
-
-                  <v-col cols="12" md="4">
-                    <v-select
-                      v-model="editedItem.language"
-                      label="Language"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-translate"
-                      :items="languageOptions"
-                      :error-messages="errors.language"
-                    ></v-select>
-                  </v-col>
-
-                  <v-col cols="12" md="4">
-                    <v-text-field
-                      v-model.number="editedItem.page_count"
-                      label="Page Count"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-file-document"
-                      type="number"
-                      :error-messages="errors.page_count"
-                    ></v-text-field>
-                  </v-col>
                 </v-row>
               </div>
 
               <v-divider class="mb-6"></v-divider>
 
-              <!-- Pricing & Description -->
+              <!-- Pricing, Rating & Description -->
               <div class="mb-6">
                 <h3
                   class="text-h6 font-weight-medium mb-4 text-success d-flex align-center"
                 >
                   <v-icon class="mr-2">mdi-currency-usd</v-icon>
-                  Pricing & Description
+                  Pricing & Details
                 </h3>
                 <v-row>
                   <v-col cols="12" md="6">
@@ -418,6 +421,21 @@
                       prefix="$"
                       :error-messages="errors.price"
                     ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-rating
+                      v-model="editedItem.rating"
+                      label="Rating"
+                      density="comfortable"
+                      color="amber"
+                      half-increments
+                      hover
+                      :error-messages="errors.rating"
+                    ></v-rating>
+                    <div class="text-caption text-grey-darken-1 mt-1">
+                      Rating: {{ editedItem.rating || 0 }}/5 stars
+                    </div>
                   </v-col>
 
                   <v-col cols="12">
@@ -654,7 +672,7 @@
                     >
                     Categories
                   </h4>
-                  <div class="d-flex flex-wrap ga-2">
+                  <div class="d-flex text-capitalize flex-wrap ga-2">
                     <v-chip
                       v-for="subject in viewedBook.subjects"
                       :key="subject"
@@ -717,7 +735,8 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-
+import { uploadBookImage } from "~/api/userApi";
+import { v4 as uuidv4 } from "uuid";
 export default {
   name: "BookManagement",
   data() {
@@ -800,14 +819,7 @@ export default {
         },
       ],
 
-      subjects: [
-        "fiction",
-        "romance",
-        "manga",
-        "history",
-        "science",
-        "biography",
-      ],
+      subjects: [],
 
       languageOptions: [
         { title: "English", value: "en" },
@@ -842,6 +854,10 @@ export default {
 
   computed: {
     ...mapState("book", ["books", "loading"]),
+    getSubjectsFromBook() {
+      const allSubjects =  this.books.map((book) => book.subjects);
+      return [...new Set(allSubjects.flat())];
+    },
 
     dialogTitle() {
       return this.editedIndex === -1 ? "Add New Book" : "Edit Book";
@@ -911,15 +927,14 @@ export default {
 
     getDefaultItem() {
       return {
+        key: uuidv4(),
         title: "",
-        authors: [],
-        subjects: [],
-        price: 0,
-        first_publish_year: new Date().getFullYear(),
         cover_url: "",
+        first_publish_year: new Date().getFullYear(),
+        authors: [],
+        price: 0,
+        subjects: [],
         description: "",
-        language: "en",
-        page_count: 0,
       };
     },
 
@@ -984,6 +999,10 @@ export default {
         this.errors.authors = ["At least one author is required"];
       }
 
+      if (!this.editedItem.cover_url) {
+        this.errors.cover_url = ["Cover image is required"];
+      }
+
       if (this.editedItem.price < 0) {
         this.errors.price = ["Price must be non-negative"];
       }
@@ -1001,8 +1020,44 @@ export default {
       return Object.keys(this.errors).length === 0;
     },
 
+    async handleBookUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        this.showSnackbar("Please select a valid image file", "error");
+        return;
+      }
+
+      // Validate file size (5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        this.showSnackbar("File size must be less than 5MB", "error");
+        return;
+      }
+      
+      try {
+        const response = await uploadBookImage(file);
+        if (response.data && response.data.data.url) {
+          this.editedItem.cover_url = response.data.data.url;
+          console.log('Image uploaded successfully:', this.editedItem.cover_url);
+        } else {
+          throw new Error('No URL returned from server');
+        }
+      } catch (error) {
+        console.error('Upload error:', error);
+        this.showSnackbar("Failed to upload image: " + (error.message || 'Unknown error'), "error");
+      }
+    },
+
     async saveBook() {
       if (!this.validateForm()) return;
+
+      // Check if cover_url is provided
+      if (!this.editedItem.cover_url) {
+        this.errors.cover_url = ["Please upload a cover image"];
+        return;
+      }
 
       this.saving = true;
       try {
@@ -1013,12 +1068,13 @@ export default {
           });
           this.showSnackbar("Book updated successfully");
         } else {
-          await this.createBook(this.editedItem);
+          await this.createBook(bookData);
           this.showSnackbar("Book added successfully");
         }
         this.closeDialog();
       } catch (error) {
-        this.showSnackbar("Failed to save book", "error");
+        console.error('Save book error:', error);
+        this.showSnackbar("Failed to save book: " + (error.response?.data?.message || error.message || 'Unknown error'), "error");
       } finally {
         this.saving = false;
       }
@@ -1072,9 +1128,10 @@ export default {
       val || this.closeDialog();
     },
   },
-
   async mounted() {
     await this.refreshBooks();
+    console.log(this.editedItem, "dsadasdzzzxccvcbbbbbbb")
+    this.subjects = this.getSubjectsFromBook
   },
 };
 </script>

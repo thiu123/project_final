@@ -147,7 +147,7 @@ export default {
     ...mapState("favorite", ["favorites"]),
     ...mapState("review", ["userReviews"]),
     ordersCount() {
-      return this.userOrders?.length || 0;
+      return this.userOrders?.filter(order => order.status === 'Paid').length || 0;
     },
     favoritesCount() {
       return this.favorites?.length || 0;

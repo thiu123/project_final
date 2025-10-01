@@ -317,20 +317,20 @@
                           <!-- Rating Section -->
                           <div class="d-flex align-center mb-3">
                             <v-rating
-                              :model-value="4.5"
+                              :model-value="book?.rating"
                               color="amber"
                               density="compact"
                               size="small"
                               readonly
                               half-increments
                             ></v-rating>
-                            <v-chip
+                            <!-- <v-chip
                               size="x-small"
                               variant="text"
                               class="ml-2 text-caption"
                             >
                               (128)
-                            </v-chip>
+                            </v-chip> -->
                           </div>
 
                           <!-- Book Title -->
@@ -579,7 +579,7 @@ export default {
     return {
       tab: "historical fiction",
       bookComponents: ["BookFiction", "BookManga", "BookRomance"],
-      bestSellerSubjects: ["historical fiction", "ancient history", "cooking"],
+      bestSellerSubjects: ["historical fiction", "manga", "cooking"],
       newsletterEmail: "",
       categories: [
         {
@@ -651,7 +651,6 @@ export default {
       if (!this.books?.length) {
         return [];
       }
-
       return this.books.filter((book) => {
         // Skip books without subjects
         if (!book.subjects) return false;
@@ -660,6 +659,7 @@ export default {
         const bookSubjects = Array.isArray(book.subjects)
           ? book.subjects
           : [book.subjects];
+        console.log("Tab:", this.tab, "Book Subjects:", bookSubjects);
 
         // Filter books that have the currently selected subject (tab)
         return bookSubjects.some(
@@ -670,7 +670,7 @@ export default {
   },
   async mounted() {
     // Xử lý Google Auth callback
-    await this.handleGoogleAuthCallback(); 
+    await this.handleGoogleAuthCallback();
     await this.getFavoritesForEachUser();
     await this.getAllBooks({ subject: null, half: true }); // Chỉ lấy một nửa sách
   },

@@ -5,9 +5,9 @@
         <!-- Success Header -->
         <v-card class="mb-6" elevation="2">
           <v-card-text class="text-center py-8">
-            <v-icon 
-              icon="mdi-check-circle" 
-              size="80" 
+            <v-icon
+              icon="mdi-check-circle"
+              size="80"
               color="success"
               class="mb-4"
             ></v-icon>
@@ -24,32 +24,42 @@
             <v-icon icon="mdi-receipt" class="mr-2"></v-icon>
             Order Details
           </v-card-title>
-          
+
           <v-card-text class="pa-4">
             <v-row>
               <v-col cols="12" sm="6">
                 <div class="mb-3">
-                  <span class="text-subtitle-2 text-medium-emphasis">Order ID:</span>
-                  <div class="text-h6 font-weight-bold">{{ order.orderId }}</div>
+                  <span class="text-subtitle-2 text-medium-emphasis"
+                    >Order ID:</span
+                  >
+                  <div class="text-h6 font-weight-bold">
+                    {{ order.orderId }}
+                  </div>
                 </div>
               </v-col>
               <v-col cols="12" sm="6">
                 <div class="mb-3">
-                  <span class="text-subtitle-2 text-medium-emphasis">Order Date:</span>
+                  <span class="text-subtitle-2 text-medium-emphasis"
+                    >Order Date:</span
+                  >
                   <div class="text-h6">{{ formatDate(order.createdAt) }}</div>
                 </div>
               </v-col>
               <v-col cols="12" sm="6">
                 <div class="mb-3">
-                  <span class="text-subtitle-2 text-medium-emphasis">Payment Method:</span>
+                  <span class="text-subtitle-2 text-medium-emphasis"
+                    >Payment Method:</span
+                  >
                   <div class="text-h6">{{ order.paymentMethod }}</div>
                 </div>
               </v-col>
               <v-col cols="12" sm="6">
                 <div class="mb-3">
-                  <span class="text-subtitle-2 text-medium-emphasis">Status:</span>
-                  <v-chip 
-                    :color="getStatusColor(order.status)" 
+                  <span class="text-subtitle-2 text-medium-emphasis"
+                    >Status:</span
+                  >
+                  <v-chip
+                    :color="getStatusColor(order.status)"
                     variant="flat"
                     class="ml-2"
                   >
@@ -59,7 +69,9 @@
               </v-col>
               <v-col cols="12" sm="6">
                 <div class="mb-3">
-                  <span class="text-subtitle-2 text-medium-emphasis">Payment Completed:</span>
+                  <span class="text-subtitle-2 text-medium-emphasis"
+                    >Payment Completed:</span
+                  >
                   <div class="text-h6">{{ formatDate(order.updatedAt) }}</div>
                 </div>
               </v-col>
@@ -73,7 +85,7 @@
             <v-icon icon="mdi-book-multiple" class="mr-2"></v-icon>
             Items Purchased ({{ order.items.length }})
           </v-card-title>
-          
+
           <v-list>
             <v-list-item
               v-for="(item, index) in order.items"
@@ -82,14 +94,22 @@
             >
               <template v-slot:prepend>
                 <v-avatar size="80" rounded="lg" class="mr-4">
-                  <v-img 
-                    :src="item.bookId.cover_url" 
+                  <v-img
+                    :src="item.bookId.cover_url"
                     :alt="item.bookId.title"
                     cover
                   >
                     <template v-slot:placeholder>
-                      <v-row class="fill-height ma-0" align="center" justify="center">
-                        <v-icon icon="mdi-book" size="40" color="grey-lighten-2"></v-icon>
+                      <v-row
+                        class="fill-height ma-0"
+                        align="center"
+                        justify="center"
+                      >
+                        <v-icon
+                          icon="mdi-book"
+                          size="40"
+                          color="grey-lighten-2"
+                        ></v-icon>
                       </v-row>
                     </template>
                   </v-img>
@@ -99,10 +119,10 @@
               <v-list-item-title class="text-h6 mb-1">
                 {{ item.bookId.title }}
               </v-list-item-title>
-              
+
               <v-list-item-subtitle class="mb-2">
                 <div class="text-body-2 text-medium-emphasis mb-1">
-                  by {{ item.bookId.authors.join(', ') }}
+                  by {{ item.bookId.authors.join(", ") }}
                 </div>
                 <div class="text-body-2 text-medium-emphasis mb-2">
                   Published: {{ item.bookId.first_publish_year }}
@@ -116,7 +136,9 @@
                     readonly
                     half-increments
                   ></v-rating>
-                  <span class="text-body-2 ml-2">({{ item.bookId.rating }})</span>
+                  <span class="text-body-2 ml-2"
+                    >({{ item.bookId.rating }})</span
+                  >
                 </div>
                 <div class="d-flex flex-wrap gap-1">
                   <v-chip
@@ -132,7 +154,10 @@
                 <v-expansion-panels class="mt-2" variant="accordion">
                   <v-expansion-panel>
                     <v-expansion-panel-title class="text-body-2">
-                      <v-icon icon="mdi-book-open-page-variant" class="mr-2"></v-icon>
+                      <v-icon
+                        icon="mdi-book-open-page-variant"
+                        class="mr-2"
+                      ></v-icon>
                       View Description
                     </v-expansion-panel-title>
                     <v-expansion-panel-text class="text-body-2">
@@ -144,13 +169,20 @@
 
               <template v-slot:append>
                 <div class="text-right">
-                  <div class="text-body-2 text-medium-emphasis">Quantity: {{ item.quantity }}</div>
-                  <div class="text-h6 font-weight-bold">${{ (item.bookId.price).toFixed(2) }}</div>
+                  <div class="text-body-2 text-medium-emphasis">
+                    Quantity: {{ item.quantity }}
+                  </div>
+                  <div class="text-h6 font-weight-bold">
+                    ${{ item.bookId.price.toFixed(2) }}
+                  </div>
                 </div>
               </template>
             </v-list-item>
-            
-            <v-divider v-if="index < order.items.length - 1" :key="`divider-${index}`"></v-divider>
+
+            <v-divider
+              v-if="index < order.items.length - 1"
+              :key="`divider-${index}`"
+            ></v-divider>
           </v-list>
         </v-card>
 
@@ -161,7 +193,11 @@
             Order Summary
           </v-card-title>
           <v-card-text class="pa-4">
-            <div v-for="(item, index) in order.items" :key="index" class="d-flex justify-space-between mb-2">
+            <div
+              v-for="(item, index) in order.items"
+              :key="index"
+              class="d-flex justify-space-between mb-2"
+            >
               <span>{{ item.bookId.title }} (x{{ item.quantity }})</span>
               <span>${{ (item.bookId.price * item.quantity).toFixed(2) }}</span>
             </div>
@@ -169,7 +205,7 @@
             <div class="d-flex justify-space-between">
               <span class="text-h6 font-weight-bold">Total:</span>
               <span class="text-h5 font-weight-bold text-success">
-                ${{ (order.total / 100).toFixed(2) }}
+                {{ order.total }}VNĐ
               </span>
             </div>
           </v-card-text>
@@ -211,9 +247,9 @@
           class="mb-4"
         >
           <div class="text-body-2">
-            <strong>What's next?</strong><br>
-            • You will receive an email confirmation shortly<br>
-            • Your order will be processed within 1-2 business days<br>
+            <strong>What's next?</strong><br />
+            • You will receive an email confirmation shortly<br />
+            • Your order will be processed within 1-2 business days<br />
             • Track your order status in "My Orders" section
           </div>
         </v-alert>
@@ -238,7 +274,7 @@ export default {
   },
   methods: {
     ...mapActions("order", ["fetchOrderById"]),
-    
+
     async getOrder() {
       const orderId = this.$route.params.id;
       try {
@@ -247,40 +283,40 @@ export default {
         console.error("Error fetching order:", error);
       }
     },
-    
+
     formatDate(dateString) {
       const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
       });
     },
-    
+
     getStatusColor(status) {
       switch (status.toLowerCase()) {
-        case 'paid':
-          return 'success';
-        case 'pending':
-          return 'warning';
-        case 'failed':
-          return 'error';
+        case "paid":
+          return "success";
+        case "pending":
+          return "warning";
+        case "failed":
+          return "error";
         default:
-          return 'primary';
+          return "primary";
       }
     },
-    
+
     goToHome() {
-      this.$router.push('/');
+      this.$router.push("/");
     },
-    
+
     goToOrders() {
-      this.$router.push('/orders');
-    }
+      this.$router.push("/orders");
+    },
   },
-  
+
   async mounted() {
     await this.getOrder();
     console.log("Order fetched:", this.order);
