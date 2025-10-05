@@ -8,6 +8,11 @@ router.post(
   middlewareController.verifyToken,
   orderController.createOrderFromCart
 );
+router.post(
+  "/checkout_momo",
+  middlewareController.verifyToken,
+  orderController.createMoMoOrderFromCart
+);
 router.get(
   "/preview",
   middlewareController.verifyToken,
@@ -19,6 +24,7 @@ router.get(
   orderController.getUserOrders
 );
 router.get("/vnpay_return", orderController.vnpayReturn);
+router.get("/momo_return", orderController.momoReturn);
 router.get("/:id", orderController.getOrderById);
 
 module.exports = router;

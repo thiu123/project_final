@@ -352,7 +352,7 @@
                     </div>
                     <span class="text-h6">{{
                       item.bookId.price * item.quantity
-                    }}</span>
+                    }}$</span>
                   </div>
                 </div>
               </div>
@@ -397,9 +397,15 @@
             :size="$vuetify.display.xs ? 'default' : 'large'"
             class="flex-grow-1 order-1 order-sm-2"
             @click="handleConfirmPayment"
+            :disabled="isProcessingPayment"
+            :loading="isProcessingPayment"
           >
-            <span class="d-none d-sm-inline">CONFIRM PAYMENT</span>
-            <span class="d-sm-none">CONFIRM</span>
+            <span class="d-none d-sm-inline">
+              {{ isProcessingPayment ? 'PROCESSING...' : 'CONFIRM PAYMENT' }}
+            </span>
+            <span class="d-sm-none">
+              {{ isProcessingPayment ? 'PROCESSING...' : 'CONFIRM' }}
+            </span>
           </v-btn>
         </div>
       </v-container>
@@ -430,6 +436,7 @@ export default {
       invoice: false,
       shippingFee: 30000,
       exchangeRate: 24000, // USD to VND exchange rate
+      isProcessingPayment: false,
     };
   },
   computed: {
@@ -476,7 +483,15 @@ export default {
       item.quantity += change;
     },
     async handleConfirmPayment() {
+      // Prevent double click
+      if (this.isProcessingPayment) {
+        console.log("Payment already in progress...");
+        return;
+      }
+
       try {
+        this.isProcessingPayment = true;
+
         if (this.selectedPayment === "vnpay") {
           console.log("Creating order with VNPay payment...");
           const paymentUrl = await this.createOrder();
@@ -486,6 +501,7 @@ export default {
           } else {
             console.error("Failed to get VNPay payment URL");
             alert("Payment processing failed. Please try again.");
+            this.isProcessingPayment = false;
           }
         } else if (this.selectedPayment === "momo") {
           console.log("Creating order with MoMo payment...");
@@ -496,6 +512,7 @@ export default {
           } else {
             console.error("Failed to get MoMo payment URL");
             alert("Payment processing failed. Please try again.");
+            this.isProcessingPayment = false;
           }
         } else {
           // Handle other payment methods
@@ -503,6 +520,7 @@ export default {
             "Processing order with payment method:",
             this.selectedPayment
           );
+          this.isProcessingPayment = false;
           // Implement other payment methods here
         }
       } catch (error) {
@@ -510,6 +528,7 @@ export default {
         alert(
           "An error occurred while processing your payment. Please try again."
         );
+        this.isProcessingPayment = false;
       }
     },
   },
