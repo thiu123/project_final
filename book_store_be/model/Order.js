@@ -20,6 +20,11 @@ const orderSchema = new mongoose.Schema(
           required: true,
         },
         quantity: { type: Number, required: true },
+        productType: {
+          type: String,
+          enum: ["hardbook", "ebook"],
+          default: "hardbook",
+        },
       },
     ],
     total: { type: Number, required: true },

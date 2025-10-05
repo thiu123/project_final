@@ -8,8 +8,9 @@ export default {
     cartItems: [],
     total: 0,
     orderStatus: "",
-    order: null, // order detail 
+    order: null, // order detail
     userOrders: [], // all orders of user
+    purchasedEbooks: {}, // { bookId: true/false }
   },
   mutations: {
     setCart(state, { items, total }) {
@@ -21,6 +22,9 @@ export default {
     },
     setUserOrders(state, orders) {
       state.userOrders = orders;
+    },
+    setEbookPurchaseStatus(state, { bookId, isPurchased }) {
+      state.purchasedEbooks[bookId] = isPurchased;
     },
   },
   actions: {
@@ -68,6 +72,23 @@ export default {
         return order;
       } catch (error) {
         console.error("Error when retrieving order information:", error);
+      }
+    },
+
+    async checkEbookPurchase({ commit }, bookId) {
+      try {
+        const response = await orderApi.checkEbookPurchase(bookId);
+        const isPurchased = response.isPurchased;
+
+        // Lưu vào state
+        commit("setEbookPurchaseStatus", { bookId, isPurchased });
+
+        return isPurchased;
+      } catch (error) {
+        console.error("Error checking ebook purchase:", error);
+        // Nếu lỗi, mặc định là chưa mua
+        commit("setEbookPurchaseStatus", { bookId, isPurchased: false });
+        return false;
       }
     },
   },

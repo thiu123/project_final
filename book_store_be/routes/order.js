@@ -23,6 +23,11 @@ router.get(
   middlewareController.verifyToken,
   orderController.getUserOrders
 );
+router.get(
+  "/check-ebook",
+  middlewareController.verifyToken,
+  orderController.checkEbookPurchase
+);
 router.get("/vnpay_return", orderController.vnpayReturn);
 router.get("/momo_return", orderController.momoReturn);
 router.get("/:id", orderController.getOrderById);

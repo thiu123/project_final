@@ -100,7 +100,7 @@
                   <div class="d-flex align-center justify-space-between mb-4">
                     <div>
                       <div class="text-h3 font-weight-bold text-success mb-2">
-                        ${{ detailsBooks.price || "120.00" }}
+                        ${{ displayPrice }}
                       </div>
                       <v-chip
                         color="success"
@@ -121,6 +121,67 @@
                       @click="handleToggleFavorites(detailsBooks._id)"
                     ></v-btn>
                   </div>
+                </div>
+
+                <!-- Product Type Selection -->
+                <div class="product-type-section mb-6">
+                  <v-label
+                    class="text-subtitle-2 font-weight-medium mb-3 d-block"
+                    >Choose Product Type</v-label
+                  >
+                  <v-radio-group v-model="productType" inline>
+                    <v-radio value="hardbook" color="primary">
+                      <template v-slot:label>
+                        <div class="d-flex align-center">
+                          <v-icon class="mr-2" color="primary">mdi-book</v-icon>
+                          <div>
+                            <span class="font-weight-medium">📚 Hardbook</span>
+                            <div class="text-caption text-grey">
+                              ${{ detailsBooks.price }}
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </v-radio>
+
+                    <v-radio value="ebook" color="success" class="ml-4">
+                      <template v-slot:label>
+                        <div class="d-flex align-center">
+                          <v-icon class="mr-2" color="success"
+                            >mdi-tablet</v-icon
+                          >
+                          <div>
+                            <span class="font-weight-medium"
+                              >📱 Ebook (PDF)</span
+                            >
+                            <v-chip color="success" size="x-small" class="ml-2">
+                              -20% OFF
+                            </v-chip>
+                            <div class="text-caption text-grey">
+                              ${{ ebookPrice }}
+                            </div>
+                          </div>
+                        </div>
+                      </template>
+                    </v-radio>
+                  </v-radio-group>
+
+                  <!-- Ebook Preview Button -->
+                  <v-btn
+                    v-if="productType === 'ebook'"
+                    :color="hasPurchasedEbook ? 'success' : 'info'"
+                    variant="outlined"
+                    size="small"
+                    class="mt-2"
+                    :prepend-icon="
+                      hasPurchasedEbook
+                        ? 'mdi-check-circle'
+                        : 'mdi-book-open-page-variant'
+                    "
+                    @click="previewEbook"
+                  >
+                    {{ previewButtonText }}
+                  </v-btn>
                 </div>
 
                 <!-- Quantity & Actions -->
@@ -344,6 +405,7 @@ export default {
       detailsBooks: {},
       isLoading: false,
       quantity: 1,
+      productType: "hardbook", // Mặc định chọn hardbook
       authors: [],
       showSnackbar: false,
       snackbarText: "",
@@ -359,15 +421,40 @@ export default {
   },
   computed: {
     ...mapState("favorite", ["favorites"]),
+    ...mapState("auth", ["currentUser"]),
+    ...mapState("order", ["purchasedEbooks"]),
+
     breadcrumbItems() {
       return [
         { title: "Home", disabled: false, href: "/" },
         { title: this.detailsBooks.title || "Book Details", disabled: true },
       ];
     },
+    // Tính giá ebook (giảm 20%)
+    ebookPrice() {
+      const price = this.detailsBooks.price || 120;
+      return (price * 0.8).toFixed(2);
+    },
+    // Giá hiển thị dựa vào productType
+    displayPrice() {
+      return this.productType === "ebook"
+        ? this.ebookPrice
+        : this.detailsBooks.price || "120.00";
+    },
+    // ✅ Lấy purchase status từ store
+    hasPurchasedEbook() {
+      return this.purchasedEbooks[this.detailsBooks._id] || false;
+    },
+    // Text cho preview button
+    previewButtonText() {
+      return this.hasPurchasedEbook
+        ? "Preview full"
+        : "Preview (20 pages free)";
+    },
   },
   methods: {
     ...mapActions("cart", ["addToCart"]),
+    ...mapActions("order", ["fetchUserOrders", "checkEbookPurchase"]),
     ...mapActions("favorite", ["toggleFavorites"]),
     async getDetailsBooks() {
       try {
@@ -383,11 +470,22 @@ export default {
           `http://localhost:5000/api/books/${bookId}`
         );
         this.detailsBooks = response.data;
-        // console.log("Fetched Data:", response.data);
+
+        // ✅ Check nếu user đã mua ebook này (dùng store action)
+        if (this.currentUser) {
+          await this.checkEbookPurchase(bookId);
+        }
       } catch (error) {
         console.error("Fetch error:", error);
       } finally {
         this.isLoading = false;
+      }
+    },
+    async getOrderOfUser() {
+      try {
+        await this.fetchUserOrders();
+      } catch (error) {
+        console.error("Error fetching user orders:", error);
       }
     },
     increaseQuantity() {
@@ -403,8 +501,11 @@ export default {
         await this.addToCart({
           bookId,
           quantity,
+          productType: this.productType, // ✅ Truyền productType
         });
-        this.snackbarText = "Add to cart successfully!";
+
+        const typeName = this.productType === "ebook" ? "Ebook" : "Hardbook";
+        this.snackbarText = `${typeName} added to cart successfully!`;
         this.showSnackbar = true;
         this.snackbarColor = "success";
       } catch (error) {
@@ -414,6 +515,15 @@ export default {
         this.snackbarColor = "error";
       }
     },
+
+    // Preview ebook - đến trang reader (xem 20 trang)
+    previewEbook() {
+      this.$router.push({
+        path: "/reader",
+        query: { bookId: this.detailsBooks._id },
+      });
+    },
+
     async handleToggleFavorites(bookId) {
       try {
         await this.toggleFavorites(bookId);
@@ -439,6 +549,7 @@ export default {
   },
   async mounted() {
     await this.getDetailsBooks();
+    await this.getOrderOfUser();
   },
 };
 </script>
@@ -466,7 +577,22 @@ export default {
   border: 1px solid #e0e0e0;
 }
 
+.product-type-section {
+  background-color: #f9f9f9;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
 :deep(.v-rating .v-icon) {
   padding: 0;
+}
+
+:deep(.v-radio-group .v-selection-control) {
+  margin-right: 0;
+}
+
+:deep(.v-radio .v-label) {
+  opacity: 1 !important;
 }
 </style>

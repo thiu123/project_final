@@ -18,7 +18,7 @@ const orderController = {
         // Apply pricing based on product type
         const price =
           item.productType === "ebook"
-            ? item.bookId.price * 0.7 // 70% of original price for ebook
+            ? item.bookId.price * 0.8 // 80% of original price for ebook (20% off)
             : item.bookId.price; // Full price for hardbook
         return sum + price * item.quantity * exchange_rate;
       }, 0);
@@ -76,7 +76,7 @@ const orderController = {
         // Apply pricing based on product type
         const price =
           item.productType === "ebook"
-            ? item.bookId.price * 0.7 // 70% of original price for ebook
+            ? item.bookId.price * 0.8 // 80% of original price for ebook (20% off)
             : item.bookId.price; // Full price for hardbook
         return sum + price * item.quantity * exchange_rate;
       }, 0);
@@ -140,7 +140,7 @@ const orderController = {
         // Apply pricing based on product type
         const price =
           item.productType === "ebook"
-            ? item.bookId.price * 0.7 // 70% of original price for ebook
+            ? item.bookId.price * 0.8 // 80% of original price for ebook (20% off)
             : item.bookId.price; // Full price for hardbook
         return sum + price * item.quantity * exchange_rate;
       }, 0);
@@ -186,19 +186,51 @@ const orderController = {
 
       const order = await Order.findOne({ orderId });
       if (order) {
-        // MoMo trả về resultCode trong query string là string "0" khi success
-        order.status = resultCode === "0" ? "Paid" : "Failed";
+        // MoMo trả về resultCode có thể là string "0" hoặc number 0
+        // Dùng == để check cả 2 cases (loose equality)
+        order.status = resultCode == 0 ? "Paid" : "Failed";
         await order.save();
+
+        console.log(`✅ Order ${orderId} updated to status: ${order.status}`);
 
         if (order.status === "Paid") {
           await Cart.findOneAndDelete({ userId: order.userId });
+          console.log(`✅ Cart cleared for user ${order.userId}`);
         }
+      } else {
+        console.error(`❌ Order not found: ${orderId}`);
       }
 
       return res.redirect(`http://localhost:3000/order/status/${orderId}`);
     } catch (err) {
       console.error("MoMo payment processing error:", err);
       return res.redirect(`http://localhost:3000/order/status/unknown`);
+    }
+  },
+
+  // ✅ API kiểm tra user đã mua ebook chưa
+  checkEbookPurchase: async (req, res) => {
+    try {
+      const userId = req.user.id;
+      const { bookId } = req.query;
+
+      if (!bookId) {
+        return res.status(400).json({ msg: "Book ID is required" });
+      }
+
+      // Tìm order đã paid và có ebook
+      const order = await Order.findOne({
+        userId,
+        status: "Paid",
+        "items.bookId": bookId,
+        "items.productType": "ebook",
+      });
+
+      return res.status(200).json({
+        isPurchased: !!order,
+      });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
     }
   },
 };

@@ -36,14 +36,23 @@ const orderApi = {
     });
     return res.data;
   },
- 
+
   // MoMo checkout
   createMomoOrderFromCart: async () => {
     const res = await axios.post(`${API_URL}/checkout_momo`, null, {
       headers: { token: token() },
     });
     return res.data;
-  }
+  },
+
+  // ✅ Kiểm tra user đã mua ebook chưa
+  checkEbookPurchase: async (bookId) => {
+    const res = await axios.get(`${API_URL}/check-ebook`, {
+      params: { bookId },
+      headers: { token: token() },
+    });
+    return res.data;
+  },
 };
 
 export default orderApi;

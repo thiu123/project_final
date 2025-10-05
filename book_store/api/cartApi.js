@@ -9,18 +9,22 @@ export const fetchCart = () => {
   });
 };
 
-export const addToCart = (bookId, quantity) => {
+export const addToCart = (bookId, quantity, productType) => {
   return axios.post(
     `${API_URL}/add`,
-    { bookId, quantity },
+    { bookId, quantity, productType }, // ✅ Thêm productType
     { headers: { token: token() } }
   );
 };
 
 export const updateCartItem = (bookId, quantity) => {
-  return axios.put(`${API_URL}/update`, { bookId, quantity }, {
-    headers: { token: token() },
-  });
+  return axios.put(
+    `${API_URL}/update`,
+    { bookId, quantity },
+    {
+      headers: { token: token() },
+    }
+  );
 };
 
 export const removeCartItem = (bookId) => {

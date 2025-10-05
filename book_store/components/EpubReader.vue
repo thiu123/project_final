@@ -5,15 +5,32 @@
     </div>
 
     <template v-else>
+      <!-- Hiển thị thông báo nếu chưa mua và đang ở giới hạn -->
+      <div
+        v-if="!isPurchased && currentPage >= previewLimit"
+        class="purchase-overlay"
+      >
+        <div class="purchase-box">
+          <h2>🔒 Bạn đã xem hết phần dùng thử</h2>
+          <p>Chỉ có thể xem {{ previewLimit }} trang đầu tiên</p>
+          <p class="highlight">
+            Mua sách để đọc toàn bộ {{ totalPages }} trang
+          </p>
+          <button class="btn-purchase" @click="goToPurchase">
+            💳 Mua ngay
+          </button>
+        </div>
+      </div>
+
       <div class="controls">
         <button @click="prevPage" :disabled="!hasPdf || currentPage <= 1">
           ⬅️ Trang trước
         </button>
-        <span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
-        <button
-          @click="nextPage"
-          :disabled="!hasPdf || currentPage >= totalPages"
-        >
+        <span class="page-info">
+          {{ currentPage }} / {{ isPurchased ? totalPages : previewLimit }}
+          <span v-if="!isPurchased" class="demo-badge">DEMO</span>
+        </span>
+        <button @click="nextPage" :disabled="!hasPdf || !canGoNext">
           Trang sau ➡️
         </button>
       </div>
@@ -27,18 +44,15 @@
 
 <script>
 export default {
-  name: "PdfReader",
-  
   props: {
-    pdfUrl: {
-      type: String,
-      required: true,
-    },
+    pdfUrl: { type: String, required: true },
+    isPurchased: { type: Boolean, default: false },
+    previewLimit: { type: Number, default: 20 },
+    bookId: { type: [String, Number], default: null },
   },
 
   data() {
     return {
-      // ⚠️ KHÔNG lưu pdfDoc trong data() vì Vue sẽ làm nó reactive
       currentPage: 1,
       totalPages: 0,
       isLoading: true,
@@ -47,65 +61,53 @@ export default {
     };
   },
 
+  computed: {
+    canGoNext() {
+      return this.isPurchased
+        ? this.currentPage < this.totalPages
+        : this.currentPage < this.previewLimit &&
+            this.currentPage < this.totalPages;
+    },
+  },
+
   mounted() {
-    console.log("📄 Component mounted");
-    console.log("📄 PDF URL:", this.pdfUrl);
     this.initPdfReader();
   },
 
   methods: {
     async initPdfReader() {
-      console.log("🔄 Bắt đầu khởi tạo PDF Reader...");
-
       if (import.meta.client) {
         await this.loadPdfJsLibrary();
         await this.loadPdfDocument();
-      } else {
-        console.warn("⚠️ Không phải client side, bỏ qua load PDF");
       }
     },
 
     loadPdfJsLibrary() {
       return new Promise((resolve, reject) => {
-        console.log("📚 Đang load PDF.js library...");
-        
-        // Kiểm tra xem đã load chưa
         if (window.pdfjsLib) {
-          console.log("✅ PDF.js đã có sẵn trong window");
           this.pdfjsLib = window.pdfjsLib;
           this.configurePdfJs();
           resolve();
           return;
         }
 
-        // Tạo script tag để load PDF.js
         const script = document.createElement("script");
-        script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+        script.src =
+          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
         script.async = true;
 
         script.onload = () => {
-          console.log("✅ PDF.js script loaded");
-          
-          setTimeout(() => {
-            this.pdfjsLib = window.pdfjsLib;
-            
-            if (!this.pdfjsLib) {
-              console.error("❌ pdfjsLib không tồn tại trên window");
-              reject(new Error("PDF.js không load được"));
-              return;
-            }
-            
-            console.log("✅ pdfjsLib đã sẵn sàng");
-            this.configurePdfJs();
-            resolve();
-          }, 50);
+          this.pdfjsLib = window.pdfjsLib;
+          if (!this.pdfjsLib) {
+            reject(new Error("PDF.js không load được"));
+            return;
+          }
+          this.configurePdfJs();
+          resolve();
         };
 
-        script.onerror = () => {
-          console.error("❌ Không thể tải PDF.js library");
+        script.onerror = () =>
           reject(new Error("Không thể tải PDF.js library"));
-        };
-
         document.head.appendChild(script);
       });
     },
@@ -114,111 +116,62 @@ export default {
       if (this.pdfjsLib) {
         this.pdfjsLib.GlobalWorkerOptions.workerSrc =
           "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-        console.log("⚙️ Đã cấu hình PDF.js worker");
       }
     },
 
     async loadPdfDocument() {
       try {
-        console.log("📖 Đang load PDF document...");
-        
-        if (!this.pdfjsLib) {
-          throw new Error("PDF.js library chưa được load");
-        }
+        if (!this.pdfjsLib) throw new Error("PDF.js chưa được load");
 
         const loadingTask = this.pdfjsLib.getDocument(this.pdfUrl);
-        console.log("⏳ Loading task created:", loadingTask);
-        
-        // ⚠️ Lưu vào this (không reactive) thay vì data()
         this.pdfDoc = await loadingTask.promise;
-        
-        console.log("✅ PDF Document loaded:", this.pdfDoc);
-        console.log("📊 Total pages:", this.pdfDoc.numPages);
-        console.log("📊 PDF Info:", {
-          numPages: this.pdfDoc.numPages,
-          fingerprints: this.pdfDoc.fingerprints,
-        });
 
         this.totalPages = this.pdfDoc.numPages;
         this.hasPdf = true;
         this.isLoading = false;
 
-        console.log("✅ State updated - totalPages:", this.totalPages);
-        console.log("✅ State updated - hasPdf:", this.hasPdf);
-
-        // Đợi DOM update xong trước khi render
         await this.$nextTick();
-        console.log("✅ DOM đã update, canvas sẵn sàng");
         await this.renderPage(this.currentPage);
       } catch (err) {
-        console.error("❌ Lỗi khi load PDF:", err);
-        console.error("❌ Chi tiết lỗi:", {
-          message: err.message,
-          stack: err.stack,
-        });
+        console.error("❌ Lỗi khi load PDF:", err.message);
         this.isLoading = false;
       }
     },
 
     async renderPage(num) {
-      if (!this.pdfDoc || !this.$refs.pdfCanvas) {
-        console.warn("⚠️ Không thể render - pdfDoc hoặc canvas chưa sẵn sàng");
-        return;
-      }
-
+      if (!this.pdfDoc || !this.$refs.pdfCanvas) return;
       try {
-        console.log(`🎨 Đang render trang ${num}...`);
-        
-        // ⚠️ Gọi trực tiếp this.pdfDoc.getPage (không có reactivity)
         const page = await this.pdfDoc.getPage(num);
-        console.log("✅ Page object:", page);
-        
         const canvas = this.$refs.pdfCanvas;
         const ctx = canvas.getContext("2d");
         const viewport = page.getViewport({ scale: this.scale });
 
-        console.log("📐 Viewport:", {
-          width: viewport.width,
-          height: viewport.height,
-          scale: this.scale,
-        });
-
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
-        const renderContext = {
-          canvasContext: ctx,
-          viewport: viewport,
-        };
-
-        await page.render(renderContext).promise;
-        console.log(`✅ Đã render xong trang ${num}`);
+        await page.render({ canvasContext: ctx, viewport }).promise;
       } catch (err) {
-        console.error("❌ Lỗi khi render trang:", err);
-        console.error("❌ Chi tiết lỗi render:", {
-          page: num,
-          message: err.message,
-          stack: err.stack,
-        });
+        console.error(`❌ Lỗi render trang ${num}:`, err.message);
       }
     },
 
     async nextPage() {
-      console.log("➡️ Next page clicked");
+      if (!this.isPurchased && this.currentPage >= this.previewLimit) return;
       if (this.currentPage < this.totalPages) {
         this.currentPage++;
-        console.log("📄 Moving to page:", this.currentPage);
         await this.renderPage(this.currentPage);
       }
     },
 
     async prevPage() {
-      console.log("⬅️ Prev page clicked");
       if (this.currentPage > 1) {
         this.currentPage--;
-        console.log("📄 Moving to page:", this.currentPage);
         await this.renderPage(this.currentPage);
       }
+    },
+
+    goToPurchase() {
+      this.$router.push(this.bookId ? `/details/${this.bookId}` : "/");
     },
   },
 };
@@ -296,5 +249,99 @@ button:disabled {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   max-width: 100%;
   height: auto;
+}
+
+/* Purchase Overlay */
+.purchase-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.purchase-box {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  text-align: center;
+  max-width: 500px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.purchase-box h2 {
+  color: #333;
+  margin-bottom: 15px;
+  font-size: 24px;
+}
+
+.purchase-box p {
+  color: #666;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.purchase-box .highlight {
+  color: #4a90e2;
+  font-weight: 600;
+  font-size: 18px;
+  margin-top: 20px;
+  margin-bottom: 25px;
+}
+
+.btn-purchase {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-purchase:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+}
+
+.demo-badge {
+  background: #ff6b6b;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 8px;
+  vertical-align: middle;
 }
 </style>
