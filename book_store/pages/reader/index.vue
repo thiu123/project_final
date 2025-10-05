@@ -1,6 +1,6 @@
 <template>
   <div>
-    <EpubReader epub-url="/sample.epub" />
+    <EpubReader pdf-url="/sample.pdf" />
   </div>
 </template>
 
