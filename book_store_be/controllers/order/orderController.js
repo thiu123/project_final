@@ -1,6 +1,7 @@
 const Order = require("../../model/Order");
 const Cart = require("../../model/Cart");
 const vnpayController = require("../vnpay/vnpayController");
+const momoController = require("../momo/momoController");
 
 const orderController = {
   getCartPreview: async (req, res) => {
@@ -14,7 +15,12 @@ const orderController = {
 
       const exchange_rate = 24;
       const totalAmount = cart.items.reduce((sum, item) => {
-        return sum + item.bookId.price * item.quantity * exchange_rate;
+        // Apply pricing based on product type
+        const price =
+          item.productType === "ebook"
+            ? item.bookId.price * 0.7 // 70% of original price for ebook
+            : item.bookId.price; // Full price for hardbook
+        return sum + price * item.quantity * exchange_rate;
       }, 0);
 
       return res.status(200).json({
@@ -67,7 +73,12 @@ const orderController = {
 
       const exchange_rate = 24000;
       const totalAmount = cart.items.reduce((sum, item) => {
-        return sum + item.bookId.price * item.quantity * exchange_rate;
+        // Apply pricing based on product type
+        const price =
+          item.productType === "ebook"
+            ? item.bookId.price * 0.7 // 70% of original price for ebook
+            : item.bookId.price; // Full price for hardbook
+        return sum + price * item.quantity * exchange_rate;
       }, 0);
 
       const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
@@ -101,7 +112,6 @@ const orderController = {
       const order = await Order.findOne({ orderId: vnp_TxnRef });
       if (order) {
         order.status = vnp_ResponseCode === "00" ? "Paid" : "Failed";
-        order.vnpayData = queryData;
         await order.save();
 
         if (order.status === "Paid") {
@@ -127,7 +137,12 @@ const orderController = {
       // Tính tổng tiền
       const exchange_rate = 24000;
       const totalAmount = cart.items.reduce((sum, item) => {
-        return sum + item.bookId.price * item.quantity * exchange_rate;
+        // Apply pricing based on product type
+        const price =
+          item.productType === "ebook"
+            ? item.bookId.price * 0.7 // 70% of original price for ebook
+            : item.bookId.price; // Full price for hardbook
+        return sum + price * item.quantity * exchange_rate;
       }, 0);
 
       // Tạo orderId
@@ -139,13 +154,13 @@ const orderController = {
         orderId,
         items: cart.items,
         total: totalAmount,
-        paymentMethod: "MoMo",
+        paymentMethod: "Momo",
       });
 
       await newOrder.save();
 
       // Tạo MoMo payment URL
-      const paymentUrl = await orderController.buildMoMoPaymentUrl({
+      const paymentUrl = await momoController.buildPaymentUrl({
         orderId,
         amount: totalAmount,
       });
@@ -155,61 +170,37 @@ const orderController = {
       return res.status(500).json({ msg: err.message });
     }
   },
-   buildMoMoPaymentUrl: async ({ orderId, amount }) => {
+
+  momoReturn: async (req, res) => {
     try {
-      const requestId = orderId + new Date().getTime();
-      const requestType = 'payWithMethod';
-      const extraData = '';
-      const orderInfo = `Thanh toán đơn hàng ${orderId}`;
-      const lang = 'vi';
-      
-      // Tạo raw signature
-      const rawSignature = `accessKey=${MOMO_CONFIG.accessKey}&amount=${amount}&extraData=${extraData}&ipnUrl=${MOMO_CONFIG.ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}&partnerCode=${MOMO_CONFIG.partnerCode}&redirectUrl=${MOMO_CONFIG.redirectUrl}&requestId=${requestId}&requestType=${requestType}`;
-      
-      // Tạo signature
-      const signature = crypto
-        .createHmac('sha256', MOMO_CONFIG.secretKey)
-        .update(rawSignature)
-        .digest('hex');
+      const queryData = req.query;
+      const { resultCode, orderId } = queryData;
 
-      // Chuẩn bị request body
-      const requestBody = {
-        partnerCode: MOMO_CONFIG.partnerCode,
-        partnerName: "BookStore",
-        storeId: "BookStoreOnline",
-        requestId: requestId,
-        amount: amount,
-        orderId: orderId,
-        orderInfo: orderInfo,
-        redirectUrl: MOMO_CONFIG.redirectUrl,
-        ipnUrl: MOMO_CONFIG.ipnUrl,
-        lang: lang,
-        requestType: requestType,
-        autoCapture: true,
-        extraData: extraData,
-        signature: signature
-      };
+      console.log("MoMo Return Data:", queryData);
+      console.log(
+        "MoMo resultCode type:",
+        typeof resultCode,
+        "value:",
+        resultCode
+      );
 
-      console.log('MoMo Request:', JSON.stringify(requestBody, null, 2));
+      const order = await Order.findOne({ orderId });
+      if (order) {
+        // MoMo trả về resultCode trong query string là string "0" khi success
+        order.status = resultCode === "0" ? "Paid" : "Failed";
+        await order.save();
 
-      // Gửi request đến MoMo
-      const response = await axios.post(`${MOMO_CONFIG.endpoint}/create`, requestBody, {
-        headers: { 'Content-Type': 'application/json' }
-      });
-
-      console.log('MoMo Response:', response.data);
-
-      if (response.data.resultCode === 0) {
-        return response.data.payUrl;
-      } else {
-        throw new Error(response.data.message || 'MoMo payment creation failed');
+        if (order.status === "Paid") {
+          await Cart.findOneAndDelete({ userId: order.userId });
+        }
       }
-    } catch (error) {
-      console.error('MoMo Create Payment Error:', error);
-      throw error;
+
+      return res.redirect(`http://localhost:3000/order/status/${orderId}`);
+    } catch (err) {
+      console.error("MoMo payment processing error:", err);
+      return res.redirect(`http://localhost:3000/order/status/unknown`);
     }
   },
-
 };
 
 module.exports = orderController;
