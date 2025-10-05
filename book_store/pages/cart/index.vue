@@ -160,7 +160,34 @@
                         <div
                           class="text-h6 font-weight-bold text-waterblue mb-2 d-md-none"
                         >
-                          ${{ item?.bookId?.price || "0" }}
+                          ${{ getItemPrice(item) }}
+                        </div>
+                        <div class="d-flex gap-2 mb-2">
+                          <v-chip
+                            size="small"
+                            :color="
+                              item.productType === 'ebook'
+                                ? 'success'
+                                : 'primary'
+                            "
+                            variant="tonal"
+                            class="text-caption"
+                          >
+                            {{
+                              item.productType === "ebook"
+                                ? "📱 Ebook"
+                                : "📚 Hardbook"
+                            }}
+                          </v-chip>
+                          <v-chip
+                            v-if="item.productType === 'ebook'"
+                            size="small"
+                            color="success"
+                            variant="outlined"
+                            class="text-caption"
+                          >
+                            -20% OFF
+                          </v-chip>
                         </div>
                         <v-chip
                           size="small"
@@ -227,10 +254,18 @@
 
                     <!-- Price -->
                     <v-col cols="4" sm="2" class="text-end d-none d-md-block">
-                      <div
-                        class="text-subtitle-1 font-weight-bold text-waterblue"
-                      >
-                        ${{ item?.bookId?.price || "0" }}
+                      <div class="text-end">
+                        <div
+                          class="text-subtitle-1 font-weight-bold text-waterblue"
+                        >
+                          ${{ getItemPrice(item) }}
+                        </div>
+                        <div
+                          v-if="item.productType === 'ebook'"
+                          class="text-caption text-grey-darken-1 text-decoration-line-through"
+                        >
+                          ${{ item?.bookId?.price || "0" }}
+                        </div>
                       </div>
                     </v-col>
 
@@ -575,6 +610,16 @@ export default {
   },
   methods: {
     ...mapActions("cart", ["fetchCart", "removeCartItem"]),
+
+    // ✅ Tính giá item dựa vào productType
+    getItemPrice(item) {
+      const basePrice = item?.bookId?.price || 0;
+      if (item.productType === "ebook") {
+        return (basePrice * 0.8).toFixed(2); // Giảm 20% cho ebook
+      }
+      return basePrice.toFixed(2);
+    },
+
     increaseQuantity(item) {
       item.quantity++;
     },

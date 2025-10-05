@@ -155,8 +155,8 @@
               <v-col cols="auto">
                 <v-chip color="primary" variant="elevated" size="large">
                   <v-icon start>mdi-heart</v-icon>
-                  {{ favorites.length }}
-                  {{ favorites.length === 1 ? "Book" : "Books" }}
+                  {{ validFavorites.length }}
+                  {{ validFavorites.length === 1 ? "Book" : "Books" }}
                 </v-chip>
               </v-col>
               <v-spacer></v-spacer>
@@ -180,7 +180,7 @@
           <!-- Grid View -->
           <v-row v-if="viewMode === 'grid'">
             <v-col
-              v-for="favorite in favorites"
+              v-for="favorite in validFavorites"
               :key="favorite._id"
               cols="12"
               sm="6"
@@ -190,7 +190,7 @@
               <v-card class="book-card" elevation="3" hover>
                 <div class="position-relative">
                   <v-img
-                    :src="favorite.bookId.cover_url"
+                    :src="favorite?.bookId?.cover_url"
                     height="300"
                     cover
                     class="book-cover"
@@ -288,7 +288,7 @@
           <!-- List View -->
           <div v-else>
             <v-card
-              v-for="favorite in favorites"
+              v-for="favorite in validFavorites"
               :key="favorite._id"
               class="mb-4"
               elevation="2"
@@ -296,7 +296,7 @@
               <v-row no-gutters>
                 <v-col cols="3" sm="2">
                   <v-img
-                    :src="favorite.bookId.cover_url"
+                    :src="favorite?.bookId?.cover_url"
                     height="150"
                     cover
                   ></v-img>
@@ -498,6 +498,14 @@ export default {
       },
     };
   },
+  computed: {
+    // Filter out favorites with null bookId
+    validFavorites() {
+      return this.favorites.filter(
+        (favorite) => favorite && favorite.bookId && favorite.bookId._id
+      );
+    },
+  },
   methods: {
     async removeFromFavorites(bookId) {
       try {
@@ -559,7 +567,9 @@ export default {
       this.removeDialog.show = true;
     },
     isFavorite(bookId) {
-      return this.favorites.some((favorite) => favorite.bookId._id === bookId);
+      return this.favorites.some(
+        (favorite) => favorite?.bookId?._id === bookId
+      );
     },
   },
   mounted() {

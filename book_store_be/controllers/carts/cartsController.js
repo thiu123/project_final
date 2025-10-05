@@ -18,23 +18,32 @@ const cartsController = {
 
   addToCart: async (req, res) => {
     try {
-      const { bookId, quantity } = req.body;
+      const { bookId, quantity, productType } = req.body; // ✅ Thêm productType
+      const type = productType || "hardbook"; // Default hardbook
+
       let cart = await Cart.findOne({ userId: req.user.id });
+
       if (!cart) {
         cart = new Cart({
           userId: req.user.id,
-          items: [{ bookId, quantity }],
+          items: [{ bookId, quantity, productType: type }],
         });
       } else {
+        // Tìm item với cùng bookId VÀ productType
         const itemIndex = cart.items.findIndex(
-          (item) => item.bookId.toString() === bookId
+          (item) =>
+            item.bookId.toString() === bookId && item.productType === type
         );
+
         if (itemIndex !== -1) {
+          // Nếu đã có, tăng quantity
           cart.items[itemIndex].quantity += quantity;
         } else {
-          cart.items.push({ bookId, quantity });
+          // Nếu chưa có, thêm mới
+          cart.items.push({ bookId, quantity, productType: type });
         }
       }
+
       await cart.save();
       return res.status(200).json(cart);
     } catch (err) {
