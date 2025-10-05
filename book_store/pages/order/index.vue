@@ -350,9 +350,9 @@
                         @click="updateQuantity(item, 1)"
                       ></v-btn>
                     </div>
-                    <span class="text-h6">{{
-                      item.bookId.price * item.quantity
-                    }}$</span>
+                    <span class="text-h6"
+                      >{{ item.bookId.price * item.quantity }}$</span
+                    >
                   </div>
                 </div>
               </div>
@@ -401,10 +401,10 @@
             :loading="isProcessingPayment"
           >
             <span class="d-none d-sm-inline">
-              {{ isProcessingPayment ? 'PROCESSING...' : 'CONFIRM PAYMENT' }}
+              {{ isProcessingPayment ? "PROCESSING..." : "CONFIRM PAYMENT" }}
             </span>
             <span class="d-sm-none">
-              {{ isProcessingPayment ? 'PROCESSING...' : 'CONFIRM' }}
+              {{ isProcessingPayment ? "PROCESSING..." : "CONFIRM" }}
             </span>
           </v-btn>
         </div>
