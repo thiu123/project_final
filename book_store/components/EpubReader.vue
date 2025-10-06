@@ -1,37 +1,37 @@
 <template>
   <div class="pdf-reader">
     <div v-if="isLoading" class="loading">
-      <p>Đang tải PDF...</p>
+      <p>Loading PDF...</p>
     </div>
 
     <template v-else>
-      <!-- Hiển thị thông báo nếu chưa mua và đang ở giới hạn -->
+      <!-- Display message if user hasn’t purchased and reached the preview limit -->
       <div
         v-if="!isPurchased && currentPage >= previewLimit"
         class="purchase-overlay"
       >
         <div class="purchase-box">
-          <h2>🔒 Bạn đã xem hết phần dùng thử</h2>
-          <p>Chỉ có thể xem {{ previewLimit }} trang đầu tiên</p>
+          <h2>🔒 You’ve reached the preview limit</h2>
+          <p>You can only view the first {{ previewLimit }} pages</p>
           <p class="highlight">
-            Mua sách để đọc toàn bộ {{ totalPages }} trang
+            Buy this book to unlock all {{ totalPages }} pages
           </p>
           <button class="btn-purchase" @click="goToPurchase">
-            💳 Mua ngay
+            💳 Buy Now
           </button>
         </div>
       </div>
 
       <div class="controls">
         <button @click="prevPage" :disabled="!hasPdf || currentPage <= 1">
-          ⬅️ Trang trước
+          ⬅️ Previous Page
         </button>
         <span class="page-info">
           {{ currentPage }} / {{ isPurchased ? totalPages : previewLimit }}
           <span v-if="!isPurchased" class="demo-badge">DEMO</span>
         </span>
         <button @click="nextPage" :disabled="!hasPdf || !canGoNext">
-          Trang sau ➡️
+          Next Page ➡️
         </button>
       </div>
 
@@ -99,7 +99,7 @@ export default {
         script.onload = () => {
           this.pdfjsLib = window.pdfjsLib;
           if (!this.pdfjsLib) {
-            reject(new Error("PDF.js không load được"));
+            reject(new Error("Failed to load PDF.js"));
             return;
           }
           this.configurePdfJs();
@@ -107,7 +107,7 @@ export default {
         };
 
         script.onerror = () =>
-          reject(new Error("Không thể tải PDF.js library"));
+          reject(new Error("Unable to load PDF.js library"));
         document.head.appendChild(script);
       });
     },
@@ -121,7 +121,7 @@ export default {
 
     async loadPdfDocument() {
       try {
-        if (!this.pdfjsLib) throw new Error("PDF.js chưa được load");
+        if (!this.pdfjsLib) throw new Error("PDF.js not loaded");
 
         const loadingTask = this.pdfjsLib.getDocument(this.pdfUrl);
         this.pdfDoc = await loadingTask.promise;
@@ -133,7 +133,7 @@ export default {
         await this.$nextTick();
         await this.renderPage(this.currentPage);
       } catch (err) {
-        console.error("❌ Lỗi khi load PDF:", err.message);
+        console.error("❌ Error loading PDF:", err.message);
         this.isLoading = false;
       }
     },
@@ -151,7 +151,7 @@ export default {
 
         await page.render({ canvasContext: ctx, viewport }).promise;
       } catch (err) {
-        console.error(`❌ Lỗi render trang ${num}:`, err.message);
+        console.error(`❌ Error rendering page ${num}:`, err.message);
       }
     },
 

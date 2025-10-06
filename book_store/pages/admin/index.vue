@@ -6,6 +6,9 @@
     <!-- User Management Component (Placeholder) -->
     <AdminUserManagement v-else-if="currentTab === 'user-management'" />
 
+    <!-- Contact Management Component -->
+    <AdminContactManagement v-else-if="currentTab === 'contact-management'" />
+
     <!-- Order Management Component (Placeholder) -->
     <div v-else-if="currentTab === 'order-management'" class="text-center pa-8">
       <v-icon size="80" color="grey-lighten-2">mdi-package-variant</v-icon>
