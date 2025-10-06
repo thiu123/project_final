@@ -138,6 +138,11 @@ export default {
           icon: "mdi-account-multiple",
         },
         {
+          title: "Contact Management",
+          value: "contact-management",
+          icon: "mdi-message-text",
+        },
+        {
           title: "Order Management",
           value: "order-management",
           icon: "mdi-package-variant",

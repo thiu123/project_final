@@ -495,7 +495,7 @@
                   </template>
                   <template v-slot:append>
                     <span class="text-h6 font-weight-bold text-waterblue"
-                      >$120.00</span
+                      >{{ totalPrice }}</span
                     >
                   </template>
                 </v-list-item>
@@ -594,6 +594,15 @@ export default {
     cartItems() {
       return this.cart?.items || [];
     },
+    totalPrice() {
+      return this.cartItems.reduce((total, item) => {
+        const price =
+          item.productType === "ebook"
+            ? item.bookId.price * 0.8
+            : item.bookId.price;
+        return total + price * item.quantity;
+      }, 0).toFixed(2);
+    }
   },
   watch: {
     selectAll(val) {

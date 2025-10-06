@@ -5,6 +5,7 @@ import cart from "./cart";
 import review from "./review";
 import order from "./order";
 import favorite from "./favorite";
+import contact from "./contact";
 
 const store = createStore({
   modules: {
@@ -14,6 +15,7 @@ const store = createStore({
     review,
     order,
     favorite,
+    contact,
   },
 });
 

@@ -10,11 +10,10 @@
             </v-avatar>
           </div>
           <h1 class="text-h3 font-weight-bold text-customblack mb-4">
-            Get in Touch
+            Contact Us
           </h1>
           <p class="text-h6 text-medium-emphasis mb-8">
-            We'd love to hear from you. Send us a message and we'll respond as
-            soon as possible.
+            Share your feedback and help us improve
           </p>
         </v-col>
       </v-row>
@@ -23,210 +22,81 @@
     <!-- Contact Form Section -->
     <v-container class="py-8">
       <v-row justify="center">
-        <v-col cols="12" lg="10">
+        <v-col cols="12" lg="8">
           <v-card class="contact-card pa-8" elevation="12" rounded="xl">
-            <v-row>
-              <!-- Contact Form -->
-              <v-col cols="12" md="7" class="pr-md-8">
-                <h2 class="text-h4 font-weight-bold text-customblack mb-6">
-                  Send us a Message
-                </h2>
+            <h2
+              class="text-h4 font-weight-bold text-customblack mb-6 text-center"
+            >
+              Send Your Feedback
+            </h2>
 
-                <v-form ref="contactForm" v-model="formValid">
-                  <v-row>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="formData.firstName"
-                        label="First Name"
-                        variant="outlined"
-                        :rules="nameRules"
-                        required
-                        prepend-inner-icon="mdi-account"
-                      ></v-text-field>
-                    </v-col>
-                    <v-col cols="12" md="6">
-                      <v-text-field
-                        v-model="formData.lastName"
-                        label="Last Name"
-                        variant="outlined"
-                        :rules="nameRules"
-                        required
-                        prepend-inner-icon="mdi-account"
-                      ></v-text-field>
-                    </v-col>
-                  </v-row>
+            <v-alert
+              v-if="!isLoggedIn"
+              type="warning"
+              variant="tonal"
+              class="mb-6"
+            >
+              Please login to send feedback
+            </v-alert>
 
-                  <v-text-field
-                    v-model="formData.email"
-                    label="Email Address"
-                    variant="outlined"
-                    type="email"
-                    :rules="emailRules"
-                    required
-                    prepend-inner-icon="mdi-email"
-                  ></v-text-field>
+            <v-form
+              ref="contactForm"
+              v-model="formValid"
+              :disabled="!isLoggedIn"
+            >
+              <v-textarea
+                v-model="message"
+                label="Your Feedback"
+                variant="outlined"
+                rows="8"
+                :rules="messageRules"
+                required
+                prepend-inner-icon="mdi-message-text"
+                placeholder="Share your thoughts, suggestions, or report issues... (minimum 10 characters)"
+              ></v-textarea>
 
-                  <v-text-field
-                    v-model="formData.phone"
-                    label="Phone Number (Optional)"
-                    variant="outlined"
-                    prepend-inner-icon="mdi-phone"
-                  ></v-text-field>
+              <v-btn
+                color="waterblue"
+                size="large"
+                variant="elevated"
+                block
+                :loading="loading"
+                :disabled="!formValid || !isLoggedIn"
+                @click="submitForm"
+                class="font-weight-bold"
+              >
+                <v-icon start>mdi-send</v-icon>
+                Send Feedback
+              </v-btn>
+            </v-form>
 
-                  <v-select
-                    v-model="formData.subject"
-                    label="Subject"
-                    variant="outlined"
-                    :items="subjectOptions"
-                    :rules="subjectRules"
-                    required
-                    prepend-inner-icon="mdi-tag"
-                  ></v-select>
+            <!-- User's Previous Messages -->
+            <div v-if="isLoggedIn && userContacts.length > 0" class="mt-8">
+              <v-divider class="mb-4"></v-divider>
+              <h3 class="text-h6 font-weight-bold mb-4">
+                Your Feedback History
+              </h3>
 
-                  <v-textarea
-                    v-model="formData.message"
-                    label="Message"
-                    variant="outlined"
-                    rows="6"
-                    :rules="messageRules"
-                    required
-                    prepend-inner-icon="mdi-message-text"
-                  ></v-textarea>
-
-                  <div class="d-flex align-center mb-6">
-                    <v-checkbox
-                      v-model="formData.newsletter"
-                      color="waterblue"
-                      hide-details
-                    ></v-checkbox>
-                    <span class="text-body-2 text-medium-emphasis ml-2">
-                      Subscribe to our newsletter for updates and special offers
+              <v-card
+                v-for="contact in userContacts"
+                :key="contact._id"
+                class="mb-3"
+                variant="outlined"
+              >
+                <v-card-text>
+                  <div class="d-flex justify-space-between align-center mb-2">
+                    <v-chip color="primary" size="small" variant="tonal">
+                      <v-icon start size="small">mdi-message</v-icon>
+                      Feedback
+                    </v-chip>
+                    <span class="text-caption text-medium-emphasis">
+                      {{ formatDate(contact.createdAt) }}
                     </span>
                   </div>
-
-                  <v-btn
-                    color="waterblue"
-                    size="large"
-                    variant="elevated"
-                    block
-                    :loading="loading"
-                    :disabled="!formValid"
-                    @click="submitForm"
-                    class="font-weight-bold"
-                  >
-                    <v-icon start>mdi-send</v-icon>
-                    Send Message
-                  </v-btn>
-                </v-form>
-              </v-col>
-
-              <!-- Contact Information -->
-              <v-col cols="12" md="5">
-                <div class="contact-info-section">
-                  <h3 class="text-h5 font-weight-bold text-customblack mb-6">
-                    Contact Information
-                  </h3>
-
-                  <!-- Address -->
-                  <div class="contact-item mb-6">
-                    <div class="d-flex align-start">
-                      <v-avatar color="waterblue" size="48" class="mr-4">
-                        <v-icon color="white" size="24">mdi-map-marker</v-icon>
-                      </v-avatar>
-                      <div>
-                        <h4
-                          class="text-subtitle-1 font-weight-bold text-customblack mb-1"
-                        >
-                          Visit Us
-                        </h4>
-                        <p class="text-body-2 text-medium-emphasis mb-0">
-                          1234 Bookstore Drive & 4th Ave<br />
-                          Ho Chi Minh City, Vietnam
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Phone -->
-                  <div class="contact-item mb-6">
-                    <div class="d-flex align-start">
-                      <v-avatar color="waterblue" size="48" class="mr-4">
-                        <v-icon color="white" size="24">mdi-phone</v-icon>
-                      </v-avatar>
-                      <div>
-                        <h4
-                          class="text-subtitle-1 font-weight-bold text-customblack mb-1"
-                        >
-                          Call Us
-                        </h4>
-                        <p class="text-body-2 text-medium-emphasis mb-0">
-                          +84 971 450 800<br />
-                          Mon - Fri: 8:00 AM - 6:00 PM
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Email -->
-                  <div class="contact-item mb-6">
-                    <div class="d-flex align-start">
-                      <v-avatar color="waterblue" size="48" class="mr-4">
-                        <v-icon color="white" size="24">mdi-email</v-icon>
-                      </v-avatar>
-                      <div>
-                        <h4
-                          class="text-subtitle-1 font-weight-bold text-customblack mb-1"
-                        >
-                          Email Us
-                        </h4>
-                        <p class="text-body-2 text-medium-emphasis mb-0">
-                          nhokhieukute2004@gmail.com<br />
-                          We'll respond within 24 hours
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Social Media -->
-                  <div class="contact-item">
-                    <h4
-                      class="text-subtitle-1 font-weight-bold text-customblack mb-3"
-                    >
-                      Follow Us
-                    </h4>
-                    <div class="d-flex ga-3">
-                      <v-btn
-                        icon
-                        variant="outlined"
-                        color="waterblue"
-                        size="large"
-                        class="social-btn"
-                      >
-                        <v-icon>mdi-facebook</v-icon>
-                      </v-btn>
-                      <v-btn
-                        icon
-                        variant="outlined"
-                        color="waterblue"
-                        size="large"
-                        class="social-btn"
-                      >
-                        <v-icon>mdi-twitter</v-icon>
-                      </v-btn>
-                      <v-btn
-                        icon
-                        variant="outlined"
-                        color="waterblue"
-                        size="large"
-                        class="social-btn"
-                      >
-                        <v-icon>mdi-instagram</v-icon>
-                      </v-btn>
-                    </div>
-                  </div>
-                </div>
-              </v-col>
-            </v-row>
+                  <p class="text-body-2 mb-2">{{ contact.message }}</p>
+                </v-card-text>
+              </v-card>
+            </div>
           </v-card>
         </v-col>
       </v-row>
@@ -238,27 +108,53 @@
         <v-col cols="12" lg="8">
           <div class="text-center mb-8">
             <h2 class="text-h4 font-weight-bold text-customblack mb-4">
-              Frequently Asked Questions
+              Contact Information
             </h2>
-            <p class="text-subtitle-1 text-medium-emphasis">
-              Find quick answers to common questions
-            </p>
           </div>
 
-          <v-expansion-panels variant="accordion" class="faq-panels">
-            <v-expansion-panel
-              v-for="(faq, index) in faqs"
-              :key="index"
-              class="mb-2"
-            >
-              <v-expansion-panel-title class="text-subtitle-1 font-weight-bold">
-                {{ faq.question }}
-              </v-expansion-panel-title>
-              <v-expansion-panel-text class="text-body-2 text-medium-emphasis">
-                {{ faq.answer }}
-              </v-expansion-panel-text>
-            </v-expansion-panel>
-          </v-expansion-panels>
+          <v-row>
+            <!-- Address -->
+            <v-col cols="12" md="4">
+              <v-card class="pa-4 text-center" elevation="2" height="100%">
+                <v-avatar color="waterblue" size="60" class="mb-3">
+                  <v-icon color="white" size="30">mdi-map-marker</v-icon>
+                </v-avatar>
+                <h4 class="text-subtitle-1 font-weight-bold mb-2">Visit Us</h4>
+                <p class="text-body-2 text-medium-emphasis">
+                  1234 Bookstore Drive<br />
+                  Ho Chi Minh City, Vietnam
+                </p>
+              </v-card>
+            </v-col>
+
+            <!-- Phone -->
+            <v-col cols="12" md="4">
+              <v-card class="pa-4 text-center" elevation="2" height="100%">
+                <v-avatar color="waterblue" size="60" class="mb-3">
+                  <v-icon color="white" size="30">mdi-phone</v-icon>
+                </v-avatar>
+                <h4 class="text-subtitle-1 font-weight-bold mb-2">Call Us</h4>
+                <p class="text-body-2 text-medium-emphasis">
+                  +84 971 450 800<br />
+                  Mon - Fri: 8AM - 6PM
+                </p>
+              </v-card>
+            </v-col>
+
+            <!-- Email -->
+            <v-col cols="12" md="4">
+              <v-card class="pa-4 text-center" elevation="2" height="100%">
+                <v-avatar color="waterblue" size="60" class="mb-3">
+                  <v-icon color="white" size="30">mdi-email</v-icon>
+                </v-avatar>
+                <h4 class="text-subtitle-1 font-weight-bold mb-2">Email Us</h4>
+                <p class="text-body-2 text-medium-emphasis">
+                  nhokhieukute2004@gmail.com<br />
+                  We reply within 24 hours
+                </p>
+              </v-card>
+            </v-col>
+          </v-row>
         </v-col>
       </v-row>
     </v-container>
@@ -273,6 +169,7 @@
 </template>
 
 <script>
+import { mapState, mapActions } from "vuex";
 import SnackbarAlert from "../components/SnackbarAlert.vue";
 
 export default {
@@ -284,62 +181,11 @@ export default {
     return {
       formValid: false,
       loading: false,
-      formData: {
-        firstName: "",
-        lastName: "",
-        email: "",
-        phone: "",
-        subject: "",
-        message: "",
-        newsletter: false,
-      },
-      nameRules: [
-        (v) => !!v || "Name is required",
-        (v) => v.length >= 2 || "Name must be at least 2 characters",
-      ],
-      emailRules: [
-        (v) => !!v || "Email is required",
-        (v) => /.+@.+\..+/.test(v) || "Email must be valid",
-      ],
-      subjectRules: [(v) => !!v || "Subject is required"],
+      message: "",
       messageRules: [
         (v) => !!v || "Message is required",
-        (v) => v.length >= 10 || "Message must be at least 10 characters",
-      ],
-      subjectOptions: [
-        "General Inquiry",
-        "Book Availability",
-        "Order Status",
-        "Technical Support",
-        "Partnership",
-        "Other",
-      ],
-      faqs: [
-        {
-          question: "How can I track my order?",
-          answer:
-            'You can track your order by logging into your account and visiting the "My Orders" section. You\'ll receive email updates as your order progresses.',
-        },
-        {
-          question: "What is your return policy?",
-          answer:
-            "We accept returns within 30 days of purchase for books in their original condition. Please contact us for return authorization.",
-        },
-        {
-          question: "Do you ship internationally?",
-          answer:
-            "Currently, we ship within Vietnam. International shipping options are being evaluated for future expansion.",
-        },
-        {
-          question: "How can I become a member?",
-          answer:
-            'You can create an account by clicking "Sign Up" in the top navigation. Membership is free and gives you access to exclusive offers and faster checkout.',
-        },
-        {
-          question: "What payment methods do you accept?",
-          answer:
-            "We accept major credit cards, debit cards, and digital wallets including VNPay. All transactions are secure and encrypted.",
-        },
+        (v) =>
+          (v && v.length >= 10) || "Message must be at least 10 characters",
       ],
       snackbar: {
         show: false,
@@ -348,7 +194,15 @@ export default {
       },
     };
   },
+  computed: {
+    ...mapState("auth", ["currentUser"]),
+    ...mapState("contact", ["userContacts"]),
+    isLoggedIn() {
+      return !!this.currentUser;
+    },
+  },
   methods: {
+    ...mapActions("contact", ["createContact", "fetchUserContacts"]),
     async submitForm() {
       if (!this.$refs.contactForm.validate()) {
         return;
@@ -357,41 +211,48 @@ export default {
       this.loading = true;
 
       try {
-        // Simulate API call
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await this.createContact(this.message);
 
-        // Show success message
         this.showSnackbar(
-          "Thank you! Your message has been sent successfully. We'll get back to you soon.",
+          "Thank you! Your feedback has been sent successfully.",
           "success"
         );
 
         // Reset form
-        this.$refs.contactForm.reset();
-        this.formData = {
-          firstName: "",
-          lastName: "",
-          email: "",
-          phone: "",
-          subject: "",
-          message: "",
-          newsletter: false,
-        };
+        this.message = "";
+        this.$refs.contactForm.resetValidation();
+
+        // Reload user contacts
+        await this.fetchUserContacts();
       } catch (error) {
         this.showSnackbar(
-          "Sorry, there was an error sending your message. Please try again.",
+          error.response?.data?.message ||
+            "Failed to send feedback. Please try again.",
           "error"
         );
       } finally {
         this.loading = false;
       }
     },
-
+    formatDate(date) {
+      return new Date(date).toLocaleString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    },
     showSnackbar(message, color = "success") {
       this.snackbar.message = message;
       this.snackbar.color = color;
       this.snackbar.show = true;
     },
+  },
+  mounted() {
+    if (this.isLoggedIn) {
+      this.fetchUserContacts();
+    }
   },
 };
 </script>
@@ -404,43 +265,5 @@ export default {
 .contact-card {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border: 1px solid #dee2e6;
-}
-
-.contact-info-section {
-  background: rgba(82, 149, 208, 0.05);
-  padding: 24px;
-  border-radius: 12px;
-  border-left: 4px solid #5295d0;
-  height: fit-content;
-}
-
-.contact-item {
-  transition: transform 0.2s ease;
-}
-
-.contact-item:hover {
-  transform: translateX(4px);
-}
-
-.social-btn {
-  transition: all 0.3s ease;
-}
-
-.social-btn:hover {
-  background-color: #5295d0 !important;
-  color: white !important;
-  transform: translateY(-2px);
-}
-
-.faq-panels {
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .contact-info-section {
-    margin-top: 24px;
-  }
 }
 </style>
