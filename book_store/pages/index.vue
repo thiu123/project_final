@@ -455,17 +455,18 @@
             lg="3"
           >
             <v-card
-              class="category-card h-100 rounded-xl cursor-pointer"
+              class="category-card rounded-xl cursor-pointer"
               @click="$router.push(`/subjects/${category.route}`)"
               elevation="4"
               hover
+              height="280"
             >
-              <v-img
-                :src="category.image"
-                height="200"
-                cover
-                class="category-image"
-              >
+              <div class="category-image-wrapper">
+                <img
+                  :src="category.image"
+                  class="category-image"
+                  :alt="category.name"
+                />
                 <div
                   class="category-overlay d-flex align-center justify-center"
                 >
@@ -481,7 +482,7 @@
                     </p>
                   </div>
                 </div>
-              </v-img>
+              </div>
             </v-card>
           </v-col>
         </v-row>
@@ -586,16 +587,14 @@ export default {
           name: "Literary Fiction",
           route: "literary fiction",
           icon: "mdi-book-open-page-variant",
-          image:
-            "https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=400&h=200&fit=crop",
+          image: "https://covers.openlibrary.org/b/id/12727001-L.jpg",
           count: "2,500+",
         },
         {
           name: "Romance",
           route: "romance",
           icon: "mdi-heart",
-          image:
-            "https://images.unsplash.com/photo-1512820790803-83ca734da794?w=400&h=200&fit=crop",
+          image: "https://covers.openlibrary.org/b/id/1458693-L.jpg",
           count: "1,800+",
         },
         {
@@ -603,15 +602,14 @@ export default {
           route: "manga",
           icon: "mdi-comic-speech-bubble",
           image:
-            "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400&h=200&fit=crop",
+            "https://res.cloudinary.com/dud7xndwa/image/upload/v1758969520/books/oizgzwxqaijmuxghobpp.jpg",
           count: "3,200+",
         },
         {
           name: "History",
           route: "history",
           icon: "mdi-castle",
-          image:
-            "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=200&fit=crop",
+          image: "https://covers.openlibrary.org/b/id/463315-L.jpg",
           count: "1,500+",
         },
       ],
@@ -877,6 +875,7 @@ export default {
 .category-card {
   transition: all 0.3s ease;
   overflow: hidden;
+  position: relative;
 }
 
 .category-card:hover {
@@ -884,13 +883,27 @@ export default {
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
 }
 
-.category-image {
+.category-image-wrapper {
   position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.category-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .category-overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: linear-gradient(
     135deg,
     rgba(82, 149, 208, 0.8) 0%,

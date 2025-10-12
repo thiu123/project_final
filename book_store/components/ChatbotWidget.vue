@@ -60,12 +60,11 @@
                 <!-- Regular text message -->
                 <div
                   v-if="!message.suggestions && !message.review"
-                  class="text-black"
-                  style="
-                    white-space: pre-wrap;
-                    line-height: 1.5;
-                    color: #000000 !important;
-                  "
+                  :style="{
+                    'white-space': 'pre-wrap',
+                    'line-height': '1.5',
+                    color: message.type === 'user' ? '#ffffff' : '#000000',
+                  }"
                 >
                   {{ message.text }}
                 </div>
@@ -73,7 +72,7 @@
                 <!-- Book Suggestions Display -->
                 <div
                   v-if="message.suggestions"
-                  class="text-black"
+                  class="text-white"
                   style="color: #000000 !important"
                 >
                   <div
@@ -90,7 +89,8 @@
                     <v-card
                       color="blue-lighten-5"
                       variant="outlined"
-                      class="pa-2"
+                      class="pa-2 book-card-clickable"
+                      @click="goToBookDetail(book.bookId)"
                     >
                       <div
                         class="text-subtitle-2 font-weight-bold text-primary"
@@ -110,11 +110,20 @@
                         }}
                       </div>
                       <div
-                        class="text-body-2"
+                        class="text-body-2 mb-2"
                         style="color: #000000 !important"
                       >
                         {{ book.reason }}
                       </div>
+                      <v-btn
+                        size="x-small"
+                        color="primary"
+                        variant="text"
+                        prepend-icon="mdi-arrow-right"
+                        @click.stop="goToBookDetail(book.bookId)"
+                      >
+                        View Details
+                      </v-btn>
                     </v-card>
                   </div>
                 </div>
@@ -134,7 +143,8 @@
                   <v-card
                     color="green-lighten-5"
                     variant="outlined"
-                    class="pa-3"
+                    class="pa-3 book-card-clickable"
+                    @click="goToBookDetail(message.review.bookInfo.id)"
                   >
                     <div
                       class="text-subtitle-2 font-weight-bold text-success mb-2"
@@ -150,18 +160,27 @@
                       {{ message.review.bookInfo.subjects.join(", ") }}
                     </div>
                     <div
-                      class="text-body-2"
+                      class="text-body-2 mb-2"
                       style="line-height: 1.6; color: #000000 !important"
                     >
                       {{ message.review.generatedReview }}
                     </div>
+                    <v-btn
+                      size="small"
+                      color="success"
+                      variant="text"
+                      prepend-icon="mdi-arrow-right"
+                      @click.stop="goToBookDetail(message.review.bookInfo.id)"
+                    >
+                      View Details
+                    </v-btn>
                   </v-card>
                 </div>
 
                 <div
                   :class="
                     message.type === 'user'
-                      ? 'text-grey-lighten-2'
+                      ? 'text-white'
                       : 'text-grey-darken-1'
                   "
                   class="text-caption mt-1"
@@ -205,11 +224,18 @@
             </div>
             <div class="d-flex flex-wrap ga-2">
               <v-chip
-                @click="
-                  sendQuickMessage(
-                    'I want fantasy, adventure books for teenagers'
-                  )
-                "
+                @click="sendQuickMessage('suggest best book for me')"
+                color="primary"
+                variant="outlined"
+                size="small"
+                prepend-icon="mdi-star-outline"
+                clickable
+                class="quick-action-chip"
+              >
+                Best books
+              </v-chip>
+              <v-chip
+                @click="sendQuickMessage('I want fantasy books with magic')"
                 color="primary"
                 variant="outlined"
                 size="small"
@@ -217,7 +243,7 @@
                 clickable
                 class="quick-action-chip"
               >
-                Book suggestions
+                By genre
               </v-chip>
               <v-chip
                 @click="sendQuickMessage('review Naruto')"
@@ -239,7 +265,7 @@
           <v-card-actions class="pa-4 pt-2">
             <v-text-field
               v-model="newMessage"
-              placeholder="Try: 'fantasy books' or 'review Harry Potter'"
+              placeholder="E.g: 'fantasy books' or 'review Harry Potter'"
               variant="outlined"
               density="compact"
               hide-details
@@ -277,7 +303,7 @@ export default {
       messages: [
         {
           type: "bot",
-          text: "Hello! I'm your AI Book Advisor. I can help you with:\n\n📚 Book recommendations (just tell me your preferences)\n⭐ Book reviews (type 'review [book title]')\n🔍 Book search by subjects\n\nExamples:\n• 'fantasy, adventure, magic'\n• 'review Harry Potter'\n• 'programming, javascript'\n\nWhat can I help you with today?",
+          text: "Hello! I'm your AI Book Advisor. I can help you with:\n\n📚 Book recommendations\n⭐ Book reviews\n🎯 Best books in store\n\nExamples:\n• 'suggest best book for me'\n• 'I want fantasy books with magic'\n• 'help me find a good book'\n• 'review Harry Potter'\n\nJust chat naturally! 😊",
           timestamp: new Date(),
         },
       ],
@@ -321,11 +347,10 @@ export default {
       this.scrollToBottom();
 
       try {
-        // Detect if user wants a review
-        if (messageText.toLowerCase().startsWith("review")) {
+        // Simple check: if message contains "review" → review, else → suggestion
+        if (messageText.toLowerCase().includes("review")) {
           await this.handleReviewRequest(messageText);
         } else {
-          // Otherwise, treat as book recommendation request
           await this.handleBookSuggestions(messageText);
         }
       } catch (error) {
@@ -387,19 +412,9 @@ export default {
 
     async handleReviewRequest(messageText) {
       try {
-        // Extract book query from "review book name"
-        const bookQuery = messageText.substring(6).trim(); // Remove "review" prefix
-
-        if (!bookQuery) {
-          this.messages.push({
-            type: "bot",
-            text: "Please specify a book title after 'review'. For example: 'review Harry Potter'",
-            timestamp: new Date(),
-          });
-          return;
-        }
-
-        const response = await generateSmartReview({ bookQuery });
+        // No need to extract "review" prefix anymore,
+        // just pass the entire message to backend
+        const response = await generateSmartReview({ bookQuery: messageText });
 
         if (response.success && response.data.bookFound) {
           this.messages.push({
@@ -413,7 +428,7 @@ export default {
             type: "bot",
             text:
               response.message ||
-              `Sorry, I couldn't find the book "${bookQuery}" in our store.`,
+              `Sorry, I couldn't find that book in our store.`,
             timestamp: new Date(),
           });
         }
@@ -445,6 +460,15 @@ export default {
           container.scrollTop = container.scrollHeight;
         }
       });
+    },
+
+    goToBookDetail(bookId) {
+      if (bookId) {
+        // Navigate to book detail page
+        this.$router.push(`/details/${bookId}`);
+        // Optionally close the chatbot
+        this.isOpen = false;
+      }
     },
   },
 
@@ -554,6 +578,17 @@ export default {
 /* Book suggestion styles */
 .book-suggestion {
   animation: fadeIn 0.5s ease-in;
+}
+
+/* Clickable book cards */
+.book-card-clickable {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.book-card-clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 @keyframes fadeIn {

@@ -2,6 +2,7 @@ import axios from "axios";
 
 const BASE_URL = "http://localhost:5000/api/chatbot";
 const token = () => `Bearer ${localStorage.getItem("accessToken")}`;
+
 export const getBookSuggestions = async (userPreferences) => {
   try {
     const response = await axios.post(

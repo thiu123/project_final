@@ -1,357 +1,298 @@
 <template>
   <v-app>
-    <v-main>
-      <v-container class="pa-2 pa-md-4">
-        <!-- Delivery Information -->
-        <!-- <v-card class="mb-4 mb-md-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
-            <v-icon class="mr-2" size="small">mdi-map-marker</v-icon>
-            DELIVERY ADDRESS
-          </v-card-title>
-          <v-card-text class="pa-2 pa-md-4">
-            <v-row>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="form.fullName"
-                  label="Recipient's full name"
-                  placeholder="Enter recipient's full name"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="form.email"
-                  label="Email"
-                  placeholder="Enter email"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="form.phone"
-                  label="Phone number"
-                  placeholder="Example: 0979123xxx (10 digits)"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-select
-                  v-model="form.country"
-                  label="Country"
-                  :items="['Vietnam']"
-                  variant="outlined"
-                  density="compact"
-                ></v-select>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="form.city"
-                  label="Province/City"
-                  placeholder="Select province/city"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="form.district"
-                  label="District"
-                  placeholder="Select district"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="form.ward"
-                  label="Ward"
-                  placeholder="Select ward"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="12">
-                <v-text-field
-                  v-model="form.address"
-                  label="Delivery address"
-                  placeholder="Enter delivery address"
-                  variant="outlined"
-                  density="compact"
-                ></v-text-field>
-              </v-col>
-            </v-row>
-          </v-card-text>
-        </v-card> -->
+    <v-main class="bg-grey-lighten-4">
+      <v-container class="pa-2 pa-md-6" style="max-width: 1200px">
+        <!-- Page Header -->
+        <div class="mb-6">
+          <h1 class="text-h5 text-md-h4 font-weight-bold mb-2">Checkout</h1>
+          <v-breadcrumbs
+            class="pa-0"
+            :items="[
+              { title: 'Home', disabled: false },
+              { title: 'Cart', disabled: false },
+              { title: 'Checkout', disabled: true },
+            ]"
+          >
+            <template v-slot:divider>
+              <v-icon>mdi-chevron-right</v-icon>
+            </template>
+          </v-breadcrumbs>
+        </div>
 
         <!-- Shipping Method -->
-        <v-card class="mb-4 mb-md-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
-            <v-icon class="mr-2" size="small">mdi-truck</v-icon>
-            SHIPPING METHOD
+        <v-card class="mb-4 mb-md-6 rounded-lg" elevation="2">
+          <v-card-title class="bg-primary text-white d-flex align-center py-4">
+            <v-icon class="mr-3" size="24">mdi-truck-fast</v-icon>
+            <span class="text-h6">Shipping Method</span>
           </v-card-title>
-          <v-card-text class="pa-2 pa-md-4">
+          <v-card-text class="pa-4 pa-md-6">
             <v-radio-group v-model="selectedShipping" hide-details>
-              <v-radio value="standard" color="primary">
-                <template v-slot:label>
-                  <div class="text-body-2 text-sm-body-1">
-                    <div class="font-weight-medium">
-                      Standard shipping: {{ shippingFee }}
+              <v-card
+                class="pa-4 mb-0 border"
+                :class="
+                  selectedShipping === 'standard'
+                    ? 'border-primary bg-blue-lighten-5'
+                    : 'border-grey-lighten-2'
+                "
+                flat
+              >
+                <v-radio value="standard" color="primary">
+                  <template v-slot:label>
+                    <div class="ml-3">
+                      <div class="text-body-1 font-weight-bold mb-1">
+                        Standard Shipping - {{ shippingFee }}
+                      </div>
+                      <div class="text-body-2 text-grey-darken-1">
+                        <v-icon size="small" class="mr-1"
+                          >mdi-clock-outline</v-icon
+                        >
+                        Estimated delivery: Friday 12/23
+                      </div>
                     </div>
-                    <div class="text-caption text-grey">
-                      Estimated delivery: Friday 12/23
-                    </div>
-                  </div>
-                </template>
-              </v-radio>
+                  </template>
+                </v-radio>
+              </v-card>
             </v-radio-group>
           </v-card-text>
         </v-card>
 
         <!-- Payment Methods -->
-        <v-card class="mb-4 mb-md-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
-            <v-icon class="mr-2" size="small">mdi-credit-card</v-icon>
-            PAYMENT METHOD
+        <v-card class="mb-4 mb-md-6 rounded-lg" elevation="2">
+          <v-card-title class="bg-primary text-white d-flex align-center py-4">
+            <v-icon class="mr-3" size="24">mdi-credit-card-outline</v-icon>
+            <span class="text-h6">Payment Method</span>
           </v-card-title>
-          <v-card-text class="pa-2 pa-md-4">
+          <v-card-text class="pa-4 pa-md-6">
             <v-radio-group v-model="selectedPayment" hide-details>
-              <!-- <v-radio value="zalopay" color="primary" class="mb-2">
-                <template v-slot:label>
-                  <div class="d-flex align-center flex-wrap">
-                    <v-avatar size="24" class="mr-2 flex-shrink-0">
-                    </v-avatar>
-                    <span class="text-body-2 text-sm-body-1 mr-2"
-                      >ZaloPay Wallet</span
-                    >
-                    <a
-                      href="#"
-                      class="text-primary text-decoration-underline text-caption text-sm-body-2"
-                      >Details</a
-                    >
-                  </div>
-                </template>
-              </v-radio> -->
+              <v-card
+                class="pa-4 mb-3 border"
+                :class="
+                  selectedPayment === 'vnpay'
+                    ? 'border-primary bg-blue-lighten-5'
+                    : 'border-grey-lighten-2'
+                "
+                flat
+              >
+                <v-radio value="vnpay" color="primary">
+                  <template v-slot:label>
+                    <div class="d-flex align-center ml-3">
+                      <v-avatar size="60" class="mr-3 flex-shrink-0 rounded">
+                        <v-img
+                          src="../../assets/vnpay-logo-inkythuatso.svg"
+                        ></v-img>
+                      </v-avatar>
+                      <span class="text-body-1 font-weight-medium"
+                        >VNPay Wallet</span
+                      >
+                    </div>
+                  </template>
+                </v-radio>
+              </v-card>
 
-              <v-radio value="vnpay" color="primary" class="mb-2">
-                <template v-slot:label>
-                  <div class="d-flex align-center flex-wrap">
-                    <v-avatar size="80" class="mr-2 flex-shrink-0">
-                      <v-img
-                        src="../../assets/vnpay-logo-inkythuatso.svg"
-                      ></v-img>
-                    </v-avatar>
-                  </div>
-                </template>
-              </v-radio>
-
-              <!-- <v-radio value="momo" color="primary" class="mb-2">
-                <template v-slot:label>
-                  <div class="d-flex align-center">
-                    <v-avatar size="24" class="mr-2 flex-shrink-0">
-                    </v-avatar>
-                    <span class="text-body-2 text-sm-body-1">Momo Wallet</span>
-                  </div>
-                </template>
-              </v-radio> -->
-
-              <v-radio value="momo" color="primary" class="mb-2">
-                <template v-slot:label>
-                  <div class="d-flex align-center">
-                    <v-avatar size="40" class="mr-2 flex-shrink-0">
-                      <v-img
-                        src="../../assets/Logo-MoMo-Square-300x300.png"
-                      ></v-img>
-                    </v-avatar>
-                  </div>
-                </template>
-              </v-radio>
+              <v-card
+                class="pa-4 mb-0 border"
+                :class="
+                  selectedPayment === 'momo'
+                    ? 'border-primary bg-blue-lighten-5'
+                    : 'border-grey-lighten-2'
+                "
+                flat
+              >
+                <v-radio value="momo" color="primary">
+                  <template v-slot:label>
+                    <div class="d-flex align-center ml-3">
+                      <v-avatar size="40" class="mr-3 flex-shrink-0 rounded">
+                        <v-img
+                          src="../../assets/Logo-MoMo-Square-300x300.png"
+                        ></v-img>
+                      </v-avatar>
+                      <span class="text-body-1 font-weight-medium"
+                        >Momo Wallet</span
+                      >
+                    </div>
+                  </template>
+                </v-radio>
+              </v-card>
             </v-radio-group>
           </v-card-text>
         </v-card>
 
         <!-- Promotion Code -->
-        <v-card class="mb-4 mb-md-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
-            <v-icon class="mr-2" size="small">mdi-tag</v-icon>
-            PROMOTION CODE/GIFT CODE
+        <v-card class="mb-4 mb-md-6 rounded-lg" elevation="2">
+          <v-card-title class="bg-primary text-white d-flex align-center py-4">
+            <v-icon class="mr-3" size="24">mdi-ticket-percent</v-icon>
+            <span class="text-h6">Promotion Code</span>
           </v-card-title>
-          <v-card-text class="pa-2 pa-md-4">
-            <div class="d-flex flex-column flex-sm-row ga-2 mb-2">
+          <v-card-text class="pa-4 pa-md-6">
+            <div class="d-flex flex-column flex-sm-row ga-3 mb-3">
               <v-text-field
                 v-model="promoCode"
-                placeholder="Enter promotion/gift code"
+                placeholder="Enter promotion or gift code"
                 variant="outlined"
-                density="compact"
+                density="comfortable"
                 hide-details
                 class="flex-grow-1"
+                prepend-inner-icon="mdi-tag-outline"
               ></v-text-field>
               <div class="d-flex ga-2">
                 <v-btn
                   color="primary"
                   variant="flat"
-                  :size="$vuetify.display.xs ? 'small' : 'default'"
-                  class="flex-shrink-0"
+                  size="large"
+                  class="flex-shrink-0 px-6"
                 >
                   Apply
                 </v-btn>
                 <v-btn
                   variant="outlined"
                   color="primary"
-                  :size="$vuetify.display.xs ? 'small' : 'default'"
+                  size="large"
                   class="flex-shrink-0"
                 >
-                  <span class="d-none d-sm-inline">Choose promotion code</span>
-                  <span class="d-sm-none">Choose code</span>
+                  <v-icon class="mr-2">mdi-percent</v-icon>
+                  <span class="d-none d-sm-inline">Browse Codes</span>
+                  <span class="d-sm-none">Browse</span>
                 </v-btn>
               </div>
             </div>
-            <div class="text-caption text-grey">
-              <v-icon size="small" class="mr-1">mdi-information</v-icon>
-              Multiple codes can be applied simultaneously
-            </div>
+            <v-alert
+              density="compact"
+              type="info"
+              variant="tonal"
+              icon="mdi-information-outline"
+            >
+              Multiple promotion codes can be applied simultaneously
+            </v-alert>
           </v-card-text>
         </v-card>
 
-        <!-- Additional Options -->
-        <!-- <v-card class="mb-4 mb-md-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
-            <v-icon class="mr-2" size="small">mdi-information</v-icon>
-            ADDITIONAL INFORMATION
-          </v-card-title>
-          <v-card-text class="pa-2 pa-md-4">
-            <v-checkbox
-              v-model="giftNote"
-              label="Add a note"
-              color="primary"
-              hide-details
-              class="mb-2"
-              density="compact"
-            ></v-checkbox>
-            <v-checkbox
-              v-model="invoice"
-              label="Request VAT invoice"
-              color="primary"
-              hide-details
-              class="mb-3"
-              density="compact"
-            ></v-checkbox>
-            <div class="text-caption">
-              <v-icon size="small" class="mr-1">mdi-check</v-icon>
-              By proceeding with the purchase, the customer agrees to the
-              <a href="#" class="text-primary">General Transaction Terms</a>
-              issued by Book50:
-              <a href="#" class="text-primary">Terms of use</a> |
-              <a href="#" class="text-primary">Payment security policy</a>
-              |
-              <a href="#" class="text-primary"
-                >Personal information privacy policy</a
-              >
-              | <a href="#" class="text-primary">Shipping policy</a> |
-              <a href="#" class="text-primary">Return and refund policy</a>.
-            </div>
-          </v-card-text>
-        </v-card> -->
-
         <!-- Order Review -->
-        <v-card class="mb-4 mb-md-6" elevation="1">
-          <v-card-title class="bg-grey-lighten-4 text-body-1 text-md-h6">
-            <v-icon class="mr-2" size="small">mdi-cart</v-icon>
-            REVIEW YOUR ORDER
+        <v-card class="mb-4 mb-md-6 rounded-lg" elevation="2">
+          <v-card-title class="bg-primary text-white d-flex align-center py-4">
+            <v-icon class="mr-3" size="24">mdi-cart-outline</v-icon>
+            <span class="text-h6">Order Summary</span>
           </v-card-title>
-          <v-card-text v-if="cartItems.length" class="pa-2 pa-md-4">
-            <!-- Loop through cartItems -->
+          <v-card-text v-if="cartItems.length" class="pa-4 pa-md-6">
             <div
               v-for="(item, index) in cartItems"
               :key="item._id"
               class="mb-4"
-              :class="{ 'border-bottom pb-4': index < cartItems.length - 1 }"
+              :class="{
+                'pb-4 border-b border-grey-lighten-2':
+                  index < cartItems.length - 1,
+              }"
             >
               <!-- Mobile Layout -->
-              <div class="d-flex d-sm-none flex-column gap-3">
-                <div class="d-flex gap-3">
-                  <img
-                    :src="item.bookId.cover_url"
-                    width="60"
-                    height="80"
-                    class="flex-shrink-0 rounded"
-                    :alt="item.bookId.title"
-                  />
+              <div class="d-flex d-sm-none flex-column">
+                <div class="d-flex gap-3 mb-3">
+                  <v-card class="flex-shrink-0" elevation="0">
+                    <v-img
+                      :src="item.bookId.cover_url"
+                      width="80"
+                      height="110"
+                      class="rounded"
+                      :alt="item.bookId.title"
+                      cover
+                    ></v-img>
+                  </v-card>
                   <div class="flex-grow-1 min-width-0">
-                    <div class="font-weight-medium mb-1 text-body-2">
+                    <div class="font-weight-bold mb-2 text-body-1">
                       {{ item.bookId.title }}
                     </div>
-                    <div class="text-caption text-grey mb-2">
-                      Author: {{ item.bookId.authors.join(", ") }}
+                    <div class="text-caption text-grey-darken-1 mb-2">
+                      <v-icon size="x-small" class="mr-1"
+                        >mdi-account-outline</v-icon
+                      >
+                      {{ item.bookId.authors.join(", ") }}
                     </div>
-                    <div class="text-subtitle-2 text-primary">
-                      {{ item.bookId.price }}
-                    </div>
+                    <v-chip color="primary" size="small" label>
+                      {{ item.bookId.price }}$
+                    </v-chip>
                   </div>
                 </div>
-                <div class="d-flex align-center justify-space-between">
-                  <div class="d-flex align-center gap-2">
+                <div
+                  class="d-flex align-center justify-space-between bg-grey-lighten-4 pa-3 rounded"
+                >
+                  <div class="d-flex align-center gap-1">
                     <v-btn
-                      size="x-small"
-                      variant="outlined"
+                      size="small"
+                      variant="flat"
+                      color="grey-lighten-2"
                       icon="mdi-minus"
                       @click="updateQuantity(item, -1)"
                       :disabled="item.quantity <= 1"
                     ></v-btn>
-                    <span class="px-2 text-body-2">{{ item.quantity }}</span>
+                    <span class="px-3 text-body-1 font-weight-medium">{{
+                      item.quantity
+                    }}</span>
                     <v-btn
-                      size="x-small"
-                      variant="outlined"
+                      size="small"
+                      variant="flat"
+                      color="grey-lighten-2"
                       icon="mdi-plus"
                       @click="updateQuantity(item, 1)"
                     ></v-btn>
                   </div>
-                  <span class="text-subtitle-2 font-weight-bold">
-                    {{ item.bookId.price * item.quantity }}
+                  <span class="text-h6 font-weight-bold text-primary">
+                    ${{ (item.bookId.price * item.quantity).toFixed(2) }}
                   </span>
                 </div>
               </div>
 
               <!-- Desktop/Tablet Layout -->
-              <div class="d-none d-sm-flex align-center ga-4">
-                <img
-                  :src="item.bookId.cover_url"
-                  width="180"
-                  height="200"
-                  class="flex-shrink-0 rounded"
-                  :alt="item.bookId.title"
-                />
+              <div class="d-none d-sm-flex align-start ga-4">
+                <v-card class="flex-shrink-0" elevation="0">
+                  <v-img
+                    :src="item.bookId.cover_url"
+                    width="120"
+                    height="160"
+                    class="rounded-lg"
+                    :alt="item.bookId.title"
+                    cover
+                  ></v-img>
+                </v-card>
                 <div class="flex-grow-1">
-                  <div class="font-weight-medium mb-1">
+                  <div class="font-weight-bold mb-2 text-h6">
                     {{ item.bookId.title }}
                   </div>
-                  <div class="text-caption text-grey mb-2">
-                    Author: {{ item.bookId.authors.join(", ") }}
-                  </div>
-                  <div class="d-flex align-center justify-space-between">
-                    <span class="text-h6 text-primary"
-                      >{{ item.bookId.price }}$</span
+                  <div class="text-body-2 text-grey-darken-1 mb-3">
+                    <v-icon size="small" class="mr-1"
+                      >mdi-account-outline</v-icon
                     >
-                    <div class="d-flex align-center gap-2">
+                    {{ item.bookId.authors.join(", ") }}
+                  </div>
+                  <div
+                    class="d-flex align-center justify-space-between flex-wrap gap-3"
+                  >
+                    <v-chip color="primary" size="large" label>
+                      <span class="text-h6">${{ item.bookId.price }}</span>
+                    </v-chip>
+                    <div
+                      class="d-flex align-center gap-2 bg-grey-lighten-4 pa-2 rounded"
+                    >
                       <v-btn
                         size="small"
-                        variant="outlined"
+                        variant="flat"
+                        color="white"
                         icon="mdi-minus"
                         @click="updateQuantity(item, -1)"
                         :disabled="item.quantity <= 1"
                       ></v-btn>
-                      <span class="px-3">{{ item.quantity }}</span>
+                      <span class="px-4 text-h6 font-weight-medium">{{
+                        item.quantity
+                      }}</span>
                       <v-btn
                         size="small"
-                        variant="outlined"
+                        variant="flat"
+                        color="white"
                         icon="mdi-plus"
                         @click="updateQuantity(item, 1)"
                       ></v-btn>
                     </div>
-                    <span class="text-h6"
-                      >{{ item.bookId.price * item.quantity }}$</span
+                    <span class="text-h5 font-weight-bold text-primary"
+                      >${{
+                        (item.bookId.price * item.quantity).toFixed(2)
+                      }}</span
                     >
                   </div>
                 </div>
@@ -361,53 +302,71 @@
         </v-card>
 
         <!-- Order Summary -->
-        <v-card class="mb-4 mb-md-6" elevation="1">
-          <v-card-text class="pa-2 pa-md-4">
-            <div class="d-flex justify-space-between mb-2 text-body-2">
-              <span>Subtotal</span>
-              <span>{{ formattedSubtotal }}</span>
+        <v-card class="mb-4 mb-md-6 rounded-lg" elevation="2">
+          <v-card-text class="pa-4 pa-md-6">
+            <div class="d-flex justify-space-between mb-3 text-body-1">
+              <span class="text-grey-darken-2">Subtotal</span>
+              <span class="font-weight-medium">{{ formattedSubtotal }}</span>
             </div>
-            <div class="d-flex justify-space-between mb-2 text-body-2">
-              <span>Shipping fee (Standard shipping)</span>
-              <span>{{ formattedShippingFee }}</span>
+            <div class="d-flex justify-space-between mb-3 text-body-1">
+              <span class="text-grey-darken-2">Shipping Fee</span>
+              <span class="font-weight-medium">{{ formattedShippingFee }}</span>
             </div>
-            <v-divider class="my-3"></v-divider>
+            <v-divider class="my-4"></v-divider>
             <div
-              class="d-flex justify-space-between text-subtitle-1 text-md-h6 font-weight-bold"
+              class="d-flex justify-space-between align-center pa-4 bg-blue-lighten-5 rounded-lg"
             >
-              <span>Total amount (including VAT)</span>
-              <span class="text-primary">{{ formattedTotal }}</span>
+              <span class="text-h6 font-weight-bold">Total Amount</span>
+              <span class="text-h4 font-weight-bold text-primary">{{
+                formattedTotal
+              }}</span>
+            </div>
+            <div class="text-caption text-grey-darken-1 mt-2 text-center">
+              (including VAT)
             </div>
           </v-card-text>
         </v-card>
 
         <!-- Action Buttons -->
-        <div class="d-flex flex-column flex-sm-row ga-3">
+        <div class="d-flex flex-column flex-sm-row ga-3 mb-4">
           <v-btn
             variant="outlined"
-            :size="$vuetify.display.xs ? 'default' : 'large'"
+            color="grey-darken-1"
+            size="x-large"
             prepend-icon="mdi-arrow-left"
             class="flex-grow-1 order-2 order-sm-1"
           >
-            <span class="d-none d-sm-inline">Back to order</span>
+            <span class="d-none d-sm-inline">Back to Cart</span>
             <span class="d-sm-none">Back</span>
           </v-btn>
           <v-btn
             color="primary"
-            :size="$vuetify.display.xs ? 'default' : 'large'"
+            size="x-large"
             class="flex-grow-1 order-1 order-sm-2"
             @click="handleConfirmPayment"
             :disabled="isProcessingPayment"
             :loading="isProcessingPayment"
+            append-icon="mdi-lock-check"
           >
-            <span class="d-none d-sm-inline">
+            <span class="d-none d-sm-inline font-weight-bold">
               {{ isProcessingPayment ? "PROCESSING..." : "CONFIRM PAYMENT" }}
             </span>
-            <span class="d-sm-none">
+            <span class="d-sm-none font-weight-bold">
               {{ isProcessingPayment ? "PROCESSING..." : "CONFIRM" }}
             </span>
           </v-btn>
         </div>
+
+        <!-- Security Notice -->
+        <v-alert
+          type="success"
+          variant="tonal"
+          density="compact"
+          icon="mdi-shield-check"
+          class="rounded-lg"
+        >
+          Your payment information is secured with 256-bit SSL encryption
+        </v-alert>
       </v-container>
     </v-main>
   </v-app>
@@ -536,34 +495,38 @@ export default {
 </script>
 
 <style scoped>
-.v-card-title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 12px 16px;
+.v-card {
+  overflow: hidden;
 }
 
-@media (max-width: 599px) {
-  .v-card-title {
-    padding: 8px 12px;
-    font-size: 0.875rem;
-  }
+.rounded-lg {
+  border-radius: 12px !important;
 }
 
 .v-radio :deep(.v-selection-control__wrapper) {
   margin-right: 8px;
 }
 
-.rounded {
-  border-radius: 8px;
-}
-
 .min-width-0 {
   min-width: 0;
 }
 
-@media (max-width: 599px) {
-  .text-caption {
-    font-size: 0.75rem;
-  }
+.border-b {
+  border-bottom: 1px solid;
+}
+
+/* Smooth transitions */
+.v-btn,
+.v-card {
+  transition: all 0.3s ease;
+}
+
+.v-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Better focus states */
+.v-btn:focus {
+  box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.2);
 }
 </style>
