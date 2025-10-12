@@ -456,7 +456,7 @@
                   </template>
                   <template v-slot:append>
                     <span class="text-body-1 font-weight-bold text-customblack"
-                      >$120.00</span
+                      >${{ totalPrice }}</span
                     >
                   </template>
                 </v-list-item>
@@ -495,7 +495,7 @@
                   </template>
                   <template v-slot:append>
                     <span class="text-h6 font-weight-bold text-waterblue"
-                      >{{ totalPrice }}</span
+                      >${{ totalPrice }}</span
                     >
                   </template>
                 </v-list-item>
@@ -620,7 +620,6 @@ export default {
   methods: {
     ...mapActions("cart", ["fetchCart", "removeCartItem"]),
 
-    // ✅ Tính giá item dựa vào productType
     getItemPrice(item) {
       const basePrice = item?.bookId?.price || 0;
       if (item.productType === "ebook") {
