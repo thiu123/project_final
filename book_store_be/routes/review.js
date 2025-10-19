@@ -24,4 +24,21 @@ router.get(
 );
 router.get("/average/:id", reviewController.getAverageRatingByBook);
 
+// ========== ADMIN REPLY ROUTES ==========
+router.post(
+  "/:reviewId/reply",
+  middlewareController.verifyTokenAndAdmin,
+  reviewController.createReply
+);
+router.put(
+  "/:reviewId/reply/:replyId",
+  middlewareController.verifyTokenAndAdmin,
+  reviewController.updateReply
+);
+router.delete(
+  "/:reviewId/reply/:replyId",
+  middlewareController.verifyTokenAndAdmin,
+  reviewController.deleteReply
+);
+
 module.exports = router;

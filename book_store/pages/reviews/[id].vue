@@ -51,7 +51,7 @@
                 <v-col cols="auto" class="me-2">
                   <v-icon color="amber" size="small">mdi-star</v-icon>
                 </v-col>
-                <v-col cols="auto">
+                <!-- <v-col cols="auto">
                   <v-progress-linear
                     :model-value="(rating.count / 24) * 100"
                     color="amber"
@@ -64,7 +64,7 @@
                   <span class="text-caption text-medium-emphasis"
                     >({{ rating.count }})</span
                   >
-                </v-col>
+                </v-col> -->
               </v-row>
             </div>
           </v-col>
@@ -199,6 +199,45 @@
         </v-card>
       </v-dialog>
 
+      <!-- Edit Reply Dialog -->
+      <v-dialog v-model="editReplyDialog" max-width="600" persistent>
+        <v-card rounded="xl" class="elevation-8">
+          <v-card-title
+            class="text-h6 text-center pa-6 pb-4 bg-primary text-white"
+          >
+            <v-icon start color="white" class="me-2">mdi-pencil</v-icon>
+            EDIT ADMIN REPLY
+          </v-card-title>
+
+          <v-card-text class="pa-6">
+            <v-textarea
+              v-model="editReplyContent"
+              label="Reply content"
+              variant="outlined"
+              rows="4"
+              auto-grow
+              :rules="[(v) => !!v || 'Reply content is required']"
+            ></v-textarea>
+          </v-card-text>
+
+          <v-card-actions class="pa-6 pt-0">
+            <v-spacer></v-spacer>
+            <v-btn variant="text" @click="editReplyDialog = false" class="me-3">
+              Cancel
+            </v-btn>
+            <v-btn
+              color="primary"
+              variant="elevated"
+              @click="confirmEditReply"
+              :disabled="!editReplyContent || editReplyContent.trim() === ''"
+            >
+              <v-icon start>mdi-check</v-icon>
+              Update Reply
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <v-divider></v-divider>
 
       <!-- Reviews List -->
@@ -231,8 +270,17 @@
                   <v-col cols="11">
                     <div class="d-flex align-center">
                       <v-avatar color="primary" size="40" class="me-3">
-                        <v-icon color="white" size="20">mdi-account</v-icon>
+                        <template v-if="review.userId?.avatar_url">
+                          <v-img
+                            :src="review.userId.avatar_url"
+                            alt="User avatar"
+                          />
+                        </template>
+                        <template v-else>
+                          <v-icon color="white" size="20">mdi-account</v-icon>
+                        </template>
                       </v-avatar>
+
                       <div class="flex-grow-1">
                         <div class="d-flex align-center mb-1">
                           <h3
@@ -294,6 +342,109 @@
                     </div>
                   </v-col>
                 </v-row>
+
+                <!-- Admin Replies Section -->
+                <v-row
+                  v-if="review.replies && review.replies.length > 0"
+                  class="mt-2"
+                >
+                  <v-col cols="12">
+                    <div class="admin-replies ml-8">
+                      <div
+                        v-for="(reply, replyIndex) in review.replies"
+                        :key="replyIndex"
+                        class="admin-reply pa-4 mb-3 rounded-lg"
+                        style="
+                          background: rgba(25, 118, 210, 0.05);
+                          border-left: 3px solid #1976d2;
+                        "
+                      >
+                        <div class="d-flex align-center mb-2">
+                          <v-avatar color="primary" size="32" class="me-2">
+                            <v-icon color="white" size="16"
+                              >mdi-shield-account</v-icon
+                            >
+                          </v-avatar>
+                          <div class="flex-grow-1">
+                            <span
+                              class="text-subtitle-2 font-weight-bold text-primary"
+                            >
+                              {{ reply.adminId?.username || "Admin" }}
+                            </span>
+                            <v-chip
+                              size="x-small"
+                              color="primary"
+                              variant="flat"
+                              class="ml-2"
+                            >
+                              Admin
+                            </v-chip>
+                            <span
+                              class="text-caption text-medium-emphasis ml-2"
+                            >
+                              · {{ formatDate(reply.createdAt) }}
+                            </span>
+                          </div>
+                          <!-- Edit/Delete buttons for admin's own reply -->
+                          <div v-if="isAdmin && isCurrentUserReply(reply)">
+                            <v-btn
+                              icon
+                              size="x-small"
+                              variant="text"
+                              color="primary"
+                              @click="showEditReplyDialog(review._id, reply)"
+                            >
+                              <v-icon size="small">mdi-pencil</v-icon>
+                            </v-btn>
+                            <v-btn
+                              icon
+                              size="x-small"
+                              variant="text"
+                              color="error"
+                              @click="confirmDeleteReply(review._id, reply._id)"
+                            >
+                              <v-icon size="small">mdi-delete</v-icon>
+                            </v-btn>
+                          </div>
+                        </div>
+                        <p class="text-body-2 mb-0 ml-10">
+                          {{ reply.content }}
+                        </p>
+                      </div>
+                    </div>
+                  </v-col>
+                </v-row>
+
+                <!-- Admin Reply Form (only visible to admin) -->
+                <v-row v-if="isAdmin" class="mt-3">
+                  <v-col cols="12">
+                    <div class="admin-reply-form ml-8">
+                      <v-textarea
+                        v-model="replyTexts[review._id]"
+                        label="Write admin reply..."
+                        variant="outlined"
+                        rows="2"
+                        density="comfortable"
+                        hide-details
+                        class="mb-2"
+                      ></v-textarea>
+                      <v-btn
+                        color="primary"
+                        variant="flat"
+                        size="small"
+                        :disabled="
+                          !replyTexts[review._id] ||
+                          replyTexts[review._id].trim() === ''
+                        "
+                        @click="submitReply(review._id)"
+                        :loading="replyLoading[review._id]"
+                      >
+                        <v-icon start size="small">mdi-send</v-icon>
+                        Post Reply
+                      </v-btn>
+                    </div>
+                  </v-col>
+                </v-row>
               </v-container>
 
               <v-divider v-if="index < reviews.length - 1"></v-divider>
@@ -340,6 +491,8 @@
 
 <script>
 import { mapActions, mapState } from "vuex";
+import { createReply, updateReply, deleteReply } from "~/api/reviewApi";
+
 export default {
   name: "BookReviewsUI",
   data() {
@@ -359,11 +512,21 @@ export default {
       ],
       loading: false,
       isLoaded: false,
+      // Reply management
+      replyTexts: {},
+      replyLoading: {},
+      editReplyDialog: false,
+      editingReply: null,
+      editingReviewId: null,
+      editReplyContent: "",
     };
   },
   computed: {
     ...mapState("review", ["reviews"]),
     ...mapState("auth", ["currentUser"]),
+    isAdmin() {
+      return this.currentUser?.admin === true;
+    },
   },
   watch: {
     reviews(newVal) {
@@ -407,6 +570,79 @@ export default {
         (review.userId._id === this.currentUser._id ||
           review.userId === this.currentUser._id)
       );
+    },
+
+    // Check if reply belongs to current admin
+    isCurrentUserReply(reply) {
+      return (
+        this.currentUser &&
+        reply.adminId &&
+        (reply.adminId._id === this.currentUser._id ||
+          reply.adminId === this.currentUser._id)
+      );
+    },
+
+    // Submit admin reply
+    async submitReply(reviewId) {
+      const content = this.replyTexts[reviewId];
+      if (!content || content.trim() === "") return;
+
+      this.$set(this.replyLoading, reviewId, true);
+      try {
+        await createReply(reviewId, content);
+        this.$set(this.replyTexts, reviewId, "");
+        await this.loadReviews(this.$route.params.id);
+        console.log("Reply added successfully");
+      } catch (error) {
+        console.error("Error adding reply:", error);
+        alert("Failed to add reply. Please try again.");
+      } finally {
+        this.$set(this.replyLoading, reviewId, false);
+      }
+    },
+
+    // Show edit reply dialog
+    showEditReplyDialog(reviewId, reply) {
+      this.editingReviewId = reviewId;
+      this.editingReply = reply;
+      this.editReplyContent = reply.content;
+      this.editReplyDialog = true;
+    },
+
+    // Update reply
+    async confirmEditReply() {
+      if (!this.editReplyContent || this.editReplyContent.trim() === "") return;
+
+      try {
+        await updateReply(
+          this.editingReviewId,
+          this.editingReply._id,
+          this.editReplyContent
+        );
+        this.editReplyDialog = false;
+        this.editingReply = null;
+        this.editingReviewId = null;
+        this.editReplyContent = "";
+        await this.loadReviews(this.$route.params.id);
+        console.log("Reply updated successfully");
+      } catch (error) {
+        console.error("Error updating reply:", error);
+        alert("Failed to update reply. Please try again.");
+      }
+    },
+
+    // Delete reply
+    async confirmDeleteReply(reviewId, replyId) {
+      if (!confirm("Are you sure you want to delete this reply?")) return;
+
+      try {
+        await deleteReply(reviewId, replyId);
+        await this.loadReviews(this.$route.params.id);
+        console.log("Reply deleted successfully");
+      } catch (error) {
+        console.error("Error deleting reply:", error);
+        alert("Failed to delete reply. Please try again.");
+      }
     },
 
     // Show delete confirmation dialog

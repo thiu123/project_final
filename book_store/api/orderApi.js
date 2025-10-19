@@ -30,18 +30,26 @@ const orderApi = {
   },
 
   // VNPAY checkout
-  createOrderFromCart: async () => {
-    const res = await axios.post(`${API_URL}/checkout`, null, {
-      headers: { token: token() },
-    });
+  createOrderFromCart: async (voucherCode = null) => {
+    const res = await axios.post(
+      `${API_URL}/checkout`,
+      voucherCode ? { voucherCode } : {},
+      {
+        headers: { token: token() },
+      }
+    );
     return res.data;
   },
 
   // MoMo checkout
-  createMomoOrderFromCart: async () => {
-    const res = await axios.post(`${API_URL}/checkout_momo`, null, {
-      headers: { token: token() },
-    });
+  createMomoOrderFromCart: async (voucherCode = null) => {
+    const res = await axios.post(
+      `${API_URL}/checkout_momo`,
+      voucherCode ? { voucherCode } : {},
+      {
+        headers: { token: token() },
+      }
+    );
     return res.data;
   },
 

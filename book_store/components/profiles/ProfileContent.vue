@@ -237,6 +237,61 @@
 
               <v-divider class="my-6"></v-divider>
 
+              <!-- Order Summary Section -->
+              <div class="order-summary-section mb-4">
+                <!-- Subtotal -->
+                <div class="d-flex justify-space-between mb-2">
+                  <span class="text-body-2 text-grey-darken-1">Subtotal</span>
+                  <span class="text-body-1 font-weight-medium">
+                    ${{ calculateOrderSubtotal(order).toFixed(2) }}
+                  </span>
+                </div>
+
+                <!-- Voucher Discount (if applied) -->
+                <div v-if="order.voucher && order.voucher.code" class="mb-2">
+                  <div
+                    class="d-flex justify-space-between align-center p-2 rounded"
+                    style="background: rgba(76, 175, 80, 0.08)"
+                  >
+                    <div class="d-flex align-center">
+                      <v-icon
+                        icon="mdi-ticket-percent"
+                        color="success"
+                        size="small"
+                        class="mr-2"
+                      ></v-icon>
+                      <div>
+                        <span class="text-body-2 text-grey-darken-2"
+                          >Discount</span
+                        >
+                        <v-chip
+                          size="x-small"
+                          color="success"
+                          variant="flat"
+                          class="ml-2"
+                        >
+                          {{ order.voucher.code }}
+                        </v-chip>
+                      </div>
+                    </div>
+                    <span class="text-body-1 font-weight-bold text-success">
+                      -${{ (order.voucher.discountAmount / 24000).toFixed(2) }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Total -->
+                <v-divider class="my-2"></v-divider>
+                <div class="d-flex justify-space-between align-center">
+                  <span class="text-h6 font-weight-bold text-customblack"
+                    >Total</span
+                  >
+                  <span class="text-h5 font-weight-bold text-waterblue">
+                    ${{ (order.total / 24000).toFixed(2) }}
+                  </span>
+                </div>
+              </div>
+
               <div class="d-flex justify-space-between align-center">
                 <v-btn
                   variant="outlined"
@@ -249,14 +304,6 @@
                   <v-icon start class="mr-2">mdi-eye</v-icon>
                   View Details
                 </v-btn>
-                <div class="text-right">
-                  <p class="text-caption text-grey-darken-1 mb-1">
-                    Total Amount
-                  </p>
-                  <p class="text-h5 font-weight-bold text-customblack">
-                    ${{ (order.total / 24).toFixed(2) }}
-                  </p>
-                </div>
               </div>
             </v-card-text>
           </v-card>
@@ -695,6 +742,15 @@ export default {
     ...mapActions("favorite", ["toggleFavorites"]),
     ...mapActions("review", ["deleteReview"]),
     ...mapActions("auth", ["changePassword"]),
+
+    calculateOrderSubtotal(order) {
+      // Calculate subtotal by adding back discount to total
+      if (order.voucher && order.voucher.discountAmount) {
+        return (order.total + order.voucher.discountAmount) / 24000;
+      }
+      return order.total / 24000;
+    },
+
     getStatusColor(status) {
       switch (status?.toLowerCase()) {
         case "paid":
@@ -804,7 +860,7 @@ export default {
         });
         return;
       }
-      
+
       try {
         this.uploadingAvatar = true;
 

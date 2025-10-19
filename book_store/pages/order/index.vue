@@ -20,7 +20,7 @@
         </div>
 
         <!-- Shipping Method -->
-        <v-card class="mb-4 mb-md-6 rounded-lg" elevation="2">
+        <!-- <v-card class="mb-4 mb-md-6 rounded-lg" elevation="2">
           <v-card-title class="bg-primary text-white d-flex align-center py-4">
             <v-icon class="mr-3" size="24">mdi-truck-fast</v-icon>
             <span class="text-h6">Shipping Method</span>
@@ -54,7 +54,7 @@
               </v-card>
             </v-radio-group>
           </v-card-text>
-        </v-card>
+        </v-card> -->
 
         <!-- Payment Methods -->
         <v-card class="mb-4 mb-md-6 rounded-lg" elevation="2">
@@ -126,28 +126,45 @@
           <v-card-text class="pa-4 pa-md-6">
             <div class="d-flex flex-column flex-sm-row ga-3 mb-3">
               <v-text-field
-                v-model="promoCode"
+                v-model="voucherCode"
                 placeholder="Enter promotion or gift code"
                 variant="outlined"
                 density="comfortable"
                 hide-details
                 class="flex-grow-1"
                 prepend-inner-icon="mdi-tag-outline"
+                @focus="showAvailableVouchers = true"
+                :disabled="appliedVoucher !== null"
               ></v-text-field>
               <div class="d-flex ga-2">
                 <v-btn
+                  v-if="!appliedVoucher"
                   color="primary"
                   variant="flat"
                   size="large"
                   class="flex-shrink-0 px-6"
+                  :loading="voucherLoading"
+                  :disabled="!voucherCode.trim() || voucherLoading"
+                  @click="applyVoucherCode"
                 >
                   Apply
+                </v-btn>
+                <v-btn
+                  v-else
+                  color="error"
+                  variant="flat"
+                  size="large"
+                  class="flex-shrink-0 px-6"
+                  @click="removeVoucherCode"
+                >
+                  Remove
                 </v-btn>
                 <v-btn
                   variant="outlined"
                   color="primary"
                   size="large"
                   class="flex-shrink-0"
+                  @click="showAvailableVouchers = !showAvailableVouchers"
                 >
                   <v-icon class="mr-2">mdi-percent</v-icon>
                   <span class="d-none d-sm-inline">Browse Codes</span>
@@ -155,13 +172,147 @@
                 </v-btn>
               </div>
             </div>
+
+            <!-- Applied Voucher Display -->
             <v-alert
+              v-if="appliedVoucher"
+              type="success"
+              variant="tonal"
+              density="compact"
+              class="mb-3"
+              icon="mdi-check-circle"
+            >
+              <div class="text-body-2">
+                <strong>{{ appliedVoucher.code }}</strong> applied!
+                <div class="text-caption mt-1">
+                  {{ appliedVoucher.description }}
+                </div>
+                <div class="text-caption text-success mt-1 font-weight-bold">
+                  You saved ${{ voucherDiscount.toFixed(2) }}!
+                </div>
+              </div>
+            </v-alert>
+
+            <!-- Voucher Error -->
+            <v-alert
+              v-if="voucherError"
+              type="error"
+              variant="tonal"
+              density="compact"
+              class="mb-3"
+              closable
+              @click:close="voucherError = ''"
+            >
+              {{ voucherError }}
+            </v-alert>
+
+            <!-- Available Vouchers List -->
+            <v-expand-transition>
+              <div v-if="showAvailableVouchers" class="mt-4">
+                <div
+                  class="text-subtitle-2 font-weight-bold mb-3 d-flex align-center"
+                >
+                  <v-icon size="small" class="mr-2">mdi-ticket-percent</v-icon>
+                  Available Vouchers
+                </div>
+
+                <v-progress-linear
+                  v-if="loadingVouchers"
+                  indeterminate
+                  color="primary"
+                  class="mb-3"
+                ></v-progress-linear>
+
+                <div
+                  v-if="!loadingVouchers && availableVouchers.length === 0"
+                  class="text-center text-grey-darken-1 py-4"
+                >
+                  <v-icon size="48" color="grey-lighten-1"
+                    >mdi-ticket-outline</v-icon
+                  >
+                  <div class="mt-2">No vouchers available</div>
+                </div>
+
+                <div v-if="!loadingVouchers" class="voucher-list">
+                  <v-card
+                    v-for="voucher in availableVouchers"
+                    :key="voucher._id"
+                    class="mb-3 voucher-card"
+                    :class="{
+                      'voucher-applied':
+                        appliedVoucher && appliedVoucher.code === voucher.code,
+                    }"
+                    variant="outlined"
+                    @click="selectVoucher(voucher)"
+                  >
+                    <v-card-text class="pa-3">
+                      <div class="d-flex justify-space-between align-center">
+                        <div class="flex-grow-1">
+                          <div class="d-flex align-center mb-2">
+                            <v-chip
+                              size="small"
+                              color="primary"
+                              variant="flat"
+                              class="mr-2 font-weight-bold"
+                            >
+                              {{ voucher.code }}
+                            </v-chip>
+                            <v-chip
+                              size="x-small"
+                              :color="
+                                voucher.discountType === 'percentage'
+                                  ? 'success'
+                                  : 'info'
+                              "
+                              variant="tonal"
+                            >
+                              {{
+                                voucher.discountType === "percentage"
+                                  ? `${voucher.discountValue}% OFF`
+                                  : `$${voucher.discountValue} OFF`
+                              }}
+                            </v-chip>
+                          </div>
+                          <div class="text-body-2 text-grey-darken-1 mb-1">
+                            {{ voucher.description }}
+                          </div>
+                          <div class="text-caption text-grey-darken-1">
+                            <v-icon size="x-small" class="mr-1"
+                              >mdi-cart-outline</v-icon
+                            >
+                            Min order: ${{ voucher.minOrderAmount }}
+                            <span v-if="voucher.maxDiscount" class="ml-2">
+                              <v-icon size="x-small" class="mr-1"
+                                >mdi-shield-star</v-icon
+                              >
+                              Max discount: ${{ voucher.maxDiscount }}
+                            </span>
+                          </div>
+                        </div>
+                        <v-btn
+                          icon
+                          variant="text"
+                          size="small"
+                          color="primary"
+                          class="ml-2"
+                        >
+                          <v-icon>mdi-arrow-right-circle</v-icon>
+                        </v-btn>
+                      </div>
+                    </v-card-text>
+                  </v-card>
+                </div>
+              </div>
+            </v-expand-transition>
+
+            <v-alert
+              v-if="!showAvailableVouchers"
               density="compact"
               type="info"
               variant="tonal"
               icon="mdi-information-outline"
             >
-              Multiple promotion codes can be applied simultaneously
+              Click "Browse Codes" to see available vouchers
             </v-alert>
           </v-card-text>
         </v-card>
@@ -308,6 +459,15 @@
               <span class="text-grey-darken-2">Subtotal</span>
               <span class="font-weight-medium">{{ formattedSubtotal }}</span>
             </div>
+            <div
+              v-if="voucherDiscount > 0"
+              class="d-flex justify-space-between mb-3 text-body-1"
+            >
+              <span class="text-grey-darken-2">Discount</span>
+              <span class="font-weight-medium text-success"
+                >-${{ voucherDiscount.toFixed(2) }}</span
+              >
+            </div>
             <div class="d-flex justify-space-between mb-3 text-body-1">
               <span class="text-grey-darken-2">Shipping Fee</span>
               <span class="font-weight-medium">{{ formattedShippingFee }}</span>
@@ -374,28 +534,27 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { validateVoucher, getAllVouchers } from "@/api/voucherApi";
 
 export default {
   data() {
     return {
-      form: {
-        fullName: "",
-        email: "",
-        phone: "",
-        country: "Việt Nam",
-        city: "",
-        district: "",
-        ward: "",
-        address: "",
-      },
       selectedShipping: "standard",
       selectedPayment: "vnpay",
-      promoCode: "",
+      voucherCode: "",
       giftNote: false,
       invoice: false,
       shippingFee: 30000,
       exchangeRate: 24000, // USD to VND exchange rate
       isProcessingPayment: false,
+      // Voucher states
+      appliedVoucher: null,
+      voucherDiscount: 0,
+      voucherLoading: false,
+      voucherError: "",
+      showAvailableVouchers: false,
+      availableVouchers: [],
+      loadingVouchers: false,
     };
   },
   computed: {
@@ -405,12 +564,17 @@ export default {
       if (!this.cartItems || this.cartItems.length === 0) return 0;
 
       return this.cartItems.reduce((sum, item) => {
-        return sum + item.bookId.price * item.quantity;
+        const price =
+          item.productType === "ebook"
+            ? item.bookId.price * 0.8
+            : item.bookId.price;
+        return sum + price * item.quantity;
       }, 0);
     },
 
     total() {
-      return this.subtotal + this.shippingFee / this.exchangeRate;
+      const subtotalAfterDiscount = this.subtotal - this.voucherDiscount;
+      return subtotalAfterDiscount + this.shippingFee / this.exchangeRate;
     },
 
     // Format currency display
@@ -428,6 +592,7 @@ export default {
   },
   async mounted() {
     await this.fetchCartPreview();
+    await this.loadAvailableVouchers();
     console.log(this.cartItems, "Cart items loaded");
   },
   methods: {
@@ -436,6 +601,63 @@ export default {
       "createOrder",
       "createMomoOrder",
     ]),
+
+    async loadAvailableVouchers() {
+      try {
+        this.loadingVouchers = true;
+        const response = await getAllVouchers();
+        if (response.success) {
+          this.availableVouchers = response.data;
+        }
+      } catch (error) {
+        console.error("Error loading vouchers:", error);
+      } finally {
+        this.loadingVouchers = false;
+      }
+    },
+
+    selectVoucher(voucher) {
+      if (this.appliedVoucher && this.appliedVoucher.code === voucher.code) {
+        return; // Already applied
+      }
+      this.voucherCode = voucher.code;
+      this.applyVoucherCode();
+    },
+
+    async applyVoucherCode() {
+      if (!this.voucherCode.trim()) return;
+
+      this.voucherLoading = true;
+      this.voucherError = "";
+
+      try {
+        const response = await validateVoucher(
+          this.voucherCode.trim(),
+          this.subtotal
+        );
+
+        if (response.success) {
+          this.appliedVoucher = response.data.voucher;
+          this.voucherDiscount = response.data.discountAmount;
+          this.showAvailableVouchers = false;
+        }
+      } catch (error) {
+        console.error("Voucher validation error:", error);
+        this.voucherError =
+          error.message || "Invalid voucher code. Please try again.";
+        this.appliedVoucher = null;
+        this.voucherDiscount = 0;
+      } finally {
+        this.voucherLoading = false;
+      }
+    },
+
+    removeVoucherCode() {
+      this.appliedVoucher = null;
+      this.voucherDiscount = 0;
+      this.voucherCode = "";
+      this.voucherError = "";
+    },
 
     updateQuantity(item, change) {
       // Implement quantity update logic
@@ -451,9 +673,15 @@ export default {
       try {
         this.isProcessingPayment = true;
 
+        // Get voucher code if applied
+        const voucherCode = this.appliedVoucher
+          ? this.appliedVoucher.code
+          : null;
+
         if (this.selectedPayment === "vnpay") {
           console.log("Creating order with VNPay payment...");
-          const paymentUrl = await this.createOrder();
+          console.log("Voucher code:", voucherCode);
+          const paymentUrl = await this.createOrder(voucherCode);
           if (paymentUrl) {
             console.log("Redirecting to VNPay payment URL:", paymentUrl);
             window.location.href = paymentUrl;
@@ -464,7 +692,8 @@ export default {
           }
         } else if (this.selectedPayment === "momo") {
           console.log("Creating order with MoMo payment...");
-          const paymentUrl = await this.createMomoOrder();
+          console.log("Voucher code:", voucherCode);
+          const paymentUrl = await this.createMomoOrder(voucherCode);
           if (paymentUrl) {
             console.log("Redirecting to MoMo payment URL:", paymentUrl);
             window.location.href = paymentUrl;
@@ -513,6 +742,49 @@ export default {
 
 .border-b {
   border-bottom: 1px solid;
+}
+
+/* Voucher card styles */
+.voucher-list {
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.voucher-card {
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.voucher-card:hover {
+  border-color: rgb(var(--v-theme-primary));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.voucher-applied {
+  border-color: rgb(var(--v-theme-success));
+  background-color: rgba(var(--v-theme-success), 0.05);
+}
+
+/* Scrollbar styles */
+.voucher-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.voucher-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.voucher-list::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.voucher-list::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
 /* Smooth transitions */

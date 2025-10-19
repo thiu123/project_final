@@ -2,7 +2,7 @@
   <!-- Header -->
   <div>
     <!-- Hero Section -->
-    <HomeHeroSection :book="books[0]" :handleAddToCart="handleAddToCart" />
+    <HomeHeroSection :book="books[0]" @add-to-cart="handleAddToCart" />
     <!-- Search Section -->
     <v-container class="search-section py-16">
       <v-row justify="center">
@@ -592,7 +592,7 @@ export default {
         },
         {
           name: "Romance",
-          route: "romance",
+          route: "contemporary romance",
           icon: "mdi-heart",
           image: "https://covers.openlibrary.org/b/id/1458693-L.jpg",
           count: "1,800+",

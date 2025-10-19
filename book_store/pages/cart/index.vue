@@ -294,146 +294,6 @@
 
         <!-- Order Summary Section -->
         <v-col cols="12" lg="4" xl="4">
-          <!-- Promotions Card -->
-          <v-card class="mb-4" elevation="3" rounded="xl">
-            <v-card-title
-              class="py-3 px-4 bg-customyellow text-darkgreen d-flex align-center"
-            >
-              <v-icon
-                icon="mdi-ticket-percent"
-                color="darkgreen"
-                class="mr-2"
-              ></v-icon>
-              <span class="font-weight-bold">PROMOTIONS</span>
-              <v-spacer></v-spacer>
-              <v-btn
-                variant="text"
-                color="darkgreen"
-                size="small"
-                append-icon="mdi-chevron-right"
-                class="text-caption"
-              >
-                View more
-              </v-btn>
-            </v-card-title>
-
-            <v-card-text class="pa-0">
-              <!-- Discount Code -->
-              <v-expand-transition>
-                <div class="pa-4">
-                  <v-sheet class="pa-4 rounded-lg bg-grey-lighten-5 mb-4">
-                    <div class="d-flex justify-space-between align-center mb-3">
-                      <div class="font-weight-bold text-customblack">
-                        20% OFF CODE
-                      </div>
-                      <v-btn
-                        variant="text"
-                        color="waterblue"
-                        size="small"
-                        density="compact"
-                        class="text-caption"
-                      >
-                        Details
-                      </v-btn>
-                    </div>
-
-                    <div class="text-caption text-grey-darken-1 mb-4">
-                      For orders from $720 - Not applicable for Gift Cards -
-                      Valid from Dec 20, 2022 - Dec 27, 2022
-                    </div>
-
-                    <div class="d-flex ga-2">
-                      <v-text-field
-                        placeholder="Enter promotion code"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        class="flex-grow-1"
-                        bg-color="white"
-                        prepend-inner-icon="mdi-ticket-outline"
-                        rounded="lg"
-                        color="waterblue"
-                      ></v-text-field>
-
-                      <v-btn
-                        color="waterblue"
-                        variant="elevated"
-                        class="text-white font-weight-bold"
-                        >Apply</v-btn
-                      >
-                    </div>
-                  </v-sheet>
-
-                  <!-- Free Shipping -->
-                  <v-sheet class="pa-4 rounded-lg bg-lightgreen text-white">
-                    <div class="d-flex justify-space-between align-center mb-3">
-                      <div class="font-weight-bold">FREE SHIPPING CODE</div>
-                      <v-btn
-                        variant="text"
-                        color="white"
-                        size="small"
-                        density="compact"
-                        class="text-caption"
-                      >
-                        Details
-                      </v-btn>
-                    </div>
-
-                    <div class="text-caption mb-4 opacity-90">
-                      For orders from $500 - Not applicable for Gift Cards -
-                      Valid from Dec 21, 2022
-                    </div>
-
-                    <v-progress-linear
-                      model-value="80"
-                      color="white"
-                      height="8"
-                      rounded
-                      class="mb-3"
-                      bg-color="rgba(255,255,255,0.3)"
-                    ></v-progress-linear>
-
-                    <div class="d-flex align-center justify-space-between mb-3">
-                      <span class="text-caption opacity-90">$0</span>
-                      <span class="text-caption font-weight-bold">$500</span>
-                    </div>
-
-                    <div
-                      class="text-caption font-weight-medium mb-4 d-flex align-center"
-                    >
-                      <v-icon
-                        icon="mdi-check-circle"
-                        size="small"
-                        class="mr-2"
-                      ></v-icon>
-                      Conditions met
-                    </div>
-
-                    <v-btn
-                      color="white"
-                      variant="elevated"
-                      block
-                      class="text-darkgreen font-weight-bold"
-                    >
-                      Apply
-                    </v-btn>
-
-                    <div
-                      class="d-flex align-center mt-3 text-caption opacity-90"
-                    >
-                      <v-icon
-                        icon="mdi-information-outline"
-                        size="small"
-                        class="mr-2"
-                      ></v-icon>
-                      Multiple codes can be applied simultaneously
-                    </div>
-                  </v-sheet>
-                </div>
-              </v-expand-transition>
-            </v-card-text>
-          </v-card>
-
           <!-- Order Summary Card -->
           <v-card
             elevation="3"
@@ -456,18 +316,7 @@
                   </template>
                   <template v-slot:append>
                     <span class="text-body-1 font-weight-bold text-customblack"
-                      >${{ totalPrice }}</span
-                    >
-                  </template>
-                </v-list-item>
-
-                <v-list-item class="px-0">
-                  <template v-slot:prepend>
-                    <span class="text-body-1 text-customblack">Discount</span>
-                  </template>
-                  <template v-slot:append>
-                    <span class="text-body-1 text-error font-weight-bold"
-                      >-$0.00</span
+                      >${{ totalPrice.toFixed(2) }}</span
                     >
                   </template>
                 </v-list-item>
@@ -495,7 +344,7 @@
                   </template>
                   <template v-slot:append>
                     <span class="text-h6 font-weight-bold text-waterblue"
-                      >${{ totalPrice }}</span
+                      >${{ totalPrice.toFixed(2) }}</span
                     >
                   </template>
                 </v-list-item>
@@ -601,8 +450,8 @@ export default {
             ? item.bookId.price * 0.8
             : item.bookId.price;
         return total + price * item.quantity;
-      }, 0).toFixed(2);
-    }
+      }, 0);
+    },
   },
   watch: {
     selectAll(val) {
