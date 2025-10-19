@@ -78,7 +78,7 @@
                   color="darkgreen"
                   class="hero-btn-secondary"
                   append-icon="mdi-cart-plus"
-                  @click="handleAddToCart"
+                  @click="this.$emit('add-to-cart', book._id, 1)"
                 >
                   Add to Cart
                 </v-btn>
@@ -104,5 +104,8 @@ export default {
       required: true,
     },
   },
+  mounted() {
+    console.log("function", this.handleAddToCart);
+  }
 };
 </script>

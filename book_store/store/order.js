@@ -47,18 +47,20 @@ export default {
       }
     },
 
-    async createOrder() {
+    async createOrder(_, voucherCode = null) {
       try {
-        const { paymentUrl } = await orderApi.createOrderFromCart();
+        const { paymentUrl } = await orderApi.createOrderFromCart(voucherCode);
         return paymentUrl;
       } catch (error) {
         console.error("Error creating order:", error);
       }
     },
 
-    async createMomoOrder() {
+    async createMomoOrder(_, voucherCode = null) {
       try {
-        const { paymentUrl } = await orderApi.createMomoOrderFromCart();
+        const { paymentUrl } = await orderApi.createMomoOrderFromCart(
+          voucherCode
+        );
         return paymentUrl;
       } catch (error) {
         console.error("Error creating MoMo order:", error);

@@ -28,6 +28,10 @@ const orderSchema = new mongoose.Schema(
       },
     ],
     total: { type: Number, required: true },
+    voucher: {
+      code: { type: String },
+      discountAmount: { type: Number, default: 0 },
+    },
     paymentMethod: {
       type: String,
       enum: ["COD", "Momo", "Vnpay"],

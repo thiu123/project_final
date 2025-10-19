@@ -28,3 +28,26 @@ export const deleteReview = (id) => {
     headers: { token: token() },
   });
 };
+
+// ========== ADMIN REPLY API ==========
+export const createReply = (reviewId, content) => {
+  return axios.post(
+    `${API_URL}/${reviewId}/reply`,
+    { content },
+    { headers: { token: token() } }
+  );
+};
+
+export const updateReply = (reviewId, replyId, content) => {
+  return axios.put(
+    `${API_URL}/${reviewId}/reply/${replyId}`,
+    { content },
+    { headers: { token: token() } }
+  );
+};
+
+export const deleteReply = (reviewId, replyId) => {
+  return axios.delete(`${API_URL}/${reviewId}/reply/${replyId}`, {
+    headers: { token: token() },
+  });
+};

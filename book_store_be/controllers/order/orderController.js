@@ -1,5 +1,6 @@
 const Order = require("../../model/Order");
 const Cart = require("../../model/Cart");
+const Voucher = require("../../model/Voucher");
 const vnpayController = require("../vnpay/vnpayController");
 const momoController = require("../momo/momoController");
 
@@ -65,6 +66,7 @@ const orderController = {
   createOrderFromCart: async (req, res) => {
     try {
       const userId = req.user.id;
+      const { voucherCode } = req.body;
 
       const cart = await Cart.findOne({ userId }).populate("items.bookId");
       if (!cart || cart.items.length === 0) {
@@ -72,14 +74,66 @@ const orderController = {
       }
 
       const exchange_rate = 24000;
-      const totalAmount = cart.items.reduce((sum, item) => {
-        // Apply pricing based on product type
+
+      // Calculate subtotal
+      let subtotal = cart.items.reduce((sum, item) => {
         const price =
           item.productType === "ebook"
-            ? item.bookId.price * 0.8 // 80% of original price for ebook (20% off)
-            : item.bookId.price; // Full price for hardbook
-        return sum + price * item.quantity * exchange_rate;
+            ? item.bookId.price * 0.8
+            : item.bookId.price;
+        return sum + price * item.quantity;
       }, 0);
+
+      let discountAmount = 0;
+
+      // Validate voucher if provided (but don't increment usedCount yet)
+      if (voucherCode) {
+        const voucher = await Voucher.findOne({
+          code: voucherCode.toUpperCase(),
+          isActive: true,
+        });
+
+        if (voucher) {
+          // Check expiry
+          if (new Date() > voucher.expiryDate) {
+            return res.status(400).json({ msg: "Voucher has expired" });
+          }
+
+          // Check usage limit
+          if (voucher.usageLimit && voucher.usedCount >= voucher.usageLimit) {
+            return res.status(400).json({ msg: "Voucher usage limit reached" });
+          }
+
+          // Check min order amount
+          if (subtotal < voucher.minOrderAmount) {
+            return res.status(400).json({
+              msg: `Minimum order amount is $${voucher.minOrderAmount}`,
+            });
+          }
+
+          // Calculate discount
+          if (voucher.discountType === "percentage") {
+            discountAmount = (subtotal * voucher.discountValue) / 100;
+            if (voucher.maxDiscount && discountAmount > voucher.maxDiscount) {
+              discountAmount = voucher.maxDiscount;
+            }
+          } else {
+            discountAmount = voucher.discountValue;
+          }
+
+          // Don't allow discount to exceed subtotal
+          if (discountAmount > subtotal) {
+            discountAmount = subtotal;
+          }
+        } else {
+          return res.status(400).json({ msg: "Invalid voucher code" });
+        }
+      }
+
+      // Calculate final total in VND
+      const totalAmount = Math.round(
+        (subtotal - discountAmount) * exchange_rate
+      );
 
       const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
@@ -89,6 +143,12 @@ const orderController = {
         items: cart.items,
         total: totalAmount,
         paymentMethod: "Vnpay",
+        voucher: voucherCode
+          ? {
+              code: voucherCode.toUpperCase(),
+              discountAmount: Math.round(discountAmount * exchange_rate), // Store discount in VND
+            }
+          : undefined,
       });
 
       await newOrder.save();
@@ -115,6 +175,18 @@ const orderController = {
         await order.save();
 
         if (order.status === "Paid") {
+          // Increment voucher usage count on successful payment
+          if (order.voucher && order.voucher.code) {
+            const voucher = await Voucher.findOne({ code: order.voucher.code });
+            if (voucher) {
+              voucher.usedCount += 1;
+              await voucher.save();
+              console.log(
+                `✅ Voucher ${order.voucher.code} usage incremented to ${voucher.usedCount}`
+              );
+            }
+          }
+
           await Cart.findOneAndDelete({ userId: order.userId });
         }
       }
@@ -127,6 +199,7 @@ const orderController = {
   createMoMoOrderFromCart: async (req, res) => {
     try {
       const userId = req.user.id;
+      const { voucherCode } = req.body;
 
       // Lấy giỏ hàng của user
       const cart = await Cart.findOne({ userId }).populate("items.bookId");
@@ -136,14 +209,66 @@ const orderController = {
 
       // Tính tổng tiền
       const exchange_rate = 24000;
-      const totalAmount = cart.items.reduce((sum, item) => {
-        // Apply pricing based on product type
+
+      // Calculate subtotal
+      let subtotal = cart.items.reduce((sum, item) => {
         const price =
           item.productType === "ebook"
-            ? item.bookId.price * 0.8 // 80% of original price for ebook (20% off)
-            : item.bookId.price; // Full price for hardbook
-        return sum + price * item.quantity * exchange_rate;
+            ? item.bookId.price * 0.8
+            : item.bookId.price;
+        return sum + price * item.quantity;
       }, 0);
+
+      let discountAmount = 0;
+
+      // Validate voucher if provided (but don't increment usedCount yet)
+      if (voucherCode) {
+        const voucher = await Voucher.findOne({
+          code: voucherCode.toUpperCase(),
+          isActive: true,
+        });
+
+        if (voucher) {
+          // Check expiry
+          if (new Date() > voucher.expiryDate) {
+            return res.status(400).json({ msg: "Voucher has expired" });
+          }
+
+          // Check usage limit
+          if (voucher.usageLimit && voucher.usedCount >= voucher.usageLimit) {
+            return res.status(400).json({ msg: "Voucher usage limit reached" });
+          }
+
+          // Check min order amount
+          if (subtotal < voucher.minOrderAmount) {
+            return res.status(400).json({
+              msg: `Minimum order amount is $${voucher.minOrderAmount}`,
+            });
+          }
+
+          // Calculate discount
+          if (voucher.discountType === "percentage") {
+            discountAmount = (subtotal * voucher.discountValue) / 100;
+            if (voucher.maxDiscount && discountAmount > voucher.maxDiscount) {
+              discountAmount = voucher.maxDiscount;
+            }
+          } else {
+            discountAmount = voucher.discountValue;
+          }
+
+          // Don't allow discount to exceed subtotal
+          if (discountAmount > subtotal) {
+            discountAmount = subtotal;
+          }
+        } else {
+          return res.status(400).json({ msg: "Invalid voucher code" });
+        }
+      }
+
+      // Calculate final total in VND
+      const totalAmount = Math.round(
+        (subtotal - discountAmount) * exchange_rate
+      );
 
       // Tạo orderId
       const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
@@ -155,6 +280,12 @@ const orderController = {
         items: cart.items,
         total: totalAmount,
         paymentMethod: "Momo",
+        voucher: voucherCode
+          ? {
+              code: voucherCode.toUpperCase(),
+              discountAmount: Math.round(discountAmount * exchange_rate), // Store discount in VND
+            }
+          : undefined,
       });
 
       await newOrder.save();
@@ -194,6 +325,18 @@ const orderController = {
         console.log(`✅ Order ${orderId} updated to status: ${order.status}`);
 
         if (order.status === "Paid") {
+          // Increment voucher usage count on successful payment
+          if (order.voucher && order.voucher.code) {
+            const voucher = await Voucher.findOne({ code: order.voucher.code });
+            if (voucher) {
+              voucher.usedCount += 1;
+              await voucher.save();
+              console.log(
+                `✅ Voucher ${order.voucher.code} usage incremented to ${voucher.usedCount}`
+              );
+            }
+          }
+
           await Cart.findOneAndDelete({ userId: order.userId });
           console.log(`✅ Cart cleared for user ${order.userId}`);
         }

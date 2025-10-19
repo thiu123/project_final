@@ -16,7 +16,7 @@
 
       <v-hover v-slot="{ isHovering, props }">
         <v-btn
-          @click="$router.push(`/subjects/romance`)"
+          @click="$router.push(`/subjects/${encodeURIComponent('contemporary romance')}`)"
           v-bind="props"
           :class="['view-all-btn', { 'is-hovering': isHovering }]"
           color="darkgreen"
