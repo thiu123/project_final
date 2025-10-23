@@ -81,7 +81,7 @@
                     <template v-slot:prepend>
                       <v-avatar size="60" rounded="lg" class="me-4">
                         <v-img
-                          :src="book.cover_url"
+                          :src="book?.cover_url"
                           :alt="book.title"
                           cover
                         ></v-img>
@@ -132,8 +132,8 @@
                     @click="$router.push(`details/${book._id}`)"
                   >
                     <v-img
-                      v-if="book.cover_url"
-                      :src="book.cover_url"
+                      v-if="book?.cover_url"
+                      :src="book?.cover_url"
                       width="80"
                       height="110"
                       cover
@@ -582,6 +582,7 @@ export default {
       bookComponents: ["BookFiction", "BookManga", "BookRomance"],
       bestSellerSubjects: ["historical fiction", "manga", "cooking"],
       newsletterEmail: "",
+      bestSellersStories: [], // Store books for current tab
       categories: [
         {
           name: "Literary Fiction",
@@ -637,45 +638,51 @@ export default {
         console.error("Error when searching", error);
       }
     }, 300),
-    tab(newVal) {
+    async tab(newVal) {
       console.log("New Tab Value:", newVal);
+      // Load books for the selected subject
+      if (newVal) {
+        await this.loadBooksForSubject(newVal);
+      }
     },
   },
   computed: {
     ...mapGetters("book", ["getTitleBooks"]),
     ...mapState("book", ["books"]),
     ...mapState("favorite", ["favorites"]),
-    bestSellersStories() {
-      if (!this.books?.length) {
-        return [];
-      }
-      return this.books.filter((book) => {
-        // Skip books without subjects
-        if (!book.subjects) return false;
-
-        // Convert book subjects to array if it's not already
-        const bookSubjects = Array.isArray(book.subjects)
-          ? book.subjects
-          : [book.subjects];
-        console.log("Tab:", this.tab, "Book Subjects:", bookSubjects);
-
-        // Filter books that have the currently selected subject (tab)
-        return bookSubjects.some(
-          (subject) => subject.toLowerCase() === this.tab.toLowerCase()
-        );
-      });
-    },
   },
   async mounted() {
     // Xử lý Google Auth callback
     await this.handleGoogleAuthCallback();
     await this.getFavoritesForEachUser();
     await this.getAllBooks({ subject: null, half: true }); // Chỉ lấy một nửa sách
+    // Load books for the initial tab
+    await this.loadBooksForSubject(this.tab);
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
     ...mapActions("cart", ["addToCart", "fetchCart"]),
     ...mapActions("favorite", ["toggleFavorites", "getFavoritesForEachUser"]),
+
+    async loadBooksForSubject(subject) {
+      try {
+        console.log("Loading books for subject:", subject);
+        
+        // Fetch books for the specific subject from API
+        await this.$store.dispatch("book/getAllBooks", {
+          subject: subject,
+          half: false,
+        });
+        
+        // The books are now filtered by backend, just assign them
+        this.bestSellersStories = this.books;
+        
+        console.log(`Loaded ${this.bestSellersStories.length} books for ${subject}`);
+      } catch (error) {
+        console.error("Error loading books for subject:", error);
+        this.bestSellersStories = [];
+      }
+    },
 
     async handleGoogleAuthCallback() {
       const urlParams = new URLSearchParams(window.location.search);

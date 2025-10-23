@@ -61,6 +61,26 @@ const orderApi = {
     });
     return res.data;
   },
+
+  // Admin: Get all orders
+  getAllOrders: async () => {
+    const res = await axios.get(`${API_URL}/admin/all`, {
+      headers: { token: token() },
+    });
+    return res.data;
+  },
+
+  // Admin: Update order status
+  updateOrderStatus: async (orderId, status) => {
+    const res = await axios.put(
+      `${API_URL}/admin/${orderId}/status`,
+      { status },
+      {
+        headers: { token: token() },
+      }
+    );
+    return res.data;
+  },
 };
 
 export default orderApi;

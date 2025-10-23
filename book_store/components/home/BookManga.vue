@@ -84,7 +84,7 @@
             <!-- Enhanced Book Cover -->
             <div class="position-relative book-cover-container">
               <v-img
-                :src="book.cover_url"
+                :src="book?.cover_url"
                 height="220"
                 cover
                 class="rounded-t-xl"

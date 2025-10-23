@@ -36,7 +36,7 @@
               <div class="text-center">
                 <v-img
                   :src="
-                    detailsBooks.cover_url ||
+                    detailsBooks?.cover_url ||
                     '/placeholder.svg?height=400&width=260'
                   "
                   alt="Book Cover"
@@ -102,12 +102,40 @@
                       <div class="text-h3 font-weight-bold text-success mb-2">
                         ${{ displayPrice }}
                       </div>
+                      <!-- Stock Status -->
+                      <div v-if="productType === 'hardbook'">
+                        <v-chip
+                          v-if="detailsBooks.stock > 20"
+                          color="success"
+                          size="small"
+                          prepend-icon="mdi-check-circle"
+                        >
+                          In Stock ({{ detailsBooks.stock }} available)
+                        </v-chip>
+                        <v-chip
+                          v-else-if="detailsBooks.stock > 0"
+                          color="warning"
+                          size="small"
+                          prepend-icon="mdi-alert"
+                        >
+                          Low Stock (Only {{ detailsBooks.stock }} left!)
+                        </v-chip>
+                        <v-chip
+                          v-else
+                          color="error"
+                          size="small"
+                          prepend-icon="mdi-close-circle"
+                        >
+                          Out of Stock
+                        </v-chip>
+                      </div>
                       <v-chip
-                        color="success"
+                        v-else
+                        color="info"
                         size="small"
-                        prepend-icon="mdi-check-circle"
+                        prepend-icon="mdi-infinity"
                       >
-                        In Stock
+                        Digital Product - Always Available
                       </v-chip>
                     </div>
                     <v-btn
@@ -197,7 +225,7 @@
                         variant="outlined"
                         size="small"
                         @click="quantity > 1 ? quantity-- : 1"
-                        :disabled="quantity <= 1"
+                        :disabled="quantity <= 1 || isOutOfStock"
                       ></v-btn>
                       <v-text-field
                         v-model="quantity"
@@ -208,15 +236,26 @@
                         class="mx-2"
                         style="max-width: 80px"
                         min="1"
-                        max="10"
+                        :max="maxQuantity"
+                        :disabled="isOutOfStock"
                       ></v-text-field>
                       <v-btn
                         icon="mdi-plus"
                         variant="outlined"
                         size="small"
                         @click="quantity++"
-                        :disabled="quantity >= 10"
+                        :disabled="quantity >= maxQuantity || isOutOfStock"
                       ></v-btn>
+                    </div>
+                    <div
+                      v-if="
+                        productType === 'hardbook' &&
+                        detailsBooks.stock > 0 &&
+                        detailsBooks.stock < 10
+                      "
+                      class="text-caption text-warning mt-1"
+                    >
+                      Maximum {{ detailsBooks.stock }} items available
                     </div>
                   </div>
 
@@ -229,8 +268,9 @@
                       class="flex-grow-1"
                       prepend-icon="mdi-cart-plus"
                       @click="handleAddToCart(detailsBooks._id, quantity)"
+                      :disabled="isOutOfStock"
                     >
-                      Add to Cart
+                      {{ isOutOfStock ? "Out of Stock" : "Add to Cart" }}
                     </v-btn>
                     <v-btn
                       color="success"
@@ -238,6 +278,7 @@
                       size="large"
                       class="flex-grow-1"
                       prepend-icon="mdi-lightning-bolt"
+                      :disabled="isOutOfStock"
                     >
                       Buy Now
                     </v-btn>
@@ -450,6 +491,25 @@ export default {
       return this.hasPurchasedEbook
         ? "Preview full"
         : "Preview (20 pages free)";
+    },
+    // Stock management
+    isOutOfStock() {
+      return this.productType === "hardbook" && this.detailsBooks.stock === 0;
+    },
+    maxQuantity() {
+      if (this.productType === "ebook") {
+        return 10; // Ebook không giới hạn stock
+      }
+      // Hardbook: giới hạn theo stock hoặc max 10
+      return Math.min(this.detailsBooks.stock || 0, 10);
+    },
+  },
+  watch: {
+    productType() {
+      // Adjust quantity when switching product type
+      if (this.quantity > this.maxQuantity) {
+        this.quantity = this.maxQuantity;
+      }
     },
   },
   methods: {

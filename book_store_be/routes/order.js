@@ -24,6 +24,16 @@ router.get(
   orderController.getUserOrders
 );
 router.get(
+  "/admin/all",
+  middlewareController.verifyTokenAndAdmin,
+  orderController.getAllOrders
+);
+router.put(
+  "/admin/:id/status",
+  middlewareController.verifyTokenAndAdmin,
+  orderController.updateOrderStatus
+);
+router.get(
   "/check-ebook",
   middlewareController.verifyToken,
   orderController.checkEbookPurchase
