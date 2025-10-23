@@ -1,6 +1,7 @@
 const Order = require("../../model/Order");
 const Cart = require("../../model/Cart");
 const Voucher = require("../../model/Voucher");
+const Book = require("../../model/Book");
 const vnpayController = require("../vnpay/vnpayController");
 const momoController = require("../momo/momoController");
 
@@ -45,6 +46,51 @@ const orderController = {
     }
   },
 
+  // Admin: Get all orders
+  getAllOrders: async (req, res) => {
+    try {
+      const orders = await Order.find()
+        .populate("items.bookId")
+        .populate("userId", "username email")
+        .sort({ createdAt: -1 });
+      return res.status(200).json(orders);
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+
+  // Admin: Update order status
+  updateOrderStatus: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { status } = req.body;
+
+      const validStatuses = [
+        "Pending",
+        "Paid",
+        "Failed",
+        "Cancelled",
+      ];
+      if (!validStatuses.includes(status)) {
+        return res.status(400).json({ msg: "Invalid status" });
+      }
+
+      const order = await Order.findByIdAndUpdate(
+        id,
+        { status },
+        { new: true }
+      ).populate("items.bookId");
+
+      if (!order) {
+        return res.status(404).json({ msg: "Order not found" });
+      }
+
+      return res.status(200).json(order);
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+
   getOrderById: async (req, res) => {
     try {
       const { id } = req.params;
@@ -71,6 +117,17 @@ const orderController = {
       const cart = await Cart.findOne({ userId }).populate("items.bookId");
       if (!cart || cart.items.length === 0) {
         return res.status(400).json({ msg: "Cart is empty" });
+      }
+
+      // Check stock for hardbooks before creating order
+      for (const item of cart.items) {
+        if (item.productType === "hardbook") {
+          if (item.bookId.stock < item.quantity) {
+            return res.status(400).json({
+              msg: `Insufficient stock for "${item.bookId.title}". Available: ${item.bookId.stock}, Requested: ${item.quantity}`,
+            });
+          }
+        }
       }
 
       const exchange_rate = 24000;
@@ -169,12 +226,30 @@ const orderController = {
       const queryData = req.query;
       const { vnp_ResponseCode, vnp_TxnRef } = queryData;
 
-      const order = await Order.findOne({ orderId: vnp_TxnRef });
+      const order = await Order.findOne({ orderId: vnp_TxnRef }).populate(
+        "items.bookId"
+      );
       if (order) {
         order.status = vnp_ResponseCode === "00" ? "Paid" : "Failed";
         await order.save();
 
         if (order.status === "Paid") {
+          // Decrement stock for hardbooks
+          for (const item of order.items) {
+            if (item.productType === "hardbook") {
+              const book = await Book.findById(item.bookId._id);
+              if (book && book.stock >= item.quantity) {
+                book.stock -= item.quantity;
+                await book.save();
+                console.log(
+                  `✅ Stock updated for "${book.title}": ${
+                    book.stock + item.quantity
+                  } → ${book.stock}`
+                );
+              }
+            }
+          }
+
           // Increment voucher usage count on successful payment
           if (order.voucher && order.voucher.code) {
             const voucher = await Voucher.findOne({ code: order.voucher.code });
@@ -205,6 +280,17 @@ const orderController = {
       const cart = await Cart.findOne({ userId }).populate("items.bookId");
       if (!cart || cart.items.length === 0) {
         return res.status(400).json({ msg: "Cart is empty" });
+      }
+
+      // Check stock for hardbooks before creating order
+      for (const item of cart.items) {
+        if (item.productType === "hardbook") {
+          if (item.bookId.stock < item.quantity) {
+            return res.status(400).json({
+              msg: `Insufficient stock for "${item.bookId.title}". Available: ${item.bookId.stock}, Requested: ${item.quantity}`,
+            });
+          }
+        }
       }
 
       // Tính tổng tiền
@@ -315,7 +401,7 @@ const orderController = {
         resultCode
       );
 
-      const order = await Order.findOne({ orderId });
+      const order = await Order.findOne({ orderId }).populate("items.bookId");
       if (order) {
         // MoMo trả về resultCode có thể là string "0" hoặc number 0
         // Dùng == để check cả 2 cases (loose equality)
@@ -325,6 +411,22 @@ const orderController = {
         console.log(`✅ Order ${orderId} updated to status: ${order.status}`);
 
         if (order.status === "Paid") {
+          // Decrement stock for hardbooks
+          for (const item of order.items) {
+            if (item.productType === "hardbook") {
+              const book = await Book.findById(item.bookId._id);
+              if (book && book.stock >= item.quantity) {
+                book.stock -= item.quantity;
+                await book.save();
+                console.log(
+                  `✅ Stock updated for "${book.title}": ${
+                    book.stock + item.quantity
+                  } → ${book.stock}`
+                );
+              }
+            }
+          }
+
           // Increment voucher usage count on successful payment
           if (order.voucher && order.voucher.code) {
             const voucher = await Voucher.findOne({ code: order.voucher.code });

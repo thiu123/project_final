@@ -162,7 +162,7 @@
                         >
                           ${{ getItemPrice(item) }}
                         </div>
-                        <div class="d-flex gap-2 mb-2">
+                        <div class="d-flex ga-2 mb-2 flex-wrap">
                           <v-chip
                             size="small"
                             :color="
@@ -187,6 +187,16 @@
                             class="text-caption"
                           >
                             -20% OFF
+                          </v-chip>
+                          <!-- Stock display for hardbooks -->
+                          <v-chip
+                            v-if="item.productType === 'hardbook'"
+                            size="small"
+                            :color="getStockColor(item.bookId.stock)"
+                            variant="outlined"
+                            class="text-caption"
+                          >
+                            {{ getStockText(item.bookId.stock) }}
                           </v-chip>
                         </div>
                         <v-chip
@@ -247,6 +257,10 @@
                           color="waterblue"
                           density="comfortable"
                           @click="increaseQuantity(item)"
+                          :disabled="
+                            item.productType === 'hardbook' &&
+                            item.quantity >= item.bookId.stock
+                          "
                           class="transition-all duration-200"
                         ></v-btn>
                       </div>
@@ -477,8 +491,29 @@ export default {
       return basePrice.toFixed(2);
     },
 
+    getStockColor(stock) {
+      if (stock > 20) return "success";
+      if (stock > 0) return "warning";
+      return "error";
+    },
+
+    getStockText(stock) {
+      if (stock > 20) return `${stock} in stock`;
+      if (stock > 0) return `Only ${stock} left!`;
+      return "Out of stock";
+    },
+
     increaseQuantity(item) {
-      item.quantity++;
+      // For hardbooks, check stock limit
+      if (item.productType === "hardbook") {
+        const maxAllowed = item.bookId.stock || 0;
+        if (item.quantity < maxAllowed) {
+          item.quantity++;
+        }
+      } else {
+        // Ebook has no stock limit
+        item.quantity++;
+      }
     },
     decreaseQuantity(item) {
       if (item.quantity > 1) {

@@ -117,10 +117,11 @@ const bookController = {
               : null,
             first_publish_year: book.first_publish_year,
             authors: book.authors.map((a) => a.name),
-            price: Math.floor(Math.random() * 50) + 10,
+            price: Math.floor(Math.random() * 25) + 5,
             subjects: [subject],
             description,
             rating: (Math.random() * 2 + 3).toFixed(1),
+            stock: Math.floor(Math.random() * 101),
           };
 
           books.push(bookData);

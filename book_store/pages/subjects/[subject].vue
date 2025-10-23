@@ -223,7 +223,7 @@
                 >
                   <div class="position-relative">
                     <v-img
-                      v-if="book.cover_url"
+                      v-if="book?.cover_url"
                       class="cursor-pointer book-cover rounded-t-xl"
                       @click="$router.push(`/details/${book._id}`)"
                       :src="book.cover_url"

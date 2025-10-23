@@ -158,6 +158,7 @@
                 rounded="xl"
                 class="font-weight-bold"
                 elevation="4"
+                @click="$router.push('/subjects/literary fiction')"
               >
                 <v-icon start size="small">mdi-rocket-launch</v-icon>
                 Learn More
@@ -170,6 +171,7 @@
                 rounded="xl"
                 class="font-weight-bold text-darkgreen"
                 elevation="2"
+                @click="$router.push('/contact')"
               >
                 <v-icon start size="small">mdi-phone</v-icon>
                 Contact Us

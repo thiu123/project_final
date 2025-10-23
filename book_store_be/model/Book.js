@@ -11,6 +11,11 @@ const bookSchema = new mongoose.Schema(
     subjects: { type: [String], default: [] },
     description: { type: String },
     rating: { type: Number, min: 0, max: 5 },
+    stock: {
+      type: Number,
+      default: 0, // 0 nghĩa là hết hàng hoặc là ebook (không cần stock)
+      min: 0,
+    },
   },
   { timestamps: true }
 );

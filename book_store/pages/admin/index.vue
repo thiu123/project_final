@@ -9,12 +9,8 @@
     <!-- Contact Management Component -->
     <AdminContactManagement v-else-if="currentTab === 'contact-management'" />
 
-    <!-- Order Management Component (Placeholder) -->
-    <div v-else-if="currentTab === 'order-management'" class="text-center pa-8">
-      <v-icon size="80" color="grey-lighten-2">mdi-package-variant</v-icon>
-      <h2 class="text-h4 mt-4 mb-2">Order Management</h2>
-      <p class="text-grey">Feature under development...</p>
-    </div>
+    <!-- Order Management Component -->
+    <AdminOrderManagement v-else-if="currentTab === 'order-management'" />
 
     <!-- Analytics Component (Placeholder) -->
     <div v-else-if="currentTab === 'analytics'" class="text-center pa-8">
