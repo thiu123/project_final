@@ -1,45 +1,112 @@
 <template>
-  <div class="pdf-reader">
-    <div v-if="isLoading" class="loading">
-      <p>Loading PDF...</p>
-    </div>
+  <v-container fluid class="pdf-reader pa-0">
+    <v-overlay
+      :model-value="isLoading"
+      class="align-center justify-center"
+      contained
+    >
+      <div class="text-center">
+        <v-progress-circular
+          indeterminate
+          size="64"
+          color="primary"
+          width="4"
+        ></v-progress-circular>
+        <p class="text-h6 mt-4">Loading PDF...</p>
+      </div>
+    </v-overlay>
 
-    <template v-else>
-      <!-- Display message if user hasn’t purchased and reached the preview limit -->
-      <div
-        v-if="!isPurchased && currentPage >= previewLimit"
-        class="purchase-overlay"
+    <template v-if="!isLoading">
+      <!-- Purchase Overlay -->
+      <v-dialog
+        :model-value="!isPurchased && currentPage >= previewLimit"
+        persistent
+        max-width="500"
       >
-        <div class="purchase-box">
-          <h2>🔒 You’ve reached the preview limit</h2>
-          <p>You can only view the first {{ previewLimit }} pages</p>
-          <p class="highlight">
-            Buy this book to unlock all {{ totalPages }} pages
-          </p>
-          <button class="btn-purchase" @click="goToPurchase">
-            💳 Buy Now
-          </button>
-        </div>
-      </div>
+        <v-card class="purchase-card" rounded="xl">
+          <v-card-text class="text-center pa-8">
+            <div class="lock-icon text-h1 mb-4">🔒</div>
+            <h2 class="text-h4 font-weight-bold mb-3">Preview Limit Reached</h2>
+            <p class="text-body-1 text-medium-emphasis mb-2">
+              You've viewed all {{ previewLimit }} available preview pages
+            </p>
+            <p class="text-h6 text-primary font-weight-bold my-6">
+              Unlock all {{ totalPages }} pages with full access
+            </p>
+            <v-btn
+              color="primary"
+              size="x-large"
+              rounded="lg"
+              variant="flat"
+              class="purchase-btn"
+              prepend-icon="mdi-credit-card"
+              @click="goToPurchase"
+            >
+              Purchase Full Access
+            </v-btn>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
 
-      <div class="controls">
-        <button @click="prevPage" :disabled="!hasPdf || currentPage <= 1">
-          ⬅️ Previous Page
-        </button>
-        <span class="page-info">
-          {{ currentPage }} / {{ isPurchased ? totalPages : previewLimit }}
-          <span v-if="!isPurchased" class="demo-badge">DEMO</span>
-        </span>
-        <button @click="nextPage" :disabled="!hasPdf || !canGoNext">
-          Next Page ➡️
-        </button>
-      </div>
+      <!-- Controls Bar -->
+      <v-toolbar color="white" elevation="1" class="controls-toolbar">
+        <v-container class="d-flex align-center justify-space-between px-6">
+          <v-btn
+            color="primary"
+            variant="flat"
+            size="large"
+            rounded="lg"
+            :disabled="!hasPdf || currentPage <= 1"
+            prepend-icon="mdi-chevron-left"
+            @click="prevPage"
+            class="nav-btn"
+          >
+            <span class="d-none d-sm-inline">Previous</span>
+          </v-btn>
 
-      <div class="pdf-viewer">
-        <canvas ref="pdfCanvas" class="pdf-canvas"></canvas>
-      </div>
+          <div class="page-info-wrapper py-10 text-center">
+            <div class="d-flex align-center justify-center ga-2">
+              <span class="current-page text-h4 font-weight-bold text-primary">
+                {{ currentPage }}
+              </span>
+              <span class="text-h5 text-medium-emphasis">/</span>
+              <span class="text-h5 text-medium-emphasis">
+                {{ isPurchased ? totalPages : previewLimit }}
+              </span>
+            </div>
+            <div
+              v-if="!isPurchased"
+              class="text-red font-weight-bold"
+            >
+              PREVIEW
+            </div>
+          </div>
+
+          <v-btn
+            color="primary"
+            variant="flat"
+            size="large"
+            rounded="lg"
+            :disabled="!hasPdf || !canGoNext"
+            append-icon="mdi-chevron-right"
+            @click="nextPage"
+            class="nav-btn"
+          >
+            <span class="d-none d-sm-inline">Next</span>
+          </v-btn>
+        </v-container>
+      </v-toolbar>
+
+      <!-- PDF Viewer -->
+      <v-main class="pdf-viewer-main">
+        <v-container class="d-flex justify-center py-8">
+          <v-card elevation="8" rounded="xl" class="canvas-card">
+            <canvas ref="pdfCanvas" class="pdf-canvas"></canvas>
+          </v-card>
+        </v-container>
+      </v-main>
     </template>
-  </div>
+  </v-container>
 </template>
 
 <script>
@@ -179,115 +246,68 @@ export default {
 
 <style scoped>
 .pdf-reader {
-  display: flex;
-  flex-direction: column;
   height: 100vh;
-  background: #fafafa;
+  background: linear-gradient(to bottom, #f5f5f5 0%, #e0e0e0 100%);
 }
 
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  font-size: 18px;
-  color: #666;
+.controls-toolbar {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
 
-.controls {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
-  background: #f4f4f4;
-  border-bottom: 1px solid #ddd;
+.nav-btn {
+  min-width: 120px;
+  box-shadow: 0 2px 8px rgba(var(--v-theme-primary), 0.3) !important;
+  transition: all 0.3s ease !important;
 }
 
-button {
-  padding: 8px 16px;
-  background: #4a90e2;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.2s;
+.nav-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(var(--v-theme-primary), 0.4) !important;
 }
 
-button:hover:not(:disabled) {
-  background: #357abd;
+.nav-btn:active:not(:disabled) {
+  transform: translateY(0);
 }
 
-button:disabled {
-  background: #ccc;
-  cursor: not-allowed;
-  opacity: 0.6;
+.page-info-wrapper {
+  min-width: 150px;
 }
 
-.page-info {
-  font-weight: 600;
-  color: #333;
-  min-width: 80px;
-  text-align: center;
+.current-page {
+  line-height: 1;
 }
 
-.pdf-viewer {
-  flex: 1;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  background: #e9ecef;
-  overflow: auto;
-  padding: 20px;
+.pdf-viewer-main {
+  height: calc(100vh - 88px);
+  overflow-y: auto;
+  background: linear-gradient(to bottom, #f5f5f5 0%, #e0e0e0 100%);
+}
+
+.canvas-card {
+  padding: 24px;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.canvas-card:hover {
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15) !important;
 }
 
 .pdf-canvas {
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: block;
   max-width: 100%;
   height: auto;
+  border-radius: 4px;
 }
 
-/* Purchase Overlay */
-.purchase-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.purchase-box {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  text-align: center;
-  max-width: 500px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  animation: slideUp 0.3s ease;
+/* Purchase Card Animations */
+.purchase-card {
+  animation: slideUp 0.4s ease;
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(30px);
+    transform: translateY(40px);
     opacity: 0;
   }
   to {
@@ -296,52 +316,47 @@ button:disabled {
   }
 }
 
-.purchase-box h2 {
-  color: #333;
-  margin-bottom: 15px;
-  font-size: 24px;
+.lock-icon {
+  animation: bounce 0.6s ease;
 }
 
-.purchase-box p {
-  color: #666;
-  margin-bottom: 10px;
-  font-size: 16px;
+@keyframes bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
-.purchase-box .highlight {
-  color: #4a90e2;
-  font-weight: 600;
-  font-size: 18px;
-  margin-top: 20px;
-  margin-bottom: 25px;
+.purchase-btn {
+  box-shadow: 0 6px 20px rgba(var(--v-theme-primary), 0.4) !important;
+  transition: all 0.3s ease !important;
 }
 
-.btn-purchase {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 14px 32px;
-  font-size: 16px;
-  font-weight: 600;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+.purchase-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 28px rgba(var(--v-theme-primary), 0.5) !important;
 }
 
-.btn-purchase:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+.purchase-btn:active {
+  transform: translateY(-1px);
 }
 
-.demo-badge {
-  background: #ff6b6b;
-  color: white;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 700;
-  margin-left: 8px;
-  vertical-align: middle;
+/* Mobile Responsive */
+@media (max-width: 600px) {
+  .nav-btn {
+    min-width: 48px !important;
+    padding: 0 12px !important;
+  }
+
+  .canvas-card {
+    padding: 16px;
+  }
+
+  .page-info-wrapper {
+    min-width: 100px;
+  }
 }
 </style>
