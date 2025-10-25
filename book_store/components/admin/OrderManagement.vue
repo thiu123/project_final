@@ -349,8 +349,11 @@
                 <v-card-text>
                   <div class="d-flex align-center justify-space-between">
                     <div>
-                      <v-chip color="success" variant="flat" class="mb-2">
+                      <v-chip v-if="selectedOrder.voucher.code" color="success" variant="flat" class="mb-2">
                         {{ selectedOrder.voucher.code }}
+                      </v-chip>
+                      <v-chip v-else color="red" variant="flat" class="mb-2">
+                        No Voucher
                       </v-chip>
                     </div>
                     <div class="text-h6 text-success">
@@ -387,12 +390,12 @@
                       >
                         <td>
                           <div class="d-flex align-center py-2">
-                            <v-img
+                            <img
                               :src="item.bookId?.cover_url"
                               width="40"
                               height="60"
                               class="rounded mr-3"
-                            ></v-img>
+                            ></img>
                             <div>
                               <div class="font-weight-medium">
                                 {{ item.bookId?.title || "N/A" }}

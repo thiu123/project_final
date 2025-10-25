@@ -468,10 +468,6 @@
                 >-${{ voucherDiscount.toFixed(2) }}</span
               >
             </div>
-            <div class="d-flex justify-space-between mb-3 text-body-1">
-              <span class="text-grey-darken-2">Shipping Fee</span>
-              <span class="font-weight-medium">{{ formattedShippingFee }}</span>
-            </div>
             <v-divider class="my-4"></v-divider>
             <div
               class="d-flex justify-space-between align-center pa-4 bg-blue-lighten-5 rounded-lg"
@@ -573,17 +569,12 @@ export default {
     },
 
     total() {
-      const subtotalAfterDiscount = this.subtotal - this.voucherDiscount;
-      return subtotalAfterDiscount + this.shippingFee / this.exchangeRate;
+      return this.subtotal - this.voucherDiscount;
     },
 
     // Format currency display
     formattedSubtotal() {
       return `$${this.subtotal.toFixed(2)}`;
-    },
-
-    formattedShippingFee() {
-      return `$${(this.shippingFee / this.exchangeRate).toFixed(2)}`;
     },
 
     formattedTotal() {

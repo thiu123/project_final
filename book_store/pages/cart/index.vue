@@ -114,7 +114,7 @@
                     >
                       <v-checkbox
                         v-model="selectedItems"
-                        :value="item.bookId._id"
+                        :value="item?.bookId?._id"
                         hide-details
                         density="compact"
                         color="waterblue"
@@ -205,8 +205,8 @@
                           variant="outlined"
                           class="text-caption text-capitalize"
                           v-if="
-                            item.bookId.subjects &&
-                            item.bookId.subjects.length > 0
+                            item?.bookId?.subjects &&
+                            item?.bookId?.subjects.length > 0
                           "
                         >
                           {{ item?.bookId?.subjects[0] }}
