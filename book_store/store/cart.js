@@ -74,7 +74,7 @@ export default {
           state.cart.items?.reduce((total, item) => {
             const price =
               item.productType === "ebook"
-                ? (item.bookId?.price || 0) * 0.8
+                ? (item.bookId?.price || 0) * 0.7
                 : item.bookId?.price || 0;
             return total + price * item.quantity;
           }, 0) || 0;

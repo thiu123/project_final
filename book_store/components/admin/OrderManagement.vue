@@ -429,7 +429,7 @@
                             (
                               item.bookId?.price *
                               item.quantity *
-                              (item.productType === "ebook" ? 0.8 : 1)
+                              (item.productType === "ebook" ? 0.7 : 1)
                             ).toFixed(2)
                           }}
                         </td>
