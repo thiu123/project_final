@@ -42,13 +42,45 @@ export const applyVoucher = async (code) => {
   }
 };
 
-// Get all active vouchers
+// Get all vouchers (including inactive and expired)
 export const getAllVouchers = async () => {
   try {
-    const response = await axios.get(BASE_URL, {
-      headers: {
-        token: token(),
-      },
+    const response = await axios.get(`${BASE_URL}/all`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+// Create new voucher (admin only)
+export const createVoucher = async (voucherData) => {
+  try {
+    const response = await axios.post(`${BASE_URL}`, voucherData, {
+      headers: { token: token() },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+// Update voucher (admin only)
+export const updateVoucher = async (id, voucherData) => {
+  try {
+    const response = await axios.put(`${BASE_URL}/${id}`, voucherData, {
+      headers: { token: token() },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+// Delete voucher (admin only)
+export const deleteVoucher = async (id) => {
+  try {
+    const response = await axios.delete(`${BASE_URL}/${id}`, {
+      headers: { token: token() },
     });
     return response.data;
   } catch (error) {

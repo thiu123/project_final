@@ -20,7 +20,7 @@ const orderController = {
         // Apply pricing based on product type
         const price =
           item.productType === "ebook"
-            ? item.bookId.price * 0.8 // 80% of original price for ebook (20% off)
+            ? item.bookId.price * 0.7 // 70% of original price for ebook
             : item.bookId.price; // Full price for hardbook
         return sum + price * item.quantity * exchange_rate;
       }, 0);
@@ -65,12 +65,7 @@ const orderController = {
       const { id } = req.params;
       const { status } = req.body;
 
-      const validStatuses = [
-        "Pending",
-        "Paid",
-        "Failed",
-        "Cancelled",
-      ];
+      const validStatuses = ["Pending", "Paid", "Failed", "Cancelled"];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({ msg: "Invalid status" });
       }
@@ -136,7 +131,7 @@ const orderController = {
       let subtotal = cart.items.reduce((sum, item) => {
         const price =
           item.productType === "ebook"
-            ? item.bookId.price * 0.8
+            ? item.bookId.price * 0.7
             : item.bookId.price;
         return sum + price * item.quantity;
       }, 0);
@@ -300,7 +295,7 @@ const orderController = {
       let subtotal = cart.items.reduce((sum, item) => {
         const price =
           item.productType === "ebook"
-            ? item.bookId.price * 0.8
+            ? item.bookId.price * 0.7
             : item.bookId.price;
         return sum + price * item.quantity;
       }, 0);

@@ -178,6 +178,18 @@
           </div>
         </template>
 
+        <!-- Stock Column -->
+        <template v-slot:item.stock="{ item }">
+          <v-chip
+            :color="getStockColor(item.stock)"
+            variant="flat"
+            size="small"
+            class="font-weight-bold"
+          >
+            {{ item.stock || 0 }}
+          </v-chip>
+        </template>
+
         <!-- Mô Tả Column -->
         <template v-slot:item.description="{ item }">
           <div class="description-cell">
@@ -338,7 +350,8 @@
                         Image uploaded
                       </v-chip>
                       <div class="text-caption text-grey mt-1">
-                        {{ editedItem.cover_url.substring(0, 50) }}{{ editedItem.cover_url.length > 50 ? '...' : '' }}
+                        {{ editedItem.cover_url.substring(0, 50)
+                        }}{{ editedItem.cover_url.length > 50 ? "..." : "" }}
                       </div>
                     </div>
                   </v-col>
@@ -420,6 +433,21 @@
                       type="number"
                       prefix="$"
                       :error-messages="errors.price"
+                    ></v-text-field>
+                  </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-text-field
+                      v-model.number="editedItem.stock"
+                      label="Stock Quantity"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-package-variant"
+                      type="number"
+                      :error-messages="errors.stock"
+                      min="0"
+                      hint="0 = Out of stock / Ebook only"
+                      persistent-hint
                     ></v-text-field>
                   </v-col>
 
@@ -804,6 +832,13 @@ export default {
           width: "100px",
         },
         {
+          title: "Stock",
+          key: "stock",
+          align: "center",
+          sortable: true,
+          width: "100px",
+        },
+        {
           title: "Description",
           key: "description",
           align: "start",
@@ -855,7 +890,7 @@ export default {
   computed: {
     ...mapState("book", ["books", "loading"]),
     getSubjectsFromBook() {
-      const allSubjects =  this.books.map((book) => book.subjects);
+      const allSubjects = this.books.map((book) => book.subjects);
       return [...new Set(allSubjects.flat())];
     },
 
@@ -933,6 +968,7 @@ export default {
         first_publish_year: new Date().getFullYear(),
         authors: [],
         price: 0,
+        stock: 0,
         subjects: [],
         description: "",
       };
@@ -956,6 +992,13 @@ export default {
       if (year >= currentYear - 5) return "success";
       if (year >= currentYear - 20) return "warning";
       return "error";
+    },
+
+    getStockColor(stock) {
+      if (stock === 0) return "error";
+      if (stock <= 10) return "warning";
+      if (stock <= 50) return "info";
+      return "success";
     },
 
     openAddDialog() {
@@ -1035,18 +1078,24 @@ export default {
         this.showSnackbar("File size must be less than 5MB", "error");
         return;
       }
-      
+
       try {
         const response = await uploadBookImage(file);
         if (response.data && response.data.data.url) {
           this.editedItem.cover_url = response.data.data.url;
-          console.log('Image uploaded successfully:', this.editedItem.cover_url);
+          console.log(
+            "Image uploaded successfully:",
+            this.editedItem.cover_url
+          );
         } else {
-          throw new Error('No URL returned from server');
+          throw new Error("No URL returned from server");
         }
       } catch (error) {
-        console.error('Upload error:', error);
-        this.showSnackbar("Failed to upload image: " + (error.message || 'Unknown error'), "error");
+        console.error("Upload error:", error);
+        this.showSnackbar(
+          "Failed to upload image: " + (error.message || "Unknown error"),
+          "error"
+        );
       }
     },
 
@@ -1073,8 +1122,12 @@ export default {
         }
         this.closeDialog();
       } catch (error) {
-        console.error('Save book error:', error);
-        this.showSnackbar("Failed to save book: " + (error.response?.data?.message || error.message || 'Unknown error'), "error");
+        console.error("Save book error:", error);
+        this.showSnackbar(
+          "Failed to save book: " +
+            (error.response?.data?.message || error.message || "Unknown error"),
+          "error"
+        );
       } finally {
         this.saving = false;
       }
@@ -1130,8 +1183,8 @@ export default {
   },
   async mounted() {
     await this.refreshBooks();
-    console.log(this.editedItem, "dsadasdzzzxccvcbbbbbbb")
-    this.subjects = this.getSubjectsFromBook
+    console.log(this.editedItem, "dsadasdzzzxccvcbbbbbbb");
+    this.subjects = this.getSubjectsFromBook;
   },
 };
 </script>

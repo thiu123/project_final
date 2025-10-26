@@ -669,11 +669,7 @@ export default {
         console.log("Loading books for subject:", subject);
         
         // Fetch books for the specific subject from API
-        await this.$store.dispatch("book/getAllBooks", {
-          subject: subject,
-          half: false,
-        });
-        
+        await this.getAllBooks({ subject, half: true });
         // The books are now filtered by backend, just assign them
         this.bestSellersStories = this.books;
         

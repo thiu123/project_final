@@ -139,20 +139,77 @@ const applyVoucher = async (req, res) => {
 // Get all active vouchers (for display/admin)
 const getAllVouchers = async (req, res) => {
   try {
-    const vouchers = await Voucher.find({
-      isActive: true,
-      expiryDate: { $gt: new Date() },
-    }).select("-__v");
+    const vouchers = await Voucher.find()
+      .select("-__v")
+      .sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
-      data: vouchers,
-    });
+    res.status(200).json(vouchers);
   } catch (error) {
     console.error("Get vouchers error:", error);
     res.status(500).json({
       success: false,
       message: "Error fetching vouchers",
+      error: error.message,
+    });
+  }
+};
+
+// Update voucher (admin only)
+const updateVoucher = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    const voucher = await Voucher.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!voucher) {
+      return res.status(404).json({
+        success: false,
+        message: "Voucher not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Voucher updated successfully",
+      data: voucher,
+    });
+  } catch (error) {
+    console.error("Update voucher error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error updating voucher",
+      error: error.message,
+    });
+  }
+};
+
+// Delete voucher (admin only)
+const deleteVoucher = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const voucher = await Voucher.findByIdAndDelete(id);
+
+    if (!voucher) {
+      return res.status(404).json({
+        success: false,
+        message: "Voucher not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Voucher deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete voucher error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error deleting voucher",
       error: error.message,
     });
   }
@@ -198,4 +255,6 @@ module.exports = {
   applyVoucher,
   getAllVouchers,
   createVoucher,
+  updateVoucher,
+  deleteVoucher,
 };

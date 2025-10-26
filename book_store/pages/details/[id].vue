@@ -182,9 +182,7 @@
                             <span class="font-weight-medium"
                               >📱 Ebook (PDF)</span
                             >
-                            <v-chip color="success" size="x-small" class="ml-2">
-                              -20% OFF
-                            </v-chip>
+
                             <div class="text-caption text-grey">
                               ${{ ebookPrice }}
                             </div>
@@ -471,10 +469,10 @@ export default {
         { title: this.detailsBooks.title || "Book Details", disabled: true },
       ];
     },
-    // Tính giá ebook (giảm 20%)
+    // Tính giá ebook (70% của giá hardbook)
     ebookPrice() {
       const price = this.detailsBooks.price || 120;
-      return (price * 0.8).toFixed(2);
+      return (price * 0.7).toFixed(2);
     },
     // Giá hiển thị dựa vào productType
     displayPrice() {
@@ -588,8 +586,8 @@ export default {
       try {
         await this.toggleFavorites(bookId);
         this.snackbarText = this.isFavorite(bookId)
-          ? "Removed from favorites!"
-          : "Added to favorites!";
+          ? "Added to favorites!"
+          : "Removed from favorites!";
         this.showSnackbar = true;
         this.snackbarColor = "success";
       } catch (error) {

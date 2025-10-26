@@ -278,7 +278,7 @@
                       Qty: {{ item.quantity }}
                     </v-chip>
                     <div class="text-h6 font-weight-bold text-primary">
-                      ${{ item.bookId.price.toFixed(2) }}
+                      ${{ getItemPrice(item).toFixed(2) }}
                     </div>
                     <div class="text-caption text-grey-darken-1">per item</div>
                   </div>
@@ -332,13 +332,21 @@
                       class="text-body-1 font-weight-medium text-grey-darken-3"
                     >
                       {{ item.bookId.title }}
+                      <v-chip
+                        v-if="item.productType === 'ebook'"
+                        color="success"
+                        size="x-small"
+                        class="ml-2"
+                      >
+                        Ebook
+                      </v-chip>
                     </div>
                     <div class="text-caption text-grey-darken-1">
-                      ${{ item.bookId.price.toFixed(2) }} × {{ item.quantity }}
+                      ${{ getItemPrice(item).toFixed(2) }} × {{ item.quantity }}
                     </div>
                   </div>
                   <div class="text-h6 font-weight-bold text-primary">
-                    ${{ (item.bookId.price * item.quantity).toFixed(2) }}
+                    ${{ (getItemPrice(item) * item.quantity).toFixed(2) }}
                   </div>
                 </div>
               </v-card>
@@ -565,6 +573,13 @@ export default {
         default:
           return "primary";
       }
+    },
+
+    getItemPrice(item) {
+      if (item.productType === "ebook") {
+        return item.bookId.price * 0.7;
+      }
+      return item.bookId.price;
     },
 
     calculateSubtotal(order) {

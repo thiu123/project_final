@@ -12,6 +12,9 @@
     <!-- Order Management Component -->
     <AdminOrderManagement v-else-if="currentTab === 'order-management'" />
 
+    <!-- Voucher Management Component -->
+    <AdminVoucherManagement v-else-if="currentTab === 'voucher-management'" />
+
     <!-- Analytics Component (Placeholder) -->
     <div v-else-if="currentTab === 'analytics'" class="text-center pa-8">
       <v-icon size="80" color="grey-lighten-2">mdi-chart-line</v-icon>

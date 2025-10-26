@@ -179,15 +179,7 @@
                                 : "📚 Hardbook"
                             }}
                           </v-chip>
-                          <v-chip
-                            v-if="item.productType === 'ebook'"
-                            size="small"
-                            color="success"
-                            variant="outlined"
-                            class="text-caption"
-                          >
-                            -20% OFF
-                          </v-chip>
+
                           <!-- Stock display for hardbooks -->
                           <v-chip
                             v-if="item.productType === 'hardbook'"
@@ -461,7 +453,7 @@ export default {
       return this.cartItems.reduce((total, item) => {
         const price =
           item.productType === "ebook"
-            ? item.bookId.price * 0.8
+            ? item.bookId.price * 0.7
             : item.bookId.price;
         return total + price * item.quantity;
       }, 0);
@@ -486,7 +478,7 @@ export default {
     getItemPrice(item) {
       const basePrice = item?.bookId?.price || 0;
       if (item.productType === "ebook") {
-        return (basePrice * 0.8).toFixed(2); // Giảm 20% cho ebook
+        return (basePrice * 0.7).toFixed(2); // 70% giá hardbook cho ebook
       }
       return basePrice.toFixed(2);
     },
