@@ -19,8 +19,8 @@ const authController = {
       });
 
       const user = await newUser.save();
-      // console.log(user, "user");
-      return res.status(200).json(user);
+      const { password, ...others } = user._doc;
+      return res.status(200).json(others);
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }

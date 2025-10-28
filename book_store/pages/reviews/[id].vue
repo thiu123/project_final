@@ -17,11 +17,11 @@
           <v-col cols="auto">
             <div class="overall-rating text-center">
               <div class="text-h2 font-weight-bold text-primary mb-2">
-                <span class="rating-number">4.0</span>
+                <span class="rating-number">{{ displayRating }}</span>
                 <span class="text-h5 text-medium-emphasis">/5</span>
               </div>
               <v-rating
-                :model-value="4"
+                :model-value="displayRating"
                 color="amber"
                 density="compact"
                 readonly
@@ -29,7 +29,7 @@
                 class="mb-2"
               ></v-rating>
               <div class="text-caption text-medium-emphasis">
-                Based on 24 reviews
+                Based on {{ totalReviews }} reviews
               </div>
             </div>
           </v-col>
@@ -503,6 +503,9 @@ export default {
       showDeleteDialog: false,
       deleteLoading: false,
       reviewToDelete: null,
+      averageRating: 0,
+      totalReviews: 0,
+      bookRating: 0, // Rating từ database
       ratingBreakdown: [
         { count: 20 },
         { count: 2 },
@@ -527,6 +530,13 @@ export default {
     isAdmin() {
       return this.currentUser?.admin === true;
     },
+    // Hiển thị rating: nếu có review thì dùng average, không thì dùng rating mặc định từ database
+    displayRating() {
+      if (this.totalReviews > 0) {
+        return this.averageRating;
+      }
+      return this.bookRating;
+    },
   },
   watch: {
     reviews(newVal) {
@@ -539,7 +549,13 @@ export default {
     this.isLoaded = false;
     this.loading = true;
     try {
-      await this.loadReviews(this.$route.params.id);
+      const bookId = this.$route.params.id;
+
+      // Load reviews
+      await this.loadReviews(bookId);
+
+      // Load average rating và book info
+      await this.loadRatingData(bookId);
     } catch (error) {
       console.error("Error loading reviews:", error);
     } finally {
@@ -550,6 +566,28 @@ export default {
 
   methods: {
     ...mapActions("review", ["addNewReview", "loadReviews", "deleteReview"]),
+
+    async loadRatingData(bookId) {
+      try {
+        // Lấy average rating từ reviews
+        const { getAverageRating } = await import("~/api/reviewApi");
+        const ratingResponse = await getAverageRating(bookId);
+        this.averageRating = ratingResponse.data.averageRating;
+        this.totalReviews = ratingResponse.data.totalReviews;
+
+        // Lấy thông tin book để có rating mặc định
+        const axios = (await import("axios")).default;
+        const bookResponse = await axios.get(
+          `http://localhost:5000/api/books/${bookId}`
+        );
+        this.bookRating = bookResponse.data.rating || 0;
+      } catch (error) {
+        console.error("Error loading rating data:", error);
+        this.averageRating = 0;
+        this.totalReviews = 0;
+        this.bookRating = 0;
+      }
+    },
 
     // Format date for display
     formatDate(dateString) {
@@ -661,8 +699,10 @@ export default {
         console.log("Review deleted successfully");
         this.showDeleteDialog = false;
         this.reviewToDelete = null;
-        // Reload reviews to update the list
-        await this.loadReviews(this.$route.params.id);
+        // Reload reviews and rating data
+        const bookId = this.$route.params.id;
+        await this.loadReviews(bookId);
+        await this.loadRatingData(bookId);
       } catch (error) {
         console.error("Error deleting review:", error);
         // You might want to show an error message to the user here
@@ -679,8 +719,10 @@ export default {
         this.showCreateReviewsDialog = false;
         this.rating = 0;
         this.comment = "";
-        await this.loadReviews(this.$route.params.id);
-        console.log("Reviews reloaded after writing a new review");
+        // Reload reviews and rating data
+        await this.loadReviews(bookId);
+        await this.loadRatingData(bookId);
+        console.log("Reviews and rating reloaded after writing a new review");
       } catch (error) {
         console.error("Error writing review:", error);
       } finally {

@@ -1,5 +1,5 @@
 const Review = require("../../model/Review");
-
+const mongoose = require("mongoose");
 const reviewsController = {
   getAllReviews: async (req, res) => {
     try {
@@ -62,11 +62,15 @@ const reviewsController = {
   },
   getAverageRatingByBook: async (req, res) => {
     try {
-      const { bookId } = req.params;
+      const { id } = req.params;
+
+      if (!id) {
+        return res.status(400).json({ msg: "Missing bookId parameter" });
+      }
 
       const avg = await Review.aggregate([
         {
-          $match: { bookId: new mongoose.Types.ObjectId(bookId) },
+          $match: { bookId: new mongoose.Types.ObjectId(id) },
         },
         {
           $group: {
@@ -80,7 +84,7 @@ const reviewsController = {
       const average = avg[0]?.avgRating || 0;
 
       res.status(200).json({
-        bookId,
+        bookId: id,
         averageRating: parseFloat(average.toFixed(2)),
         totalReviews: avg[0]?.total || 0,
       });

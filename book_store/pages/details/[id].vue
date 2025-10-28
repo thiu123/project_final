@@ -80,18 +80,18 @@
                 <!-- Rating -->
                 <div class="d-flex align-center mb-6">
                   <v-rating
-                    :model-value="4"
+                    :model-value="displayRating"
                     color="amber"
                     density="compact"
                     readonly
                     size="small"
                     class="mr-2"
                   ></v-rating>
-                  <span class="text-subtitle-1 font-weight-medium mr-1"
-                    >4.0</span
-                  >
+                  <span class="text-subtitle-1 font-weight-medium mr-1">{{
+                    displayRating
+                  }}</span>
                   <span class="text-body-2 text-grey-darken-1"
-                    >(24 reviews)</span
+                    >({{ totalReviews }} reviews)</span
                   >
                 </div>
 
@@ -449,6 +449,8 @@ export default {
       showSnackbar: false,
       snackbarText: "",
       snackbarColor: "success",
+      averageRating: 0,
+      totalReviews: 0,
       ratingBreakdown: [
         { percentage: 70, count: 12 },
         { percentage: 20, count: 5 },
@@ -468,6 +470,13 @@ export default {
         { title: "Home", disabled: false, href: "/" },
         { title: this.detailsBooks.title || "Book Details", disabled: true },
       ];
+    },
+    // Hiển thị rating: nếu có review thì dùng average, không thì dùng rating mặc định từ database
+    displayRating() {
+      if (this.totalReviews > 0) {
+        return this.averageRating;
+      }
+      return this.detailsBooks.rating || 0;
     },
     // Tính giá ebook (70% của giá hardbook)
     ebookPrice() {
@@ -514,6 +523,18 @@ export default {
     ...mapActions("cart", ["addToCart"]),
     ...mapActions("order", ["fetchUserOrders", "checkEbookPurchase"]),
     ...mapActions("favorite", ["toggleFavorites"]),
+    async getAverageRating(bookId) {
+      try {
+        const { getAverageRating } = await import("~/api/reviewApi");
+        const response = await getAverageRating(bookId);
+        this.averageRating = response.data.averageRating;
+        this.totalReviews = response.data.totalReviews;
+      } catch (error) {
+        console.error("Error fetching average rating:", error);
+        this.averageRating = 0;
+        this.totalReviews = 0;
+      }
+    },
     async getDetailsBooks() {
       try {
         this.isLoading = true;
@@ -528,6 +549,9 @@ export default {
           `http://localhost:5000/api/books/${bookId}`
         );
         this.detailsBooks = response.data;
+
+        // Lấy average rating từ reviews
+        await this.getAverageRating(bookId);
 
         // ✅ Check nếu user đã mua ebook này (dùng store action)
         if (this.currentUser) {
@@ -559,7 +583,7 @@ export default {
         await this.addToCart({
           bookId,
           quantity,
-          productType: this.productType, // ✅ Truyền productType
+          productType: this.productType,
         });
 
         const typeName = this.productType === "ebook" ? "Ebook" : "Hardbook";
