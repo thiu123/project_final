@@ -233,13 +233,13 @@
                 <div class="d-flex align-center">
                   <v-avatar color="info" size="36" class="elevation-2">
                     <v-img
-                      :src="currentUser.avatar_url"
+                      :src="
+                        currentUser.avatar_url ||
+                        'https://cdn.vuetifyjs.com/images/john.jpg'
+                      "
                       cover
                       :alt="currentUser.name + ' avatar'"
                     >
-                      <template v-slot:placeholder>
-                        <v-icon icon="mdi-account-circle" size="28"></v-icon>
-                      </template>
                     </v-img>
                   </v-avatar>
                   <span

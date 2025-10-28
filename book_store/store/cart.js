@@ -43,7 +43,7 @@ export default {
 
     async addToCart({ dispatch }, { bookId, quantity, productType }) {
       try {
-        await addToCartApi(bookId, quantity, productType); // ✅ Truyền productType
+        await addToCartApi(bookId, quantity, productType);
         dispatch("fetchCart");
       } catch (error) {
         console.error("Add to cart failed:", error);

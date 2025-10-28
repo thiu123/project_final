@@ -29,6 +29,10 @@ export const deleteReview = (id) => {
   });
 };
 
+export const getAverageRating = (bookId) => {
+  return axios.get(`${API_URL}/average/${bookId}`);
+};
+
 // ========== ADMIN REPLY API ==========
 export const createReply = (reviewId, content) => {
   return axios.post(

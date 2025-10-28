@@ -17,12 +17,12 @@ router.get(
   middlewareController.verifyToken,
   reviewController.getReviewsByUser
 );
+router.get("/average/:id", reviewController.getAverageRatingByBook);
 router.get(
   "/:id",
   middlewareController.verifyToken,
   reviewController.getAllReviews
 );
-router.get("/average/:id", reviewController.getAverageRatingByBook);
 
 // ========== ADMIN REPLY ROUTES ==========
 router.post(

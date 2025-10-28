@@ -12,7 +12,10 @@
       <div class="mb-4">
         <v-avatar size="100" class="elevation-4 border-4 border-white">
           <v-img
-            :src="currentUser?.avatar_url || 'https://via.placeholder.com/100'"
+            :src="
+              currentUser?.avatar_url ||
+              'https://cdn.vuetifyjs.com/images/john.jpg'
+            "
             alt="User Avatar"
             cover
           />
@@ -147,7 +150,9 @@ export default {
     ...mapState("favorite", ["favorites"]),
     ...mapState("review", ["userReviews"]),
     ordersCount() {
-      return this.userOrders?.filter(order => order.status === 'Paid').length || 0;
+      return (
+        this.userOrders?.filter((order) => order.status === "Paid").length || 0
+      );
     },
     favoritesCount() {
       return this.favorites?.length || 0;
@@ -162,7 +167,6 @@ export default {
     ...mapActions("review", ["loadUserReviewsAction"]),
     async loadAllData() {
       try {
-        // Load all data in parallel để nhanh hơn
         await Promise.all([
           this.fetchUserOrders(),
           this.getFavoritesForEachUser(),
