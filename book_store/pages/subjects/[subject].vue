@@ -383,7 +383,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-
+import { bookSubjects } from "@/constants/bookSubjects.js";
 export default {
   data() {
     return {
@@ -393,47 +393,7 @@ export default {
         { title: "From A to Z" },
         { title: "From Z to A" },
       ],
-      bookSubjects: [
-        {
-          category: "Fiction",
-          subcategories: [
-            "Literary Fiction",
-            "Historical Fiction",
-            "Contemporary Fiction",
-          ],
-        },
-        {
-          category: "Romance",
-          subcategories: ["Contemporary Romance", "Historical Romance"],
-        },
-        {
-          category: "Manga",
-        },
-        {
-          category: "Biography & Memoir",
-          subcategories: ["Historical Figures", "Political Leaders"],
-        },
-        {
-          category: "History",
-          subcategories: ["Ancient History", "Modern History"],
-        },
-        {
-          category: "Health & Wellness",
-          subcategories: ["Cooking", "Nutrition", "Exercise"],
-        },
-        {
-          category: "Science & Nature",
-          subcategories: [
-            "Popular Science",
-            "Astronomy",
-            "Biology & Life Sciences",
-          ],
-        },
-        {
-          category: "Business & Economics",
-          subcategories: ["Personal Finance", "Investing", "Entrepreneurship"],
-        },
-      ],
+      bookSubjects,
       prices: ["Under $10", "$10 - $20", "$20 - $30", "Above $50"],
       selectedPrice: [],
       page: 1,
