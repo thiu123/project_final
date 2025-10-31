@@ -1117,7 +1117,7 @@ export default {
           });
           this.showSnackbar("Book updated successfully");
         } else {
-          await this.createBook(bookData);
+          await this.createBook(this.editedItem);
           this.showSnackbar("Book added successfully");
         }
         this.closeDialog();
@@ -1183,8 +1183,8 @@ export default {
   },
   async mounted() {
     await this.refreshBooks();
-    console.log(this.editedItem, "dsadasdzzzxccvcbbbbbbb");
     this.subjects = this.getSubjectsFromBook;
+    console.log("Available subjects:", this.subjects);
   },
 };
 </script>
