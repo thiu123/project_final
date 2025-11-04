@@ -71,7 +71,10 @@
                 rounded="xl"
                 elevation="8"
               >
-                <v-list class="py-0"   style="max-height: 400px; overflow-y: auto;">
+                <v-list
+                  class="py-0"
+                  style="max-height: 400px; overflow-y: auto"
+                >
                   <v-list-item
                     v-for="(book, index) in searchResults"
                     :key="index"
@@ -125,8 +128,6 @@
                   <v-card
                     v-for="(book, i) in books"
                     :key="i"
-                    elevation="4"
-                    rounded="xl"
                     hover
                     class="trending-book-card"
                     @click="$router.push(`details/${book._id}`)"
@@ -137,7 +138,7 @@
                       width="80"
                       height="110"
                       cover
-                      class="rounded-xl"
+                      class=""
                     >
                       <template v-slot:placeholder>
                         <div
@@ -447,14 +448,6 @@ export default {
 
 .search-result-item:hover {
   background-color: #f8f9fa;
-}
-
-.trending-book-card {
-  transition: transform 0.2s ease;
-}
-
-.trending-book-card:hover {
-  transform: translateY(-4px);
 }
 
 .newsletter-card {

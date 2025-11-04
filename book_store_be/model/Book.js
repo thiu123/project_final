@@ -16,6 +16,11 @@ const bookSchema = new mongoose.Schema(
       default: 0, // 0 nghĩa là hết hàng hoặc là ebook (không cần stock)
       min: 0,
     },
+    sold: {
+      type: Number,
+      default: 0, // Số lượng đã bán
+      min: 0,
+    },
   },
   { timestamps: true }
 );

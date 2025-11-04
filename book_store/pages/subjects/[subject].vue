@@ -296,6 +296,17 @@
                     <div class="text-body-2 text-grey-darken-1 mb-3">
                       by {{ book.authors[0] || "Unknown Author" }}
                     </div>
+
+                    <!-- Sold Count -->
+                    <v-chip
+                      size="x-small"
+                      variant="flat"
+                      color="success"
+                      class="mb-2"
+                    >
+                      <v-icon start size="x-small">mdi-fire</v-icon>
+                      Sold {{ book.sold || 0 }}
+                    </v-chip>
                   </v-card-text>
 
                   <!-- Enhanced Card Actions -->
