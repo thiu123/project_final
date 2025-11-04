@@ -257,13 +257,4 @@ export default {
 };
 </script>
 
-<style scoped>
-.hero-section {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-}
-
-.contact-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 1px solid #dee2e6;
-}
-</style>
+<style scoped></style>

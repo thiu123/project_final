@@ -221,26 +221,16 @@
                   rounded="xl"
                   hover
                 >
-                  <div class="position-relative">
-                    <v-img
-                      v-if="book?.cover_url"
-                      class="cursor-pointer book-cover rounded-t-xl"
-                      @click="$router.push(`/details/${book._id}`)"
-                      :src="book.cover_url"
-                      height="320"
-                      cover
-                    >
-                      <template v-slot:placeholder>
-                        <div
-                          class="d-flex align-center justify-center fill-height bg-grey-lighten-4"
-                        >
-                          <v-progress-circular
-                            color="grey-lighten-1"
-                            indeterminate
-                          ></v-progress-circular>
-                        </div>
-                      </template>
-                    </v-img>
+                  <div class="position-relative book-cover-container">
+                    <div class="book-cover-wrapper">
+                      <img
+                        v-if="book?.cover_url"
+                        class="cursor-pointer book-cover-image"
+                        @click="$router.push(`/details/${book._id}`)"
+                        :src="book.cover_url"
+                        :alt="book.title"
+                      />
+                    </div>
 
                     <!-- Enhanced Wishlist Button -->
                     <v-btn
@@ -502,12 +492,37 @@ export default {
   border-color: rgba(var(--v-theme-primary), 0.2);
 }
 
-.book-cover {
-  transition: all 0.3s ease;
+.book-cover-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px;
+  min-height: 320px;
+  position: relative;
 }
 
-.book-card:hover .book-cover {
-  transform: scale(1.02);
+.book-cover-wrapper {
+  width: 70%;
+  max-width: 200px;
+  aspect-ratio: 2/3;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.book-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.book-card:hover .book-cover-wrapper {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
 }
 
 .cursor-pointer {

@@ -128,7 +128,7 @@
                           :src="item?.bookId?.cover_url"
                           width="80"
                           height="120"
-                          class="rounded-lg elevation-2"
+                          class="elevation-2"
                           cover
                         >
                           <template v-slot:placeholder>
