@@ -229,19 +229,30 @@ const orderController = {
         await order.save();
 
         if (order.status === "Paid") {
-          // Decrement stock for hardbooks
+          // Decrement stock for hardbooks and increment sold count
           for (const item of order.items) {
-            if (item.productType === "hardbook") {
-              const book = await Book.findById(item.bookId._id);
-              if (book && book.stock >= item.quantity) {
+            const book = await Book.findById(item.bookId._id);
+            if (book) {
+              // Update stock for hardbooks
+              if (
+                item.productType === "hardbook" &&
+                book.stock >= item.quantity
+              ) {
                 book.stock -= item.quantity;
-                await book.save();
                 console.log(
                   `✅ Stock updated for "${book.title}": ${
                     book.stock + item.quantity
                   } → ${book.stock}`
                 );
               }
+              // Increment sold count for both hardbook and ebook
+              book.sold += item.quantity;
+              await book.save();
+              console.log(
+                `✅ Sold count updated for "${book.title}": ${
+                  book.sold - item.quantity
+                } → ${book.sold}`
+              );
             }
           }
 
@@ -406,19 +417,30 @@ const orderController = {
         console.log(`✅ Order ${orderId} updated to status: ${order.status}`);
 
         if (order.status === "Paid") {
-          // Decrement stock for hardbooks
+          // Decrement stock for hardbooks and increment sold count
           for (const item of order.items) {
-            if (item.productType === "hardbook") {
-              const book = await Book.findById(item.bookId._id);
-              if (book && book.stock >= item.quantity) {
+            const book = await Book.findById(item.bookId._id);
+            if (book) {
+              // Update stock for hardbooks
+              if (
+                item.productType === "hardbook" &&
+                book.stock >= item.quantity
+              ) {
                 book.stock -= item.quantity;
-                await book.save();
                 console.log(
                   `✅ Stock updated for "${book.title}": ${
                     book.stock + item.quantity
                   } → ${book.stock}`
                 );
               }
+              // Increment sold count for both hardbook and ebook
+              book.sold += item.quantity;
+              await book.save();
+              console.log(
+                `✅ Sold count updated for "${book.title}": ${
+                  book.sold - item.quantity
+                } → ${book.sold}`
+              );
             }
           }
 

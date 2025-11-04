@@ -40,7 +40,7 @@
                     '/placeholder.svg?height=400&width=260'
                   "
                   alt="Book Cover"
-                  class="rounded-lg mx-auto"
+                  class="mx-auto"
                   max-width="380"
                   height="480"
                   cover
@@ -93,6 +93,14 @@
                   <span class="text-body-2 text-grey-darken-1"
                     >({{ totalReviews }} reviews)</span
                   >
+                </div>
+
+                <!-- Sold Count -->
+                <div class="mb-4">
+                  <v-chip color="success" size="small" variant="elevated">
+                    <v-icon start size="small">mdi-fire</v-icon>
+                    Sold {{ detailsBooks.sold || 0 }}
+                  </v-chip>
                 </div>
 
                 <!-- Price & Stock -->

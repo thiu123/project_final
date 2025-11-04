@@ -190,6 +190,19 @@
           </v-chip>
         </template>
 
+        <!-- Sold Column -->
+        <template v-slot:item.sold="{ item }">
+          <v-chip
+            color="success"
+            variant="flat"
+            size="small"
+            class="font-weight-bold"
+          >
+            <v-icon start size="x-small">mdi-fire</v-icon>
+            {{ item.sold || 0 }}
+          </v-chip>
+        </template>
+
         <!-- Mô Tả Column -->
         <template v-slot:item.description="{ item }">
           <div class="description-cell">
@@ -834,6 +847,13 @@ export default {
         {
           title: "Stock",
           key: "stock",
+          align: "center",
+          sortable: true,
+          width: "100px",
+        },
+        {
+          title: "Sold",
+          key: "sold",
           align: "center",
           sortable: true,
           width: "100px",

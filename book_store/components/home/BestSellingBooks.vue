@@ -90,11 +90,7 @@
 
                       <!-- Enhanced Book Cover -->
                       <div class="position-relative book-cover-container">
-                        <img
-                          :src="book?.cover_url"
-                          cover
-                          class="book-cover"
-                        />
+                        <img :src="book?.cover_url" cover class="book-cover" />
 
                         <!-- Favorite Button -->
                         <!-- <v-btn
@@ -157,15 +153,26 @@
                           <span class="text-truncate">{{ author }}</span>
                         </div>
 
-                        <!-- Genre Tag -->
-                        <v-chip
-                          size="small"
-                          variant="outlined"
-                          color="waterblue"
-                          class="mb-3 align-self-start text-capitalize"
-                        >
-                          {{ subject }}
-                        </v-chip>
+                        <!-- Genre Tag & Sold Count -->
+                        <div class="d-flex ga-2 mb-3">
+                          <v-chip
+                            size="small"
+                            variant="outlined"
+                            color="waterblue"
+                            class="text-capitalize"
+                          >
+                            {{ subject }}
+                          </v-chip>
+                          <v-chip
+                            size="small"
+                            variant="flat"
+                            color="success"
+                            class="text-capitalize"
+                          >
+                            <v-icon start size="x-small">mdi-fire</v-icon>
+                            Sold {{ book.sold || 0 }}
+                          </v-chip>
+                        </div>
 
                         <v-spacer></v-spacer>
 
@@ -221,7 +228,7 @@
         </v-col>
       </v-row>
     </v-card>
-</v-container>
+  </v-container>
 </template>
 
 <script>
@@ -342,7 +349,6 @@ export default {
   object-fit: cover !important;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
-
 
 .add-to-cart-btn {
   transition: all 0.2s ease;

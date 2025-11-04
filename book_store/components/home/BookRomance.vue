@@ -168,6 +168,17 @@
                   {{ book.title }}
                 </div>
 
+                <!-- Sold Count -->
+                <v-chip
+                  size="x-small"
+                  variant="flat"
+                  color="success"
+                  class="mb-2"
+                >
+                  <v-icon start size="x-small">mdi-fire</v-icon>
+                  Sold {{ book.sold || 0 }}
+                </v-chip>
+
                 <!-- Enhanced Price -->
                 <div class="d-flex justify-space-between align-center mt-auto">
                   <div class="d-flex align-center">
