@@ -1,5 +1,5 @@
 <template>
-  <v-container class="mt-12">
+  <v-container max-width="1500" class="mt-12">
     <!-- Enhanced Header Section -->
     <div class="d-flex justify-space-between align-center mb-8">
       <div class="d-flex align-center">
@@ -16,7 +16,11 @@
 
       <v-hover v-slot="{ isHovering, props }">
         <v-btn
-          @click="$router.push(`/subjects/${encodeURIComponent('contemporary romance')}`)"
+          @click="
+            $router.push(
+              `/subjects/${encodeURIComponent('contemporary romance')}`
+            )
+          "
           v-bind="props"
           :class="['view-all-btn', { 'is-hovering': isHovering }]"
           color="darkgreen"
@@ -34,195 +38,198 @@
     </div>
 
     <!-- Enhanced Loading Skeletons -->
-    <v-row v-if="isLoading && romanceBooks.length === 0">
-      <v-col v-for="i in 6" :key="i" cols="6" sm="4" md="2">
-        <v-sheet
-          rounded="xl"
-          class="pa-0 h-100 book-skeleton"
-          style="overflow: hidden; border: 1px solid rgba(0, 0, 0, 0.08)"
-        >
-          <v-skeleton-loader
-            type="image"
-            height="220"
-            class="rounded-t-xl"
-          ></v-skeleton-loader>
-          <div class="pa-4">
-            <v-skeleton-loader
-              type="text@2,actions"
-              class="rounded-lg"
-            ></v-skeleton-loader>
-          </div>
-        </v-sheet>
-      </v-col>
-    </v-row>
-
-    <!-- Enhanced Romance Books Grid -->
-    <v-row v-else>
-      <v-col
-        v-for="(book, i) in limitedRomanceBooks"
-        :key="i"
-        cols="6"
-        sm="4"
-        md="2"
-        class="d-flex"
+    <div v-if="isLoading && romanceBooks.length === 0">
+      <swiper
+        :slides-per-view="2"
+        :space-between="16"
+        :loop="true"
+        :breakpoints="{
+          640: { slidesPerView: 3, spaceBetween: 16 },
+          960: { slidesPerView: 4, spaceBetween: 20 },
+          1280: { slidesPerView: 6, spaceBetween: 24 },
+        }"
       >
-        <v-hover v-slot="{ isHovering, props }">
+        <swiper-slide v-for="i in 6" :key="i">
           <v-sheet
-            v-bind="props"
             rounded="xl"
-            class="d-flex flex-column h-100 w-100 book-card"
-            @click="$router.push(`/details/${book._id}`)"
-            :elevation="isHovering ? 8 : 2"
-            :style="{
-              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: isHovering ? 'translateY(-8px) scale(1.02)' : 'none',
-              border: '1px solid rgba(0,0,0,0.08)',
-            }"
+            class="pa-0 h-100 book-skeleton"
+            style="overflow: hidden; border: 1px solid rgba(0, 0, 0, 0.08)"
           >
-            <!-- Enhanced Book Cover -->
-            <div class="position-relative book-cover-container">
-              <v-img
-                :src="book?.cover_url"
-                height="220"
-                cover
-                class="rounded-t-xl"
-              >
-                <template v-slot:placeholder>
-                  <div class="d-flex align-center justify-center fill-height">
-                    <v-progress-circular
-                      indeterminate
-                      color="primary"
-                      size="32"
-                    ></v-progress-circular>
-                  </div>
-                </template>
-              </v-img>
-
-              <!-- Enhanced Favorite Button -->
-              <v-btn
-                icon
-                variant="text"
-                class="position-absolute favorite-btn"
-                style="top: 12px; right: 12px"
-                size="small"
-                @click.stop="handleToggleFavorites(book._id)"
-              >
-                <v-icon
-                  :color="isFavorite(book._id) ? 'red' : 'grey-lighten-5'"
-                  size="24"
-                >
-                  {{ isFavorite(book._id) ? "mdi-heart" : "mdi-heart-outline" }}
-                </v-icon>
-              </v-btn>
-
-              <!-- Quick View Overlay -->
-              <!-- <div
-                v-if="isHovering"
-                class="position-absolute d-flex align-center justify-center quick-view-overlay"
-              >
-                <v-btn
-                  color="white"
-                  variant="flat"
-                  size="small"
-                  rounded="pill"
-                  class="px-4 py-2 quick-view-btn"
-                  elevation="4"
-                >
-                  <v-icon size="small" class="mr-2">mdi-eye</v-icon>
-                  Quick View
-                </v-btn>
-              </div> -->
-
-              <!-- Stock Badge -->
-              <!-- <v-chip
-                color="success"
-                variant="flat"
-                size="x-small"
-                class="position-absolute stock-badge"
-                style="top: 12px; left: 12px"
-              >
-                In Stock
-              </v-chip> -->
-
-              <!-- Romance Badge -->
-              <v-chip
-                color="pink"
-                variant="flat"
-                size="x-small"
-                class="position-absolute romance-badge"
-                style="bottom: 12px; left: 12px"
-              >
-                Romance
-              </v-chip>
+            <v-skeleton-loader
+              type="image"
+              height="220"
+              class="rounded-t-xl"
+            ></v-skeleton-loader>
+            <div class="pa-4">
+              <v-skeleton-loader
+                type="text@2,actions"
+                class="rounded-lg"
+              ></v-skeleton-loader>
             </div>
+          </v-sheet>
+        </swiper-slide>
+      </swiper>
+    </div>
 
-            <!-- Enhanced Book Details -->
-            <div class="px-4 pt-4 pb-3 flex-grow-1 d-flex flex-column">
-              <!-- Enhanced Rating -->
-              <div class="d-flex align-center mb-2">
-                <v-rating
-                  :model-value="book.rating"
-                  color="amber"
-                  density="compact"
-                  size="small"
-                  readonly
-                  half-increments
-                  class="mr-2"
-                ></v-rating>
-              </div>
+    <!-- Enhanced Romance Books Swiper -->
+    <div v-else class="swiper-container-wrapper">
+      <!-- Custom Previous Button -->
+      <v-btn
+        icon
+        size="small"
+        class="swiper-button-custom swiper-button-prev-custom"
+        @click="slidePrev"
+        elevation="2"
+      >
+        <v-icon size="x-large">mdi-chevron-left</v-icon>
+      </v-btn>
 
-              <!-- Enhanced Title -->
-              <div
-                class="text-subtitle-1 font-weight-medium text-truncate mb-2 book-title"
-              >
-                {{ book.title }}
-              </div>
-
-              <!-- Enhanced Price -->
-              <div class="d-flex justify-space-between align-center mt-auto">
-                <div class="d-flex align-center">
-                  <span class="text-h6 font-weight-bold text-darkgreen"
-                    >${{ book.price }}</span
-                  >
+      <swiper
+        ref="romanceSwiper"
+        :modules="modules"
+        :slides-per-view="2"
+        :space-between="16"
+        :loop="true"
+        :pagination="{ clickable: true }"
+        :breakpoints="{
+          640: { slidesPerView: 3, spaceBetween: 16 },
+          960: { slidesPerView: 4, spaceBetween: 20 },
+          1280: { slidesPerView: 6, spaceBetween: 24 },
+        }"
+        class="romance-swiper"
+      >
+        <swiper-slide v-for="(book, i) in romanceBooks" :key="i">
+          <v-hover v-slot="{ isHovering, props }">
+            <v-sheet
+              v-bind="props"
+              class="d-flex flex-column h-100 w-100 book-card"
+              @click="$router.push(`/details/${book._id}`)"
+            >
+              <!-- Enhanced Book Cover -->
+              <div class="position-relative book-cover-container">
+                <div class="book-cover-wrapper">
+                  <img
+                    :src="book?.cover_url"
+                    :alt="book.title"
+                    class="book-cover-image"
+                  />
                 </div>
+
+                <!-- Enhanced Favorite Button -->
+                <v-btn
+                  icon
+                  variant="text"
+                  class="position-absolute favorite-btn"
+                  style="top: 12px; right: 12px"
+                  size="small"
+                  @click.stop="handleToggleFavorites(book._id)"
+                >
+                  <v-icon
+                    :color="isFavorite(book._id) ? 'red' : 'grey-lighten-5'"
+                    size="24"
+                  >
+                    {{
+                      isFavorite(book._id) ? "mdi-heart" : "mdi-heart-outline"
+                    }}
+                  </v-icon>
+                </v-btn>
+
+                <!-- Romance Badge -->
                 <v-chip
-                  color="customyellow"
+                  color="pink"
                   variant="flat"
                   size="x-small"
-                  class="px-2 discount-chip"
+                  class="position-absolute romance-badge"
+                  style="bottom: 12px; left: 50%; transform: translateX(-50%)"
                 >
-                  -25%
+                  Romance
                 </v-chip>
               </div>
-            </div>
 
-            <!-- Enhanced Add to Cart Button -->
-            <v-card-actions class="px-4 pb-4 pt-0">
-              <v-btn
-                color="darkgreen"
-                variant="elevated"
-                block
-                size="large"
-                class="text-subtitle-2 font-weight-medium add-to-cart-btn"
-                rounded="lg"
-                elevation="2"
-                @click.stop="$emit('add-to-cart', book._id, 1)"
-              >
-                <v-icon size="small" class="mr-2">mdi-cart-plus</v-icon>
-                Add to Cart
-              </v-btn>
-            </v-card-actions>
-          </v-sheet>
-        </v-hover>
-      </v-col>
-    </v-row>
+              <!-- Enhanced Book Details -->
+              <div class="px-4 pt-4 pb-3 flex-grow-1 d-flex flex-column">
+                <!-- Enhanced Rating -->
+                <div class="d-flex align-center mb-2">
+                  <v-rating
+                    :model-value="book.rating"
+                    color="amber"
+                    density="compact"
+                    size="small"
+                    readonly
+                    half-increments
+                    class="mr-2"
+                  ></v-rating>
+                </div>
+
+                <!-- Enhanced Title -->
+                <div
+                  class="text-subtitle-1 font-weight-medium text-truncate mb-2 book-title"
+                >
+                  {{ book.title }}
+                </div>
+
+                <!-- Enhanced Price -->
+                <div class="d-flex justify-space-between align-center mt-auto">
+                  <div class="d-flex align-center">
+                    <span class="text-h6 font-weight-bold text-darkgreen"
+                      >${{ book.price }}</span
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <!-- Enhanced Add to Cart Button -->
+              <v-card-actions class="px-4 pb-4 pt-0 d-flex justify-center">
+                <v-btn
+                  color="darkgreen"
+                  variant="elevated"
+                  size="large"
+                  block
+                  class="text-subtitle-2 font-weight-medium add-to-cart-btn"
+                  rounded="lg"
+                  elevation="2"
+                  @click.stop="$emit('add-to-cart', book._id, 1)"
+                >
+                  <v-icon size="small" class="mr-2">mdi-cart-plus</v-icon>
+                  Add to Cart
+                </v-btn>
+              </v-card-actions>
+            </v-sheet>
+          </v-hover>
+        </swiper-slide>
+      </swiper>
+
+      <!-- Custom Next Button -->
+      <v-btn
+        icon
+        size="small"
+        class="swiper-button-custom swiper-button-next-custom"
+        @click="slideNext"
+        elevation="2"
+      >
+        <v-icon size="x-large">mdi-chevron-right</v-icon>
+      </v-btn>
+    </div>
   </v-container>
 </template>
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { Swiper, SwiperSlide } from "swiper/vue";
+import { Pagination } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/pagination";
 
 export default {
+  components: {
+    Swiper,
+    SwiperSlide,
+  },
+  setup() {
+    return {
+      modules: [Pagination],
+    };
+  },
   data() {
     return {
       isLoading: false,
@@ -230,9 +237,6 @@ export default {
   },
   computed: {
     ...mapState("book", ["romanceBooks"]),
-    limitedRomanceBooks() {
-      return this.romanceBooks.slice(0, 6);
-    },
   },
   props: {
     favorites: {
@@ -276,10 +280,44 @@ export default {
       this.isLoading = false;
     }
   },
+  slidePrev() {
+    this.$refs.romanceSwiper.$el.swiper.slidePrev();
+  },
+  slideNext() {
+    this.$refs.romanceSwiper.$el.swiper.slideNext();
+  },
 };
 </script>
 
 <style scoped>
+/* Swiper Container Wrapper */
+.swiper-container-wrapper {
+  position: relative;
+}
+
+/* Custom Navigation Buttons */
+.swiper-button-custom {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  background-color: white !important;
+  border: 1px solid #e0e0e0;
+  margin-top: -25px;
+}
+
+.swiper-button-prev-custom {
+  left: -20px;
+}
+
+.swiper-button-next-custom {
+  right: -20px;
+}
+
+.swiper-button-custom:hover {
+  background-color: #f5f5f5 !important;
+}
+
 .category-icon-wrapper {
   width: 60px;
   height: 60px;
@@ -319,20 +357,47 @@ export default {
   cursor: pointer;
 }
 
-.book-card:hover {
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
-}
-
 .book-cover-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  position: relative;
+}
+
+.book-cover-wrapper {
+  width: 70%;
+  max-width: 180px;
+  aspect-ratio: 2/3;
+  position: relative;
   overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.book-cover-container .v-img {
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+.book-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
-.book-card:hover .book-cover-container .v-img {
-  transform: scale(1.05);
+.book-card:hover .book-cover-wrapper {
+  transform: translateY(-8px) scale(1.05);
+}
+
+/* Swiper Customization */
+.romance-swiper {
+  padding: 0 4px 50px 4px;
+}
+
+.romance-swiper :deep(.swiper-pagination-bullet) {
+  background: #435058;
+  opacity: 0.3;
+}
+
+.romance-swiper :deep(.swiper-pagination-bullet-active) {
+  opacity: 1;
+  background: #435058;
 }
 
 .favorite-btn {

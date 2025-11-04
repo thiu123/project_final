@@ -341,7 +341,6 @@
                       :src="item.bookId.cover_url"
                       width="80"
                       height="110"
-                      class="rounded"
                       :alt="item.bookId.title"
                       cover
                     ></v-img>
@@ -397,7 +396,6 @@
                     :src="item.bookId.cover_url"
                     width="120"
                     height="160"
-                    class="rounded-lg"
                     :alt="item.bookId.title"
                     cover
                   ></v-img>

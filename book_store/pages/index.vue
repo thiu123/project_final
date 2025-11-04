@@ -71,9 +71,9 @@
                 rounded="xl"
                 elevation="8"
               >
-                <v-list class="py-0">
+                <v-list class="py-0"   style="max-height: 400px; overflow-y: auto;">
                   <v-list-item
-                    v-for="(book, index) in searchResults.slice(0, 5)"
+                    v-for="(book, index) in searchResults"
                     :key="index"
                     class="search-result-item"
                     @click="$router.push(`/details/${book._id}`)"
@@ -121,9 +121,9 @@
               </h3>
 
               <div class="d-flex justify-center flex-wrap ga-4">
-                <template v-if="books.length">
+                <template v-if="books && books.length">
                   <v-card
-                    v-for="(book, i) in books.slice(50, 56)"
+                    v-for="(book, i) in books"
                     :key="i"
                     elevation="4"
                     rounded="xl"
@@ -175,319 +175,14 @@
     </v-container>
 
     <!-- Best Selling Books -->
-    <v-container class="mt-8">
-      <v-card
-        elevation="12"
-        class="pa-8 rounded-xl best-sellers-card"
-        style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
-      >
-        <!-- Enhanced Header -->
-        <div class="d-flex justify-space-between align-center mb-8">
-          <div class="d-flex align-center">
-            <v-avatar color="customyellow" size="56" class="mr-4">
-              <v-icon color="darkgreen" size="32">mdi-trophy</v-icon>
-            </v-avatar>
-            <div>
-              <h2 class="text-h3 text-customblack font-weight-bold mb-2">
-                Best Selling Books
-              </h2>
-              <p class="text-subtitle-1 text-medium-emphasis ma-0">
-                Discover our most popular titles across all categories
-              </p>
-            </div>
-          </div>
+    <HomeBestSellingBooks
+      :favorites="favorites"
+      @add-to-cart="handleAddToCart"
+      @toggle-favorites="handleToggleFavorites"
+    />
 
-          <v-btn
-            color="waterblue"
-            variant="outlined"
-            rounded="xl"
-            class="font-weight-bold"
-            size="large"
-          >
-            <v-icon start size="small">mdi-eye</v-icon>
-            View All
-          </v-btn>
-        </div>
-
-        <v-row>
-          <v-col cols="12">
-            <!-- Enhanced Tabs Card -->
-            <v-card elevation="8" class="rounded-xl overflow-hidden">
-              <!-- Enhanced Tabs Navigation -->
-              <v-tabs
-                v-model="tab"
-                color="waterblue"
-                align-tabs="start"
-                class="enhanced-tabs"
-                bg-color="grey-lighten-5"
-                slider-color="waterblue"
-                height="72"
-              >
-                <v-tab
-                  v-for="(subject, i) in bestSellerSubjects"
-                  :key="i"
-                  :value="subject"
-                  class="text-capitalize font-weight-bold tab-item"
-                  rounded="lg"
-                >
-                  {{ subject }}
-                </v-tab>
-              </v-tabs>
-
-              <!-- Enhanced Tabs Content -->
-              <v-tabs-window class="pa-6" v-model="tab">
-                <v-tabs-window-item
-                  v-for="subject in bestSellerSubjects"
-                  :key="subject"
-                  :value="subject"
-                  class="tab-content"
-                >
-                  <v-row>
-                    <v-col
-                      v-for="(book, i) in bestSellersStories.slice(0, 8)"
-                      :key="i"
-                      cols="12"
-                      sm="6"
-                      md="3"
-                    >
-                      <!-- Enhanced Book Card -->
-                      <v-card
-                        class="book-card h-100 rounded-xl position-relative cursor-pointer"
-                        @click="$router.push(`/details/${book._id}`)"
-                        elevation="4"
-                        hover
-                      >
-                        <!-- Bestseller Badge -->
-                        <v-chip
-                          color="red"
-                          size="small"
-                          class="bestseller-badge"
-                          variant="elevated"
-                        >
-                          <v-icon start size="x-small">mdi-fire</v-icon>
-                          #{{ i + 1 }}
-                        </v-chip>
-
-                        <!-- Enhanced Book Cover -->
-                        <div class="position-relative book-cover-container">
-                          <v-img
-                            :src="book?.cover_url"
-                            height="300"
-                            cover
-                            class="book-cover"
-                          >
-                            <template v-slot:placeholder>
-                              <div
-                                class="d-flex align-center justify-center fill-height"
-                              >
-                                <v-progress-circular
-                                  color="waterblue"
-                                  indeterminate
-                                ></v-progress-circular>
-                              </div>
-                            </template>
-                          </v-img>
-
-                          <!-- Favorite Button -->
-                          <!-- <v-btn
-                            icon
-                            variant="text"
-                            class="position-absolute favorite-btn"
-                            style="top: 12px; right: 12px"
-                            size="small"
-                            @click.stop="handleToggleFavorites(book._id)"
-                          >
-                            <v-icon
-                              :color="
-                                isFavorite(book._id) ? 'red' : 'grey-lighten-2'
-                              "
-                              size="24"
-                            >
-                              {{
-                                isFavorite(book._id)
-                                  ? "mdi-heart"
-                                  : "mdi-heart-outline"
-                              }}
-                            </v-icon>
-                          </v-btn> -->
-                        </div>
-
-                        <!-- Enhanced Card Content -->
-                        <v-card-text class="pa-4 d-flex flex-column">
-                          <!-- Rating Section -->
-                          <div class="d-flex align-center mb-3">
-                            <v-rating
-                              :model-value="book?.rating"
-                              color="amber"
-                              density="compact"
-                              size="small"
-                              readonly
-                              half-increments
-                            ></v-rating>
-                            <!-- <v-chip
-                              size="x-small"
-                              variant="text"
-                              class="ml-2 text-caption"
-                            >
-                              (128)
-                            </v-chip> -->
-                          </div>
-
-                          <!-- Book Title -->
-                          <div
-                            class="text-subtitle-1 text-truncate font-weight-bold mb-2 text-customblack"
-                          >
-                            {{ book.title }}
-                          </div>
-
-                          <!-- Author -->
-                          <div
-                            v-for="(author, index) in book.authors?.slice(0, 1)"
-                            :key="index"
-                            class="text-caption text-medium-emphasis mb-3"
-                          >
-                            <span class="text-truncate">{{ author }}</span>
-                          </div>
-
-                          <!-- Genre Tag -->
-                          <v-chip
-                            size="small"
-                            variant="outlined"
-                            color="waterblue"
-                            class="mb-3 align-self-start text-capitalize"
-                          >
-                            {{ subject }}
-                          </v-chip>
-
-                          <v-spacer></v-spacer>
-
-                          <!-- Price Section -->
-                          <div
-                            class="d-flex justify-space-between align-center mb-3"
-                          >
-                            <div class="d-flex align-center">
-                              <span
-                                class="text-h6 font-weight-bold text-customblack"
-                              >
-                                ${{ book.price || "19.99" }}
-                              </span>
-                              <span
-                                class="text-caption text-grey text-decoration-line-through ml-2"
-                              >
-                                ${{ (book.price * 1.25 || 24.99).toFixed(2) }}
-                              </span>
-                            </div>
-
-                            <v-chip
-                              color="red-lighten-4"
-                              text-color="red-darken-2"
-                              size="x-small"
-                              variant="flat"
-                            >
-                              -20%
-                            </v-chip>
-                          </div>
-                        </v-card-text>
-
-                        <!-- Enhanced Card Actions -->
-                        <v-card-actions class="pa-4 pt-0">
-                          <v-btn
-                            block
-                            color="waterblue"
-                            variant="elevated"
-                            size="large"
-                            class="font-weight-bold rounded-xl add-to-cart-btn"
-                            elevation="2"
-                            @click.stop="handleAddToCart(book._id, 1)"
-                          >
-                            <v-icon start size="small">mdi-cart-plus</v-icon>
-                            Add to Cart
-                          </v-btn>
-                        </v-card-actions>
-                      </v-card>
-                    </v-col>
-                  </v-row>
-
-                  <!-- Load More Section -->
-                  <div class="text-center mt-8">
-                    <v-btn
-                      color="waterblue"
-                      variant="outlined"
-                      size="large"
-                      rounded="xl"
-                      class="font-weight-bold"
-                    >
-                      <v-icon start>mdi-plus</v-icon>
-                      Load More Books
-                    </v-btn>
-                  </div>
-                </v-tabs-window-item>
-              </v-tabs-window>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-card>
-    </v-container>
-
-    <!-- New Categories Showcase Section -->
-    <v-container class="mt-8">
-      <v-card
-        elevation="12"
-        class="pa-8 rounded-xl categories-card"
-        style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)"
-      >
-        <div class="text-center mb-8">
-          <h2 class="text-h3 font-weight-bold text-customblack mb-3">
-            Explore by Category
-          </h2>
-          <p class="text-subtitle-1 text-medium-emphasis">
-            Find your perfect book in our carefully curated categories
-          </p>
-        </div>
-
-        <v-row>
-          <v-col
-            v-for="(category, index) in categories"
-            :key="index"
-            cols="12"
-            sm="6"
-            md="4"
-            lg="3"
-          >
-            <v-card
-              class="category-card rounded-xl cursor-pointer"
-              @click="$router.push(`/subjects/${category.route}`)"
-              elevation="4"
-              hover
-              height="280"
-            >
-              <div class="category-image-wrapper">
-                <img
-                  :src="category.image"
-                  class="category-image"
-                  :alt="category.name"
-                />
-                <div
-                  class="category-overlay d-flex align-center justify-center"
-                >
-                  <div class="text-center">
-                    <v-icon size="48" color="white" class="mb-3">{{
-                      category.icon
-                    }}</v-icon>
-                    <h3 class="text-h5 font-weight-bold text-white">
-                      {{ category.name }}
-                    </h3>
-                    <p class="text-white text-caption">
-                      {{ category.count }} books
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </v-card>
-          </v-col>
-        </v-row>
-      </v-card>
-    </v-container>
+    <!-- Categories Showcase Section -->
+    <HomeCategoryShowcase />
 
     <!-- Dynamic Book Components -->
     <component
@@ -578,42 +273,8 @@ export default {
   },
   data() {
     return {
-      tab: "historical fiction",
       bookComponents: ["BookFiction", "BookManga", "BookRomance"],
-      bestSellerSubjects: ["historical fiction", "manga", "cooking"],
       newsletterEmail: "",
-      bestSellersStories: [], // Store books for current tab
-      categories: [
-        {
-          name: "Literary Fiction",
-          route: "literary fiction",
-          icon: "mdi-book-open-page-variant",
-          image: "https://covers.openlibrary.org/b/id/12727001-L.jpg",
-          count: "2,500+",
-        },
-        {
-          name: "Romance",
-          route: "contemporary romance",
-          icon: "mdi-heart",
-          image: "https://covers.openlibrary.org/b/id/1458693-L.jpg",
-          count: "1,800+",
-        },
-        {
-          name: "Manga",
-          route: "manga",
-          icon: "mdi-comic-speech-bubble",
-          image:
-            "https://res.cloudinary.com/dud7xndwa/image/upload/v1758969520/books/oizgzwxqaijmuxghobpp.jpg",
-          count: "3,200+",
-        },
-        {
-          name: "History",
-          route: "history",
-          icon: "mdi-castle",
-          image: "https://covers.openlibrary.org/b/id/463315-L.jpg",
-          count: "1,500+",
-        },
-      ],
       searchQuery: "",
       searchResults: [],
       showSnackbar: false,
@@ -638,13 +299,6 @@ export default {
         console.error("Error when searching", error);
       }
     }, 300),
-    async tab(newVal) {
-      console.log("New Tab Value:", newVal);
-      // Load books for the selected subject
-      if (newVal) {
-        await this.loadBooksForSubject(newVal);
-      }
-    },
   },
   computed: {
     ...mapGetters("book", ["getTitleBooks"]),
@@ -655,30 +309,12 @@ export default {
     // Xử lý Google Auth callback
     await this.handleGoogleAuthCallback();
     await this.getFavoritesForEachUser();
-    await this.getAllBooks({ subject: null, half: true }); // Chỉ lấy một nửa sách
-    // Load books for the initial tab
-    await this.loadBooksForSubject(this.tab);
+    await this.getAllBooks({ subject: null, half: true });
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
     ...mapActions("cart", ["addToCart", "fetchCart"]),
     ...mapActions("favorite", ["toggleFavorites", "getFavoritesForEachUser"]),
-
-    async loadBooksForSubject(subject) {
-      try {
-        console.log("Loading books for subject:", subject);
-        
-        // Fetch books for the specific subject from API
-        await this.getAllBooks({ subject, half: true });
-        // The books are now filtered by backend, just assign them
-        this.bestSellersStories = this.books;
-        
-        console.log(`Loaded ${this.bestSellersStories.length} books for ${subject}`);
-      } catch (error) {
-        console.error("Error loading books for subject:", error);
-        this.bestSellersStories = [];
-      }
-    },
 
     async handleGoogleAuthCallback() {
       const urlParams = new URLSearchParams(window.location.search);
@@ -821,119 +457,8 @@ export default {
   transform: translateY(-4px);
 }
 
-.best-sellers-card {
-  border: 1px solid #dee2e6;
-}
-
-.enhanced-tabs {
-  border-bottom: 1px solid #e9ecef;
-}
-
-.tab-item {
-  font-size: 1rem;
-  padding: 16px 24px;
-}
-
-.book-card {
-  transition: all 0.3s ease;
-  border: 1px solid #e9ecef;
-}
-
-.book-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
-}
-
-.bestseller-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 2;
-}
-
-.book-cover-container {
-  overflow: hidden;
-}
-
-.book-cover {
-  transition: transform 0.3s ease;
-}
-
-.book-card:hover .book-cover {
-  transform: scale(1.05);
-}
-
-.add-to-cart-btn {
-  transition: all 0.2s ease;
-}
-
-.add-to-cart-btn:hover {
-  transform: translateY(-2px);
-}
-
-.categories-card {
-  border: 1px solid #dee2e6;
-}
-
-.category-card {
-  transition: all 0.3s ease;
-  overflow: hidden;
-  position: relative;
-}
-
-.category-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15) !important;
-}
-
-.category-image-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  border-radius: 12px;
-}
-
-.category-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.category-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(82, 149, 208, 0.8) 0%,
-    rgba(67, 80, 88, 0.8) 100%
-  );
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.category-card:hover .category-overlay {
-  opacity: 1;
-}
-
 .newsletter-card {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
   border: 1px solid #dee2e6;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .tab-item {
-    font-size: 0.875rem;
-    padding: 12px 16px;
-  }
-
-  .book-card {
-    margin-bottom: 16px;
-  }
 }
 </style>

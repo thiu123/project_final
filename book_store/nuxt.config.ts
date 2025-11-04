@@ -6,14 +6,7 @@ export default defineNuxtConfig({
   modules: ["vuetify-nuxt-module", "nuxt3-vuex-module"],
   css: ["@/assets/styles/main.css"],
   app: {
-    head: {
-      link: [
-        {
-          rel: "stylesheet",
-          href: "https://fonts.googleapis.com/css2?family=Geist:wght@100;200;300;400;500;600;700;800;900&display=swap",
-        },
-      ],
-    },
+    head: {},
   },
   vuetify: {
     moduleOptions: {
@@ -33,7 +26,7 @@ export default defineNuxtConfig({
               whitesmoke: "#F1F2EE",
             },
             variables: {
-              "font-family": "Geist, sans-serif",
+              "font-family": "Arial, sans-serif",
             },
           },
         },
