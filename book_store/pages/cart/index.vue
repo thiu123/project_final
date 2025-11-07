@@ -311,10 +311,31 @@
               class="py-4 px-4 bg-waterblue text-white d-flex align-center"
             >
               <v-icon icon="mdi-receipt" color="white" class="mr-2"></v-icon>
-              <span class="font-weight-bold">PAYMENT</span>
+              <span class="font-weight-bold">PAYMENT SUMMARY</span>
             </v-card-title>
 
             <v-card-text class="pa-6">
+              <v-alert
+                v-if="selectedItems.length === 0"
+                type="info"
+                variant="tonal"
+                density="compact"
+                class="mb-4"
+              >
+                No items selected
+              </v-alert>
+
+              <div v-else class="mb-4">
+                <div class="d-flex align-center justify-space-between mb-2">
+                  <span class="text-caption text-grey-darken-1"
+                    >Selected items</span
+                  >
+                  <span class="text-caption font-weight-bold text-waterblue">
+                    {{ selectedItems.length }} / {{ cartItems.length }}
+                  </span>
+                </div>
+              </div>
+
               <v-list density="compact" class="pa-0 bg-transparent">
                 <v-list-item class="px-0">
                   <template v-slot:prepend>
@@ -372,10 +393,21 @@
                 class="text-h6 font-weight-bold mt-6 text-white"
                 prepend-icon="mdi-cash-register"
                 rounded="lg"
-                @click="$router.push('/order')"
+                @click="handleCheckout"
+                :disabled="selectedItems.length === 0"
               >
-                CHECKOUT
+                CHECKOUT ({{ selectedItems.length }})
               </v-btn>
+
+              <v-alert
+                v-if="selectedItems.length === 0"
+                type="warning"
+                variant="tonal"
+                density="compact"
+                class="mt-3 text-caption"
+              >
+                Please select at least one item to checkout
+              </v-alert>
 
               <div class="d-flex align-center justify-center gap-2 mt-4">
                 <v-icon
@@ -436,7 +468,7 @@ export default {
   data() {
     return {
       drawer: false,
-      selectAll: true,
+      selectAll: false,
       selectedItems: [],
       confirmDelete: false,
       itemToDelete: null,
@@ -449,8 +481,15 @@ export default {
     cartItems() {
       return this.cart?.items || [];
     },
+    selectedCartItems() {
+      // Get only selected items
+      return this.cartItems.filter((item) =>
+        this.selectedItems.includes(item.bookId._id)
+      );
+    },
     totalPrice() {
-      return this.cartItems.reduce((total, item) => {
+      // Calculate total only for selected items
+      return this.selectedCartItems.reduce((total, item) => {
         const price =
           item.productType === "ebook"
             ? item.bookId.price * 0.7
@@ -462,18 +501,51 @@ export default {
   watch: {
     selectAll(val) {
       if (val) {
+        console.log("Selecting all items", val);
         this.selectedItems = this.cartItems.map((item) => item.bookId._id);
       } else {
         this.selectedItems = [];
       }
     },
     selectedItems(val) {
+      console.log("Selected items changed:", val);
       this.selectAll =
         val.length === this.cartItems.length && this.cartItems.length > 0;
     },
   },
   methods: {
     ...mapActions("cart", ["fetchCart", "removeCartItem"]),
+
+    handleCheckout() {
+      if (this.selectedItems.length === 0) {
+        return;
+      }
+
+      // Get selected items data
+      const selectedItemsData = this.selectedCartItems.map((item) => ({
+        bookId: item.bookId._id,
+        title: item.bookId.title,
+        cover_url: item.bookId.cover_url,
+        price: item.bookId.price,
+        quantity: item.quantity,
+        productType: item.productType,
+        subjects: item.bookId.subjects,
+        stock: item.bookId.stock,
+      }));
+
+      // Store in localStorage for order page (only on client side)
+      if (import.meta.client) {
+        localStorage.setItem(
+          "checkoutItems",
+          JSON.stringify(selectedItemsData)
+        );
+      }
+
+      console.log("Checkout with items:", selectedItemsData);
+
+      // Navigate to order page
+      this.$router.push("/order");
+    },
 
     getItemPrice(item) {
       const basePrice = item?.bookId?.price || 0;
@@ -513,12 +585,22 @@ export default {
       }
     },
     confirmDeleteItem(bookId) {
-      console.log("Deleting item with bookId:", bookId);
+      if(!bookId) return;
       this.itemToDelete = bookId;
       this.confirmDelete = true;
     },
     async deleteItem() {
       try {
+        if(!this.itemToDelete) return;
+
+        if(this.selectAll) {
+          // If all selected, delete all selected items
+          await this.deleteSelectedItems();
+          this.confirmDelete = false;
+          this.itemToDelete = null;
+          return;
+        }
+        
         if (this.itemToDelete) {
           await this.removeCartItem(this.itemToDelete);
           this.confirmDelete = false;
@@ -545,6 +627,12 @@ export default {
 
     try {
       await this.fetchCart();
+
+      // Auto-select all items when cart loads
+      if (this.cartItems.length > 0) {
+        this.selectedItems = this.cartItems.map((item) => item.bookId._id);
+        this.selectAll = true;
+      }
     } catch (err) {
       console.error("Error fetching cart:", err);
     } finally {

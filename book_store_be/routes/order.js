@@ -14,11 +14,6 @@ router.post(
   orderController.createMoMoOrderFromCart
 );
 router.get(
-  "/preview",
-  middlewareController.verifyToken,
-  orderController.getCartPreview
-);
-router.get(
   "/user",
   middlewareController.verifyToken,
   orderController.getUserOrders

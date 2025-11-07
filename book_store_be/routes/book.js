@@ -3,7 +3,7 @@ const bookController = require("../controllers/books/bookController");
 const middlewareController = require("../controllers/middlewareController");
 
 router.get("/", bookController.getAllBooks);
-router.get("/subject/:subject", bookController.getBooksBySubject);
+// router.get("/subject/:subject", bookController.getBooksBySubject);
 router.get("/search", bookController.searchBooksByTitle);
 router.get("/:id", bookController.getBookById);
 

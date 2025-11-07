@@ -5,13 +5,6 @@ const API_URL = "http://localhost:5000/api/order";
 const token = () => `Bearer ${localStorage.getItem("accessToken")}`;
 
 const orderApi = {
-  getCartPreview: async () => {
-    const res = await axios.get(`${API_URL}/preview`, {
-      headers: { token: token() },
-    });
-    return res.data;
-  },
-
   getUserOrders: async () => {
     const res = await axios.get(`${API_URL}/user`, {
       headers: { token: token() },
