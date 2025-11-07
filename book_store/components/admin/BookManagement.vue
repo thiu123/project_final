@@ -347,13 +347,14 @@
 
                   <v-col cols="12" md="6">
                     <v-file-input
+                      v-model="uploadedFile"
                       label="Cover Image"
                       variant="outlined"
                       density="comfortable"
                       prepend-inner-icon="mdi-camera"
                       accept="image/*"
                       show-size
-                      @change="handleBookUpload"
+                      @update:modelValue="handleBookUpload"
                       :error-messages="errors.cover_url"
                     ></v-file-input>
                     <!-- Hiển thị URL ảnh hiện tại nếu có -->
@@ -800,6 +801,7 @@ export default {
       editedItem: this.getDefaultItem(),
       bookToDelete: null,
       viewedBook: null,
+      uploadedFile: null, // For v-file-input binding
 
       // Form validation
       errors: {},
@@ -1048,6 +1050,7 @@ export default {
         this.editedItem = this.getDefaultItem();
         this.editedIndex = -1;
         this.errors = {};
+        this.uploadedFile = null; // Reset file input
       });
     },
 
@@ -1083,12 +1086,26 @@ export default {
       return Object.keys(this.errors).length === 0;
     },
 
-    async handleBookUpload(event) {
-      const file = event.target.files[0];
-      if (!file) return;
+    async handleBookUpload(file) {
+      // console.log("=== UPLOAD DEBUG START ===");
+      // console.log("1. Raw file received:", file);
+      // console.log("2. Type of file:", typeof file);
+      // console.log("3. Is it an array?", Array.isArray(file));
+      // console.log("4. Is it a File?", file instanceof File);
+
+      if (!file) {
+        console.log("No file found!");
+        return;
+      }
+
+      // console.log("5. File type:", file.type);
+      // console.log("6. File name:", file.name);
+      // console.log("7. File size:", file.size);
+      // console.log("=== UPLOAD DEBUG END ===");
 
       // Validate file type
-      if (!file.type.startsWith("image/")) {
+      if (!file.type || !file.type.startsWith("image/")) {
+        console.log("❌ File type validation failed:", file.type);
         this.showSnackbar("Please select a valid image file", "error");
         return;
       }
@@ -1100,20 +1117,28 @@ export default {
       }
 
       try {
+        this.showSnackbar("Uploading image...", "info");
         const response = await uploadBookImage(file);
-        if (response.data && response.data.data.url) {
+
+        // console.log("Upload response:", response);
+        // console.log("Response data:", response.data);
+
+        if (response.data && response.data.data && response.data.data.url) {
           this.editedItem.cover_url = response.data.data.url;
-          console.log(
-            "Image uploaded successfully:",
-            this.editedItem.cover_url
-          );
+          // console.log(
+          //   "✅ Image uploaded successfully:",
+          //   this.editedItem.cover_url
+          // );
+          this.showSnackbar("Image uploaded successfully!", "success");
         } else {
           throw new Error("No URL returned from server");
         }
       } catch (error) {
         console.error("Upload error:", error);
+        console.error("Error response:", error.response);
         this.showSnackbar(
-          "Failed to upload image: " + (error.message || "Unknown error"),
+          "Failed to upload image: " +
+            (error.response?.data?.message || error.message || "Unknown error"),
           "error"
         );
       }

@@ -6,34 +6,6 @@ const vnpayController = require("../vnpay/vnpayController");
 const momoController = require("../momo/momoController");
 
 const orderController = {
-  getCartPreview: async (req, res) => {
-    try {
-      const userId = req.user.id;
-
-      const cart = await Cart.findOne({ userId }).populate("items.bookId");
-      if (!cart || cart.items.length === 0) {
-        return res.status(400).json({ msg: "Cart is empty" });
-      }
-
-      const exchange_rate = 24;
-      const totalAmount = cart.items.reduce((sum, item) => {
-        // Apply pricing based on product type
-        const price =
-          item.productType === "ebook"
-            ? item.bookId.price * 0.7 // 70% of original price for ebook
-            : item.bookId.price; // Full price for hardbook
-        return sum + price * item.quantity * exchange_rate;
-      }, 0);
-
-      return res.status(200).json({
-        items: cart.items,
-        total: totalAmount,
-      });
-    } catch (err) {
-      return res.status(500).json({ msg: err.message });
-    }
-  },
-
   getUserOrders: async (req, res) => {
     try {
       const userId = req.user.id;

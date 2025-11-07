@@ -1,18 +1,24 @@
 <template>
-  <v-container max-width="1440" class="mt-8">
+  <v-container max-width="1440" class="mt-4 mt-md-8 px-3 px-md-4">
     <v-card
       elevation="12"
-      class="pa-8 rounded-xl best-sellers-card"
+      class="pa-4 pa-md-8 rounded-xl best-sellers-card"
       style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
     >
       <!-- Enhanced Header -->
-      <div class="d-flex justify-space-between align-center mb-8 border-b">
-        <div class="d-flex align-center">
+      <div
+        class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center mb-4 mb-md-8 border-b"
+      >
+        <div class="d-flex align-center mb-4 mb-md-0">
           <div>
-            <h2 class="text-h3 text-customblack font-weight-bold mb-2">
+            <h2
+              class="text-h5 text-md-h3 text-customblack font-weight-bold mb-2"
+            >
               Best Selling Books
             </h2>
-            <p class="text-subtitle-1 text-medium-emphasis ma-0">
+            <p
+              class="text-caption text-md-subtitle-1 text-medium-emphasis ma-0"
+            >
               Discover our most popular titles across all categories
             </p>
           </div>
@@ -23,10 +29,13 @@
           variant="outlined"
           rounded="xl"
           class="font-weight-bold"
-          size="large"
+          :size="$vuetify.display.mobile ? 'small' : 'large'"
         >
-          <v-icon start size="small">mdi-eye</v-icon>
-          View All
+          <v-icon start :size="$vuetify.display.mobile ? 'x-small' : 'small'"
+            >mdi-eye</v-icon
+          >
+          <span class="d-none d-sm-inline">View All</span>
+          <span class="d-inline d-sm-none">View</span>
         </v-btn>
       </div>
 
@@ -38,11 +47,12 @@
             <v-tabs
               v-model="tab"
               color="waterblue"
-              align-tabs="start"
+              :align-tabs="$vuetify.display.mobile ? 'center' : 'start'"
               class="enhanced-tabs"
               bg-color="grey-lighten-5"
               slider-color="waterblue"
-              height="72"
+              :height="$vuetify.display.mobile ? '56' : '72'"
+              :show-arrows="$vuetify.display.mobile"
             >
               <v-tab
                 v-for="(subject, i) in bestSellerSubjects"
@@ -56,7 +66,7 @@
             </v-tabs>
 
             <!-- Enhanced Tabs Content -->
-            <v-tabs-window class="pa-6" v-model="tab">
+            <v-tabs-window class="pa-3 pa-md-6" v-model="tab">
               <v-tabs-window-item
                 v-for="subject in bestSellerSubjects"
                 :key="subject"
@@ -67,7 +77,7 @@
                   <v-col
                     v-for="(book, i) in bestSellersStories.slice(0, 8)"
                     :key="i"
-                    cols="12"
+                    cols="6"
                     sm="6"
                     md="3"
                   >
@@ -80,7 +90,7 @@
                       <!-- Bestseller Badge -->
                       <v-chip
                         color="red"
-                        size="small"
+                        :size="$vuetify.display.mobile ? 'x-small' : 'small'"
                         class="bestseller-badge"
                         variant="elevated"
                       >
@@ -91,55 +101,28 @@
                       <!-- Enhanced Book Cover -->
                       <div class="position-relative book-cover-container">
                         <img :src="book?.cover_url" cover class="book-cover" />
-
-                        <!-- Favorite Button -->
-                        <!-- <v-btn
-                          icon
-                          variant="text"
-                          class="position-absolute favorite-btn"
-                          style="top: 12px; right: 12px"
-                          size="small"
-                          @click.stop="handleToggleFavorites(book._id)"
-                        >
-                          <v-icon
-                            :color="
-                              isFavorite(book._id) ? 'red' : 'grey-lighten-2'
-                            "
-                            size="24"
-                          >
-                            {{
-                              isFavorite(book._id)
-                                ? "mdi-heart"
-                                : "mdi-heart-outline"
-                            }}
-                          </v-icon>
-                        </v-btn> -->
                       </div>
 
                       <!-- Enhanced Card Content -->
-                      <v-card-text class="pa-4 d-flex flex-column">
+                      <v-card-text class="pa-2 pa-md-4 d-flex flex-column">
                         <!-- Rating Section -->
-                        <div class="d-flex align-center mb-3">
+                        <div class="d-flex align-center mb-2 mb-md-3">
                           <v-rating
                             :model-value="book?.rating"
                             color="amber"
                             density="compact"
-                            size="small"
+                            :size="
+                              $vuetify.display.mobile ? 'x-small' : 'small'
+                            "
                             readonly
                             half-increments
                           ></v-rating>
-                          <!-- <v-chip
-                            size="x-small"
-                            variant="text"
-                            class="ml-2 text-caption"
-                          >
-                            (128)
-                          </v-chip> -->
                         </div>
 
                         <!-- Book Title -->
                         <div
-                          class="text-subtitle-1 text-truncate font-weight-bold mb-2 text-customblack"
+                          class="text-caption text-md-subtitle-1 text-truncate font-weight-bold mb-1 mb-md-2 text-customblack"
+                          :title="book.title"
                         >
                           {{ book.title }}
                         </div>
@@ -148,15 +131,21 @@
                         <div
                           v-for="(author, index) in book.authors?.slice(0, 1)"
                           :key="index"
-                          class="text-caption text-medium-emphasis mb-3"
+                          class="text-caption text-medium-emphasis mb-2 mb-md-3"
                         >
-                          <span class="text-truncate">{{ author }}</span>
+                          <span class="text-truncate d-block">{{
+                            author
+                          }}</span>
                         </div>
 
                         <!-- Genre Tag & Sold Count -->
-                        <div class="d-flex ga-2 mb-3">
+                        <div
+                          class="d-flex flex-column flex-md-row ga-1 ga-md-2 mb-2 mb-md-3"
+                        >
                           <v-chip
-                            size="small"
+                            :size="
+                              $vuetify.display.mobile ? 'x-small' : 'small'
+                            "
                             variant="outlined"
                             color="waterblue"
                             class="text-capitalize"
@@ -164,7 +153,9 @@
                             {{ subject }}
                           </v-chip>
                           <v-chip
-                            size="small"
+                            :size="
+                              $vuetify.display.mobile ? 'x-small' : 'small'
+                            "
                             variant="flat"
                             color="success"
                             class="text-capitalize"
@@ -178,11 +169,11 @@
 
                         <!-- Price Section -->
                         <div
-                          class="d-flex justify-space-between align-center mb-3"
+                          class="d-flex justify-space-between align-center mb-2 mb-md-3"
                         >
                           <div class="d-flex align-center">
                             <span
-                              class="text-h6 font-weight-bold text-customblack"
+                              class="text-subtitle-2 text-md-h6 font-weight-bold text-customblack"
                             >
                               ${{ book.price }}
                             </span>
@@ -191,18 +182,25 @@
                       </v-card-text>
 
                       <!-- Enhanced Card Actions -->
-                      <v-card-actions class="pa-4 pt-0">
+                      <v-card-actions class="pa-2 pa-md-4 pt-0">
                         <v-btn
                           block
                           color="darkgreen"
                           variant="elevated"
-                          size="large"
+                          :size="$vuetify.display.mobile ? 'small' : 'large'"
                           class="font-weight-bold rounded-xl add-to-cart-btn"
                           elevation="2"
                           @click.stop="handleAddToCart(book._id, 1)"
                         >
-                          <v-icon start size="small">mdi-cart-plus</v-icon>
-                          Add to Cart
+                          <v-icon
+                            start
+                            :size="
+                              $vuetify.display.mobile ? 'x-small' : 'small'
+                            "
+                            >mdi-cart-plus</v-icon
+                          >
+                          <span class="d-none d-sm-inline">Add to Cart</span>
+                          <span class="d-inline d-sm-none">Add</span>
                         </v-btn>
                       </v-card-actions>
                     </v-card>
@@ -210,11 +208,11 @@
                 </v-row>
 
                 <!-- Load More Section -->
-                <div class="text-center mt-8">
+                <div class="text-center mt-6 mt-md-8">
                   <v-btn
                     color="waterblue"
                     variant="outlined"
-                    size="large"
+                    :size="$vuetify.display.mobile ? 'default' : 'large'"
                     rounded="xl"
                     class="font-weight-bold"
                   >
@@ -359,14 +357,38 @@ export default {
 }
 
 /* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 959px) {
+  .book-cover-container {
+    height: 280px;
+  }
+
+  .book-cover {
+    max-height: 260px;
+  }
+}
+
+@media (max-width: 599px) {
   .tab-item {
-    font-size: 0.875rem;
-    padding: 12px 16px;
+    font-size: 0.75rem;
+    padding: 8px 12px;
+    min-width: auto;
+  }
+
+  .book-cover-container {
+    height: 200px;
+  }
+
+  .book-cover {
+    max-height: 180px;
   }
 
   .book-card {
-    margin-bottom: 16px;
+    margin-bottom: 12px;
+  }
+
+  .bestseller-badge {
+    top: 8px;
+    left: 8px;
   }
 }
 </style>

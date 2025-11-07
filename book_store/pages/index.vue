@@ -126,7 +126,7 @@
               <div class="d-flex justify-center flex-wrap ga-4">
                 <template v-if="books && books.length">
                   <v-card
-                    v-for="(book, i) in books"
+                    v-for="(book, i) in books.slice(0,3)"
                     :key="i"
                     hover
                     class="trending-book-card"

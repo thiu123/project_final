@@ -321,16 +321,18 @@
         <v-card class="mb-4 mb-md-6 rounded-lg" elevation="2">
           <v-card-title class="bg-primary text-white d-flex align-center py-4">
             <v-icon class="mr-3" size="24">mdi-cart-outline</v-icon>
-            <span class="text-h6">Order Summary</span>
+            <span class="text-h6"
+              >Order Summary ({{ orderItems.length }} items)</span
+            >
           </v-card-title>
-          <v-card-text v-if="cartItems.length" class="pa-4 pa-md-6">
+          <v-card-text v-if="orderItems.length" class="pa-4 pa-md-6">
             <div
-              v-for="(item, index) in cartItems"
-              :key="item._id"
+              v-for="(item, index) in orderItems"
+              :key="item.bookId || item._id"
               class="mb-4"
               :class="{
                 'pb-4 border-b border-grey-lighten-2':
-                  index < cartItems.length - 1,
+                  index < orderItems.length - 1,
               }"
             >
               <!-- Mobile Layout -->
@@ -338,53 +340,55 @@
                 <div class="d-flex gap-3 mb-3">
                   <v-card class="flex-shrink-0" elevation="0">
                     <v-img
-                      :src="item.bookId.cover_url"
+                      :src="getItemCoverUrl(item)"
                       width="80"
                       height="110"
-                      :alt="item.bookId.title"
+                      :alt="getItemTitle(item)"
                       cover
                     ></v-img>
                   </v-card>
                   <div class="flex-grow-1 min-width-0">
                     <div class="font-weight-bold mb-2 text-body-1">
-                      {{ item.bookId.title }}
+                      {{ getItemTitle(item) }}
                     </div>
                     <div class="text-caption text-grey-darken-1 mb-2">
                       <v-icon size="x-small" class="mr-1"
                         >mdi-account-outline</v-icon
                       >
-                      {{ item.bookId.authors.join(", ") }}
+                      {{ getItemAuthors(item) }}
                     </div>
-                    <v-chip color="primary" size="small" label>
-                      {{ item.bookId.price }}$
+                    <v-chip
+                      :color="
+                        item.productType === 'ebook' ? 'success' : 'primary'
+                      "
+                      size="small"
+                      label
+                    >
+                      {{
+                        item.productType === "ebook"
+                          ? "📱 Ebook"
+                          : "📚 Hardbook"
+                      }}
                     </v-chip>
                   </div>
                 </div>
                 <div
                   class="d-flex align-center justify-space-between bg-grey-lighten-4 pa-3 rounded"
                 >
-                  <div class="d-flex align-center gap-1">
-                    <v-btn
-                      size="small"
-                      variant="flat"
-                      color="grey-lighten-2"
-                      icon="mdi-minus"
-                      @click="updateQuantity(item, -1)"
-                      :disabled="item.quantity <= 1"
-                    ></v-btn>
+                  <div class="d-flex align-center gap-2">
+                    <span class="text-body-2 text-grey-darken-1">Qty:</span>
                     <span class="px-3 text-body-1 font-weight-medium">{{
                       item.quantity
                     }}</span>
-                    <v-btn
-                      size="small"
-                      variant="flat"
-                      color="grey-lighten-2"
-                      icon="mdi-plus"
-                      @click="updateQuantity(item, 1)"
-                    ></v-btn>
                   </div>
                   <span class="text-h6 font-weight-bold text-primary">
-                    ${{ (item.bookId.price * item.quantity).toFixed(2) }}
+                    ${{
+                      (
+                        getItemPrice(item) *
+                        (item.productType === "ebook" ? 0.7 : 1) *
+                        item.quantity
+                      ).toFixed(2)
+                    }}
                   </span>
                 </div>
               </div>
@@ -393,54 +397,72 @@
               <div class="d-none d-sm-flex align-start ga-4">
                 <v-card class="flex-shrink-0" elevation="0">
                   <v-img
-                    :src="item.bookId.cover_url"
+                    :src="getItemCoverUrl(item)"
                     width="120"
                     height="160"
-                    :alt="item.bookId.title"
+                    :alt="getItemTitle(item)"
                     cover
                   ></v-img>
                 </v-card>
                 <div class="flex-grow-1">
                   <div class="font-weight-bold mb-2 text-h6">
-                    {{ item.bookId.title }}
+                    {{ getItemTitle(item) }}
                   </div>
                   <div class="text-body-2 text-grey-darken-1 mb-3">
                     <v-icon size="small" class="mr-1"
                       >mdi-account-outline</v-icon
                     >
-                    {{ item.bookId.authors.join(", ") }}
+                    {{ getItemAuthors(item) }}
                   </div>
                   <div
                     class="d-flex align-center justify-space-between flex-wrap gap-3"
                   >
-                    <v-chip color="primary" size="large" label>
-                      <span class="text-h6">${{ item.bookId.price }}</span>
-                    </v-chip>
+                    <div class="d-flex align-center ga-2">
+                      <v-chip
+                        :color="
+                          item.productType === 'ebook' ? 'success' : 'primary'
+                        "
+                        size="large"
+                        label
+                      >
+                        <span class="text-h6">
+                          ${{
+                            (
+                              getItemPrice(item) *
+                              (item.productType === "ebook" ? 0.7 : 1)
+                            ).toFixed(2)
+                          }}
+                        </span>
+                      </v-chip>
+                      <v-chip
+                        :color="
+                          item.productType === 'ebook' ? 'success' : 'info'
+                        "
+                        size="small"
+                        variant="tonal"
+                      >
+                        {{
+                          item.productType === "ebook"
+                            ? "📱 Ebook"
+                            : "📚 Hardbook"
+                        }}
+                      </v-chip>
+                    </div>
                     <div
                       class="d-flex align-center gap-2 bg-grey-lighten-4 pa-2 rounded"
                     >
-                      <v-btn
-                        size="small"
-                        variant="flat"
-                        color="white"
-                        icon="mdi-minus"
-                        @click="updateQuantity(item, -1)"
-                        :disabled="item.quantity <= 1"
-                      ></v-btn>
-                      <span class="px-4 text-h6 font-weight-medium">{{
+                      <span class="text-body-2 text-grey-darken-1">Qty:</span>
+                      <span class="px-3 text-h6 font-weight-medium">{{
                         item.quantity
                       }}</span>
-                      <v-btn
-                        size="small"
-                        variant="flat"
-                        color="white"
-                        icon="mdi-plus"
-                        @click="updateQuantity(item, 1)"
-                      ></v-btn>
                     </div>
                     <span class="text-h5 font-weight-bold text-primary"
                       >${{
-                        (item.bookId.price * item.quantity).toFixed(2)
+                        (
+                          getItemPrice(item) *
+                          (item.productType === "ebook" ? 0.7 : 1) *
+                          item.quantity
+                        ).toFixed(2)
                       }}</span
                     >
                   </div>
@@ -554,14 +576,31 @@ export default {
   computed: {
     ...mapState("order", ["cartItems"]),
 
-    subtotal() {
-      if (!this.cartItems || this.cartItems.length === 0) return 0;
+    // Use checkout items from localStorage if available, otherwise use all cart items
+    orderItems() {
+      // Check if running on client side
+      if (import.meta.client) {
+        const checkoutItems = localStorage.getItem("checkoutItems");
+        if (checkoutItems) {
+          try {
+            return JSON.parse(checkoutItems);
+          } catch (e) {
+            console.error("Error parsing checkout items:", e);
+            return this.cartItems || [];
+          }
+        }
+      }
+      return this.cartItems || [];
+    },
 
-      return this.cartItems.reduce((sum, item) => {
+    subtotal() {
+      if (!this.orderItems || this.orderItems.length === 0) return 0;
+
+      return this.orderItems.reduce((sum, item) => {
         const price =
           item.productType === "ebook"
-            ? item.bookId.price * 0.7
-            : item.bookId.price;
+            ? (item.price || item.bookId?.price || 0) * 0.7
+            : item.price || item.bookId?.price || 0;
         return sum + price * item.quantity;
       }, 0);
     },
@@ -580,23 +619,32 @@ export default {
     },
   },
   async mounted() {
-    await this.fetchCartPreview();
     await this.loadAvailableVouchers();
-    console.log(this.cartItems, "Cart items loaded");
   },
   methods: {
-    ...mapActions("order", [
-      "fetchCartPreview",
-      "createOrder",
-      "createMomoOrder",
-    ]),
+    ...mapActions("order", ["createOrder", "createMomoOrder"]),
+
+    // Helper methods to get item properties (handle both localStorage and store data)
+    getItemCoverUrl(item) {
+      return item.cover_url || item.bookId?.cover_url || "";
+    },
+    getItemTitle(item) {
+      return item.title || item.bookId?.title || "Unknown";
+    },
+    getItemAuthors(item) {
+      const authors = item.authors || item.bookId?.authors || [];
+      return Array.isArray(authors) ? authors.join(", ") : "Unknown";
+    },
+    getItemPrice(item) {
+      return item.price || item.bookId?.price || 0;
+    },
 
     async loadAvailableVouchers() {
       try {
         this.loadingVouchers = true;
         const response = await getAllVouchers();
-        if (response.success) {
-          this.availableVouchers = response.data;
+        if (response) {
+          this.availableVouchers = response;
         }
       } catch (error) {
         console.error("Error loading vouchers:", error);

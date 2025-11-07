@@ -28,15 +28,6 @@ export default {
     },
   },
   actions: {
-    async fetchCartPreview({ commit }) {
-      try {
-        const { items, total } = await orderApi.getCartPreview();
-        commit("setCart", { items, total });
-      } catch (error) {
-        console.error("Error loading cart:", error);
-      }
-    },
-
     async fetchUserOrders({ commit }) {
       try {
         const orders = await orderApi.getUserOrders();
