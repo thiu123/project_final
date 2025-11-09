@@ -180,15 +180,15 @@ export default {
       // Load books for each subject one by one
       for (const subjectName of subjectsToLoad) {
         try {
-          console.log(`Loading books for subject: ${subjectName}`);
-          await this.getAllBooks({ subject: subjectName, half: true });
+          // console.log(`Loading books for subject: ${subjectName}`);
+          await this.getAllBooks({ subject: subjectName });
           if (this.books && this.books.length > 0) {
             // Store the first book's cover for this subject
             this.categoryBooks[subjectName] = [this.books[0]];
-            console.log(
-              `Loaded cover for ${subjectName}:`,
-              this.books[0].cover_url
-            );
+            // console.log(
+            //   `Loaded cover for ${subjectName}:`,
+            //   this.books[0].cover_url
+            // );
           }
         } catch (error) {
           console.error(`Error loading books for ${subjectName}:`, error);
@@ -295,7 +295,6 @@ export default {
 .category-card:hover .category-image {
   transform: scale(1.05);
 }
-
 
 .category-name h3 {
   font-size: 0.9rem;

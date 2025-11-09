@@ -3,11 +3,10 @@ import axios from "axios";
 const API_URL = "http://localhost:5000/api/books";
 const token = () => `Bearer ${localStorage.getItem("accessToken")}`;
 
-export const getBooksBySubject = (subject, half = false) => {
+export const getBooksBySubject = (subject) => {
   return axios.get(API_URL, {
     params: {
       subject,
-      half: half ? "true" : undefined,
     },
   });
 };

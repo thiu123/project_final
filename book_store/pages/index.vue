@@ -126,7 +126,7 @@
               <div class="d-flex justify-center flex-wrap ga-4">
                 <template v-if="books && books.length">
                   <v-card
-                    v-for="(book, i) in books.slice(0,3)"
+                    v-for="(book, i) in books.slice(0, 3)"
                     :key="i"
                     hover
                     class="trending-book-card"
@@ -176,11 +176,7 @@
     </v-container>
 
     <!-- Best Selling Books -->
-    <HomeBestSellingBooks
-      :favorites="favorites"
-      @add-to-cart="handleAddToCart"
-      @toggle-favorites="handleToggleFavorites"
-    />
+    <HomeBestSellerTabs @show-snackbar="handleSnackbarEvent" />
 
     <!-- Categories Showcase Section -->
     <HomeCategoryShowcase />
@@ -259,6 +255,7 @@
 import BookManga from "../components/home/BookManga.vue";
 import BookFiction from "../components/home/BookFiction.vue";
 import BookRomance from "../components/home/BookRomance.vue";
+import BestSellingBooks from "../components/home/BestSellingBooks.vue";
 import { mapState, mapActions, mapGetters } from "vuex";
 import { searchBooksByTitle } from "@/api/bookApi";
 import debounce from "lodash/debounce";
@@ -270,11 +267,17 @@ export default {
     BookFiction,
     BookManga,
     BookRomance,
+    BestSellingBooks,
     SnackbarAlert,
   },
   data() {
     return {
-      bookComponents: ["BookFiction", "BookManga", "BookRomance"],
+      bookComponents: [
+        "BestSellingBooks",
+        "BookFiction",
+        "BookManga",
+        "BookRomance",
+      ],
       newsletterEmail: "",
       searchQuery: "",
       searchResults: [],
@@ -310,7 +313,8 @@ export default {
     // Xử lý Google Auth callback
     await this.handleGoogleAuthCallback();
     await this.getFavoritesForEachUser();
-    await this.getAllBooks({ subject: null, half: true });
+    // Fetch all books
+    await this.getAllBooks({ subject: null });
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
@@ -411,6 +415,12 @@ export default {
 
     getPlaceholderImage(width, height) {
       return `https://via.placeholder.com/${width}x${height}`;
+    },
+
+    handleSnackbarEvent(data) {
+      this.snackbarText = data.text;
+      this.snackbarColor = data.color;
+      this.showSnackbar = true;
     },
   },
 };

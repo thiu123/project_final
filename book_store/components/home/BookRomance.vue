@@ -283,7 +283,6 @@ export default {
       try {
         await this.getRomanceBooks({
           subject: "contemporary romance",
-          half: true,
         });
       } catch (error) {
         console.error("Error fetching books:", error);
