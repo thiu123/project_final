@@ -104,8 +104,8 @@ export default {
       required: true,
     },
   },
-  mounted() {
-    console.log("function", this.handleAddToCart);
-  }
+  // mounted() {
+  //   console.log("function", this.handleAddToCart);
+  // }
 };
 </script>

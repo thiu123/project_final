@@ -275,7 +275,7 @@ export default {
     if (this.mangaBooks.length === 0) {
       this.isLoading = true;
       try {
-        await this.getMangaBooks({ subject: "manga", half: true });
+        await this.getMangaBooks({ subject: "manga" });
       } catch (error) {
         console.error("Error fetching books:", error);
       }

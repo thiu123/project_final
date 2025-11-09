@@ -360,7 +360,7 @@
                 >Subtotal</span
               >
               <span class="text-h6 font-weight-bold text-grey-darken-3">
-                {{ calculateSubtotal(order).toLocaleString() }} VNĐ
+                ${{ (calculateSubtotal(order) / 24000).toFixed(2) }}
               </span>
             </div>
 
@@ -394,7 +394,7 @@
                   </div>
                 </div>
                 <div class="text-h6 font-weight-bold text-success">
-                  -{{ order.voucher.discountAmount.toLocaleString() }} VNĐ
+                  -${{ (order.voucher.discountAmount / 24000).toFixed(2) }}
                 </div>
               </div>
             </v-card>
@@ -414,7 +414,7 @@
                     Total Paid
                   </div>
                   <div class="text-h4 font-weight-bold text-success">
-                    {{ order.total.toLocaleString() }} VNĐ
+                    ${{ (order.total / 24000).toFixed(2) }}
                   </div>
                 </div>
                 <v-icon
@@ -424,7 +424,7 @@
                 ></v-icon>
               </div>
 
-              <!-- USD Equivalent -->
+              <!-- VND Equivalent -->
               <div
                 class="text-center mt-4 pt-4"
                 style="border-top: 2px dashed rgba(76, 175, 80, 0.3)"
@@ -432,7 +432,7 @@
                 <span
                   class="text-body-2 text-success-darken-1 font-weight-medium"
                 >
-                  ≈ ${{ (order.total / 24000).toFixed(2) }} USD
+                  ≈ {{ order.total.toLocaleString() }} VNĐ
                 </span>
               </div>
             </v-card>

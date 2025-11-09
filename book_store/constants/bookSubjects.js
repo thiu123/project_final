@@ -36,6 +36,6 @@ export const bookSubjects = [
   },
   {
     category: "Vietnamese",
-    subcategories: ["Marketing"],
+    subcategories: ["Marketing", "Kids Education"],
   },
 ];

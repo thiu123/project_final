@@ -999,7 +999,7 @@ export default {
     async refreshBooks() {
       this.loading = true;
       try {
-        await this.getAllBooks({ subject: null, half: false });
+        await this.getAllBooks({ subject: null });
       } catch (error) {
         console.error("Error fetching books:", error);
         this.showSnackbar("Failed to load books", "error");

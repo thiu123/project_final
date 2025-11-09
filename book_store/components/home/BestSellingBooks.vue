@@ -271,7 +271,7 @@ export default {
         console.log("Loading books for subject:", subject);
 
         // Fetch books for the specific subject from API
-        await this.getAllBooks({ subject, half: true });
+        await this.getAllBooks({ subject });
         // The books are now filtered by backend, just assign them
         this.bestSellersStories = this.books;
 
