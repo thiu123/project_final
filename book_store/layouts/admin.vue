@@ -162,11 +162,6 @@ export default {
           value: "voucher-management",
           icon: "mdi-ticket-percent",
         },
-        {
-          title: "Settings",
-          value: "settings",
-          icon: "mdi-cog",
-        },
       ],
     };
   },

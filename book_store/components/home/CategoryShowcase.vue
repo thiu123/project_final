@@ -43,7 +43,7 @@
             :key="index"
           >
             <v-card
-              class="category-card rounded-lg cursor-pointer"
+              class="category-card cursor-pointer"
               @click="navigateToCategory(category)"
               elevation="2"
               hover
