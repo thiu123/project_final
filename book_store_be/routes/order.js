@@ -23,6 +23,11 @@ router.get(
   middlewareController.verifyTokenAndAdmin,
   orderController.getAllOrders
 );
+router.get(
+  "/admin/dashboard/stats",
+  middlewareController.verifyTokenAndAdmin,
+  orderController.getDashboardStats
+);
 router.put(
   "/admin/:id/status",
   middlewareController.verifyTokenAndAdmin,

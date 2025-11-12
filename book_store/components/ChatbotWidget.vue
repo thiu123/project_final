@@ -235,17 +235,6 @@
                 Best books
               </v-chip>
               <v-chip
-                @click="sendQuickMessage('I want fantasy books with magic')"
-                color="primary"
-                variant="outlined"
-                size="small"
-                prepend-icon="mdi-lightbulb"
-                clickable
-                class="quick-action-chip"
-              >
-                By genre
-              </v-chip>
-              <v-chip
                 @click="sendQuickMessage('review Naruto')"
                 color="success"
                 variant="outlined"

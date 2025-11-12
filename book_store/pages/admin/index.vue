@@ -1,10 +1,16 @@
 <template>
   <div>
+    <!-- Dashboard -->
+    <AdminDashboardManagement v-if="currentTab === 'dashboard'" />
+
     <!-- Book Management Component -->
-    <AdminBookManagement v-if="currentTab === 'book-management'" />
+    <AdminBookManagement v-else-if="currentTab === 'book-management'" />
 
     <!-- User Management Component (Placeholder) -->
     <AdminUserManagement v-else-if="currentTab === 'user-management'" />
+
+    <!-- Review Management Component -->
+    <AdminReviewManagement v-else-if="currentTab === 'review-management'" />
 
     <!-- Contact Management Component -->
     <AdminContactManagement v-else-if="currentTab === 'contact-management'" />
@@ -14,13 +20,6 @@
 
     <!-- Voucher Management Component -->
     <AdminVoucherManagement v-else-if="currentTab === 'voucher-management'" />
-
-    <!-- Analytics Component (Placeholder) -->
-    <div v-else-if="currentTab === 'analytics'" class="text-center pa-8">
-      <v-icon size="80" color="grey-lighten-2">mdi-chart-line</v-icon>
-      <h2 class="text-h4 mt-4 mb-2">Analytics</h2>
-      <p class="text-grey">Feature under development...</p>
-    </div>
 
     <!-- Settings Component (Placeholder) -->
     <div v-else-if="currentTab === 'settings'" class="text-center pa-8">
@@ -48,13 +47,12 @@ export default {
   name: "AdminPage",
   data() {
     return {
-      currentTab: "book-management",
+      currentTab: "dashboard",
     };
   },
   watch: {
     "$route.query.tab": {
       handler(newTab) {
-        // console.log(newTab, 'new tabbbb');
         if (newTab) {
           this.currentTab = newTab;
         }

@@ -20,6 +20,21 @@ const reviewsController = {
     }
   },
 
+  // Admin: Get all reviews across all books
+  getAllReviewsAdmin: async (req, res) => {
+    try {
+      const reviews = await Review.find()
+        .populate("userId", "username email avatar_url")
+        .populate("bookId", "title cover_url")
+        .populate("replies.adminId", "username email")
+        .sort({ createdAt: -1 });
+
+      res.status(200).json(reviews);
+    } catch (error) {
+      res.status(500).json({ msg: error.message });
+    }
+  },
+
   getReviewsByUser: async (req, res) => {
     try {
       const userId = req.user.id;

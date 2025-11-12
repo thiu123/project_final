@@ -55,3 +55,10 @@ export const deleteReply = (reviewId, replyId) => {
     headers: { token: token() },
   });
 };
+
+// ========== ADMIN REVIEW MANAGEMENT API ==========
+export const getAllReviewsAdmin = () => {
+  return axios.get(`${API_URL}/admin/all`, {
+    headers: { token: token() },
+  });
+};

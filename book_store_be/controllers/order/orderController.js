@@ -31,6 +31,43 @@ const orderController = {
     }
   },
 
+  // Admin: Get dashboard statistics
+  getDashboardStats: async (req, res) => {
+    try {
+      // Total revenue (only paid orders)
+      const revenueResult = await Order.aggregate([
+        { $match: { status: "Paid" } },
+        { $group: { _id: null, total: { $sum: "$total" } } },
+      ]);
+      const totalRevenue = revenueResult[0]?.total || 0;
+
+      // Total orders by status
+      const orderStats = await Order.aggregate([
+        {
+          $group: {
+            _id: "$status",
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+
+      // Recent orders (latest 10)
+      const recentOrders = await Order.find()
+        .populate("items.bookId", "title")
+        .populate("userId", "username")
+        .sort({ createdAt: -1 })
+        .limit(10);
+
+      return res.status(200).json({
+        totalRevenue,
+        orderStats,
+        recentOrders,
+      });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+
   // Admin: Update order status
   updateOrderStatus: async (req, res) => {
     try {

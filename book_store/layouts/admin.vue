@@ -125,8 +125,13 @@ export default {
     return {
       drawer: true,
       rail: false,
-      activeTab: "book-management",
+      activeTab: "dashboard",
       menuItems: [
+        {
+          title: "Dashboard",
+          value: "dashboard",
+          icon: "mdi-view-dashboard",
+        },
         {
           title: "Book Management",
           value: "book-management",
@@ -136,6 +141,11 @@ export default {
           title: "User Management",
           value: "user-management",
           icon: "mdi-account-multiple",
+        },
+        {
+          title: "Review Management",
+          value: "review-management",
+          icon: "mdi-comment-multiple",
         },
         {
           title: "Contact Management",
