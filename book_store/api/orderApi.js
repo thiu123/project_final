@@ -63,6 +63,14 @@ const orderApi = {
     return res.data;
   },
 
+  // Admin: Get dashboard statistics
+  getDashboardStats: async () => {
+    const res = await axios.get(`${API_URL}/admin/dashboard/stats`, {
+      headers: { token: token() },
+    });
+    return res.data;
+  },
+
   // Admin: Update order status
   updateOrderStatus: async (orderId, status) => {
     const res = await axios.put(

@@ -2,7 +2,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const Book = require("../../model/Book");
 
 // Initialize Google Generative AI
-const genAI = new GoogleGenerativeAI("AIzaSyCa39PwllE3HtLncHvq69YasJhqIJC5mfs");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
 // Config limits

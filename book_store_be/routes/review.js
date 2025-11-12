@@ -24,6 +24,13 @@ router.get(
   reviewController.getAllReviews
 );
 
+// ========== ADMIN ROUTES ==========
+router.get(
+  "/admin/all",
+  middlewareController.verifyTokenAndAdmin,
+  reviewController.getAllReviewsAdmin
+);
+
 // ========== ADMIN REPLY ROUTES ==========
 router.post(
   "/:reviewId/reply",
