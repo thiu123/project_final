@@ -153,7 +153,7 @@
           <v-btn
             color="error"
             variant="elevated"
-            @click="deleteContact"
+            @click="deleteContactMessenger"
             :loading="deleting"
           >
             Delete
@@ -206,7 +206,7 @@ export default {
   methods: {
     ...mapActions("contact", [
       "fetchAllContacts",
-      "deleteContact as deleteContactAction",
+      "deleteContact",
     ]),
     async loadContacts() {
       try {
@@ -223,10 +223,10 @@ export default {
       this.selectedContact = contact;
       this.deleteDialog = true;
     },
-    async deleteContact() {
+    async deleteContactMessenger() {
       try {
         this.deleting = true;
-        await this.deleteContactAction(this.selectedContact._id);
+        await this.deleteContact(this.selectedContact._id);
         this.showSnackbar("Feedback deleted successfully", "success");
         this.deleteDialog = false;
       } catch (error) {

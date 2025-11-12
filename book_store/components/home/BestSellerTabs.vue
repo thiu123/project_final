@@ -5,7 +5,7 @@
         <!-- Header -->
         <div class="mb-8">
           <h2 class="text-h4 font-weight-bold text-customblack mb-2">
-            Bảng xếp hạng bán chạy tuần
+            Weekly Best Sellers
           </h2>
         </div>
 
@@ -103,7 +103,7 @@
                           </span>
                         </div>
                         <p class="text-caption text-grey mb-2">
-                          {{ book.sold }} điểm
+                          {{ book.sold }} sold
                         </p>
                       </div>
                     </div>
@@ -119,7 +119,7 @@
                   class="mt-4"
                   @click="loadMore('marketing')"
                 >
-                  Xem thêm
+                  View More
                 </v-btn>
               </v-col>
 
@@ -148,11 +148,13 @@
                   </v-card-title>
 
                   <v-card-subtitle class="text-body-2 mb-2">
-                    Tác giả:
+                    Author:
                     {{ selectedBook.authors?.join(", ") || "Unknown Author" }}
                     <br />
-                    Nhà xuất bản:
-                    {{ selectedBook.publisher || "Quân Đội Nhân Dân" }}
+                    Publisher:
+                    {{
+                      selectedBook.publisher || "People's Army Publishing House"
+                    }}
                   </v-card-subtitle>
 
                   <v-card-text>
@@ -194,7 +196,7 @@
                         @click="addToCart(selectedBook._id)"
                         block
                       >
-                        Thêm vào giỏ
+                        Add to Cart
                       </v-btn>
                     </div>
                   </v-card-text>
@@ -207,7 +209,7 @@
                       >mdi-book-open-page-variant</v-icon
                     >
                     <p class="text-h6 text-grey mt-4">
-                      Chọn một cuốn sách để xem chi tiết
+                      Select a book to view details
                     </p>
                   </v-card-text>
                 </v-card>
@@ -289,7 +291,7 @@
                           </span>
                         </div>
                         <p class="text-caption text-grey mb-2">
-                          {{ book.sold }} điểm
+                          {{ book.sold }} sold
                         </p>
                       </div>
                     </div>
@@ -305,7 +307,7 @@
                   class="mt-4"
                   @click="loadMore('education')"
                 >
-                  Xem thêm
+                  View More
                 </v-btn>
               </v-col>
 
@@ -334,11 +336,13 @@
                   </v-card-title>
 
                   <v-card-subtitle class="text-body-2 mb-2">
-                    Tác giả:
+                    Author:
                     {{ selectedBook.authors?.join(", ") || "Unknown Author" }}
                     <br />
-                    Nhà xuất bản:
-                    {{ selectedBook.publisher || "Quân Đội Nhân Dân" }}
+                    Publisher:
+                    {{
+                      selectedBook.publisher || "People's Army Publishing House"
+                    }}
                   </v-card-subtitle>
 
                   <v-card-text>
@@ -380,7 +384,7 @@
                         @click="addToCart(selectedBook._id)"
                         block
                       >
-                        Thêm vào giỏ
+                        Add to Cart
                       </v-btn>
                     </div>
                   </v-card-text>
@@ -393,7 +397,7 @@
                       >mdi-book-open-page-variant</v-icon
                     >
                     <p class="text-h6 text-grey mt-4">
-                      Chọn một cuốn sách để xem chi tiết
+                      Select a book to view details
                     </p>
                   </v-card-text>
                 </v-card>
@@ -447,7 +451,6 @@ export default {
   },
   methods: {
     ...mapActions("book", ["getAllBooks"]),
-    ...mapActions("cart", ["addToCart"]),
     ...mapActions("favorite", ["toggleFavorites"]),
 
     async loadMarketingBooks() {
@@ -502,15 +505,19 @@ export default {
 
     async addToCart(bookId) {
       try {
-        await this.addToCart({ bookId, quantity: 1 });
+        await this.$store.dispatch("cart/addToCart", {
+          bookId,
+          quantity: 1,
+          productType: "hardbook", // default to hardbook
+        });
         this.$emit("show-snackbar", {
-          text: "Đã thêm vào giỏ hàng!",
+          text: "Added to cart!",
           color: "success",
         });
       } catch (error) {
         console.error("Error adding to cart:", error);
         this.$emit("show-snackbar", {
-          text: "Không thể thêm vào giỏ hàng",
+          text: "Failed to add to cart",
           color: "error",
         });
       }
