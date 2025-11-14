@@ -4,18 +4,21 @@
       <v-col cols="12" md="10" lg="8">
         <!-- Success Header with Animation -->
         <v-card class="mb-8 overflow-hidden" elevation="0" rounded="xl">
-          <div class="success-gradient pa-8 pa-md-12 text-center">
+          <div
+            :class="isSuccessStatus ? 'success-gradient' : 'warning-gradient'"
+            class="pa-8 pa-md-12 text-center"
+          >
             <v-icon
-              icon="mdi-check-circle"
+              :icon="getHeaderIcon()"
               size="100"
               color="white"
               class="mb-4 pulse-animation"
             ></v-icon>
             <h1 class="text-h3 text-md-h2 text-white font-weight-bold mb-3">
-              Payment Successful!
+              {{ getHeaderTitle() }}
             </h1>
             <p class="text-h6 text-white text-opacity-90">
-              Thank you for your purchase
+              {{ getHeaderSubtitle() }}
             </p>
           </div>
         </v-card>
@@ -110,6 +113,25 @@
                   >
                     {{ order.status }}
                   </v-chip>
+                </v-card>
+              </v-col>
+
+              <v-col cols="12" sm="6" md="4" v-if="order?.confirmedByAdmin">
+                <v-card
+                  class="pa-4 bg-indigo-lighten-5"
+                  elevation="0"
+                  rounded="lg"
+                >
+                  <div
+                    class="text-caption text-indigo-darken-2 mb-1 font-weight-medium"
+                  >
+                    Admin Confirmed
+                  </div>
+                  <div
+                    class="text-subtitle-1 font-weight-bold text-indigo-darken-4"
+                  >
+                    {{ formatDate(order?.confirmedAt) }}
+                  </div>
                 </v-card>
               </v-col>
 
@@ -441,7 +463,27 @@
 
         <!-- Action Buttons -->
         <v-row class="mb-6" dense>
-          <v-col cols="12" sm="6">
+          <v-col cols="12" sm="6" md="4" v-if="canCancelOrder">
+            <v-btn
+              color="error"
+              variant="flat"
+              size="x-large"
+              block
+              rounded="lg"
+              prepend-icon="mdi-cancel"
+              @click="handleCancelOrder"
+              :loading="cancelling"
+              class="text-none font-weight-bold"
+              elevation="2"
+            >
+              Cancel Order
+            </v-btn>
+          </v-col>
+          <v-col
+            cols="12"
+            :sm="canCancelOrder ? 6 : 6"
+            :md="canCancelOrder ? 4 : 6"
+          >
             <v-btn
               color="primary"
               variant="flat"
@@ -456,7 +498,11 @@
               Continue Shopping
             </v-btn>
           </v-col>
-          <v-col cols="12" sm="6">
+          <v-col
+            cols="12"
+            :sm="canCancelOrder ? 12 : 6"
+            :md="canCancelOrder ? 4 : 6"
+          >
             <v-btn
               color="secondary"
               variant="flat"
@@ -496,14 +542,23 @@
                   </div>
                   <div class="mb-2 d-flex align-start">
                     <v-icon
+                      icon="mdi-shield-check"
+                      size="18"
+                      class="mr-2 mt-1"
+                      color="info"
+                    ></v-icon>
+                    <span>Admin will review and confirm your order</span>
+                  </div>
+                  <div class="mb-2 d-flex align-start">
+                    <v-icon
                       icon="mdi-clock-fast"
                       size="18"
                       class="mr-2 mt-1"
                       color="info"
                     ></v-icon>
                     <span
-                      >Your order will be processed within 1-2 business
-                      days</span
+                      >Your order will be processed after admin
+                      confirmation</span
                     >
                   </div>
                   <div class="d-flex align-start">
@@ -515,11 +570,70 @@
                     ></v-icon>
                     <span>Track your order status in "My Orders" section</span>
                   </div>
+                  <div
+                    class="mt-3 d-flex align-start"
+                    v-if="!order?.confirmedByAdmin && order?.status === 'Paid'"
+                  >
+                    <v-icon
+                      icon="mdi-alert-circle"
+                      size="18"
+                      class="mr-2 mt-1"
+                      color="warning"
+                    ></v-icon>
+                    <span class="text-warning"
+                      >You can cancel this order before admin confirmation</span
+                    >
+                  </div>
                 </div>
               </div>
             </div>
           </v-card-text>
         </v-card>
+
+        <!-- Cancel Confirmation Dialog -->
+        <v-dialog v-model="cancelDialog" max-width="500">
+          <v-card>
+            <v-card-title class="text-h5 bg-error text-white">
+              <v-icon class="mr-2">mdi-alert</v-icon>
+              Cancel Order?
+            </v-card-title>
+            <v-card-text class="pa-6">
+              <p class="text-body-1 mb-3">
+                Are you sure you want to cancel this order?
+              </p>
+              <v-alert type="warning" variant="tonal" class="mb-0">
+                This action cannot be undone. Your payment will be refunded
+                within 5-7 business days.
+              </v-alert>
+            </v-card-text>
+            <v-card-actions class="pa-4">
+              <v-spacer></v-spacer>
+              <v-btn
+                variant="text"
+                @click="cancelDialog = false"
+                :disabled="cancelling"
+              >
+                Keep Order
+              </v-btn>
+              <v-btn
+                color="error"
+                variant="flat"
+                @click="confirmCancelOrder"
+                :loading="cancelling"
+              >
+                Yes, Cancel Order
+              </v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
+
+        <!-- Snackbar -->
+        <v-snackbar v-model="snackbar" :color="snackbarColor" :timeout="3000">
+          {{ snackbarText }}
+          <template v-slot:actions>
+            <v-btn variant="text" @click="snackbar = false">Close</v-btn>
+          </template>
+        </v-snackbar>
       </v-col>
     </v-row>
   </v-container>
@@ -527,17 +641,31 @@
 
 <script>
 import { mapActions, mapState } from "vuex";
+import orderApi from "~/api/orderApi";
 
 export default {
   name: "CheckoutSuccess",
   data() {
     return {
-      status: "",
-      orderId: "",
+      cancelDialog: false,
+      cancelling: false,
+      snackbar: false,
+      snackbarText: "",
+      snackbarColor: "success",
     };
   },
   computed: {
     ...mapState("order", ["order"]),
+    canCancelOrder() {
+      if (!this.order) return false;
+      // Can only cancel if order is Pending or Paid (before Confirmed)
+      return ["Pending", "Paid"].includes(this.order.status);
+    },
+    isSuccessStatus() {
+      return ["Paid", "Confirmed", "In Delivery", "Delivered"].includes(
+        this.order?.status
+      );
+    },
   },
   methods: {
     ...mapActions("order", ["fetchOrderById"]),
@@ -551,7 +679,65 @@ export default {
       }
     },
 
+    getHeaderTitle() {
+      if (!this.order) return "Order Details";
+      switch (this.order.status) {
+        case "Paid":
+          return "Payment Successful!";
+        case "Confirmed":
+          return "Order Confirmed!";
+        case "In Delivery":
+          return "Out for Delivery!";
+        case "Delivered":
+          return "Order Delivered!";
+        case "Cancelled":
+          return "Order Cancelled";
+        case "Failed":
+          return "Payment Failed";
+        default:
+          return "Order Pending";
+      }
+    },
+
+    getHeaderSubtitle() {
+      if (!this.order) return "";
+      switch (this.order.status) {
+        case "Paid":
+          return "Waiting for admin confirmation";
+        case "Confirmed":
+          return "Your order is being prepared";
+        case "In Delivery":
+          return "Your order is on the way";
+        case "Delivered":
+          return "Your order has been delivered";
+        case "Cancelled":
+          return "This order has been cancelled";
+        case "Failed":
+          return "Payment was not successful";
+        default:
+          return "Processing your order";
+      }
+    },
+
+    getHeaderIcon() {
+      if (!this.order) return "mdi-information";
+      switch (this.order.status) {
+        case "Paid":
+        case "Confirmed":
+        case "In Delivery":
+        case "Delivered":
+          return "mdi-check-circle";
+        case "Cancelled":
+          return "mdi-cancel";
+        case "Failed":
+          return "mdi-close-circle";
+        default:
+          return "mdi-clock-outline";
+      }
+    },
+
     formatDate(dateString) {
+      if (!dateString) return "N/A";
       const date = new Date(dateString);
       return date.toLocaleDateString("en-US", {
         year: "numeric",
@@ -563,12 +749,19 @@ export default {
     },
 
     getStatusColor(status) {
-      switch (status.toLowerCase()) {
+      switch (status?.toLowerCase()) {
         case "paid":
           return "success";
+        case "confirmed":
+          return "info";
+        case "in delivery":
+          return "purple";
+        case "delivered":
+          return "teal";
         case "pending":
           return "warning";
         case "failed":
+        case "cancelled":
           return "error";
         default:
           return "primary";
@@ -590,6 +783,35 @@ export default {
       return order.total;
     },
 
+    handleCancelOrder() {
+      this.cancelDialog = true;
+    },
+
+    async confirmCancelOrder() {
+      this.cancelling = true;
+      try {
+        await orderApi.cancelOrder(this.order._id);
+        this.showSnackbar("Order cancelled successfully", "success");
+        this.cancelDialog = false;
+        // Refresh order data
+        await this.getOrder();
+      } catch (error) {
+        console.error("Error cancelling order:", error);
+        this.showSnackbar(
+          error.response?.data?.msg || "Failed to cancel order",
+          "error"
+        );
+      } finally {
+        this.cancelling = false;
+      }
+    },
+
+    showSnackbar(text, color = "success") {
+      this.snackbarText = text;
+      this.snackbarColor = color;
+      this.snackbar = true;
+    },
+
     goToHome() {
       this.$router.push("/");
     },
@@ -601,7 +823,6 @@ export default {
 
   async mounted() {
     await this.getOrder();
-    console.log("Order fetched:", this.order);
   },
 };
 </script>
@@ -609,6 +830,10 @@ export default {
 <style scoped>
 .success-gradient {
   background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+}
+
+.warning-gradient {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
 }
 
 .summary-gradient {

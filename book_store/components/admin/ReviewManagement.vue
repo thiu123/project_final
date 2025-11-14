@@ -81,12 +81,20 @@
       <v-divider></v-divider>
 
       <v-card-text v-if="loading" class="text-center py-8">
-        <v-progress-circular indeterminate color="primary"></v-progress-circular>
+        <v-progress-circular
+          indeterminate
+          color="primary"
+        ></v-progress-circular>
         <p class="text-caption text-grey mt-4">Loading reviews...</p>
       </v-card-text>
 
-      <v-card-text v-else-if="filteredReviews.length === 0" class="text-center py-12">
-        <v-icon size="80" color="grey-lighten-2">mdi-comment-remove-outline</v-icon>
+      <v-card-text
+        v-else-if="filteredReviews.length === 0"
+        class="text-center py-12"
+      >
+        <v-icon size="80" color="grey-lighten-2"
+          >mdi-comment-remove-outline</v-icon
+        >
         <h3 class="text-h6 text-grey mt-4">No reviews found</h3>
         <p class="text-caption text-grey">Try adjusting your filters</p>
       </v-card-text>
@@ -97,14 +105,20 @@
             <template v-slot:prepend>
               <v-avatar size="56" class="mr-4">
                 <img
-                  :src="review.userId?.avatar_url || 'https://via.placeholder.com/56'"
+                  cover
+                  :src="
+                    review.userId?.avatar_url ||
+                    'https://via.placeholder.com/56'
+                  "
                   :alt="review.userId?.username"
                 />
               </v-avatar>
             </template>
 
             <v-list-item-title class="d-flex align-center mb-2">
-              <span class="font-weight-bold mr-2">{{ review.userId?.username || 'Anonymous' }}</span>
+              <span class="font-weight-bold mr-2">{{
+                review.userId?.username || "Anonymous"
+              }}</span>
               <v-rating
                 :model-value="review.rating"
                 color="amber"
@@ -112,30 +126,52 @@
                 size="small"
                 readonly
               ></v-rating>
-              <span class="text-caption text-grey ml-2">{{ formatDate(review.createdAt) }}</span>
+              <span class="text-caption text-grey ml-2">{{
+                formatDate(review.createdAt)
+              }}</span>
             </v-list-item-title>
 
             <v-list-item-subtitle class="mb-3">
               <div class="d-flex align-center mb-2">
-                <v-chip size="x-small" color="primary" variant="tonal" class="mr-2">
+                <v-chip
+                  size="x-small"
+                  color="primary"
+                  variant="tonal"
+                  class="mr-2"
+                >
                   <v-icon start size="x-small">mdi-book</v-icon>
-                  {{ review.bookId?.title || 'Unknown Book' }}
+                  {{ review.bookId?.title || "Unknown Book" }}
                 </v-chip>
               </div>
-              <p class="text-body-2 text-grey-darken-3 mt-2">{{ review.comment }}</p>
+              <p class="text-body-2 text-grey-darken-3 mt-2">
+                {{ review.comment }}
+              </p>
             </v-list-item-subtitle>
 
             <!-- Admin Replies Section -->
-            <div v-if="review.replies && review.replies.length > 0" class="mt-3 ml-12">
-              <v-card variant="tonal" color="blue-lighten-5" class="mb-2" v-for="reply in review.replies" :key="reply._id">
+            <div
+              v-if="review.replies && review.replies.length > 0"
+              class="mt-3 ml-12"
+            >
+              <v-card
+                variant="tonal"
+                color="blue-lighten-5"
+                class="mb-2"
+                v-for="reply in review.replies"
+                :key="reply._id"
+              >
                 <v-card-text class="py-2 px-3">
                   <div class="d-flex justify-space-between align-center mb-1">
                     <div class="d-flex align-center">
-                      <v-icon size="small" color="primary" class="mr-1">mdi-shield-account</v-icon>
+                      <v-icon size="small" color="primary" class="mr-1"
+                        >mdi-shield-account</v-icon
+                      >
                       <span class="text-caption font-weight-bold text-primary">
-                        {{ reply.adminId?.username || 'Admin' }}
+                        {{ reply.adminId?.username || "Admin" }}
                       </span>
-                      <span class="text-caption text-grey ml-2">{{ formatDate(reply.createdAt) }}</span>
+                      <span class="text-caption text-grey ml-2">{{
+                        formatDate(reply.createdAt)
+                      }}</span>
                     </div>
                     <div>
                       <v-btn
@@ -153,7 +189,9 @@
                       ></v-btn>
                     </div>
                   </div>
-                  <p class="text-body-2 text-grey-darken-2">{{ reply.content }}</p>
+                  <p class="text-body-2 text-grey-darken-2">
+                    {{ reply.content }}
+                  </p>
                 </v-card-text>
               </v-card>
             </div>
@@ -203,7 +241,7 @@
     <v-dialog v-model="replyDialog" max-width="600">
       <v-card>
         <v-card-title class="text-h6 font-weight-bold">
-          {{ editingReply ? 'Edit Reply' : 'Reply to Review' }}
+          {{ editingReply ? "Edit Reply" : "Reply to Review" }}
         </v-card-title>
         <v-card-text>
           <v-textarea
@@ -212,7 +250,10 @@
             variant="outlined"
             rows="4"
             counter
-            :rules="[v => !!v || 'Reply is required', v => v.length >= 10 || 'Reply must be at least 10 characters']"
+            :rules="[
+              (v) => !!v || 'Reply is required',
+              (v) => v.length >= 10 || 'Reply must be at least 10 characters',
+            ]"
           ></v-textarea>
         </v-card-text>
         <v-card-actions>
@@ -225,7 +266,7 @@
             :loading="submitting"
             :disabled="!replyContent || replyContent.length < 10"
           >
-            {{ editingReply ? 'Update' : 'Submit' }}
+            {{ editingReply ? "Update" : "Submit" }}
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -236,12 +277,18 @@
       <v-card>
         <v-card-title class="text-h6">Confirm Delete</v-card-title>
         <v-card-text>
-          Are you sure you want to delete this {{ deleteType }}? This action cannot be undone.
+          Are you sure you want to delete this {{ deleteType }}? This action
+          cannot be undone.
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="deleteDialog = false">Cancel</v-btn>
-          <v-btn color="error" variant="flat" @click="performDelete" :loading="deleting">
+          <v-btn
+            color="error"
+            variant="flat"
+            @click="performDelete"
+            :loading="deleting"
+          >
             Delete
           </v-btn>
         </v-card-actions>
@@ -259,7 +306,13 @@
 </template>
 
 <script>
-import { getAllReviewsAdmin, createReply, updateReply, deleteReply, deleteReview } from "~/api/reviewApi";
+import {
+  getAllReviewsAdmin,
+  createReply,
+  updateReply,
+  deleteReply,
+  deleteReview,
+} from "~/api/reviewApi";
 
 export default {
   name: "ReviewManagement",
@@ -272,26 +325,26 @@ export default {
       filterReplied: null,
       page: 1,
       itemsPerPage: 10,
-      
+
       // Reply dialog
       replyDialog: false,
       replyContent: "",
       selectedReview: null,
       editingReply: null,
       submitting: false,
-      
+
       // Delete dialog
       deleteDialog: false,
       deleteType: "",
       deleteReviewId: null,
       deleteReplyId: null,
       deleting: false,
-      
+
       // Snackbar
       snackbar: false,
       snackbarText: "",
       snackbarColor: "success",
-      
+
       // Filter options
       ratingFilters: [
         { title: "5 Stars", value: 5 },
@@ -335,34 +388,36 @@ export default {
       return (sum / this.reviews.length).toFixed(1);
     },
     pendingReplies() {
-      return this.reviews.filter(r => !r.replies || r.replies.length === 0).length;
+      return this.reviews.filter((r) => !r.replies || r.replies.length === 0)
+        .length;
     },
     filteredReviews() {
       let filtered = this.reviews;
-      
+
       // Search filter
       if (this.search) {
         const searchLower = this.search.toLowerCase();
-        filtered = filtered.filter(r => 
-          r.comment?.toLowerCase().includes(searchLower) ||
-          r.userId?.username?.toLowerCase().includes(searchLower) ||
-          r.bookId?.title?.toLowerCase().includes(searchLower)
+        filtered = filtered.filter(
+          (r) =>
+            r.comment?.toLowerCase().includes(searchLower) ||
+            r.userId?.username?.toLowerCase().includes(searchLower) ||
+            r.bookId?.title?.toLowerCase().includes(searchLower)
         );
       }
-      
+
       // Rating filter
       if (this.filterRating !== null) {
-        filtered = filtered.filter(r => r.rating === this.filterRating);
+        filtered = filtered.filter((r) => r.rating === this.filterRating);
       }
-      
+
       // Replied filter
       if (this.filterReplied !== null) {
-        filtered = filtered.filter(r => {
+        filtered = filtered.filter((r) => {
           const hasReplies = r.replies && r.replies.length > 0;
           return this.filterReplied ? hasReplies : !hasReplies;
         });
       }
-      
+
       return filtered;
     },
     paginatedReviews() {
@@ -387,43 +442,47 @@ export default {
         this.loading = false;
       }
     },
-    
+
     openReplyDialog(review) {
       this.selectedReview = review;
       this.replyContent = "";
       this.editingReply = null;
       this.replyDialog = true;
     },
-    
+
     editReply(review, reply) {
       this.selectedReview = review;
       this.replyContent = reply.content;
       this.editingReply = reply;
       this.replyDialog = true;
     },
-    
+
     closeReplyDialog() {
       this.replyDialog = false;
       this.replyContent = "";
       this.selectedReview = null;
       this.editingReply = null;
     },
-    
+
     async submitReply() {
       if (!this.replyContent || this.replyContent.length < 10) return;
-      
+
       this.submitting = true;
       try {
         if (this.editingReply) {
           // Update existing reply
-          await updateReply(this.selectedReview._id, this.editingReply._id, this.replyContent);
+          await updateReply(
+            this.selectedReview._id,
+            this.editingReply._id,
+            this.replyContent
+          );
           this.showSnackbar("Reply updated successfully", "success");
         } else {
           // Create new reply
           await createReply(this.selectedReview._id, this.replyContent);
           this.showSnackbar("Reply added successfully", "success");
         }
-        
+
         await this.fetchReviews();
         this.closeReplyDialog();
       } catch (error) {
@@ -433,21 +492,21 @@ export default {
         this.submitting = false;
       }
     },
-    
+
     confirmDeleteReview(reviewId) {
       this.deleteType = "review";
       this.deleteReviewId = reviewId;
       this.deleteReplyId = null;
       this.deleteDialog = true;
     },
-    
+
     confirmDeleteReply(reviewId, replyId) {
       this.deleteType = "reply";
       this.deleteReviewId = reviewId;
       this.deleteReplyId = replyId;
       this.deleteDialog = true;
     },
-    
+
     async performDelete() {
       this.deleting = true;
       try {
@@ -458,7 +517,7 @@ export default {
           await deleteReply(this.deleteReviewId, this.deleteReplyId);
           this.showSnackbar("Reply deleted successfully", "success");
         }
-        
+
         await this.fetchReviews();
         this.deleteDialog = false;
       } catch (error) {
@@ -468,14 +527,14 @@ export default {
         this.deleting = false;
       }
     },
-    
+
     resetFilters() {
       this.search = "";
       this.filterRating = null;
       this.filterReplied = null;
       this.page = 1;
     },
-    
+
     formatDate(date) {
       return new Date(date).toLocaleDateString("vi-VN", {
         year: "numeric",
@@ -485,14 +544,14 @@ export default {
         minute: "2-digit",
       });
     },
-    
+
     showSnackbar(text, color = "success") {
       this.snackbarText = text;
       this.snackbarColor = color;
       this.snackbar = true;
     },
   },
-  
+
   mounted() {
     this.fetchReviews();
   },

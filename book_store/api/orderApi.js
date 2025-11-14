@@ -82,6 +82,30 @@ const orderApi = {
     );
     return res.data;
   },
+
+  // Admin: Confirm order
+  confirmOrder: async (orderId) => {
+    const res = await axios.put(
+      `${API_URL}/admin/${orderId}/confirm`,
+      {},
+      {
+        headers: { token: token() },
+      }
+    );
+    return res.data;
+  },
+
+  // User: Cancel order
+  cancelOrder: async (orderId) => {
+    const res = await axios.put(
+      `${API_URL}/${orderId}/cancel`,
+      {},
+      {
+        headers: { token: token() },
+      }
+    );
+    return res.data;
+  },
 };
 
 export default orderApi;

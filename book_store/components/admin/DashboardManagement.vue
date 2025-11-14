@@ -31,7 +31,10 @@
               <canvas ref="revenueChart"></canvas>
             </div>
             <div v-else class="text-center py-12">
-              <v-progress-circular indeterminate color="primary"></v-progress-circular>
+              <v-progress-circular
+                indeterminate
+                color="primary"
+              ></v-progress-circular>
             </div>
           </v-card-text>
         </v-card>
@@ -68,9 +71,11 @@
               <tbody>
                 <tr v-for="order in recentOrders" :key="order._id">
                   <td class="font-weight-medium">{{ order.orderId }}</td>
-                  <td>{{ order.userId?.username || 'N/A' }}</td>
+                  <td>{{ order.userId?.username || "N/A" }}</td>
                   <td>{{ order.items?.length || 0 }} items</td>
-                  <td class="font-weight-bold">{{ formatCurrency(order.total) }}</td>
+                  <td class="font-weight-bold">
+                    {{ formatCurrency(order.total) }}
+                  </td>
                   <td>
                     <v-chip :color="getStatusColor(order.status)" size="small">
                       {{ order.status }}
@@ -80,7 +85,9 @@
                 </tr>
                 <tr v-if="recentOrders.length === 0">
                   <td colspan="6" class="text-center py-8">
-                    <v-icon size="48" color="grey-lighten-2">mdi-package-variant-closed</v-icon>
+                    <v-icon size="48" color="grey-lighten-2"
+                      >mdi-package-variant-closed</v-icon
+                    >
                     <p class="text-caption text-grey mt-2">No recent orders</p>
                   </td>
                 </tr>
@@ -112,9 +119,11 @@ export default {
   },
   computed: {
     statsCards() {
-      const paidOrders = this.orderStats.find((s) => s._id === "Paid")?.count || 0;
+      const paidOrders =
+        this.orderStats.find((s) => s._id === "Paid")?.count || 0;
       const totalOrders = this.orderStats.reduce((sum, s) => sum + s.count, 0);
-      const failedOrders = this.orderStats.find((s) => s._id === "Failed")?.count || 0;
+      const failedOrders =
+        this.orderStats.find((s) => s._id === "Failed")?.count || 0;
 
       return [
         {

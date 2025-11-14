@@ -732,7 +732,7 @@ export default {
     ...mapState("favorite", ["favorites"]),
     ...mapState("review", ["userReviews"]),
     userOrdersPaid() {
-      return this.userOrders.filter((order) => order.status === "Paid");
+      return this.userOrders;
     },
   },
   mounted() {
@@ -753,12 +753,18 @@ export default {
 
     getStatusColor(status) {
       switch (status?.toLowerCase()) {
-        case "paid":
-          return "success";
         case "pending":
           return "warning";
-        case "processing":
+        case "paid":
+          return "success";
+        case "confirmed":
           return "info";
+        case "in delivery":
+          return "purple";
+        case "delivered":
+          return "teal";
+        case "cancelled":
+          return "grey";
         case "failed":
           return "error";
         default:
@@ -767,12 +773,18 @@ export default {
     },
     getStatusIcon(status) {
       switch (status?.toLowerCase()) {
-        case "paid":
-          return "mdi-check-circle";
         case "pending":
-          return "mdi-clock";
-        case "processing":
-          return "mdi-cog";
+          return "mdi-clock-outline";
+        case "paid":
+          return "mdi-cash-check";
+        case "confirmed":
+          return "mdi-check-circle";
+        case "in delivery":
+          return "mdi-truck-delivery";
+        case "delivered":
+          return "mdi-package-variant-closed";
+        case "cancelled":
+          return "mdi-cancel";
         case "failed":
           return "mdi-close-circle";
         default:

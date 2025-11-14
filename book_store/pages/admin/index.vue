@@ -22,11 +22,7 @@
     <AdminVoucherManagement v-else-if="currentTab === 'voucher-management'" />
 
     <!-- Settings Component (Placeholder) -->
-    <div v-else-if="currentTab === 'settings'" class="text-center pa-8">
-      <v-icon size="80" color="grey-lighten-2">mdi-cog</v-icon>
-      <h2 class="text-h4 mt-4 mb-2">Settings</h2>
-      <p class="text-grey">Feature under development...</p>
-    </div>
+  
 
     <!-- Default Dashboard -->
     <div v-else class="text-center pa-8">

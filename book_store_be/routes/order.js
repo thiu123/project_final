@@ -33,6 +33,16 @@ router.put(
   middlewareController.verifyTokenAndAdmin,
   orderController.updateOrderStatus
 );
+router.put(
+  "/admin/:id/confirm",
+  middlewareController.verifyTokenAndAdmin,
+  orderController.confirmOrder
+);
+router.put(
+  "/:id/cancel",
+  middlewareController.verifyToken,
+  orderController.cancelOrder
+);
 router.get(
   "/check-ebook",
   middlewareController.verifyToken,

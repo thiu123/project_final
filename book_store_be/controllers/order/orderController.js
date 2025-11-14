@@ -74,7 +74,15 @@ const orderController = {
       const { id } = req.params;
       const { status } = req.body;
 
-      const validStatuses = ["Pending", "Paid", "Failed", "Cancelled"];
+      const validStatuses = [
+        "Pending",
+        "Paid",
+        "Confirmed",
+        "In Delivery",
+        "Delivered",
+        "Cancelled",
+        "Failed",
+      ];
       if (!validStatuses.includes(status)) {
         return res.status(400).json({ msg: "Invalid status" });
       }
@@ -90,6 +98,104 @@ const orderController = {
       }
 
       return res.status(200).json(order);
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+
+  // Admin: Confirm order after payment
+  confirmOrder: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const order = await Order.findById(id);
+      if (!order) {
+        return res.status(404).json({ msg: "Order not found" });
+      }
+
+      if (order.status !== "Paid") {
+        return res.status(400).json({ msg: "Can only confirm paid orders" });
+      }
+
+      if (order.confirmedByAdmin) {
+        return res.status(400).json({ msg: "Order already confirmed" });
+      }
+
+      order.confirmedByAdmin = true;
+      order.confirmedAt = new Date();
+      order.status = "Confirmed";
+      await order.save();
+
+      const populatedOrder = await Order.findById(id)
+        .populate("items.bookId")
+        .populate("userId", "username email");
+
+      return res.status(200).json(populatedOrder);
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+
+  // User: Cancel order
+  cancelOrder: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+
+      const order = await Order.findById(id);
+      if (!order) {
+        return res.status(404).json({ msg: "Order not found" });
+      }
+
+      // Check if order belongs to user
+      if (order.userId.toString() !== userId) {
+        return res.status(403).json({ msg: "Unauthorized" });
+      }
+
+      // Only allow cancellation for Pending or Paid orders (before Confirmed)
+      if (!["Pending", "Paid"].includes(order.status)) {
+        return res.status(400).json({
+          msg: "Cannot cancel order. Only Pending or Paid orders can be cancelled.",
+        });
+      }
+
+      // Check if order is already cancelled or failed
+      if (order.status === "Cancelled" || order.status === "Failed") {
+        return res
+          .status(400)
+          .json({ msg: "Order is already cancelled or failed" });
+      }
+
+      // If order was paid, we need to restore stock and voucher usage
+      if (order.status === "Paid" || order.status === "Confirmed") {
+        // Restore stock for hardbooks and decrement sold count
+        for (const item of order.items) {
+          const book = await Book.findById(item.bookId);
+          if (book) {
+            if (item.productType === "hardbook") {
+              book.stock += item.quantity;
+            }
+            book.sold = Math.max(0, book.sold - item.quantity);
+            await book.save();
+          }
+        }
+
+        // Restore voucher usage
+        if (order.voucher && order.voucher.code) {
+          const voucher = await Voucher.findOne({ code: order.voucher.code });
+          if (voucher && voucher.usedCount > 0) {
+            voucher.usedCount -= 1;
+            await voucher.save();
+          }
+        }
+      }
+
+      order.status = "Cancelled";
+      await order.save();
+
+      const populatedOrder = await Order.findById(id).populate("items.bookId");
+
+      return res.status(200).json(populatedOrder);
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }

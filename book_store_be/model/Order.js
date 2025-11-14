@@ -39,8 +39,23 @@ const orderSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["Pending", "Paid", "Failed", "Cancelled"],
+      enum: [
+        "Pending",
+        "Paid",
+        "Confirmed",
+        "In Delivery",
+        "Delivered",
+        "Cancelled",
+        "Failed",
+      ],
       default: "Pending",
+    },
+    confirmedByAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    confirmedAt: {
+      type: Date,
     },
   },
   { timestamps: true }
