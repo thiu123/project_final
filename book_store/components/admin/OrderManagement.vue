@@ -210,7 +210,34 @@
 
             <!-- Actions -->
             <template v-slot:item.actions="{ item }">
-              <div class="d-flex gap-1">
+              <div class="d-flex gap-2 align-center">
+                <v-select
+                  :model-value="item.status"
+                  :items="statusOptions"
+                  density="compact"
+                  variant="outlined"
+                  hide-details
+                  style="min-width: 100px"
+                  @update:model-value="(newStatus) => quickUpdateStatus(item, newStatus)"
+                >
+                  <template v-slot:selection="{ item: statusItem }">
+                    <div class="d-flex align-center gap-1">
+                      <v-icon :color="getStatusColor(statusItem.value)" size="small">
+                        {{ getStatusIcon(statusItem.value) }}
+                      </v-icon>
+                      <span class="text-caption font-weight-medium">{{ statusItem.value }}</span>
+                    </div>
+                  </template>
+                  <template v-slot:item="{ props, item: statusItem }">
+                    <v-list-item v-bind="props">
+                      <template v-slot:prepend>
+                        <v-icon :color="getStatusColor(statusItem.value)">
+                          {{ getStatusIcon(statusItem.value) }}
+                        </v-icon>
+                      </template>
+                    </v-list-item>
+                  </template>
+                </v-select>
                 <v-btn
                   icon
                   size="small"
@@ -221,18 +248,6 @@
                   <v-icon>mdi-eye</v-icon>
                   <v-tooltip activator="parent" location="top"
                     >View Details</v-tooltip
-                  >
-                </v-btn>
-                <v-btn
-                  icon
-                  size="small"
-                  variant="text"
-                  color="warning"
-                  @click="editOrderStatus(item)"
-                >
-                  <v-icon>mdi-pencil</v-icon>
-                  <v-tooltip activator="parent" location="top"
-                    >Edit Status</v-tooltip
                   >
                 </v-btn>
               </div>
@@ -485,66 +500,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- Edit Status Dialog -->
-    <v-dialog v-model="editDialog" max-width="500px" persistent>
-      <v-card v-if="selectedOrder">
-        <v-card-title class="bg-warning text-white">
-          <v-icon class="mr-2">mdi-pencil</v-icon>
-          Update Order Status
-        </v-card-title>
-
-        <v-card-text class="pa-4">
-          <v-row>
-            <v-col cols="12">
-              <v-alert
-                type="info"
-                variant="tonal"
-                density="compact"
-                class="mb-4"
-              >
-                Order ID: <strong>{{ selectedOrder.orderId }}</strong>
-              </v-alert>
-            </v-col>
-            <v-col cols="12">
-              <v-select
-                v-model="newStatus"
-                :items="statusOptions"
-                label="New Status"
-                variant="outlined"
-                density="comfortable"
-                prepend-icon="mdi-tag"
-              >
-                <template v-slot:item="{ props, item }">
-                  <v-list-item v-bind="props">
-                    <template v-slot:prepend>
-                      <v-icon :color="getStatusColor(item.value)">
-                        {{ getStatusIcon(item.value) }}
-                      </v-icon>
-                    </template>
-                  </v-list-item>
-                </template>
-              </v-select>
-            </v-col>
-          </v-row>
-        </v-card-text>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="editDialog = false">
-            Cancel
-          </v-btn>
-          <v-btn
-            color="warning"
-            variant="elevated"
-            @click="updateStatus"
-            :loading="updateLoading"
-          >
-            Update Status
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
     <!-- Snackbar -->
     <v-snackbar
       v-model="snackbar"
@@ -569,14 +524,11 @@ export default {
     return {
       orders: [],
       loading: false,
-      updateLoading: false,
       search: "",
       statusFilter: null,
       paymentFilter: null,
       detailsDialog: false,
-      editDialog: false,
       selectedOrder: null,
-      newStatus: null,
       snackbar: false,
       snackbarText: "",
       snackbarColor: "success",
@@ -590,7 +542,7 @@ export default {
         { title: "Date", key: "createdAt", sortable: true },
         { title: "Actions", key: "actions", sortable: false, align: "center" },
       ],
-      statusOptions: ["Pending", "Paid", "Failed", "Cancelled"],
+      statusOptions: ["Pending", "Paid", "Confirmed", "In Delivery", "Delivered", "Cancelled", "Failed"],
       paymentOptions: ["Vnpay", "Momo"],
     };
   },
@@ -657,45 +609,44 @@ export default {
       this.selectedOrder = order;
       this.detailsDialog = true;
     },
-    editOrderStatus(order) {
-      this.selectedOrder = order;
-      this.newStatus = order.status;
-      this.editDialog = true;
-    },
-    async updateStatus() {
-      if (!this.newStatus || this.newStatus === this.selectedOrder.status) {
-        this.showSnackbar("Please select a different status", "warning");
+    async quickUpdateStatus(order, newStatus) {
+      if (newStatus === order.status) {
         return;
       }
 
       try {
-        this.updateLoading = true;
-        await orderApi.updateOrderStatus(
-          this.selectedOrder._id,
-          this.newStatus
-        );
+        await orderApi.updateOrderStatus(order._id, newStatus);
 
         // Update local order
-        const index = this.orders.findIndex(
-          (o) => o._id === this.selectedOrder._id
-        );
+        const index = this.orders.findIndex((o) => o._id === order._id);
         if (index !== -1) {
-          this.orders[index].status = this.newStatus;
+          this.orders[index].status = newStatus;
+          // If changing to Confirmed, also update confirmedByAdmin
+          if (newStatus === "Confirmed") {
+            this.orders[index].confirmedByAdmin = true;
+            this.orders[index].confirmedAt = new Date();
+          }
         }
 
-        this.editDialog = false;
-        this.showSnackbar("Order status updated successfully", "success");
+        this.showSnackbar(`Order status updated to ${newStatus}`, "success");
       } catch (error) {
         console.error("Error updating order status:", error);
-        this.showSnackbar("Failed to update order status", "error");
-      } finally {
-        this.updateLoading = false;
+        this.showSnackbar(
+          error.response?.data?.msg || "Failed to update order status",
+          "error"
+        );
+        // Revert on error
+        await this.fetchOrders();
       }
     },
+
     getStatusColor(status) {
       const colors = {
         Pending: "warning",
         Paid: "success",
+        Confirmed: "info",
+        "In Delivery": "purple",
+        Delivered: "teal",
         Failed: "error",
         Cancelled: "grey",
       };
@@ -705,6 +656,9 @@ export default {
       const icons = {
         Pending: "mdi-clock-outline",
         Paid: "mdi-check-circle",
+        Confirmed: "mdi-shield-check",
+        "In Delivery": "mdi-truck-delivery",
+        Delivered: "mdi-package-variant-closed",
         Failed: "mdi-close-circle",
         Cancelled: "mdi-cancel",
       };

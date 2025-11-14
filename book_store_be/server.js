@@ -34,7 +34,7 @@ app.use(
     secret: process.env.JWT_ACCESS_KEY || "your-secret-key",
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false }, // Set true nếu dùng HTTPS
+    cookie: { secure: false },
   })
 );
 
