@@ -86,7 +86,7 @@
         :slides-per-view="2"
         :space-between="16"
         :loop="true"
-        :pagination="{ clickable: true }"
+
         :breakpoints="{
           640: { slidesPerView: 3, spaceBetween: 16 },
           960: { slidesPerView: 4, spaceBetween: 20 },
