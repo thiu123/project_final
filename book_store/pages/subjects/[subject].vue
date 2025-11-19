@@ -152,19 +152,18 @@
                 <span class="text-body-2 mr-3 font-weight-medium">Sort by</span>
                 <v-menu>
                   <template v-slot:activator="{ props }">
-                    <v-btn
+                    <v-select
+                      v-model="sortBy"
+                      :items="items"
                       variant="outlined"
-                      color="grey-darken-1"
+                      density="compact"
                       class="text-body-2 font-weight-medium"
-                      v-bind="props"
-                      rounded="lg"
-                      prepend-icon="mdi-sort"
+                      append-inner-icon="mdi-sort"
                     >
-                      Newest
                       <v-icon class="ml-2">mdi-chevron-down</v-icon>
-                    </v-btn>
+                    </v-select>
                   </template>
-                  <v-list class="py-0">
+                  <!-- <v-list class="py-0">
                     <v-list-item
                       v-for="(item, index) in items"
                       :key="index"
@@ -175,7 +174,7 @@
                         >{{ item.title }}</v-list-item-title
                       >
                     </v-list-item>
-                  </v-list>
+                  </v-list> -->
                 </v-menu>
               </div>
             </div>
@@ -396,9 +395,10 @@ export default {
       ],
       bookSubjects,
       prices: ["Under $10", "$10 - $20", "$20 - $30", "Above $50"],
-      selectedPrice: [],
+      selectedPrice: "",
       page: 1,
       itemsPerPage: 12,
+      sortBy: "Newest",
     };
   },
   computed: {
@@ -407,11 +407,43 @@ export default {
     paginatedBooks() {
       const start = (this.page - 1) * this.itemsPerPage;
       const end = start + this.itemsPerPage;
-      return this.books.slice(start, end);
+      return this.filteredSubject.slice(start, end);
     },
 
     totalPages() {
-      return Math.ceil(this.books.length / this.itemsPerPage);
+      return Math.ceil(this.filteredSubject.length / this.itemsPerPage);
+    },
+    filteredSubject() {
+      let filtered = [...this.books];
+
+      if (this.sortBy === "Newest") {
+        filtered.sort(
+          (a, b) => new Date(b.publishedDate) - new Date(a.publishedDate)
+        );
+      } else if (this.sortBy === "From A to Z") {
+        filtered.sort((a, b) => a.title.localeCompare(b.title));
+      } else if (this.sortBy === "From Z to A") {
+        filtered.sort((a, b) => b.title.localeCompare(a.title));
+      }
+
+      if (this.selectedPrice) {
+        filtered = filtered.filter((book) => {
+          const price = book.price;
+          switch (this.selectedPrice) {
+            case "Under $10":
+              return price < 10;
+            case "$10 - $20":
+              return price >= 10 && price <= 20;
+            case "$20 - $30":
+              return price >= 20 && price <= 30;
+            case "Above $50":
+              return price > 50;
+            default:
+              return true;
+          }
+        });
+      }
+      return filtered;
     },
   },
   methods: {
