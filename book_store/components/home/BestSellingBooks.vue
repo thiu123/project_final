@@ -24,7 +24,7 @@
           </div>
         </div>
 
-        <v-btn
+        <!-- <v-btn
           color="waterblue"
           variant="outlined"
           rounded="xl"
@@ -36,7 +36,7 @@
           >
           <span class="d-none d-sm-inline">View All</span>
           <span class="d-inline d-sm-none">View</span>
-        </v-btn>
+        </v-btn> -->
       </div>
 
       <v-row>
