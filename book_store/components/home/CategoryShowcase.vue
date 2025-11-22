@@ -50,8 +50,6 @@
               <div class="category-content">
                 <!-- Category Image -->
                 <div class="category-image-wrapper">
-
-                  
                   <img
                     :src="
                       category.cover_url ||

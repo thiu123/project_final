@@ -152,6 +152,14 @@ const orderController = {
         return res.status(403).json({ msg: "Unauthorized" });
       }
 
+      // Check if order contains any ebooks
+      const hasEbook = order.items.some((item) => item.productType === "ebook");
+      if (hasEbook && order.status === "Paid") {
+        return res.status(400).json({
+          msg: "Cannot cancel order containing ebooks after payment",
+        });
+      }
+
       // Only allow cancellation for Pending or Paid orders (before Confirmed)
       if (!["Pending", "Paid"].includes(order.status)) {
         return res.status(400).json({
@@ -595,10 +603,10 @@ const orderController = {
         return res.status(400).json({ msg: "Book ID is required" });
       }
 
-      // Tìm order đã paid và có ebook
+      // Ebook is available immediately after payment (Paid status)
       const order = await Order.findOne({
         userId,
-        status: "Paid",
+        status: { $in: ["Paid", "Confirmed", "In Delivery", "Delivered"] },
         "items.bookId": bookId,
         "items.productType": "ebook",
       });

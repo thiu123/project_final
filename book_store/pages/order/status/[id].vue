@@ -17,7 +17,7 @@
             <h1 class="text-h3 text-md-h2 text-white font-weight-bold mb-3">
               {{ getHeaderTitle() }}
             </h1>
-            <p class="text-h6 text-white text-opacity-90">
+            <p v-if="!isEbookOnly" class="text-h6 text-white text-opacity-90">
               {{ getHeaderSubtitle() }}
             </p>
           </div>
@@ -658,13 +658,25 @@ export default {
     ...mapState("order", ["order"]),
     canCancelOrder() {
       if (!this.order) return false;
-      // Can only cancel if order is Pending or Paid (before Confirmed)
+
+      const hasEbook = this.order.items?.some(
+        (item) => item.productType === "ebook"
+      );
+
+      if (hasEbook && this.order.status === "Paid") {
+        return false;
+      }
+
       return ["Pending", "Paid"].includes(this.order.status);
     },
     isSuccessStatus() {
       return ["Paid", "Confirmed", "In Delivery", "Delivered"].includes(
         this.order?.status
       );
+    },
+    isEbookOnly() {
+      if (!this.order || !this.order.items) return false;
+      return this.order.items.every((item) => item.productType === "ebook");
     },
   },
   methods: {

@@ -360,7 +360,7 @@
         </div>
 
         <!-- Favorites List -->
-        <div v-else-if="favorites && favorites.length > 0">
+        <div v-else-if="favorites && favorites.some(f => f.bookId)">
           <v-row>
             <v-col
               v-for="favorite in favorites"
@@ -390,13 +390,13 @@
                   <h4
                     class="text-subtitle-1 font-weight-bold text-customblack mb-2 text-truncate"
                   >
-                    {{ favorite.bookId?.title || "Unknown Book" }}
+                    {{ favorite.bookId?.title }}
                   </h4>
                   <p class="text-body-2 text-grey-darken-1 mb-3">
-                    by {{ favorite.bookId?.author || "Unknown Author" }}
+                    by {{ favorite.bookId?.author}}
                   </p>
                   <p class="text-h6 font-weight-bold text-waterblue mb-4">
-                    ${{ favorite.bookId?.price?.toFixed(2) || "0.00" }}
+                    ${{ favorite.bookId?.price?.toFixed(2) }}
                   </p>
                 </v-card-text>
                 <v-card-actions class="pa-6 pt-0">
@@ -732,11 +732,12 @@ export default {
     ...mapState("favorite", ["favorites"]),
     ...mapState("review", ["userReviews"]),
     userOrdersPaid() {
-      return this.userOrders;
+      return this.userOrders.map((order) => {
+        if (order.status.toLowerCase() !== "pending") {
+          return order;
+        }
+      }).filter(order => order !== undefined);
     },
-  },
-  mounted() {
-    console.log(this.userOrdersPaid, "czxczxcxz");
   },
   methods: {
     ...mapActions("favorite", ["toggleFavorites"]),
