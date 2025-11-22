@@ -6,22 +6,18 @@ const redisClient = require("../../config/redis");
 const bookController = {
   getAllBooks: async (req, res) => {
     try {
-      // 1. Tạo key cache từ query
       const cacheKey = `books:all:${req.query.subject || "all"}`;
 
-      // 2. Kiểm tra cache có data không
       const cachedData = await redisClient.get(cacheKey);
       if (cachedData) {
         console.log("📦 Lấy từ cache:", cacheKey);
         return res.status(200).json(JSON.parse(cachedData));
       }
 
-      // 3. Nếu không có cache → lấy từ DB
       console.log("🗄️ Lấy từ database:", cacheKey);
       const filter = req.query.subject ? { subjects: req.query.subject } : {};
       const books = await Book.find(filter);
 
-      // 4. Lưu vào cache 30 phút (1800 giây)
       await redisClient.setEx(cacheKey, 1800, JSON.stringify(books));
 
       return res.status(200).json(books);

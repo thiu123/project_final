@@ -564,10 +564,11 @@ export default {
 }
 
 .sticky-card {
-  position: sticky;
-  top: 100px;
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: visible !important;
 }
 
 .book-cover-large-container {
