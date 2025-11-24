@@ -2,7 +2,7 @@
   <v-container max-width="1440" class="mt-4 mt-md-8 px-3 px-md-4">
     <v-card
       elevation="12"
-      class="pa-4 pa-md-8 rounded-xl best-sellers-card"
+      class="pa-4 pa-md-8 best-sellers-card"
       style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
     >
       <!-- Enhanced Header -->

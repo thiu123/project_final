@@ -175,12 +175,6 @@
       </v-row>
     </v-container>
 
-    <!-- Best Selling Books -->
-    <HomeBestSellerTabs @show-snackbar="handleSnackbarEvent" />
-
-    <!-- Categories Showcase Section -->
-    <HomeCategoryShowcase />
-
     <!-- Dynamic Book Components -->
     <component
       v-for="(bookComponent, index) in bookComponents"
@@ -252,6 +246,8 @@
 </template>
 
 <script>
+import HomeCategoryShowcase from "~/components/home/CategoryShowcase.vue";
+import BestSellerTabs from "~/components/home/BestSellerTabs.vue";
 import BookManga from "../components/home/BookManga.vue";
 import BookFiction from "../components/home/BookFiction.vue";
 import BookRomance from "../components/home/BookRomance.vue";
@@ -264,6 +260,8 @@ import SnackbarAlert from "../components/SnackbarAlert.vue";
 export default {
   name: "Home",
   components: {
+    HomeCategoryShowcase,
+    BestSellerTabs,
     BookFiction,
     BookManga,
     BookRomance,
@@ -274,6 +272,8 @@ export default {
     return {
       bookComponents: [
         "BestSellingBooks",
+        "BestSellerTabs",
+        "HomeCategoryShowcase",
         "BookFiction",
         "BookManga",
         "BookRomance",
