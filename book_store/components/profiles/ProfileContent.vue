@@ -230,7 +230,7 @@
                 </div>
                 <div class="text-right">
                   <p class="text-h6 font-weight-bold text-waterblue">
-                    ${{ (item.bookId?.price * item.quantity).toFixed(2) }}
+                    ${{ calculateItemPrice(item).toFixed(2) }}
                   </p>
                 </div>
               </div>
@@ -360,7 +360,7 @@
         </div>
 
         <!-- Favorites List -->
-        <div v-else-if="favorites && favorites.some(f => f.bookId)">
+        <div v-else-if="favorites && favorites.some((f) => f.bookId)">
           <v-row>
             <v-col
               v-for="favorite in favorites"
@@ -393,7 +393,7 @@
                     {{ favorite.bookId?.title }}
                   </h4>
                   <p class="text-body-2 text-grey-darken-1 mb-3">
-                    by {{ favorite.bookId?.author}}
+                    by {{ favorite.bookId?.author }}
                   </p>
                   <p class="text-h6 font-weight-bold text-waterblue mb-4">
                     ${{ favorite.bookId?.price?.toFixed(2) }}
@@ -732,17 +732,30 @@ export default {
     ...mapState("favorite", ["favorites"]),
     ...mapState("review", ["userReviews"]),
     userOrdersPaid() {
-      return this.userOrders.map((order) => {
-        if (order.status.toLowerCase() !== "pending") {
-          return order;
-        }
-      }).filter(order => order !== undefined);
+      return this.userOrders
+        .map((order) => {
+          if (order.status.toLowerCase() !== "pending") {
+            return order;
+          }
+        })
+        .filter((order) => order !== undefined);
     },
   },
   methods: {
     ...mapActions("favorite", ["toggleFavorites"]),
     ...mapActions("review", ["deleteReview"]),
     ...mapActions("auth", ["changePassword"]),
+
+    calculateItemPrice(item) {
+      const basePrice = item.bookId?.price || 0;
+      const quantity = item.quantity || 0;
+
+      if (item.productType === "ebook") {
+        return basePrice * 0.7 * quantity;
+      }
+
+      return basePrice * quantity;
+    },
 
     calculateOrderSubtotal(order) {
       // Calculate subtotal by adding back discount to total

@@ -187,7 +187,7 @@
                     </p>
 
                     <!-- Action Buttons -->
-                    <div class="d-flex ga-3">
+                    <div class="ga-3">
                       <v-btn
                         color="primary"
                         variant="flat"
