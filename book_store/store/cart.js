@@ -18,7 +18,7 @@ export default {
       state.cart = cart;
     },
     clearCart(state) {
-      state.cart = [];
+      state.cart = { items: [] };
       state.appliedVoucher = null;
       state.voucherDiscount = 0;
     },
@@ -34,10 +34,20 @@ export default {
   actions: {
     async fetchCart({ commit }) {
       try {
+        // Check if user is logged in
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          // Clear cart if no token
+          commit("clearCart");
+          return;
+        }
+
         const response = await fetchCartApi();
-        commit("setCart", response.data);
+        commit("setCart", response.data || {});
       } catch (error) {
         console.error("Failed to fetch cart", error);
+        // Clear cart on error (e.g., invalid token)
+        commit("clearCart");
       }
     },
 
@@ -102,6 +112,10 @@ export default {
 
     removeVoucher({ commit }) {
       commit("clearVoucher");
+    },
+
+    clearCart({ commit }) {
+      commit("clearCart");
     },
 
     async confirmVoucherUsage({ state }) {

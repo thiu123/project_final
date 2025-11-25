@@ -801,7 +801,9 @@ export default {
     ...mapState("favorite", ["favorites"]),
     ...mapState("cart", ["cart"]),
     userFavoritesCount() {
-      return this.favorites ? this.favorites.length : 0;
+      return Array.isArray(this.favorites)
+        ? this.favorites.filter((f) => f?.bookId != null).length
+        : 0;
     },
     cartItemCount() {
       return this.cart.items ? this.cart.items.length : 0;

@@ -525,6 +525,7 @@ export default {
       const selectedItemsData = this.selectedCartItems.map((item) => ({
         bookId: item.bookId._id,
         title: item.bookId.title,
+        authors: item.bookId.authors[0],
         cover_url: item.bookId.cover_url,
         price: item.bookId.price,
         quantity: item.quantity,

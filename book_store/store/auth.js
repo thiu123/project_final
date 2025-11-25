@@ -67,8 +67,10 @@ export default {
         throw error;
       }
     },
-    logout({ commit }) {
+    logout({ commit, dispatch }) {
       commit("logout");
+      dispatch("cart/clearCart", null, { root: true });
+      dispatch("favorite/clearFavorites", null, { root: true });
     },
     async register(_, user) {
       try {

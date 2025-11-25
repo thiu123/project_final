@@ -188,23 +188,15 @@
               lg="3"
             >
               <v-card class="book-card" elevation="3" hover>
-                <div class="position-relative">
-                  <v-img
-                    :src="favorite?.bookId?.cover_url"
-                    height="300"
-                    cover
-                    class="book-cover"
-                  >
-                    <template v-slot:placeholder>
-                      <div
-                        class="d-flex align-center justify-center fill-height"
-                      >
-                        <v-progress-circular
-                          indeterminate
-                        ></v-progress-circular>
-                      </div>
-                    </template>
-                  </v-img>
+                <div class="position-relative book-cover-container">
+                  <div class="book-cover-wrapper">
+                    <img
+                      :src="favorite?.bookId?.cover_url"
+                      :alt="favorite?.bookId?.title"
+                      class="book-cover-image"
+                      loading="lazy"
+                    />
+                  </div>
 
                   <!-- Favorite Button -->
                   <v-btn
@@ -581,14 +573,45 @@ export default {
 <style scoped>
 .book-card {
   transition: transform 0.2s ease-in-out;
+  background: white;
+  overflow: hidden;
 }
 
 .book-card:hover {
   transform: translateY(-4px);
 }
 
-.book-cover {
-  border-radius: 8px 8px 0 0;
+.book-cover-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px;
+  min-height: 220px;
+  position: relative;
+}
+
+.book-cover-wrapper {
+  width: 70%;
+  max-width: 180px;
+  aspect-ratio: 2/3;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.book-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.book-card:hover .book-cover-wrapper {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
 }
 
 .favorite-btn {
