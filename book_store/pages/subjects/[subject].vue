@@ -149,33 +149,18 @@
 
               <!-- Enhanced Sort Dropdown -->
               <div class="d-flex align-center">
-                <span class="text-body-2 mr-3 font-weight-medium">Sort by</span>
-                <v-menu>
-                  <template v-slot:activator="{ props }">
-                    <v-select
-                      v-model="sortBy"
-                      :items="items"
-                      variant="outlined"
-                      density="compact"
-                      class="text-body-2 font-weight-medium"
-                      append-inner-icon="mdi-sort"
-                    >
-                      <v-icon class="ml-2">mdi-chevron-down</v-icon>
-                    </v-select>
-                  </template>
-                  <!-- <v-list class="py-0">
-                    <v-list-item
-                      v-for="(item, index) in items"
-                      :key="index"
-                      class="rounded-lg mx-2 my-1"
-                    >
-                      <v-list-item-title
-                        class="text-body-2 font-weight-medium"
-                        >{{ item.title }}</v-list-item-title
-                      >
-                    </v-list-item>
-                  </v-list> -->
-                </v-menu>
+                <span class="text-body-1 mr-3 font-weight-medium">Sort by</span>
+                <v-select
+                  v-model="sortBy"
+                  :items="items"
+                  item-title="title"
+                  item-value="title"
+                  variant="outlined"
+                  density="compact"
+                  class="text-body-2 font-weight-medium"
+                  style="min-width: 150px"
+                  hide-details
+                ></v-select>
               </div>
             </div>
           </v-card-title>

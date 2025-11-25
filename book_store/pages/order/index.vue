@@ -632,8 +632,8 @@ export default {
       return item.title || item.bookId?.title || "Unknown";
     },
     getItemAuthors(item) {
-      const authors = item.authors || item.bookId?.authors || [];
-      return Array.isArray(authors) ? authors.join(", ") : "Unknown";
+      const authors = item.authors
+      return authors 
     },
     getItemPrice(item) {
       return item.price || item.bookId?.price || 0;

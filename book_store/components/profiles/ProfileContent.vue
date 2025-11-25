@@ -360,10 +360,10 @@
         </div>
 
         <!-- Favorites List -->
-        <div v-else-if="favorites && favorites.some((f) => f.bookId)">
+        <div v-else-if="validFavorites.length > 0">
           <v-row>
             <v-col
-              v-for="favorite in favorites"
+              v-for="favorite in validFavorites"
               :key="favorite._id"
               cols="12"
               sm="6"
@@ -377,15 +377,18 @@
                   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
                 "
               >
-                <v-img
-                  :src="
-                    favorite.bookId?.cover_url ||
-                    'https://via.placeholder.com/200x300'
-                  "
-                  height="200"
-                  cover
-                  class="book-cover"
-                ></v-img>
+                <div class="position-relative book-cover-container">
+                  <div class="book-cover-wrapper">
+                    <img
+                      :src="
+                        favorite.bookId?.cover_url ||
+                        'https://via.placeholder.com/200x300'
+                      "
+                      :alt="favorite.bookId?.title"
+                      class="book-cover-image"
+                    />
+                  </div>
+                </div>
                 <v-card-text class="pa-6">
                   <h4
                     class="text-subtitle-1 font-weight-bold text-customblack mb-2 text-truncate"
@@ -740,6 +743,11 @@ export default {
         })
         .filter((order) => order !== undefined);
     },
+    validFavorites() {
+      return this.favorites.filter(
+        (favorite) => favorite && favorite.bookId && favorite.bookId._id
+      );
+    },
   },
   methods: {
     ...mapActions("favorite", ["toggleFavorites"]),
@@ -947,6 +955,39 @@ export default {
 .profile-content {
   background: linear-gradient(115deg, #ffffff, #d4dfed);
   min-height: 100vh;
+}
+
+.book-cover-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 20px;
+  min-height: 280px;
+  position: relative;
+}
+
+.book-cover-wrapper {
+  width: 70%;
+  max-width: 180px;
+  aspect-ratio: 2/3;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.book-cover-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.v-card:hover .book-cover-wrapper {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
 }
 
 @media (max-width: 960px) {
