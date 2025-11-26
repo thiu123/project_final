@@ -285,6 +285,7 @@
                       class="flex-grow-1"
                       prepend-icon="mdi-lightning-bolt"
                       :disabled="isOutOfStock"
+                      @click="handleBuyNow"
                     >
                       Buy Now
                     </v-btn>
@@ -354,17 +355,19 @@
             <v-card-text class="pa-4">
               <div class="text-center mb-4">
                 <div class="text-h3 font-weight-bold text-amber mb-2">
-                  4.0<span class="text-h5 text-grey-darken-1">/5</span>
+                  {{ displayRating.toFixed(1)
+                  }}<span class="text-h5 text-grey-darken-1">/5</span>
                 </div>
                 <v-rating
-                  :model-value="4"
+                  :model-value="displayRating"
                   color="amber"
                   readonly
                   size="small"
                   class="mb-2"
                 ></v-rating>
                 <div class="text-body-2 text-grey-darken-1">
-                  Based on 24 reviews
+                  Based on {{ totalReviews }}
+                  {{ totalReviews === 1 ? "review" : "reviews" }}
                 </div>
               </div>
 
@@ -452,26 +455,46 @@ export default {
       detailsBooks: {},
       isLoading: false,
       quantity: 1,
-      productType: "hardbook", // Mặc định chọn hardbook
+      productType: "hardbook",
       authors: [],
       showSnackbar: false,
       snackbarText: "",
       snackbarColor: "success",
       averageRating: 0,
       totalReviews: 0,
-      ratingBreakdown: [
-        { percentage: 70, count: 12 },
-        { percentage: 20, count: 5 },
-        { percentage: 8, count: 2 },
-        { percentage: 2, count: 1 },
-        { percentage: 0, count: 0 },
-      ],
     };
   },
   computed: {
     ...mapState("favorite", ["favorites"]),
     ...mapState("auth", ["currentUser"]),
     ...mapState("order", ["purchasedEbooks"]),
+    ...mapState("review", ["reviews"]),
+
+    ratingBreakdown() {
+      if (!this.reviews || this.reviews.length === 0) {
+        return [
+          { percentage: 0, count: 0 },
+          { percentage: 0, count: 0 },
+          { percentage: 0, count: 0 },
+          { percentage: 0, count: 0 },
+          { percentage: 0, count: 0 },
+        ];
+      }
+
+      const counts = [0, 0, 0, 0, 0];
+      this.reviews.forEach((review) => {
+        const rating = review.rating;
+        if (rating >= 1 && rating <= 5) {
+          counts[5 - rating]++;
+        }
+      });
+
+      const total = this.reviews.length;
+      return counts.map((count) => ({
+        percentage: total > 0 ? (count / total) * 100 : 0,
+        count,
+      }));
+    },
 
     breadcrumbItems() {
       return [
@@ -479,49 +502,41 @@ export default {
         { title: this.detailsBooks.title || "Book Details", disabled: true },
       ];
     },
-    // Hiển thị rating: nếu có review thì dùng average, không thì dùng rating mặc định từ database
     displayRating() {
       if (this.totalReviews > 0) {
         return this.averageRating;
       }
       return this.detailsBooks.rating || 0;
     },
-    // Tính giá ebook (70% của giá hardbook)
     ebookPrice() {
       const price = this.detailsBooks.price || 120;
       return (price * 0.7).toFixed(2);
     },
-    // Giá hiển thị dựa vào productType
     displayPrice() {
       return this.productType === "ebook"
         ? this.ebookPrice
         : this.detailsBooks.price || "120.00";
     },
-    // ✅ Lấy purchase status từ store
     hasPurchasedEbook() {
       return this.purchasedEbooks[this.detailsBooks._id] || false;
     },
-    // Text cho preview button
     previewButtonText() {
       return this.hasPurchasedEbook
         ? "Preview full"
         : "Preview (20 pages free)";
     },
-    // Stock management
     isOutOfStock() {
       return this.productType === "hardbook" && this.detailsBooks.stock === 0;
     },
     maxQuantity() {
       if (this.productType === "ebook") {
-        return 10; // Ebook không giới hạn stock
+        return 10;
       }
-      // Hardbook: giới hạn theo stock hoặc max 10
       return Math.min(this.detailsBooks.stock || 0, 10);
     },
   },
   watch: {
     productType() {
-      // Adjust quantity when switching product type
       if (this.quantity > this.maxQuantity) {
         this.quantity = this.maxQuantity;
       }
@@ -531,6 +546,7 @@ export default {
     ...mapActions("cart", ["addToCart"]),
     ...mapActions("order", ["fetchUserOrders", "checkEbookPurchase"]),
     ...mapActions("favorite", ["toggleFavorites"]),
+    ...mapActions("review", ["loadReviews"]),
     async getAverageRating(bookId) {
       try {
         const { getAverageRating } = await import("~/api/reviewApi");
@@ -558,10 +574,8 @@ export default {
         );
         this.detailsBooks = response.data;
 
-        // Lấy average rating từ reviews
         await this.getAverageRating(bookId);
 
-        // ✅ Check nếu user đã mua ebook này (dùng store action)
         if (this.currentUser) {
           await this.checkEbookPurchase(bookId);
         }
@@ -606,7 +620,25 @@ export default {
       }
     },
 
-    // Preview ebook - đến trang reader (xem 20 trang)
+    async handleBuyNow() {
+      try {
+        // Add to cart first
+        await this.addToCart({
+          bookId: this.detailsBooks._id,
+          quantity: this.quantity,
+          productType: this.productType,
+        });
+
+        // Navigate to cart page for checkout
+        this.$router.push("/cart");
+      } catch (error) {
+        console.error("Error during buy now:", error);
+        this.snackbarText = "Failed to proceed to checkout.";
+        this.showSnackbar = true;
+        this.snackbarColor = "error";
+      }
+    },
+
     previewEbook() {
       this.$router.push({
         path: "/reader",
@@ -631,7 +663,6 @@ export default {
     },
     isFavorite(bookId) {
       return this.favorites.some((favorite) => {
-        // Handle case where bookId is populated (contains full book object)
         const favoriteBookId = favorite.bookId?._id || favorite.bookId;
         return favoriteBookId === bookId;
       });
@@ -640,6 +671,11 @@ export default {
   async mounted() {
     await this.getDetailsBooks();
     await this.getOrderOfUser();
+
+    const bookId = this.$route.params.id;
+    if (bookId) {
+      await this.loadReviews(bookId);
+    }
   },
 };
 </script>

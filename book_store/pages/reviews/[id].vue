@@ -288,14 +288,14 @@
                           >
                             {{ review.userId?.username || "Anonymous" }}
                           </h3>
-                          <v-chip
+                          <!-- <v-chip
                             size="small"
                             color="success"
                             variant="tonal"
                             class="text-caption"
                           >
                             Verified
-                          </v-chip>
+                          </v-chip> -->
                         </div>
                         <div class="d-flex align-center">
                           <v-rating
