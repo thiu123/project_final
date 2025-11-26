@@ -173,7 +173,7 @@
             variant="text"
             to="/contact"
           >
-            Contact Us
+            Contact & Feedback
           </v-btn>
         </div>
 

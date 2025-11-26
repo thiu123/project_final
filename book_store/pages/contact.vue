@@ -10,10 +10,10 @@
             </v-avatar>
           </div>
           <h1 class="text-h3 font-weight-bold text-customblack mb-4">
-            Contact Us
+            Contact & Feedback
           </h1>
           <p class="text-h6 text-medium-emphasis mb-8">
-            Share your feedback and help us improve
+            Send us your questions or share your feedback — we’re here to help!
           </p>
         </v-col>
       </v-row>
@@ -27,7 +27,7 @@
             <h2
               class="text-h4 font-weight-bold text-customblack mb-6 text-center"
             >
-              Send Your Feedback
+              Contact or Send Feedback
             </h2>
 
             <v-alert
@@ -52,7 +52,7 @@
                 :rules="messageRules"
                 required
                 prepend-inner-icon="mdi-message-text"
-                placeholder="Share your thoughts, suggestions, or report issues... (minimum 10 characters)"
+                placeholder="Write your question, feedback, issue report, or anything you want to share..."
               ></v-textarea>
 
               <v-btn
@@ -66,7 +66,7 @@
                 class="font-weight-bold"
               >
                 <v-icon start>mdi-send</v-icon>
-                Send Feedback
+                Send Message
               </v-btn>
             </v-form>
 
@@ -74,7 +74,7 @@
             <div v-if="isLoggedIn && userContacts.length > 0" class="mt-8">
               <v-divider class="mb-4"></v-divider>
               <h3 class="text-h6 font-weight-bold mb-4">
-                Your Feedback History
+                Your Contact & Feedback History
               </h3>
 
               <v-card
@@ -87,7 +87,7 @@
                   <div class="d-flex justify-space-between align-center mb-2">
                     <v-chip color="primary" size="small" variant="tonal">
                       <v-icon start size="small">mdi-message</v-icon>
-                      Feedback
+                      Message
                     </v-chip>
                     <span class="text-caption text-medium-emphasis">
                       {{ formatDate(contact.createdAt) }}
