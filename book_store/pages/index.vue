@@ -185,55 +185,6 @@
       @add-to-cart="handleAddToCart"
     ></component>
 
-    <!-- Enhanced Newsletter Section -->
-    <v-container class="my-12">
-      <v-row justify="center">
-        <v-col cols="12" lg="8">
-          <v-card class="newsletter-card pa-8 rounded-xl" elevation="12">
-            <div class="text-center">
-              <v-avatar color="customyellow" size="80" class="mb-4">
-                <v-icon color="darkgreen" size="40"
-                  >mdi-email-newsletter</v-icon
-                >
-              </v-avatar>
-              <h2 class="text-h3 font-weight-bold text-customblack mb-3">
-                Stay Updated
-              </h2>
-              <p class="text-subtitle-1 text-medium-emphasis mb-6">
-                Subscribe to our newsletter for the latest releases, exclusive
-                offers, and reading recommendations.
-              </p>
-
-              <v-row justify="center">
-                <v-col cols="12" md="8">
-                  <div class="d-flex">
-                    <v-text-field
-                      v-model="newsletterEmail"
-                      variant="outlined"
-                      label="Enter your email address"
-                      hide-details
-                      class="mr-3"
-                      rounded="xl"
-                    ></v-text-field>
-                    <v-btn
-                      color="waterblue"
-                      variant="elevated"
-                      size="large"
-                      rounded="xl"
-                      class="font-weight-bold"
-                      @click="subscribeNewsletter"
-                    >
-                      Subscribe
-                    </v-btn>
-                  </div>
-                </v-col>
-              </v-row>
-            </div>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
-
     <!-- Why Shop With Us -->
     <HomeWhyShopSection :books="books" />
 

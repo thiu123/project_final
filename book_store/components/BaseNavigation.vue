@@ -995,7 +995,6 @@ export default {
 
 .dialog-close-btn:hover {
   background: rgba(255, 255, 255, 0.3) !important;
-  transform: rotate(90deg);
 }
 
 /* Badge customization */
