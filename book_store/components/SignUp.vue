@@ -150,7 +150,6 @@
                     <v-checkbox
                       v-model="agreeToTerms"
                       color="primary"
-                      hide-details
                       density="compact"
                       :rules="termsRules"
                     >
@@ -173,6 +172,7 @@
                     class="mb-6"
                     elevation="2"
                     :ripple="true"
+                    :disabled="!isFormValid || !agreeToTerms"
                   >
                     <v-icon start class="me-1">mdi-account-plus</v-icon>
                     Create Account
@@ -191,7 +191,7 @@
                       {{ errorMessage }}
                     </v-alert>
                   </v-expand-transition>
-                  
+
                   <v-expand-transition>
                     <v-alert
                       v-if="successMessage"
@@ -287,30 +287,34 @@ export default {
       successMessage: "",
       // Email validation rules
       emailRules: [
-        v => !!v || "Email is required",
-        v => /^\S+@\S+\.\S+$/.test(v) || "Email is invalid"
+        (v) => !!v || "Email is required",
+        (v) => /^\S+@\S+\.\S+$/.test(v) || "Email is invalid",
       ],
       // Username validation rules
       usernameRules: [
-        v => !!v || "Username is required",
-        v => v.length >= 3 || "Username must be at least 3 characters",
-        v => /^[a-zA-Z0-9_]+$/.test(v) || "Username can only contain letters, numbers, and underscores"
+        (v) => !!v || "Username is required",
+        (v) => v.length >= 3 || "Username must be at least 3 characters",
+        (v) =>
+          /^[a-zA-Z0-9_]+$/.test(v) ||
+          "Username can only contain letters, numbers, and underscores",
       ],
       // Password validation rules
       passwordRules: [
-        v => !!v || "Password is required",
-        v => v.length >= 6 || "Password must be at least 6 characters",
-        v => /[A-Z]/.test(v) || "Password must contain at least 1 uppercase letter",
-        v => /[0-9]/.test(v) || "Password must contain at least 1 number"
+        (v) => !!v || "Password is required",
+        (v) => v.length >= 6 || "Password must be at least 6 characters",
+        (v) =>
+          /[A-Z]/.test(v) ||
+          "Password must contain at least 1 uppercase letter",
+        (v) => /[0-9]/.test(v) || "Password must contain at least 1 number",
       ],
       // Confirm password validation rules
       confirmPasswordRules: [
-        v => !!v || "Please confirm your password",
-        v => v === this.password || "Passwords don't match"
+        (v) => !!v || "Please confirm your password",
+        (v) => v === this.password || "Passwords don't match",
       ],
       // Terms of use validation rules
       termsRules: [
-        v => v || "You must agree to the terms of use to continue"
+        (v) => v || "You must agree to the terms of use to continue",
       ],
     };
   },
@@ -318,10 +322,25 @@ export default {
     ...mapActions("auth", ["register"]),
     async onSubmit() {
       // Validate form before submitting
-       if (!this.$refs.form.validate()) {
-         this.errorMessage = "Please fill in all required fields and fix the errors";
-         return;
-       }
+      const { valid } = await this.$refs.form.validate();
+
+      if (!valid) {
+        this.errorMessage =
+          "Please fill in all required fields and fix the errors";
+        return;
+      }
+
+      if (!this.agreeToTerms) {
+        this.errorMessage = "You must agree to the terms of use to continue";
+        return;
+      }
+
+      // Reset error messages
+      this.errorMessage = "";
+      this.emailError = "";
+      this.usernameError = "";
+      this.passwordError = "";
+      this.confirmPasswordError = "";
 
       try {
         const data = await this.register({
@@ -329,45 +348,46 @@ export default {
           email: this.email,
           password: this.password,
         });
-        
+
         // Registration successful
-         this.successMessage = "Account registration successful! You can now log in.";
-         this.$emit("checkIsSignUp", true);
-         
-         // Reset form after successful registration
-         this.$refs.form.reset();
+        this.successMessage =
+          "Account registration successful! You can now log in.";
+        this.$emit("checkIsSignUp", true);
+
+        // Reset form after successful registration
+        this.$refs.form.reset();
         return data;
       } catch (error) {
         console.error("Registration failed:", error);
-        
+
         // Handle API errors
-         if (error.response) {
-           const { data } = error.response;
-           
-           // Handle specific server errors
-           if (data.message) {
-             this.errorMessage = data.message;
-           } else if (data.error) {
-             this.errorMessage = data.error;
-           } else {
-             this.errorMessage = "Registration failed. Please try again later.";
-           }
-           
-           // Handle errors for specific fields
-           if (data.errors) {
-             if (data.errors.email) {
-               this.emailError = data.errors.email;
-             }
-             if (data.errors.username) {
-               this.usernameError = data.errors.username;
-             }
-             if (data.errors.password) {
-               this.passwordError = data.errors.password;
-             }
-           }
-         } else {
-           this.errorMessage = "Connection error. Please try again later.";
-         }
+        if (error.response) {
+          const { data } = error.response;
+
+          // Handle specific server errors
+          if (data.message) {
+            this.errorMessage = data.message;
+          } else if (data.error) {
+            this.errorMessage = data.error;
+          } else {
+            this.errorMessage = "Registration failed. Please try again later.";
+          }
+
+          // Handle errors for specific fields
+          if (data.errors) {
+            if (data.errors.email) {
+              this.emailError = data.errors.email;
+            }
+            if (data.errors.username) {
+              this.usernameError = data.errors.username;
+            }
+            if (data.errors.password) {
+              this.passwordError = data.errors.password;
+            }
+          }
+        } else {
+          this.errorMessage = "Connection error. Please try again later.";
+        }
       }
     },
     async socialSignup(provider) {

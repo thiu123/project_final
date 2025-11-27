@@ -103,16 +103,18 @@
         <template v-for="(review, index) in paginatedReviews" :key="review._id">
           <v-list-item class="review-item">
             <template v-slot:prepend>
-              <v-avatar size="56" class="mr-4">
-                <img
-                  cover
-                  :src="
-                    review.userId?.avatar_url ||
-                    'https://via.placeholder.com/56'
-                  "
-                  :alt="review.userId?.username"
-                />
-              </v-avatar>
+              <img
+                :src="
+                  review.userId?.avatar_url || 'https://via.placeholder.com/56'
+                "
+                :alt="review.userId?.username"
+                style="
+                  width: 56px;
+                  height: 56px;
+                  object-fit: cover;
+                  border-radius: 50%;
+                "
+              />
             </template>
 
             <v-list-item-title class="d-flex align-center mb-2">
@@ -561,6 +563,7 @@ export default {
 <style scoped>
 .review-item {
   padding: 20px 16px;
+  gap:10px
 }
 
 .review-item:hover {

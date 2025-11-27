@@ -21,9 +21,8 @@
           <v-icon>mdi-menu</v-icon>
         </v-btn>
 
-        <div v-if="!rail" class="d-flex align-center">
+        <div v-if="!rail" class="d-flex align-center justify-center">
           <div class="text-h6 font-weight-bold text-primary">Admin Panel</div>
-          <div class="text-caption text-grey">THBookStore</div>
         </div>
       </div>
 
@@ -148,7 +147,7 @@ export default {
           icon: "mdi-comment-multiple",
         },
         {
-          title: "Contact Management",
+          title: "Contact & Feedback Management",
           value: "contact-management",
           icon: "mdi-message-text",
         },
