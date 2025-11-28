@@ -285,12 +285,10 @@ export default {
       confirmPasswordError: "",
       errorMessage: "",
       successMessage: "",
-      // Email validation rules
       emailRules: [
         (v) => !!v || "Email is required",
         (v) => /^\S+@\S+\.\S+$/.test(v) || "Email is invalid",
       ],
-      // Username validation rules
       usernameRules: [
         (v) => !!v || "Username is required",
         (v) => v.length >= 3 || "Username must be at least 3 characters",
@@ -298,7 +296,6 @@ export default {
           /^[a-zA-Z0-9_]+$/.test(v) ||
           "Username can only contain letters, numbers, and underscores",
       ],
-      // Password validation rules
       passwordRules: [
         (v) => !!v || "Password is required",
         (v) => v.length >= 6 || "Password must be at least 6 characters",
@@ -307,7 +304,6 @@ export default {
           "Password must contain at least 1 uppercase letter",
         (v) => /[0-9]/.test(v) || "Password must contain at least 1 number",
       ],
-      // Confirm password validation rules
       confirmPasswordRules: [
         (v) => !!v || "Please confirm your password",
         (v) => v === this.password || "Passwords don't match",

@@ -229,7 +229,6 @@
             v-model="accountMenu"
             :close-on-content-click="false"
             location="bottom"
-            open-on-hover
             transition="slide-y-transition"
             offset="8"
           >
@@ -767,6 +766,7 @@ export default {
       this.dialogSignIn = data;
     },
     handleLogout() {
+      this.accountMenu = false;
       this.logout();
       this.$router.push("/");
     },
