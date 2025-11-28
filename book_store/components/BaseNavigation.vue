@@ -388,13 +388,13 @@
 
                 <v-list-item
                   class="menu-list-item rounded-lg my-1"
-                  @click="goToProfile('wishlist')"
+                  @click="goToProfile('favorites')"
                 >
                   <template v-slot:prepend>
                     <v-icon icon="mdi-heart" size="22" class="mr-2"></v-icon>
                   </template>
                   <v-list-item-title class="font-weight-medium"
-                    >Wishlist</v-list-item-title
+                    >Favorites</v-list-item-title
                   >
                 </v-list-item>
 

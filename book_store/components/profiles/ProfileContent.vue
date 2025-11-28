@@ -101,12 +101,14 @@
                 <v-col cols="12" md="6">
                   <v-text-field
                     :model-value="currentUser?.username || ''"
-                    label="First Name"
+                    label="Username"
                     variant="outlined"
                     density="comfortable"
                     rounded="lg"
                     color="waterblue"
                     class="mb-4"
+                    readonly
+                    prepend-inner-icon="mdi-account"
                   ></v-text-field>
                 </v-col>
                 <v-col cols="12" md="6">
@@ -119,20 +121,26 @@
                     rounded="lg"
                     color="waterblue"
                     class="mb-4"
+                    readonly
+                    prepend-inner-icon="mdi-email"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" md="6">
+                  <v-text-field
+                    :model-value="
+                      currentUser?.isAdmin ? 'Administrator' : 'Standard User'
+                    "
+                    label="Role"
+                    variant="outlined"
+                    density="comfortable"
+                    rounded="lg"
+                    color="waterblue"
+                    class="mb-4"
+                    readonly
+                    prepend-inner-icon="mdi-shield-account"
                   ></v-text-field>
                 </v-col>
               </v-row>
-              <v-btn
-                color="waterblue"
-                size="large"
-                class="mt-4 font-weight-bold text-white"
-                rounded="lg"
-                elevation="2"
-                hover
-              >
-                <v-icon start class="mr-2">mdi-content-save</v-icon>
-                Update Information
-              </v-btn>
             </v-form>
           </v-card-text>
         </v-card>
@@ -336,7 +344,7 @@
       </div>
 
       <!-- Wishlist Section -->
-      <div v-if="activeTab === 'wishlist'" class="content-section">
+      <div v-if="activeTab === 'favorites'" class="content-section">
         <div class="d-flex align-center mb-6">
           <v-icon
             icon="mdi-heart"
@@ -344,7 +352,7 @@
             color="waterblue"
             class="mr-3"
           ></v-icon>
-          <h2 class="text-h4 font-weight-bold text-customblack">My Wishlist</h2>
+          <h2 class="text-h4 font-weight-bold text-customblack">My Favorites</h2>
         </div>
 
         <!-- Loading State -->
@@ -438,7 +446,7 @@
             No favorites yet
           </h3>
           <p class="text-body-1 text-grey-darken-1 mb-6 max-width-400 mx-auto">
-            You haven't added any books to your wishlist yet. Start exploring to
+            You haven't added any books to your favorite yet. Start exploring to
             find your favorite books!
           </p>
           <v-btn
@@ -961,7 +969,6 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   padding: 20px;
   min-height: 280px;
   position: relative;
