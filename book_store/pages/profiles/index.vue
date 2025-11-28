@@ -62,7 +62,7 @@ export default {
       if (newTab === "orders") {
         this.loadUserOrders();
       }
-      if (newTab === "wishlist") {
+      if (newTab === "favorites") {
         this.loadFavorites();
       }
       if (newTab === "reviews") {

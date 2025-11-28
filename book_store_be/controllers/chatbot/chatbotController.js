@@ -295,11 +295,9 @@ const generateSmartReview = async (req, res) => {
       });
     }
 
-    // Step 1: Extract the actual book title from user's potentially long request
     const extractedTitle = await extractBookTitle(bookQuery);
     console.log("Extracted book title:", extractedTitle);
 
-    // Step 2: Search for the book
     const book = await Book.findOne({
       $or: [
         { title: { $regex: extractedTitle, $options: "i" } },
@@ -314,7 +312,6 @@ const generateSmartReview = async (req, res) => {
       });
     }
 
-    // Step 3: Generate natural, conversational review
     const prompt = `Write a natural, enthusiastic book review for:
 
 Title: "${book.title}"

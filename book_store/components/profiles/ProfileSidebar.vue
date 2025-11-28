@@ -27,15 +27,6 @@
       <p class="text-body-2 text-grey-darken-1 mb-3">
         {{ currentUser?.email || "No email" }}
       </p>
-      <v-chip
-        color="waterblue"
-        variant="flat"
-        size="small"
-        class="text-white font-weight-medium"
-      >
-        <v-icon start size="16" class="mr-1">mdi-account-check</v-icon>
-        Active Member
-      </v-chip>
     </div>
 
     <!-- Navigation Menu -->
@@ -138,7 +129,7 @@ export default {
           icon: "mdi-account-circle",
         },
         { title: "Orders", value: "orders", icon: "mdi-package-variant" },
-        { title: "Wishlist", value: "wishlist", icon: "mdi-heart" },
+        { title: "Favorites", value: "favorites", icon: "mdi-heart" },
         { title: "My Reviews", value: "reviews", icon: "mdi-star" },
         { title: "Change Password", value: "password", icon: "mdi-lock" },
       ],
