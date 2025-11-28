@@ -23,6 +23,7 @@
 
             <v-card-text class="pa-0">
               <!-- Desktop Header -->
+              <!-- Desktop Header -->
               <v-row
                 class="ma-0 pa-4 text-subtitle-1 font-weight-medium d-none d-md-flex"
               >
@@ -37,7 +38,20 @@
                 </v-col>
                 <v-col cols="2" class="text-center">Quantity</v-col>
                 <v-col cols="2" class="text-end">Price</v-col>
-                <v-col cols="2">Delete</v-col>
+                <v-col cols="2" class="d-flex justify-end">
+                  <v-btn
+                    v-if="selectAll && selectedItems.length > 0"
+                    variant="text"
+                    color="error"
+                    size="small"
+                    @click="confirmDeleteSelected"
+                    class="font-weight-bold"
+                  >
+                    <v-icon start size="small">mdi-delete-sweep</v-icon>
+                    Delete All
+                  </v-btn>
+                  <span v-else>Delete</span>
+                </v-col>
               </v-row>
 
               <!-- Mobile Header -->
@@ -504,13 +518,31 @@ export default {
         console.log("Selecting all items", val);
         this.selectedItems = this.cartItems.map((item) => item.bookId._id);
       } else {
-        this.selectedItems = [];
+        if (this.selectedItems.length === this.cartItems.length) {
+          this.selectedItems = [];
+        }
       }
     },
-    selectedItems(val) {
-      console.log("Selected items changed:", val);
-      this.selectAll =
-        val.length === this.cartItems.length && this.cartItems.length > 0;
+    selectedItems: {
+      handler(val) {
+        console.log("Selected items changed:", val);
+        // Update selectAll checkbox based on selection
+        this.selectAll =
+          val.length === this.cartItems.length && this.cartItems.length > 0;
+      },
+      deep: true,
+    },
+    cartItems: {
+      handler(newItems, oldItems) {
+        // When cart items change (e.g., item deleted), update selected items
+        if (newItems.length !== oldItems?.length) {
+          const validBookIds = newItems.map((item) => item.bookId._id);
+          this.selectedItems = this.selectedItems.filter((id) =>
+            validBookIds.includes(id)
+          );
+        }
+      },
+      deep: true,
     },
   },
   methods: {
@@ -551,7 +583,7 @@ export default {
     getItemPrice(item) {
       const basePrice = item?.bookId?.price || 0;
       if (item.productType === "ebook") {
-        return (basePrice * 0.7).toFixed(2); // 70% giá hardbook cho ebook
+        return (basePrice * 0.7).toFixed(2);
       }
       return basePrice.toFixed(2);
     },
@@ -593,30 +625,37 @@ export default {
     async deleteItem() {
       try {
         if(!this.itemToDelete) return;
-
-        if(this.selectAll) {
-          // If all selected, delete all selected items
-          await this.deleteSelectedItems();
-          this.confirmDelete = false;
-          this.itemToDelete = null;
-          return;
+        
+        await this.removeCartItem(this.itemToDelete);
+        
+        // Remove from selected items if it was selected
+        const index = this.selectedItems.indexOf(this.itemToDelete);
+        if (index > -1) {
+          this.selectedItems.splice(index, 1);
         }
         
-        if (this.itemToDelete) {
-          await this.removeCartItem(this.itemToDelete);
-          this.confirmDelete = false;
-          this.itemToDelete = null;
-        }
+        this.confirmDelete = false;
+        this.itemToDelete = null;
       } catch (error) {
         console.error("Error deleting item:", error);
       }
     },
     async deleteSelectedItems() {
       try {
-        for (const bookId of this.selectedItems) {
+        if (this.selectedItems.length === 0) {
+          return;
+        }
+
+        // Create a copy of selected items to delete
+        const itemsToDelete = [...this.selectedItems];
+        
+        for (const bookId of itemsToDelete) {
           await this.removeCartItem(bookId);
         }
+        
+        // Clear selected items after deletion
         this.selectedItems = [];
+        this.selectAll = false;
       } catch (error) {
         console.error("Error deleting selected items:", error);
       }

@@ -33,8 +33,8 @@ const momoController = {
         `&requestId=${requestId}` +
         `&requestType=${requestType}`;
 
-      console.log("--------------------RAW SIGNATURE----------------");
-      console.log(rawSignature);
+      // console.log("--------------------RAW SIGNATURE----------------");
+      // console.log(rawSignature);
 
       // Tạo signature bằng HMAC SHA256
       const signature = crypto
@@ -42,8 +42,8 @@ const momoController = {
         .update(rawSignature)
         .digest("hex");
 
-      console.log("--------------------SIGNATURE----------------");
-      console.log(signature);
+      // console.log("--------------------SIGNATURE----------------");
+      // console.log(signature);
 
       // Chuẩn bị request body
       const requestBody = {
@@ -61,7 +61,7 @@ const momoController = {
         lang: lang,
       };
 
-      console.log("MoMo Request:", JSON.stringify(requestBody, null, 2));
+      // console.log("MoMo Request:", JSON.stringify(requestBody, null, 2));
 
       // Gửi request đến MoMo
       const response = await axios.post(
@@ -74,7 +74,7 @@ const momoController = {
         }
       );
 
-      console.log("MoMo Response:", response.data);
+      // console.log("MoMo Response:", response.data);
 
       if (response.data.resultCode === 0) {
         return response.data.payUrl;
