@@ -34,19 +34,27 @@ const orderController = {
   // Admin: Get dashboard statistics
   getDashboardStats: async (req, res) => {
     try {
-      // Total revenue (only paid orders)
       const revenueResult = await Order.aggregate([
-        { $match: { status: "Paid" } },
+        {
+          $match: {
+            status: { $in: ["Paid", "Confirmed", "In Delivery", "Delivered"] },
+          },
+        },
         { $group: { _id: null, total: { $sum: "$total" } } },
       ]);
       const totalRevenue = revenueResult[0]?.total || 0;
 
-      // Total orders by status
       const orderStats = await Order.aggregate([
+        {
+          $match: {
+            status: { $in: ["Paid", "Confirmed", "In Delivery", "Delivered"] },
+          },
+        },
         {
           $group: {
             _id: "$status",
             count: { $sum: 1 },
+            totalRevenue: { $sum: "$total" },
           },
         },
       ]);
