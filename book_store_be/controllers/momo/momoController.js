@@ -4,8 +4,8 @@ const axios = require("axios");
 // MoMo Configuration
 const MOMO_CONFIG = {
   partnerCode: "MOMO",
-  accessKey: "F8BBA842ECF85",
-  secretKey: "K951B6PE1waDMi640xX08PD3vg6EkVlz",
+  accessKey: process.env.MOMO_ACCESS_KEY,
+  secretKey: process.env.MOMO_SECRET_KEY,
   endpoint: "https://test-payment.momo.vn/v2/gateway/api",
   redirectUrl: "http://localhost:5000/api/order/momo_return",
   ipnUrl: "http://localhost:5000/api/order/momo_return",

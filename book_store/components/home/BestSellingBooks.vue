@@ -14,7 +14,7 @@
             <h2
               class="text-h5 text-md-h3 text-customblack font-weight-bold mb-2"
             >
-              Best Selling Books
+              Trending Best Sellers
             </h2>
             <p
               class="text-caption text-md-subtitle-1 text-medium-emphasis ma-0"

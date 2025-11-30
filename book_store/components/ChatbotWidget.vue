@@ -167,7 +167,7 @@
                     </div>
                     <v-btn
                       size="small"
-                      color="success"
+                      color="primary"
                       variant="text"
                       prepend-icon="mdi-arrow-right"
                       @click.stop="goToBookDetail(message.review.bookInfo.id)"

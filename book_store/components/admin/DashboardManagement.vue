@@ -77,7 +77,14 @@
                     {{ formatCurrency(order.total) }}
                   </td>
                   <td>
-                    <v-chip :color="getStatusColor(order.status)" size="small">
+                    <v-chip
+                      :color="getStatusColor(order.status)"
+                      variant="flat"
+                      size="small"
+                    >
+                      <v-icon start size="small">
+                        {{ getStatusIcon(order.status) }}
+                      </v-icon>
                       {{ order.status }}
                     </v-chip>
                   </td>
@@ -120,7 +127,7 @@ export default {
   computed: {
     statsCards() {
       const paidOrders =
-        this.orderStats.find((s) => s._id === "Paid")?.count || 0;
+        this.orderStats.find((s) => s._id !== "Pending")?.count || 0;
       const totalOrders = this.orderStats.reduce((sum, s) => sum + s.count, 0);
       const failedOrders =
         this.orderStats.find((s) => s._id === "Failed")?.count || 0;
@@ -192,9 +199,9 @@ export default {
             {
               label: "Revenue (VND)",
               data: [this.totalRevenue],
-              backgroundColor: "rgba(76, 175, 80, 0.8)",
-              borderColor: "rgba(76, 175, 80, 1)",
-              borderWidth: 2,
+              backgroundColor: "#00BFFF",
+              borderColor: "#00BFFF",
+              borderWidth: 1,
             },
           ],
         },
@@ -244,12 +251,27 @@ export default {
 
     getStatusColor(status) {
       const colors = {
-        Paid: "success",
         Pending: "warning",
+        Paid: "success",
+        Confirmed: "info",
+        "In Delivery": "purple",
+        Delivered: "teal",
         Failed: "error",
         Cancelled: "grey",
       };
       return colors[status] || "grey";
+    },
+    getStatusIcon(status) {
+      const icons = {
+        Pending: "mdi-clock-outline",
+        Paid: "mdi-check-circle",
+        Confirmed: "mdi-shield-check",
+        "In Delivery": "mdi-truck-delivery",
+        Delivered: "mdi-package-variant-closed",
+        Failed: "mdi-close-circle",
+        Cancelled: "mdi-cancel",
+      };
+      return icons[status] || "mdi-help-circle";
     },
   },
 

@@ -174,13 +174,8 @@
                       </div>
                     </div>
 
-                    <!-- Description Title -->
-                    <h4 class="text-subtitle-1 font-weight-bold mb-2">
-                      {{ selectedBook.title }}
-                    </h4>
-
                     <!-- Description -->
-                    <p class="text-body-2 text-grey-darken-2 line-clamp-6 mb-3">
+                    <p class="text-body-1 text-grey-darken-2 line-clamp-6 mb-3">
                       {{
                         selectedBook.description || "No description available"
                       }}
@@ -564,11 +559,22 @@ export default {
 }
 
 .sticky-card {
+  position: sticky;
   height: 100%;
+  top: 20px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   overflow: visible !important;
+}
+
+.sticky-card .v-card-text {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.sticky-card .v-card-text > div:last-child {
+  margin-top: auto;
 }
 
 .book-cover-large-container {
@@ -583,7 +589,6 @@ export default {
   height: auto;
   object-fit: cover;
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .book-cover-small {
