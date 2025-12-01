@@ -224,7 +224,11 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn @click="showEditDialog = false">Cancel</v-btn>
-            <v-btn color="primary" @click="confirmEditReview" :loading="editLoading">
+            <v-btn
+              color="primary"
+              @click="confirmEditReview"
+              :loading="editLoading"
+            >
               Save
             </v-btn>
           </v-card-actions>
@@ -751,12 +755,12 @@ export default {
       try {
         const { editReview } = await import("~/api/reviewApi");
         await editReview(this.editReviewId, this.editRating, this.editComment);
-        
+
         this.showEditDialog = false;
         this.editReviewId = null;
         this.editRating = 0;
         this.editComment = "";
-        
+
         await this.loadReviews(this.$route.params.id);
         await this.loadRatingData(this.$route.params.id);
         console.log("Review updated successfully");
