@@ -7,6 +7,14 @@ router.post(
   middlewareController.verifyToken,
   reviewController.createReview
 );
+
+// User: Edit their own review
+router.put(
+  "/edit/:id",
+  middlewareController.verifyToken,
+  reviewController.editReview
+);
+
 router.delete(
   "/:id",
   middlewareController.verifyToken,
