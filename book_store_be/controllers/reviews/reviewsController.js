@@ -63,13 +63,78 @@ const reviewsController = {
       res.status(500).json(error);
     }
   },
-  deleteReview: async (req, res) => {
+
+  // User: Edit their own review
+  editReview: async (req, res) => {
     try {
       const { id } = req.params;
-      const review = await Review.findByIdAndDelete(id);
+      const { rating, comment } = req.body;
+      const userId = req.user.id;
+
+      // Validate input
+      if (!rating || !comment) {
+        return res.status(400).json({ msg: "Rating and comment are required" });
+      }
+
+      if (rating < 1 || rating > 5) {
+        return res.status(400).json({ msg: "Rating must be between 1 and 5" });
+      }
+
+      // Find review
+      const review = await Review.findById(id);
+
       if (!review) {
         return res.status(404).json({ msg: "Review not found" });
       }
+
+      // Check if user is the owner of the review
+      if (review.userId.toString() !== userId) {
+        return res
+          .status(403)
+          .json({ msg: "You can only edit your own reviews" });
+      }
+
+      // Update review
+      review.rating = rating;
+      review.comment = comment.trim();
+      review.updatedAt = new Date();
+
+      await review.save();
+
+      // Populate for response
+      await review.populate("userId", "username email avatar_url");
+      await review.populate("bookId", "title cover_url");
+
+      res.status(200).json({
+        msg: "Review updated successfully",
+        review,
+      });
+    } catch (error) {
+      res.status(500).json({ msg: error.message });
+    }
+  },
+  deleteReview: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+
+      // Find review first
+      const review = await Review.findById(id);
+
+      if (!review) {
+        return res.status(404).json({ msg: "Review not found" });
+      }
+
+      // Check if user is the owner of the review
+      if (review.userId.toString() !== userId) {
+        return res
+          .status(403)
+          .json({ msg: "You can only delete your own reviews" });
+      }
+
+      // Delete review
+      await Review.findByIdAndDelete(id);
+
       res.status(200).json({ msg: "Review deleted successfully" });
     } catch (error) {
       return res.status(500).json({ msg: error.message });

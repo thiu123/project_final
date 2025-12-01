@@ -23,6 +23,14 @@ export const createReview = (bookId, rating, comment) => {
   );
 };
 
+export const editReview = (reviewId, rating, comment) => {
+  return axios.put(
+    `${API_URL}/edit/${reviewId}`,
+    { rating, comment },
+    { headers: { token: token() } }
+  );
+};
+
 export const deleteReview = (id) => {
   return axios.delete(`${API_URL}/${id}`, {
     headers: { token: token() },

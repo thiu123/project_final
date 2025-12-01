@@ -199,6 +199,38 @@
         </v-card>
       </v-dialog>
 
+      <!-- Edit Review Dialog -->
+      <v-dialog v-model="showEditDialog" max-width="500" persistent>
+        <v-card>
+          <v-card-title class="bg-primary text-white">
+            Edit Review
+          </v-card-title>
+          <v-card-text class="pt-4">
+            <v-rating
+              v-model="editRating"
+              color="amber"
+              length="5"
+              size="large"
+              hover
+            />
+            <v-textarea
+              v-model="editComment"
+              label="Your review"
+              rows="4"
+              variant="outlined"
+              class="mt-4"
+            />
+          </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn @click="showEditDialog = false">Cancel</v-btn>
+            <v-btn color="primary" @click="confirmEditReview" :loading="editLoading">
+              Save
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <!-- Edit Reply Dialog -->
       <v-dialog v-model="editReplyDialog" max-width="600" persistent>
         <v-card rounded="xl" class="elevation-8">
@@ -314,21 +346,35 @@
                     </div>
                   </v-col>
                   <v-col cols="1" class="d-flex justify-end">
-                    <!-- Delete button - only show for current user's reviews -->
-                    <v-btn
-                      v-if="isCurrentUserReview(review)"
-                      icon
-                      size="small"
-                      color="error"
-                      variant="text"
-                      @click="showDeleteConfirmation(review._id)"
-                      class="delete-btn"
-                    >
-                      <v-icon size="small">mdi-delete</v-icon>
-                      <v-tooltip activator="parent" location="top">
-                        Delete my review
-                      </v-tooltip>
-                    </v-btn>
+                    <!-- Edit/Delete buttons - only show for current user's reviews -->
+                    <div v-if="isCurrentUserReview(review)">
+                      <v-btn
+                        icon
+                        size="small"
+                        color="primary"
+                        variant="text"
+                        @click="openEditDialog(review)"
+                        class="me-1"
+                      >
+                        <v-icon size="small">mdi-pencil</v-icon>
+                        <v-tooltip activator="parent" location="top">
+                          Edit review
+                        </v-tooltip>
+                      </v-btn>
+                      <v-btn
+                        icon
+                        size="small"
+                        color="error"
+                        variant="text"
+                        @click="showDeleteConfirmation(review._id)"
+                        class="delete-btn"
+                      >
+                        <v-icon size="small">mdi-delete</v-icon>
+                        <v-tooltip activator="parent" location="top">
+                          Delete my review
+                        </v-tooltip>
+                      </v-btn>
+                    </div>
                   </v-col>
                 </v-row>
 
@@ -522,6 +568,12 @@ export default {
       editingReply: null,
       editingReviewId: null,
       editReplyContent: "",
+      // Edit review
+      showEditDialog: false,
+      editLoading: false,
+      editReviewId: null,
+      editRating: 0,
+      editComment: "",
     };
   },
   computed: {
@@ -551,10 +603,7 @@ export default {
     try {
       const bookId = this.$route.params.id;
 
-      // Load reviews
       await this.loadReviews(bookId);
-
-      // Load average rating và book info
       await this.loadRatingData(bookId);
     } catch (error) {
       console.error("Error loading reviews:", error);
@@ -683,6 +732,42 @@ export default {
       }
     },
 
+    // Open edit dialog
+    openEditDialog(review) {
+      this.editReviewId = review._id;
+      this.editRating = review.rating;
+      this.editComment = review.comment;
+      this.showEditDialog = true;
+    },
+
+    // Confirm edit review
+    async confirmEditReview() {
+      if (!this.editRating || !this.editComment.trim()) {
+        alert("Please provide rating and comment");
+        return;
+      }
+
+      this.editLoading = true;
+      try {
+        const { editReview } = await import("~/api/reviewApi");
+        await editReview(this.editReviewId, this.editRating, this.editComment);
+        
+        this.showEditDialog = false;
+        this.editReviewId = null;
+        this.editRating = 0;
+        this.editComment = "";
+        
+        await this.loadReviews(this.$route.params.id);
+        await this.loadRatingData(this.$route.params.id);
+        console.log("Review updated successfully");
+      } catch (error) {
+        console.error("Error updating review:", error);
+        alert("Failed to update review");
+      } finally {
+        this.editLoading = false;
+      }
+    },
+
     // Show delete confirmation dialog
     showDeleteConfirmation(reviewId) {
       this.reviewToDelete = reviewId;
@@ -696,16 +781,13 @@ export default {
       this.deleteLoading = true;
       try {
         await this.deleteReview(this.reviewToDelete);
-        console.log("Review deleted successfully");
         this.showDeleteDialog = false;
         this.reviewToDelete = null;
-        // Reload reviews and rating data
         const bookId = this.$route.params.id;
         await this.loadReviews(bookId);
         await this.loadRatingData(bookId);
       } catch (error) {
         console.error("Error deleting review:", error);
-        // You might want to show an error message to the user here
       } finally {
         this.deleteLoading = false;
       }
