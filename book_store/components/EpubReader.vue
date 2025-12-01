@@ -289,10 +289,6 @@ export default {
   transition: all 0.3s ease;
 }
 
-.canvas-card:hover {
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.15) !important;
-}
-
 .pdf-canvas {
   display: block;
   max-width: 100%;
