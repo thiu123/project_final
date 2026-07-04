@@ -5,69 +5,78 @@
       :rail="rail"
       permanent
       class="admin-sidebar"
-      color="grey-lighten-5"
+      color="customblack"
       width="280"
       rail-width="72"
     >
       <!-- Header -->
-      <div class="d-flex align-center pa-4" style="min-height: 80px">
+      <div class="d-flex align-center pa-4 sidebar-header">
         <v-btn
           icon
           @click.stop="rail = !rail"
           variant="text"
           size="small"
+          color="whitesmoke"
           class="mr-3"
         >
           <v-icon>mdi-menu</v-icon>
         </v-btn>
 
-        <div v-if="!rail" class="d-flex align-center justify-center">
-          <div class="text-h6 font-weight-bold text-primary">Admin Panel</div>
+        <div v-if="!rail" class="d-flex align-center">
+          <div class="brand-mark mr-2">
+            <v-icon size="18" color="customblack">mdi-shield-star</v-icon>
+          </div>
+          <div class="text-subtitle-1 font-weight-bold sidebar-brand-text">
+            Admin Panel
+          </div>
         </div>
       </div>
 
-      <v-divider></v-divider>
-
       <!-- Navigation Menu -->
-      <v-list density="compact" nav class="pa-2">
+      <v-list density="compact" nav class="pa-2 sidebar-nav">
         <v-list-item
           v-for="item in menuItems"
           :key="item.value"
           :prepend-icon="item.icon"
           :title="item.title"
           :value="item.value"
-          :active="activeTab === item.value"
           @click="setActiveTab(item.value)"
-          rounded="xl"
-          class="mb-1"
-          :class="{ 'v-list-item--active': activeTab === item.value }"
+          rounded="lg"
+          class="mb-1 sidebar-item"
+          :class="{ 'sidebar-item--active': activeTab === item.value }"
         >
         </v-list-item>
       </v-list>
 
       <!-- User Info (Bottom) -->
       <template v-slot:append>
-        <v-divider></v-divider>
-        <div class="pa-4">
+        <div class="pa-4 sidebar-footer">
           <v-list-item
             v-if="!rail"
             :prepend-avatar="currentUser?.avatar_url"
             :title="currentUser?.username || 'Admin User'"
             :subtitle="'Administrator'"
-            class="px-0"
+            class="px-0 sidebar-user"
           >
             <template v-slot:append>
               <v-btn
                 icon="mdi-logout"
                 variant="text"
                 size="small"
+                color="whitesmoke"
                 @click="handleLogout"
               ></v-btn>
             </template>
           </v-list-item>
 
           <div v-else class="text-center">
-            <v-btn icon variant="text" size="small" @click="handleLogout">
+            <v-btn
+              icon
+              variant="text"
+              size="small"
+              color="whitesmoke"
+              @click="handleLogout"
+            >
               <v-icon>mdi-logout</v-icon>
             </v-btn>
           </div>
@@ -78,33 +87,28 @@
     <!-- Main Content -->
     <v-main class="admin-main">
       <!-- Top Bar -->
-      <v-app-bar color="white" elevation="0" height="80" class="admin-topbar">
+      <v-app-bar
+        color="whitesmoke"
+        elevation="0"
+        height="80"
+        class="admin-topbar"
+      >
         <v-app-bar-title class="ml-4">
           <div class="d-flex align-center">
-            <v-icon
-              :icon="currentTabIcon"
-              class="mr-3"
-              color="primary"
-            ></v-icon>
-            <span class="text-h5 font-weight-bold">{{ currentTabTitle }}</span>
+            <div class="topbar-icon mr-3">
+              <v-icon
+                :icon="currentTabIcon"
+                size="20"
+                color="customblack"
+              ></v-icon>
+            </div>
+            <span class="text-h5 font-weight-bold topbar-title">{{
+              currentTabTitle
+            }}</span>
           </div>
         </v-app-bar-title>
 
         <v-spacer></v-spacer>
-
-        <!-- Top Bar Actions -->
-        <div class="d-flex align-center mr-4">
-          <!-- <v-btn icon variant="text" class="mr-2">
-            <v-icon>mdi-bell</v-icon>
-            <v-badge color="red" content="3" overlap></v-badge>
-          </v-btn>
-
-          <v-btn icon variant="text" class="mr-2">
-            <v-icon>mdi-cog</v-icon>
-          </v-btn> -->
-
-          <v-divider vertical class="mx-3"></v-divider>
-        </div>
       </v-app-bar>
 
       <!-- Content Area -->
@@ -205,30 +209,119 @@ export default {
 };
 </script>
 
+<style>
+/* Shared design tokens for the whole admin panel — consumed by every
+   book_store/components/admin/*.vue file via var(--admin-*). */
+:root {
+  --admin-ink: #191b24;
+  --admin-canvas: #f1f2ee;
+  --admin-accent: #dcf763;
+  --admin-blue: #5295d0;
+  --admin-slate: #435058;
+  --admin-emerald: #059669;
+  --admin-radius-sm: 10px;
+  --admin-radius-md: 16px;
+  --admin-radius-lg: 24px;
+  --admin-shadow-sm: 0 2px 10px -2px rgba(25, 27, 36, 0.08);
+  --admin-shadow-md: 0 12px 28px -8px rgba(25, 27, 36, 0.14);
+  --admin-transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+</style>
+
 <style scoped>
 .admin-sidebar {
-  border-right: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-right: none !important;
+}
+
+.sidebar-header {
+  min-height: 80px;
+}
+
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--admin-radius-sm);
+  background: var(--admin-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sidebar-brand-text {
+  color: var(--admin-canvas);
+  letter-spacing: -0.01em;
+}
+
+.sidebar-nav {
+  gap: 2px;
+}
+
+.sidebar-item {
+  color: rgba(241, 242, 238, 0.64) !important;
+  transition:
+    background-color var(--admin-transition),
+    color var(--admin-transition);
+}
+
+.sidebar-item :deep(.v-icon) {
+  color: rgba(241, 242, 238, 0.64);
+  transition: color var(--admin-transition);
+}
+
+.sidebar-item:hover {
+  background-color: rgba(241, 242, 238, 0.08) !important;
+  color: var(--admin-canvas) !important;
+}
+
+.sidebar-item--active {
+  background-color: rgba(220, 247, 99, 0.12) !important;
+  color: var(--admin-accent) !important;
+  border-left: 3px solid var(--admin-accent);
+}
+
+.sidebar-item--active :deep(.v-icon) {
+  color: var(--admin-accent) !important;
+}
+
+.sidebar-footer {
+  border-top: 1px solid rgba(241, 242, 238, 0.1);
+}
+
+.sidebar-user :deep(.v-list-item-title) {
+  color: var(--admin-canvas);
+  font-weight: 600;
+}
+
+.sidebar-user :deep(.v-list-item-subtitle) {
+  color: rgba(241, 242, 238, 0.56);
 }
 
 .admin-main {
-  background-color: #f8f9fa;
+  background-color: var(--admin-canvas);
 }
 
 .admin-topbar {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+  border-bottom: 1px solid rgba(25, 27, 36, 0.06) !important;
+}
+
+.topbar-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--admin-radius-sm);
+  background: var(--admin-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topbar-title {
+  color: var(--admin-ink);
+  letter-spacing: -0.01em;
 }
 
 .admin-content {
   min-height: calc(100vh - 80px);
-}
-
-.v-list-item--active {
-  background-color: rgba(25, 118, 210, 0.1) !important;
-  color: #1976d2 !important;
-}
-
-.v-list-item--active .v-icon {
-  color: #1976d2 !important;
 }
 
 /* Responsive */

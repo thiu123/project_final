@@ -1,11 +1,13 @@
 <template>
   <div class="book-management">
     <!-- Header Actions -->
-    <v-card class="mb-6" elevation="2">
+    <v-card class="mb-6 admin-card" elevation="0">
       <v-card-text class="pa-6">
         <div class="d-flex justify-space-between align-center mb-4">
           <div>
-            <h2 class="text-h4 font-weight-bold mb-2">Book List</h2>
+            <h2 class="text-h4 font-weight-bold mb-2 admin-heading">
+              Book List
+            </h2>
             <p class="text-grey text-body-1 mb-0">
               Manage book information in the system
             </p>
@@ -13,16 +15,17 @@
 
           <div class="d-flex align-center ga-3">
             <v-btn
-              color="success"
+              color="customyellow"
               prepend-icon="mdi-plus"
               variant="elevated"
+              class="admin-btn-accent"
               @click="openAddDialog"
             >
               Add Book
             </v-btn>
 
             <v-btn
-              color="primary"
+              color="waterblue"
               prepend-icon="mdi-refresh"
               variant="outlined"
               @click="refreshBooks"
@@ -93,7 +96,7 @@
     </v-card>
 
     <!-- Books Table -->
-    <v-card elevation="2">
+    <v-card class="admin-card" elevation="0">
       <v-data-table
         v-model:page="page"
         :headers="headers"
@@ -107,7 +110,7 @@
         <!-- Mã Sách Column -->
         <template v-slot:item.key="{ item }">
           <v-chip
-            color="primary"
+            color="waterblue"
             variant="tonal"
             size="small"
             class="font-mono"
@@ -153,7 +156,7 @@
             <v-chip
               v-for="(subject, index) in (item.subjects || []).slice(0, 2)"
               :key="index"
-              color="info"
+              color="darkgreen"
               variant="tonal"
               size="x-small"
               class="text-capitalize"
@@ -271,12 +274,12 @@
 
     <!-- Add/Edit Book Dialog -->
     <v-dialog v-model="dialog" max-width="900px" persistent scrollable>
-      <v-card class="dialog-card" elevation="8">
+      <v-card class="dialog-card" elevation="8" rounded="lg">
         <!-- Header -->
-        <v-card-title class="px-6 py-4 bg-primary text-white">
+        <v-card-title class="px-6 py-4 bg-customblack text-white">
           <div class="d-flex align-center justify-space-between">
             <div class="d-flex align-center">
-              <v-icon class="mr-3" size="large">
+              <v-icon class="mr-3" size="large" color="customyellow">
                 {{ isEditing ? "mdi-pencil" : "mdi-plus" }}
               </v-icon>
               <span class="text-h5 font-weight-medium">{{ dialogTitle }}</span>
@@ -500,7 +503,7 @@
 
         <!-- Actions -->
         <v-divider></v-divider>
-        <v-card-actions class="px-6 py-4 bg-grey-lighten-4">
+        <v-card-actions class="px-6 py-4 bg-whitesmoke">
           <v-spacer></v-spacer>
           <v-btn
             color="grey-darken-2"
@@ -513,12 +516,13 @@
             Cancel
           </v-btn>
           <v-btn
-            color="primary"
+            color="customyellow"
             variant="flat"
             size="large"
             @click="saveBook"
             :loading="saving"
-            elevation="2"
+            elevation="0"
+            class="admin-btn-accent"
           >
             <v-icon start>{{ isEditing ? "mdi-check" : "mdi-plus" }}</v-icon>
             {{ isEditing ? "Update Book" : "Add Book" }}
@@ -645,19 +649,22 @@
 
               <!-- Book Details -->
               <v-col :cols="viewedBook.cover_url ? 8 : 12">
-                <v-card variant="tonal" color="primary" class="mb-4">
+                <v-card variant="tonal" color="waterblue" class="mb-4">
                   <v-card-text class="pa-4">
                     <div class="d-flex align-center mb-2">
-                      <v-icon color="success" class="mr-2"
+                      <v-icon color="lightgreen" class="mr-2"
                         >mdi-currency-usd</v-icon
                       >
-                      <span class="text-h5 font-weight-bold text-success">
+                      <span
+                        class="text-h5 font-weight-bold"
+                        style="color: var(--admin-emerald)"
+                      >
                         ${{ viewedBook.price?.toFixed(2) || "0.00" }}
                       </span>
                     </div>
 
                     <v-chip
-                      color="success"
+                      color="lightgreen"
                       variant="flat"
                       size="small"
                       prepend-icon="mdi-check-circle"
@@ -671,7 +678,7 @@
                 <v-list class="pa-0">
                   <v-list-item class="px-0">
                     <template v-slot:prepend>
-                      <v-icon color="primary">mdi-calendar</v-icon>
+                      <v-icon color="waterblue">mdi-calendar</v-icon>
                     </template>
                     <v-list-item-title>Publication Year</v-list-item-title>
                     <v-list-item-subtitle>
@@ -681,7 +688,7 @@
 
                   <v-list-item class="px-0">
                     <template v-slot:prepend>
-                      <v-icon color="primary">mdi-translate</v-icon>
+                      <v-icon color="waterblue">mdi-translate</v-icon>
                     </template>
                     <v-list-item-title>Language</v-list-item-title>
                     <v-list-item-subtitle>
@@ -691,7 +698,7 @@
 
                   <v-list-item class="px-0">
                     <template v-slot:prepend>
-                      <v-icon color="primary">mdi-file-document</v-icon>
+                      <v-icon color="waterblue">mdi-file-document</v-icon>
                     </template>
                     <v-list-item-title>Pages</v-list-item-title>
                     <v-list-item-subtitle>
@@ -709,7 +716,7 @@
                   <h4
                     class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center"
                   >
-                    <v-icon class="mr-2" color="primary"
+                    <v-icon class="mr-2" color="waterblue"
                       >mdi-tag-multiple</v-icon
                     >
                     Categories
@@ -718,7 +725,7 @@
                     <v-chip
                       v-for="subject in viewedBook.subjects"
                       :key="subject"
-                      color="primary"
+                      color="darkgreen"
                       variant="tonal"
                       size="small"
                     >
@@ -736,7 +743,7 @@
                   <h4
                     class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center"
                   >
-                    <v-icon class="mr-2" color="primary">mdi-text-box</v-icon>
+                    <v-icon class="mr-2" color="waterblue">mdi-text-box</v-icon>
                     Description
                   </h4>
                   <p class="text-body-2 line-height-1-6 mb-0">
@@ -750,9 +757,9 @@
 
         <!-- Actions -->
         <v-divider></v-divider>
-        <v-card-actions class="justify-end pa-4 bg-grey-lighten-5">
+        <v-card-actions class="justify-end pa-4 bg-whitesmoke">
           <v-btn
-            color="primary"
+            color="customblack"
             variant="flat"
             @click="viewDialog = false"
             size="large"
@@ -1238,6 +1245,24 @@ export default {
 </script>
 
 <style scoped>
+.admin-card {
+  border-radius: var(--admin-radius-md, 16px);
+  box-shadow: var(--admin-shadow-sm, 0 2px 10px -2px rgba(25, 27, 36, 0.08));
+}
+
+.admin-heading {
+  color: var(--admin-ink, #191b24);
+}
+
+.admin-btn-accent {
+  color: var(--admin-ink, #191b24) !important;
+  transition: transform var(--admin-transition, 200ms ease);
+}
+
+.admin-btn-accent:hover {
+  transform: translateY(-1px);
+}
+
 .description-cell {
   max-width: 200px;
 }
@@ -1248,7 +1273,7 @@ export default {
 
 /* Table hover effects */
 .v-data-table >>> .v-data-table__tr:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(25, 27, 36, 0.04);
 }
 
 /* Custom chip styles */
@@ -1258,5 +1283,20 @@ export default {
 
 .v-chip.v-chip--size-x-small {
   font-size: 0.625rem;
+}
+
+.book-header {
+  background: var(--admin-ink, #191b24);
+  overflow: hidden;
+}
+
+.book-header-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(220, 247, 99, 0.18),
+    transparent 70%
+  );
 }
 </style>

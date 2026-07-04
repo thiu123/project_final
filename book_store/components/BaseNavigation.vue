@@ -452,6 +452,7 @@
           <div class="position-relative">
             <Login
               @toggleLinkSignUp="openDialog"
+              @toggleLinkForgotPassword="openDialog('forgot-password')"
               @show-snackbar="showSnackbar"
             />
             <v-btn
@@ -488,6 +489,15 @@
               <v-icon color="white">mdi-close</v-icon>
             </v-btn>
           </div>
+        </v-dialog>
+
+        <v-dialog
+          v-model="dialogForgotPassword"
+          max-width="500"
+          transition="dialog-transition"
+          scrollable
+        >
+          <ForgotPassword @back-to-login="openDialog('sign-in')" />
         </v-dialog>
       </v-container>
     </v-app-bar>
@@ -705,15 +715,18 @@ import { mapState } from "vuex";
 import { mapActions } from "vuex";
 import { bookSubjects } from "@/constants/bookSubjects.js";
 import SnackbarAlert from "~/components/SnackbarAlert.vue";
+import ForgotPassword from "~/components/ForgotPassword.vue";
 
 export default {
   components: {
     SnackbarAlert,
+    ForgotPassword,
   },
   data() {
     return {
       dialogSignUp: false,
       dialogSignIn: false,
+      dialogForgotPassword: false,
       menu: false,
       accountMenu: false,
       isSessionRestored: false,
@@ -733,6 +746,7 @@ export default {
         if (newValue) {
           this.dialogSignIn = false;
           this.dialogSignUp = false;
+          this.dialogForgotPassword = false;
         }
       },
       immediate: true,
@@ -744,20 +758,24 @@ export default {
     ...mapActions("favorite", ["getFavoritesForEachUser"]),
     ...mapActions("cart", ["fetchCart"]),
     openDialog(type) {
-      if (this.currentUser) {
+      if (this.currentUser && type !== "forgot-password") {
         this.dialogSignIn = false;
         this.dialogSignUp = false;
+        this.dialogForgotPassword = false;
         return;
       }
 
       this.dialogSignIn = false;
       this.dialogSignUp = false;
+      this.dialogForgotPassword = false;
 
       this.$nextTick(() => {
         if (type === "sign-in") {
           this.dialogSignIn = true;
         } else if (type === "sign-up") {
           this.dialogSignUp = true;
+        } else if (type === "forgot-password") {
+          this.dialogForgotPassword = true;
         }
       });
     },

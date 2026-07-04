@@ -6,13 +6,15 @@
         <v-col cols="12">
           <div class="d-flex justify-space-between align-center">
             <div>
-              <h1 class="text-h4 font-weight-bold mb-2">Order Management</h1>
+              <h1 class="text-h4 font-weight-bold mb-2 admin-heading">
+                Order Management
+              </h1>
               <p class="text-subtitle-1 text-grey">
                 Manage all orders in the system
               </p>
             </div>
             <v-btn
-              color="primary"
+              color="waterblue"
               @click="fetchOrders"
               :loading="loading"
               prepend-icon="mdi-refresh"
@@ -26,22 +28,24 @@
       <!-- Statistics Cards -->
       <v-row class="mb-6">
         <v-col cols="12" md="3">
-          <v-card>
+          <v-card class="admin-card stat-card" elevation="0">
             <v-card-text>
               <div class="d-flex align-center">
-                <v-avatar color="primary" class="mr-3">
-                  <v-icon>mdi-package-variant</v-icon>
+                <v-avatar color="customyellow" rounded="lg" class="mr-3">
+                  <v-icon color="customblack">mdi-package-variant</v-icon>
                 </v-avatar>
                 <div>
                   <p class="text-caption text-grey mb-0">Total Orders</p>
-                  <p class="text-h5 font-weight-bold mb-0">{{ totalOrders }}</p>
+                  <p class="text-h5 font-weight-bold mb-0 stat-value">
+                    {{ totalOrders }}
+                  </p>
                 </div>
               </div>
             </v-card-text>
           </v-card>
         </v-col>
         <v-col cols="12" md="3">
-          <v-card>
+          <v-card class="admin-card stat-card" elevation="0">
             <v-card-text>
               <div class="d-flex align-center">
                 <v-avatar color="success" class="mr-3">
@@ -49,14 +53,16 @@
                 </v-avatar>
                 <div>
                   <p class="text-caption text-grey mb-0">Paid Orders</p>
-                  <p class="text-h5 font-weight-bold mb-0">{{ paidOrders }}</p>
+                  <p class="text-h5 font-weight-bold mb-0 stat-value">
+                    {{ paidOrders }}
+                  </p>
                 </div>
               </div>
             </v-card-text>
           </v-card>
         </v-col>
         <v-col cols="12" md="3">
-          <v-card>
+          <v-card class="admin-card stat-card" elevation="0">
             <v-card-text>
               <div class="d-flex align-center">
                 <v-avatar color="warning" class="mr-3">
@@ -64,7 +70,7 @@
                 </v-avatar>
                 <div>
                   <p class="text-caption text-grey mb-0">Pending Orders</p>
-                  <p class="text-h5 font-weight-bold mb-0">
+                  <p class="text-h5 font-weight-bold mb-0 stat-value">
                     {{ pendingOrders }}
                   </p>
                 </div>
@@ -73,15 +79,15 @@
           </v-card>
         </v-col>
         <v-col cols="12" md="3">
-          <v-card>
+          <v-card class="admin-card stat-card" elevation="0">
             <v-card-text>
               <div class="d-flex align-center">
-                <v-avatar color="info" class="mr-3">
-                  <v-icon>mdi-cash</v-icon>
+                <v-avatar color="waterblue" rounded="lg" class="mr-3">
+                  <v-icon color="white">mdi-cash</v-icon>
                 </v-avatar>
                 <div>
                   <p class="text-caption text-grey mb-0">Total Revenue</p>
-                  <p class="text-h5 font-weight-bold mb-0">
+                  <p class="text-h5 font-weight-bold mb-0 stat-value">
                     ${{ totalRevenue }}
                   </p>
                 </div>
@@ -130,7 +136,7 @@
       </v-row>
 
       <!-- Orders Table -->
-      <v-card>
+      <v-card class="admin-card" elevation="0">
         <v-card-text class="pa-0">
           <v-data-table
             :headers="headers"
@@ -161,7 +167,7 @@
 
             <!-- Items -->
             <template v-slot:item.items="{ item }">
-              <v-chip size="small" color="primary" variant="tonal">
+              <v-chip size="small" color="waterblue" variant="tonal">
                 {{ item.items.length }} item(s)
               </v-chip>
             </template>
@@ -259,9 +265,9 @@
 
     <!-- Order Details Dialog -->
     <v-dialog v-model="detailsDialog" max-width="900px" scrollable>
-      <v-card v-if="selectedOrder">
-        <v-card-title class="bg-primary text-white">
-          <v-icon class="mr-2">mdi-package-variant</v-icon>
+      <v-card v-if="selectedOrder" rounded="lg">
+        <v-card-title class="bg-customblack text-white">
+          <v-icon class="mr-2" color="customyellow">mdi-package-variant</v-icon>
           Order Details - {{ selectedOrder.orderId }}
         </v-card-title>
 
@@ -427,7 +433,7 @@
                             :color="
                               item.productType === 'ebook'
                                 ? 'success'
-                                : 'primary'
+                                : 'waterblue'
                             "
                             variant="tonal"
                           >
@@ -457,7 +463,7 @@
 
             <!-- Order Summary -->
             <v-col cols="12">
-              <v-card variant="outlined" color="primary">
+              <v-card variant="outlined" color="waterblue">
                 <v-card-text>
                   <div class="d-flex justify-space-between align-center mb-2">
                     <span class="text-subtitle-1">Subtotal:</span>
@@ -481,7 +487,7 @@
                   <v-divider class="my-2"></v-divider>
                   <div class="d-flex justify-space-between align-center">
                     <span class="text-h6 font-weight-bold">Total:</span>
-                    <span class="text-h6 font-weight-bold text-primary">
+                    <span class="text-h6 font-weight-bold text-waterblue">
                       {{ formatCurrency(selectedOrder.total) }}
                     </span>
                   </div>
@@ -701,6 +707,30 @@ export default {
 </script>
 
 <style scoped>
+.admin-card {
+  border-radius: var(--admin-radius-md, 16px);
+  box-shadow: var(--admin-shadow-sm, 0 2px 10px -2px rgba(25, 27, 36, 0.08));
+}
+
+.admin-heading {
+  color: var(--admin-ink, #191b24);
+}
+
+.stat-card {
+  transition: transform var(--admin-transition, 200ms ease),
+    box-shadow var(--admin-transition, 200ms ease);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--admin-shadow-md, 0 12px 28px -8px rgba(25, 27, 36, 0.14));
+}
+
+.stat-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-ink, #191b24);
+}
+
 .v-table {
   font-size: 0.875rem;
 }

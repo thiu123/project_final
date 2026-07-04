@@ -3,15 +3,19 @@
     <!-- Header with Stats -->
     <v-row class="mb-6">
       <v-col cols="12" md="4" v-for="stat in reviewStats" :key="stat.title">
-        <v-card elevation="2">
+        <v-card class="admin-card stat-card" elevation="0">
           <v-card-text>
             <div class="d-flex justify-space-between align-center">
               <div>
                 <p class="text-caption text-grey mb-1">{{ stat.title }}</p>
-                <h3 class="text-h4 font-weight-bold">{{ stat.value }}</h3>
+                <h3 class="text-h4 font-weight-bold stat-value">
+                  {{ stat.value }}
+                </h3>
               </div>
-              <v-avatar :color="stat.color" size="56">
-                <v-icon size="30" color="white">{{ stat.icon }}</v-icon>
+              <v-avatar :color="stat.color" size="56" rounded="lg">
+                <v-icon size="30" :color="stat.iconColor">{{
+                  stat.icon
+                }}</v-icon>
               </v-avatar>
             </div>
           </v-card-text>
@@ -20,7 +24,7 @@
     </v-row>
 
     <!-- Filters -->
-    <v-card class="mb-6" elevation="2">
+    <v-card class="mb-6 admin-card" elevation="0">
       <v-card-text>
         <v-row align="center">
           <v-col cols="12" md="4">
@@ -58,7 +62,7 @@
           </v-col>
           <v-col cols="12" md="2">
             <v-btn
-              color="primary"
+              color="waterblue"
               variant="tonal"
               block
               @click="resetFilters"
@@ -72,10 +76,14 @@
     </v-card>
 
     <!-- Reviews List -->
-    <v-card elevation="2">
-      <v-card-title class="d-flex justify-space-between align-center">
+    <v-card class="admin-card" elevation="0">
+      <v-card-title class="d-flex justify-space-between align-center admin-card-title">
         <span class="text-h6 font-weight-bold">All Reviews</span>
-        <v-chip color="primary">{{ filteredReviews.length }} reviews</v-chip>
+        <v-chip color="customyellow"
+          ><span style="color: #191b24"
+            >{{ filteredReviews.length }} reviews</span
+          ></v-chip
+        >
       </v-card-title>
 
       <v-divider></v-divider>
@@ -137,7 +145,7 @@
               <div class="d-flex align-center mb-2">
                 <v-chip
                   size="x-small"
-                  color="primary"
+                  color="waterblue"
                   variant="tonal"
                   class="mr-2"
                 >
@@ -157,7 +165,7 @@
             >
               <v-card
                 variant="tonal"
-                color="blue-lighten-5"
+                color="waterblue"
                 class="mb-2"
                 v-for="reply in review.replies"
                 :key="reply._id"
@@ -165,10 +173,13 @@
                 <v-card-text class="py-2 px-3">
                   <div class="d-flex justify-space-between align-center mb-1">
                     <div class="d-flex align-center">
-                      <v-icon size="small" color="primary" class="mr-1"
+                      <v-icon size="small" color="waterblue" class="mr-1"
                         >mdi-shield-account</v-icon
                       >
-                      <span class="text-caption font-weight-bold text-primary">
+                      <span
+                        class="text-caption font-weight-bold"
+                        style="color: var(--admin-blue)"
+                      >
                         {{ reply.adminId?.username || "Admin" }}
                       </span>
                       <span class="text-caption text-grey ml-2">{{
@@ -201,7 +212,7 @@
             <template v-slot:append>
               <div class="d-flex flex-column ga-2">
                 <v-btn
-                  color="primary"
+                  color="waterblue"
                   variant="tonal"
                   size="small"
                   prepend-icon="mdi-reply"
@@ -262,7 +273,7 @@
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="closeReplyDialog">Cancel</v-btn>
           <v-btn
-            color="primary"
+            color="waterblue"
             variant="flat"
             @click="submitReply"
             :loading="submitting"
@@ -368,19 +379,22 @@ export default {
           title: "Total Reviews",
           value: this.reviews.length,
           icon: "mdi-comment-multiple",
-          color: "primary",
+          color: "waterblue",
+          iconColor: "white",
         },
         {
           title: "Average Rating",
           value: this.averageRating,
           icon: "mdi-star",
-          color: "warning",
+          color: "customyellow",
+          iconColor: "customblack",
         },
         {
           title: "Pending Replies",
           value: this.pendingReplies,
           icon: "mdi-reply",
-          color: "info",
+          color: "darkgreen",
+          iconColor: "white",
         },
       ];
     },
@@ -561,12 +575,37 @@ export default {
 </script>
 
 <style scoped>
+.admin-card {
+  border-radius: var(--admin-radius-md, 16px);
+  box-shadow: var(--admin-shadow-sm, 0 2px 10px -2px rgba(25, 27, 36, 0.08));
+}
+
+.admin-card-title {
+  color: var(--admin-ink, #191b24);
+}
+
+.stat-card {
+  transition: transform var(--admin-transition, 200ms ease),
+    box-shadow var(--admin-transition, 200ms ease);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--admin-shadow-md, 0 12px 28px -8px rgba(25, 27, 36, 0.14));
+}
+
+.stat-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-ink, #191b24);
+}
+
 .review-item {
   padding: 20px 16px;
-  gap:10px
+  gap: 10px;
+  transition: background-color var(--admin-transition, 200ms ease);
 }
 
 .review-item:hover {
-  background-color: rgba(0, 0, 0, 0.02);
+  background-color: rgba(25, 27, 36, 0.03);
 }
 </style>

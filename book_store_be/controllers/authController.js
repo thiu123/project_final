@@ -3,6 +3,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const crypto = require("crypto");
 // const cookieParser = require('cookie-parser');
 
 const authController = {
@@ -18,7 +19,8 @@ const authController = {
       });
 
       const user = await newUser.save();
-      const { password, ...others } = user._doc;
+      const { password, resetPasswordToken, resetPasswordExpires, ...others } =
+        user._doc;
       return res.status(200).json(others);
     } catch (err) {
       return res.status(500).json({ msg: err.message });
@@ -97,7 +99,12 @@ const authController = {
           secure: false,
         });
 
-        const { password, ...others } = user._doc;
+        const {
+          password,
+          resetPasswordToken,
+          resetPasswordExpires,
+          ...others
+        } = user._doc;
         return res
           .status(200)
           .json({ msg: "Login successful", accessToken, ...others });
@@ -181,6 +188,94 @@ const authController = {
       JSON.stringify(user)
     )}`;
     res.redirect(frontendURL);
+  },
+
+  // Forgot Password - Generate reset token
+  forgotPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({ msg: "Email is required" });
+      }
+
+      const user = await User.findOne({ email });
+      if (!user) {
+        return res.status(404).json({ msg: "User not found with this email" });
+      }
+
+      if (!user.password) {
+        return res.status(400).json({
+          msg: "This account uses Google login. Please use Google to sign in.",
+        });
+      }
+
+      const resetToken = crypto.randomBytes(32).toString("hex");
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(resetToken)
+        .digest("hex");
+
+      user.resetPasswordToken = hashedToken;
+      user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+      await user.save();
+
+      return res.status(200).json({
+        msg: "Password reset token generated",
+        resetToken,
+        email: user.email,
+      });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+
+  resetPassword: async (req, res) => {
+    try {
+      const { token, newPassword } = req.body;
+
+      if (!token || !newPassword) {
+        return res.status(400).json({
+          msg: "Reset token and new password are required",
+        });
+      }
+
+      if (newPassword.length < 6) {
+        return res.status(400).json({
+          msg: "Password must be at least 6 characters",
+        });
+      }
+
+      const hashedToken = crypto
+        .createHash("sha256")
+        .update(token)
+        .digest("hex");
+
+      const user = await User.findOne({
+        resetPasswordToken: hashedToken,
+        resetPasswordExpires: { $gt: Date.now() },
+      });
+
+      if (!user) {
+        return res.status(400).json({
+          msg: "Invalid or expired reset token",
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+      user.password = hashedPassword;
+      user.resetPasswordToken = null;
+      user.resetPasswordExpires = null;
+      await user.save();
+
+      return res.status(200).json({
+        msg: "Password reset successfully",
+      });
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
   },
 };
 

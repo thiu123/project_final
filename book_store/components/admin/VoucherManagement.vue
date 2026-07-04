@@ -1,11 +1,13 @@
 <template>
   <div class="voucher-management">
     <!-- Header -->
-    <v-card class="mb-6" elevation="2">
+    <v-card class="mb-6 admin-card" elevation="0">
       <v-card-text class="pa-6">
         <div class="d-flex justify-space-between align-center mb-4">
           <div>
-            <h2 class="text-h4 font-weight-bold mb-2">Voucher Management</h2>
+            <h2 class="text-h4 font-weight-bold mb-2 admin-heading">
+              Voucher Management
+            </h2>
             <p class="text-grey text-body-1 mb-0">
               Manage discount vouchers and promotional codes
             </p>
@@ -13,16 +15,17 @@
 
           <div class="d-flex align-center ga-3">
             <v-btn
-              color="success"
+              color="customyellow"
               prepend-icon="mdi-plus"
               variant="elevated"
+              class="admin-btn-accent"
               @click="openAddDialog"
             >
               Create Voucher
             </v-btn>
 
             <v-btn
-              color="primary"
+              color="waterblue"
               prepend-icon="mdi-refresh"
               variant="outlined"
               @click="fetchVouchers"
@@ -75,7 +78,7 @@
     </v-card>
 
     <!-- Vouchers Table -->
-    <v-card elevation="2">
+    <v-card class="admin-card" elevation="0">
       <v-data-table
         :headers="headers"
         :items="filteredVouchers"
@@ -86,7 +89,7 @@
         <!-- Code Column -->
         <template v-slot:item.code="{ item }">
           <v-chip
-            color="primary"
+            color="customblack"
             variant="flat"
             size="small"
             class="font-weight-bold"
@@ -209,8 +212,8 @@
 
     <!-- Add/Edit Dialog -->
     <v-dialog v-model="dialog" max-width="700" persistent>
-      <v-card>
-        <v-card-title class="pa-6 bg-primary">
+      <v-card rounded="lg">
+        <v-card-title class="pa-6 bg-customblack">
           <span class="text-h5 text-white font-weight-bold">
             {{ editMode ? "Edit Voucher" : "Create New Voucher" }}
           </span>
@@ -354,8 +357,9 @@
           <v-spacer></v-spacer>
           <v-btn variant="text" @click="closeDialog"> Cancel </v-btn>
           <v-btn
-            color="primary"
+            color="customyellow"
             variant="elevated"
+            class="admin-btn-accent"
             @click="saveVoucher"
             :loading="saving"
             :disabled="!valid"
@@ -644,5 +648,23 @@ export default {
 <style scoped>
 .voucher-management {
   padding: 24px;
+}
+
+.admin-card {
+  border-radius: var(--admin-radius-md, 16px);
+  box-shadow: var(--admin-shadow-sm, 0 2px 10px -2px rgba(25, 27, 36, 0.08));
+}
+
+.admin-heading {
+  color: var(--admin-ink, #191b24);
+}
+
+.admin-btn-accent {
+  color: var(--admin-ink, #191b24) !important;
+  transition: transform var(--admin-transition, 200ms ease);
+}
+
+.admin-btn-accent:hover {
+  transform: translateY(-1px);
 }
 </style>
