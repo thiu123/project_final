@@ -15,6 +15,12 @@ router.put(
   authController.changePassword
 );
 
+// Forgot Password - Generate reset token
+router.post("/forgot-password", authController.forgotPassword);
+
+// Reset Password with token
+router.post("/reset-password", authController.resetPassword);
+
 //Refresh Token
 router.post("/refresh", authController.requestRefreshToken);
 

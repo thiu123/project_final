@@ -6,13 +6,15 @@
         <v-col cols="12">
           <div class="d-flex justify-space-between align-center">
             <div>
-              <h1 class="text-h4 font-weight-bold mb-2">User Management</h1>
+              <h1 class="text-h4 font-weight-bold mb-2 admin-heading">
+                User Management
+              </h1>
               <p class="text-subtitle-1 text-grey">
                 Manage all users in the system
               </p>
             </div>
             <v-btn
-              color="primary"
+              color="waterblue"
               @click="refreshUsers"
               :loading="loading"
               prepend-icon="mdi-refresh"
@@ -26,30 +28,32 @@
       <!-- Statistics Cards -->
       <v-row class="mb-6">
         <v-col cols="12" md="3">
-          <v-card>
+          <v-card class="admin-card stat-card" elevation="0">
             <v-card-text>
               <div class="d-flex align-center">
-                <v-avatar color="primary" class="mr-3">
-                  <v-icon>mdi-account-multiple</v-icon>
+                <v-avatar color="customyellow" rounded="lg" class="mr-3">
+                  <v-icon color="customblack">mdi-account-multiple</v-icon>
                 </v-avatar>
                 <div>
                   <p class="text-caption text-grey mb-0">Total Users</p>
-                  <p class="text-h5 font-weight-bold mb-0">{{ totalUsers }}</p>
+                  <p class="text-h5 font-weight-bold mb-0 stat-value">
+                    {{ totalUsers }}
+                  </p>
                 </div>
               </div>
             </v-card-text>
           </v-card>
         </v-col>
         <v-col cols="12" md="3">
-          <v-card>
+          <v-card class="admin-card stat-card" elevation="0">
             <v-card-text>
               <div class="d-flex align-center">
-                <v-avatar color="success" class="mr-3">
-                  <v-icon>mdi-account-check</v-icon>
+                <v-avatar color="waterblue" rounded="lg" class="mr-3">
+                  <v-icon color="white">mdi-account-check</v-icon>
                 </v-avatar>
                 <div>
                   <p class="text-caption text-grey mb-0">Regular Users</p>
-                  <p class="text-h5 font-weight-bold mb-0">
+                  <p class="text-h5 font-weight-bold mb-0 stat-value">
                     {{ regularUsers }}
                   </p>
                 </div>
@@ -58,30 +62,32 @@
           </v-card>
         </v-col>
         <v-col cols="12" md="3">
-          <v-card>
+          <v-card class="admin-card stat-card" elevation="0">
             <v-card-text>
               <div class="d-flex align-center">
-                <v-avatar color="warning" class="mr-3">
-                  <v-icon>mdi-account-star</v-icon>
+                <v-avatar color="darkgreen" rounded="lg" class="mr-3">
+                  <v-icon color="white">mdi-account-star</v-icon>
                 </v-avatar>
                 <div>
                   <p class="text-caption text-grey mb-0">Admins</p>
-                  <p class="text-h5 font-weight-bold mb-0">{{ adminUsers }}</p>
+                  <p class="text-h5 font-weight-bold mb-0 stat-value">
+                    {{ adminUsers }}
+                  </p>
                 </div>
               </div>
             </v-card-text>
           </v-card>
         </v-col>
         <v-col cols="12" md="3">
-          <v-card>
+          <v-card class="admin-card stat-card" elevation="0">
             <v-card-text>
               <div class="d-flex align-center">
-                <v-avatar color="info" class="mr-3">
-                  <v-icon>mdi-account-plus</v-icon>
+                <v-avatar color="lightgreen" rounded="lg" class="mr-3">
+                  <v-icon color="white">mdi-account-plus</v-icon>
                 </v-avatar>
                 <div>
                   <p class="text-caption text-grey mb-0">This Month</p>
-                  <p class="text-h5 font-weight-bold mb-0">
+                  <p class="text-h5 font-weight-bold mb-0 stat-value">
                     {{ newUsersThisMonth }}
                   </p>
                 </div>
@@ -117,7 +123,7 @@
       </v-row>
 
       <!-- Users Table -->
-      <v-card>
+      <v-card class="admin-card" elevation="0">
         <v-data-table
           :headers="headers"
           :items="filteredUsers"
@@ -151,15 +157,18 @@
           <!-- Role Column -->
           <template v-slot:item.admin="{ item }">
             <v-chip
-              :color="item.admin ? 'warning' : 'success'"
+              :color="item.admin ? 'customyellow' : 'waterblue'"
               variant="flat"
               size="small"
             >
               <v-icon
                 start
+                :color="item.admin ? 'customblack' : 'white'"
                 :icon="item.admin ? 'mdi-account-star' : 'mdi-account'"
               ></v-icon>
-              {{ item.admin ? "Admin" : "User" }}
+              <span :style="{ color: item.admin ? '#191b24' : '#fff' }">{{
+                item.admin ? "Admin" : "User"
+              }}</span>
             </v-chip>
           </template>
 
@@ -284,11 +293,16 @@
                 <v-list-item-title>Role</v-list-item-title>
                 <v-list-item-subtitle>
                   <v-chip
-                    :color="selectedUser.admin ? 'warning' : 'success'"
+                    :color="selectedUser.admin ? 'customyellow' : 'waterblue'"
                     variant="flat"
                     size="small"
                   >
-                    {{ selectedUser.admin ? "Admin" : "User" }}
+                    <span
+                      :style="{
+                        color: selectedUser.admin ? '#191b24' : '#fff',
+                      }"
+                      >{{ selectedUser.admin ? "Admin" : "User" }}</span
+                    >
                   </v-chip>
                 </v-list-item-subtitle>
               </v-list-item>
@@ -485,5 +499,29 @@ export default {
 <style scoped>
 .gap-2 {
   gap: 8px;
+}
+
+.admin-card {
+  border-radius: var(--admin-radius-md, 16px);
+  box-shadow: var(--admin-shadow-sm, 0 2px 10px -2px rgba(25, 27, 36, 0.08));
+}
+
+.admin-heading {
+  color: var(--admin-ink, #191b24);
+}
+
+.stat-card {
+  transition: transform var(--admin-transition, 200ms ease),
+    box-shadow var(--admin-transition, 200ms ease);
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--admin-shadow-md, 0 12px 28px -8px rgba(25, 27, 36, 0.14));
+}
+
+.stat-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-ink, #191b24);
 }
 </style>

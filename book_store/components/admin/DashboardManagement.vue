@@ -3,15 +3,19 @@
     <!-- Stats Cards -->
     <v-row class="mb-6">
       <v-col cols="12" md="3" v-for="stat in statsCards" :key="stat.title">
-        <v-card class="stat-card" elevation="2">
+        <v-card class="stat-card admin-card" elevation="0">
           <v-card-text>
             <div class="d-flex justify-space-between align-center">
               <div>
                 <p class="text-caption text-grey mb-1">{{ stat.title }}</p>
-                <h3 class="text-h4 font-weight-bold">{{ stat.value }}</h3>
+                <h3 class="text-h4 font-weight-bold stat-value">
+                  {{ stat.value }}
+                </h3>
               </div>
-              <v-avatar :color="stat.color" size="56">
-                <v-icon size="30" color="white">{{ stat.icon }}</v-icon>
+              <v-avatar :color="stat.color" size="56" rounded="lg">
+                <v-icon size="30" :color="stat.iconColor">{{
+                  stat.icon
+                }}</v-icon>
               </v-avatar>
             </div>
           </v-card-text>
@@ -22,8 +26,8 @@
     <!-- Revenue Chart -->
     <v-row class="mb-6">
       <v-col cols="12">
-        <v-card elevation="2">
-          <v-card-title class="text-h6 font-weight-bold">
+        <v-card class="admin-card" elevation="0">
+          <v-card-title class="text-h6 font-weight-bold admin-card-title">
             Revenue Chart
           </v-card-title>
           <v-card-text>
@@ -33,7 +37,7 @@
             <div v-else class="text-center py-12">
               <v-progress-circular
                 indeterminate
-                color="primary"
+                color="waterblue"
               ></v-progress-circular>
             </div>
           </v-card-text>
@@ -44,12 +48,12 @@
     <!-- Recent Orders -->
     <v-row>
       <v-col cols="12">
-        <v-card elevation="2">
-          <v-card-title class="d-flex justify-space-between align-center">
+        <v-card class="admin-card" elevation="0">
+          <v-card-title class="d-flex justify-space-between align-center admin-card-title">
             <span class="text-h6 font-weight-bold">Recent Orders</span>
             <v-btn
               variant="text"
-              color="primary"
+              color="waterblue"
               size="small"
               @click="$router.push('/admin?tab=order-management')"
             >
@@ -137,25 +141,29 @@ export default {
           title: "Total Revenue",
           value: this.formatCurrency(this.totalRevenue),
           icon: "mdi-currency-usd",
-          color: "success",
+          color: "lightgreen",
+          iconColor: "white",
         },
         {
           title: "Total Orders",
           value: totalOrders,
           icon: "mdi-shopping",
-          color: "primary",
+          color: "customyellow",
+          iconColor: "customblack",
         },
         {
           title: "Completed",
           value: paidOrders,
           icon: "mdi-check-circle",
-          color: "info",
+          color: "waterblue",
+          iconColor: "white",
         },
         {
           title: "Failed",
           value: failedOrders,
           icon: "mdi-close-circle",
           color: "error",
+          iconColor: "white",
         },
       ];
     },
@@ -288,12 +296,28 @@ export default {
 </script>
 
 <style scoped>
+.admin-card {
+  border-radius: var(--admin-radius-md, 16px);
+  box-shadow: var(--admin-shadow-sm, 0 2px 10px -2px rgba(25, 27, 36, 0.08));
+}
+
+.admin-card-title {
+  color: var(--admin-ink, #191b24);
+}
+
 .stat-card {
-  transition: transform 0.3s ease;
+  transition: transform var(--admin-transition, 200ms ease),
+    box-shadow var(--admin-transition, 200ms ease);
 }
 
 .stat-card:hover {
   transform: translateY(-4px);
+  box-shadow: var(--admin-shadow-md, 0 12px 28px -8px rgba(25, 27, 36, 0.14));
+}
+
+.stat-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--admin-ink, #191b24);
 }
 
 .chart-container {

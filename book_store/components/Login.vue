@@ -110,7 +110,7 @@
                     @click:append-inner="showPassword = !showPassword"
                   ></v-text-field>
 
-                  <div class="d-flex align-center mb-4">
+                  <div class="d-flex justify-space-between align-center mb-4">
                     <v-checkbox
                       v-model="rememberMe"
                       label="Remember me"
@@ -118,6 +118,15 @@
                       hide-details
                       density="compact"
                     ></v-checkbox>
+                    <v-btn
+                      variant="text"
+                      color="primary"
+                      size="small"
+                      class="text-caption"
+                      @click="$emit('toggleLinkForgotPassword')"
+                    >
+                      Forgot password?
+                    </v-btn>
                   </div>
 
                   <v-btn
@@ -212,7 +221,7 @@ import { mapState, mapActions } from "vuex";
 
 export default {
   name: "Login",
-  emits: ["show-snackbar", "toggleLinkSignUp"],
+  emits: ["show-snackbar", "toggleLinkSignUp", "toggleLinkForgotPassword"],
   data() {
     return {
       username: "",

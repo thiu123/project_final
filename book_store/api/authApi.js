@@ -24,3 +24,14 @@ export const changePassword = (passwordData) => {
     },
   });
 };
+
+export const forgotPassword = (email) => {
+  return axios.post(`${BASE_URL}/forgot-password`, { email });
+};
+
+export const resetPassword = (resetToken, newPassword) => {
+  return axios.post(`${BASE_URL}/reset-password`, {
+    token: resetToken,
+    newPassword,
+  });
+};

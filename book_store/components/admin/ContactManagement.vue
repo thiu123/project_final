@@ -1,15 +1,17 @@
 <template>
   <div class="contact-management">
-    <v-card class="pa-4">
+    <v-card class="pa-4 admin-card" elevation="0">
       <v-card-title class="d-flex justify-space-between align-center">
         <div>
-          <h2 class="text-h4 font-weight-bold">User Feedback Management</h2>
+          <h2 class="text-h4 font-weight-bold admin-heading">
+            User Feedback Management
+          </h2>
           <p class="text-subtitle-2 text-medium-emphasis">
             View and manage customer feedback
           </p>
         </div>
-        <v-chip color="primary" variant="elevated">
-          {{ contacts.length }} Total
+        <v-chip color="customyellow" variant="elevated">
+          <span style="color: #191b24">{{ contacts.length }} Total</span>
         </v-chip>
       </v-card-title>
 
@@ -59,7 +61,7 @@
             <v-btn
               icon
               size="small"
-              color="primary"
+              color="waterblue"
               variant="text"
               @click="viewContact(item)"
             >
@@ -259,5 +261,14 @@ export default {
 <style scoped>
 .contact-management {
   padding: 16px;
+}
+
+.admin-card {
+  border-radius: var(--admin-radius-md, 16px);
+  box-shadow: var(--admin-shadow-sm, 0 2px 10px -2px rgba(25, 27, 36, 0.08));
+}
+
+.admin-heading {
+  color: var(--admin-ink, #191b24);
 }
 </style>
