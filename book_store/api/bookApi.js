@@ -11,6 +11,10 @@ export const getBooksBySubject = (subject) => {
   });
 };
 
+export const getHomeBooks = () => {
+  return axios.get(`${API_URL}/home`);
+};
+
 export const searchBooksByTitle = (title) => {
   return axios.get(`${API_URL}/search`, {
     params: { title },

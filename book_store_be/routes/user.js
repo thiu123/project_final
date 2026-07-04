@@ -6,8 +6,12 @@ const multer = require("multer");
 // Multer config (lưu file tạm để upload lên Cloudinary)
 const upload = multer({ dest: "tmp/" });
 
-// GET all users
-router.get("/", middlewareController.verifyToken, userController.getAllUsers);
+// GET all users (admin only)
+router.get(
+  "/",
+  middlewareController.verifyTokenAndAdmin,
+  userController.getAllUsers
+);
 
 // DELETE user
 router.delete(

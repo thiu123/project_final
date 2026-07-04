@@ -240,7 +240,10 @@ export default {
     };
   },
   computed: {
-    ...mapState("book", ["fictionBooks"]),
+    ...mapState("book", ["homeSubjects"]),
+    fictionBooks() {
+      return this.homeSubjects["literary fiction"] || [];
+    },
   },
   props: {
     favorites: {
@@ -253,7 +256,6 @@ export default {
     },
   },
   methods: {
-    ...mapActions("book", ["getFictionBooks"]),
     ...mapActions("favorite", ["toggleFavorites"]),
     async handleToggleFavorites(bookId) {
       try {
@@ -269,13 +271,6 @@ export default {
         return favoriteBookId === bookId;
       });
     },
-  },
-  async mounted() {
-    try {
-      await this.getFictionBooks({ subject: "literary fiction" });
-    } catch (error) {
-      console.error("Error fetching books:", error);
-    }
   },
   slidePrev() {
     this.$refs.fictionSwiper.$el.swiper.slidePrev();

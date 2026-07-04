@@ -154,12 +154,12 @@
                       :rules="termsRules"
                     >
                       <template v-slot:label>
-                        <span class="text-caption">
-                          I agree to the
-                          <a href="#" class="text-primary text-decoration-none"
-                            >Terms of Use</a
-                          >
-                        </span>
+                        <div
+                          class="text-caption"
+                          v-html="
+                            'I agree to the <span class=\'text-blue-500 underline\'>Term Of Use</span>'
+                          "
+                        ></div>
                       </template>
                     </v-checkbox>
                   </div>
@@ -345,22 +345,18 @@ export default {
           password: this.password,
         });
 
-        // Registration successful
         this.successMessage =
           "Account registration successful! You can now log in.";
         this.$emit("checkIsSignUp", true);
 
-        // Reset form after successful registration
         this.$refs.form.reset();
         return data;
       } catch (error) {
         console.error("Registration failed:", error);
 
-        // Handle API errors
         if (error.response) {
           const { data } = error.response;
 
-          // Handle specific server errors
           if (data.message) {
             this.errorMessage = data.message;
           } else if (data.error) {
@@ -369,7 +365,6 @@ export default {
             this.errorMessage = "Registration failed. Please try again later.";
           }
 
-          // Handle errors for specific fields
           if (data.errors) {
             if (data.errors.email) {
               this.emailError = data.errors.email;

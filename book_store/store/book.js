@@ -1,5 +1,6 @@
 import {
   getBooksBySubject,
+  getHomeBooks,
   deleteBookById,
   createBook,
   updateBook,
@@ -9,6 +10,7 @@ export default {
   namespaced: true,
   state: () => ({
     books: [],
+    homeSubjects: {},
     fictionBooks: [],
     mangaBooks: [],
     romanceBooks: [],
@@ -26,6 +28,9 @@ export default {
     },
     setRomanceBooks(state, books) {
       state.romanceBooks = books;
+    },
+    setHomeSubjects(state, subjects) {
+      state.homeSubjects = subjects;
     },
     clearBooks(state) {
       state.books = [];
@@ -57,6 +62,10 @@ export default {
         first_publish_year: book.first_publish_year,
       }));
     },
+    booksBySubject: (state) => (subject) => {
+      if (!subject) return state.books;
+      return state.books.filter((b) => b.subjects?.includes(subject));
+    },
   },
   actions: {
     async getAllBooks({ commit }, { subject }) {
@@ -66,6 +75,15 @@ export default {
         commit("setBooks", response.data);
       } catch (error) {
         console.error("Failed to fetch books", error);
+      }
+    },
+    async getHomeBooks({ commit }) {
+      try {
+        const response = await getHomeBooks();
+        commit("setBooks", response.data.all);
+        commit("setHomeSubjects", response.data.subjects);
+      } catch (error) {
+        console.error("Failed to fetch home books", error);
       }
     },
     async getFictionBooks({ commit }, { subject }) {

@@ -38,7 +38,7 @@
     </div>
 
     <!-- Enhanced Loading Skeletons -->
-    <div v-if="isLoading && romanceBooks.length === 0">
+    <div v-if="romanceBooks.length === 0">
       <swiper
         :slides-per-view="2"
         :space-between="16"
@@ -224,7 +224,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState } from "vuex";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
@@ -240,13 +240,11 @@ export default {
       modules: [Pagination],
     };
   },
-  data() {
-    return {
-      isLoading: false,
-    };
-  },
   computed: {
-    ...mapState("book", ["romanceBooks"]),
+    ...mapState("book", ["homeSubjects"]),
+    romanceBooks() {
+      return this.homeSubjects["contemporary romance"] || [];
+    },
   },
   props: {
     favorites: {
@@ -259,8 +257,6 @@ export default {
     },
   },
   methods: {
-    ...mapActions("book", ["getRomanceBooks"]),
-    ...mapActions("favorite", ["toggleFavorites"]),
     async handleToggleFavorites(bookId) {
       try {
         await this.toggleFavorites(bookId);
@@ -275,19 +271,6 @@ export default {
         return favoriteBookId === bookId;
       });
     },
-  },
-  async mounted() {
-    if (this.romanceBooks.length === 0) {
-      this.isLoading = true;
-      try {
-        await this.getRomanceBooks({
-          subject: "contemporary romance",
-        });
-      } catch (error) {
-        console.error("Error fetching books:", error);
-      }
-      this.isLoading = false;
-    }
   },
   slidePrev() {
     this.$refs.romanceSwiper.$el.swiper.slidePrev();

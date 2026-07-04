@@ -252,13 +252,16 @@
         <!-- Input Area -->
         <div class="input-section">
           <v-card-actions class="pa-4 pt-2">
-            <v-text-field
+            <v-textarea
               v-model="newMessage"
               placeholder="E.g: 'fantasy books' or 'review Harry Potter'"
               variant="outlined"
               density="compact"
               hide-details
-              @keypress.enter="sendMessage"
+              rows="2"
+              auto-grow
+              max-rows="4"
+              @keypress.enter.exact="sendMessage"
               :disabled="isTyping"
               class="flex-grow-1"
             >
@@ -272,7 +275,7 @@
                   size="small"
                 ></v-btn>
               </template>
-            </v-text-field>
+            </v-textarea>
           </v-card-actions>
         </div>
       </div>
@@ -458,16 +461,6 @@ export default {
         // Optionally close the chatbot
         this.isOpen = false;
       }
-    },
-  },
-
-  // Auto scroll when messages change
-  watch: {
-    messages: {
-      handler() {
-        this.scrollToBottom();
-      },
-      deep: true,
     },
   },
 };

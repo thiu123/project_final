@@ -230,7 +230,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState } from "vuex";
 
 export default {
   name: "BestSellingBooks",
@@ -244,46 +244,15 @@ export default {
     return {
       tab: "historical fiction",
       bestSellerSubjects: ["historical fiction", "manga", "cooking"],
-      bestSellersStories: [],
     };
   },
   computed: {
-    ...mapState("book", ["books"]),
-  },
-  watch: {
-    async tab(newVal) {
-      console.log("New Tab Value:", newVal);
-      // Load books for the selected subject
-      if (newVal) {
-        await this.loadBooksForSubject(newVal);
-      }
+    ...mapState("book", ["homeSubjects"]),
+    bestSellersStories() {
+      return this.homeSubjects[this.tab] || [];
     },
-  },
-  async mounted() {
-    // Load books for the initial tab
-    await this.loadBooksForSubject(this.tab);
   },
   methods: {
-    ...mapActions("book", ["getAllBooks"]),
-
-    async loadBooksForSubject(subject) {
-      try {
-        console.log("Loading books for subject:", subject);
-
-        // Fetch books for the specific subject from API
-        await this.getAllBooks({ subject });
-        // The books are now filtered by backend, just assign them
-        this.bestSellersStories = this.books;
-
-        console.log(
-          `Loaded ${this.bestSellersStories.length} books for ${subject}`
-        );
-      } catch (error) {
-        console.error("Error loading books for subject:", error);
-        this.bestSellersStories = [];
-      }
-    },
-
     handleAddToCart(bookId, quantity) {
       // Emit event to parent component
       this.$emit("add-to-cart", bookId, quantity);
