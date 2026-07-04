@@ -3,6 +3,19 @@ const Book = require("../../model/Book");
 const removeMd = require("remove-markdown");
 const redisClient = require("../../config/redis");
 
+const clearBooksCache = async () => {
+  try {
+    const keys = await redisClient.keys("books:all:*");
+    if (keys.length > 0) {
+      await Promise.all(keys.map((key) => redisClient.del(key)));
+    }
+    // Also clear home cache when books change
+    await redisClient.del("books:home");
+  } catch (error) {
+    console.error("Error when deleting cache", error);
+  }
+};
+
 const bookController = {
   getAllBooks: async (req, res) => {
     try {
@@ -10,11 +23,9 @@ const bookController = {
 
       const cachedData = await redisClient.get(cacheKey);
       if (cachedData) {
-        console.log("📦 Lấy từ cache:", cacheKey);
         return res.status(200).json(JSON.parse(cachedData));
       }
 
-      console.log("🗄️ Lấy từ database:", cacheKey);
       const filter = req.query.subject ? { subjects: req.query.subject } : {};
       const books = await Book.find(filter);
 
@@ -27,21 +38,15 @@ const bookController = {
   },
   getBookById: async (req, res) => {
     try {
-      // 1. Tạo key cache
       const cacheKey = `book:${req.params.id}`;
 
-      // 2. Kiểm tra cache
       const cachedData = await redisClient.get(cacheKey);
       if (cachedData) {
-        console.log("📦 Lấy từ cache:", cacheKey);
         return res.status(200).json(JSON.parse(cachedData));
       }
 
-      // 3. Lấy từ DB
-      console.log("🗄️ Lấy từ database:", cacheKey);
       const bookDetails = await Book.findById(req.params.id);
 
-      // 4. Lưu cache 30 phút (1800 giây)
       await redisClient.setEx(cacheKey, 1800, JSON.stringify(bookDetails));
 
       return res.status(200).json(bookDetails);
@@ -54,9 +59,7 @@ const bookController = {
       const newBook = new Book(req.body);
       const book = await newBook.save();
 
-      // Xóa cache sau khi thêm sách mới
-      await redisClient.del("books:all:all:false");
-      console.log("🗑️ Đã xóa cache danh sách sách");
+      await clearBooksCache();
 
       res.status(201).json({ message: "Add book successfully", book: newBook });
     } catch (err) {
@@ -67,10 +70,9 @@ const bookController = {
     try {
       const book = await Book.findByIdAndDelete(req.params.id);
 
-      // Xóa cache sau khi xóa sách
       await redisClient.del(`book:${req.params.id}`);
-      await redisClient.del("books:all:all:false");
-      console.log("🗑️ Đã xóa cache");
+
+      await clearBooksCache();
 
       res.status(200).json({ message: "Delete book successfully", book: book });
     } catch (err) {
@@ -86,10 +88,11 @@ const bookController = {
         return res.status(404).json({ message: "Can't find book" });
       }
 
-      // Xóa cache sau khi update sách
+      // Xóa cache của book cụ thể
       await redisClient.del(`book:${req.params.id}`);
-      await redisClient.del("books:all:all:false");
-      console.log("🗑️ Đã xóa cache");
+
+      // Xóa tất cả cache books (tất cả subjects)
+      await clearBooksCache();
 
       res
         .status(200)
@@ -184,6 +187,44 @@ const bookController = {
       });
 
       return res.status(200).json(books);
+    } catch (err) {
+      return res.status(500).json({ msg: err.message });
+    }
+  },
+
+  // Single endpoint for home page — 1 DB query, grouped by subject,
+  // capped to the newest books per group to keep the payload small
+  homeBooks: async (req, res) => {
+    try {
+      const cacheKey = "books:home";
+      const cached = await redisClient.get(cacheKey);
+      if (cached) return res.status(200).json(JSON.parse(cached));
+
+      const BOOKS_PER_GROUP = 10;
+
+      // Exclude the heavy `description` field — home cards don't show it
+      const allBooksSorted = await Book.find({})
+        .select("-description")
+        .sort({ createdAt: -1 });
+
+      // Group the newest books by each subject they belong to, capped per subject
+      const subjects = {};
+      allBooksSorted.forEach((book) => {
+        (book.subjects || []).forEach((subject) => {
+          const key = subject.toLowerCase();
+          if (!subjects[key]) subjects[key] = [];
+          if (subjects[key].length < BOOKS_PER_GROUP) {
+            subjects[key].push(book);
+          }
+        });
+      });
+
+      const result = {
+        all: allBooksSorted.slice(0, BOOKS_PER_GROUP),
+        subjects,
+      };
+      await redisClient.setEx(cacheKey, 1800, JSON.stringify(result));
+      return res.status(200).json(result);
     } catch (err) {
       return res.status(500).json({ msg: err.message });
     }

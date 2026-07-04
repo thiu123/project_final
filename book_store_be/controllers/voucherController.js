@@ -136,10 +136,25 @@ const applyVoucher = async (req, res) => {
   }
 };
 
-// Get all active vouchers (for display/admin)
+// Get vouchers. Public storefront callers (checkout page) pass ?activeOnly=true
+// to only see vouchers a customer could actually redeem right now; the admin
+// panel calls this without the flag to see and manage every voucher.
 const getAllVouchers = async (req, res) => {
   try {
-    const vouchers = await Voucher.find()
+    const filter = {};
+
+    if (req.query.activeOnly === "true") {
+      filter.isActive = true;
+      filter.expiryDate = { $gt: new Date() };
+      filter.$expr = {
+        $or: [
+          { $eq: ["$usageLimit", null] },
+          { $lt: ["$usedCount", "$usageLimit"] },
+        ],
+      };
+    }
+
+    const vouchers = await Voucher.find(filter)
       .select("-__v")
       .sort({ createdAt: -1 });
 

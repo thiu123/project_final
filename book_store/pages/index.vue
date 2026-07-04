@@ -264,11 +264,11 @@ export default {
     // Xử lý Google Auth callback
     await this.handleGoogleAuthCallback();
     await this.getFavoritesForEachUser();
-    // Fetch all books
-    await this.getAllBooks({ subject: null });
+    // Fetch all books for home page in a single request
+    await this.getHomeBooks();
   },
   methods: {
-    ...mapActions("book", ["getAllBooks"]),
+    ...mapActions("book", ["getAllBooks", "getHomeBooks"]),
     ...mapActions("cart", ["addToCart", "fetchCart"]),
     ...mapActions("favorite", ["toggleFavorites", "getFavoritesForEachUser"]),
 

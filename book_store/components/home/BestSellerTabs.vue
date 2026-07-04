@@ -419,72 +419,25 @@ export default {
     };
   },
   computed: {
-    ...mapState("book", ["books"]),
+    ...mapState("book", ["homeSubjects"]),
     marketingBooks() {
-      return this.marketingBooksData.slice(0, 5);
+      return (this.homeSubjects["marketing"] || []).slice(0, 5);
     },
     kidsBooks() {
-      return this.kidsBooksData.slice(0, 5);
+      return (this.homeSubjects["kids education"] || []).slice(0, 5);
     },
   },
   watch: {
-    async activeTab(newTab) {
-      console.log("=== TAB CHANGED ===");
-      console.log("New tab:", newTab);
-
-      // Load books for the selected tab
-      if (newTab === "marketing") {
-        await this.loadMarketingBooks();
-      } else if (newTab === "kids") {
-        await this.loadKidsBooks();
-      }
+    marketingBooks(books) {
+      if (!this.selectedBook && books.length) this.selectedBook = books[0];
     },
-  },
-  async mounted() {
-    // Load books for the initial tab
-    await this.loadMarketingBooks();
+    activeTab(newTab) {
+      this.selectedBook =
+        newTab === "marketing" ? this.marketingBooks[0] : this.kidsBooks[0];
+    },
   },
   methods: {
-    ...mapActions("book", ["getAllBooks"]),
     ...mapActions("favorite", ["toggleFavorites"]),
-
-    async loadMarketingBooks() {
-      try {
-        console.log("Loading marketing books...");
-        await this.getAllBooks({ subject: "marketing" });
-        this.marketingBooksData = this.books;
-
-        console.log("Marketing books loaded:", this.marketingBooksData.length);
-
-        // Auto-select first book
-        if (this.marketingBooksData.length > 0) {
-          this.selectedBook = this.marketingBooksData[0];
-          console.log("Selected book:", this.selectedBook?.title);
-        }
-      } catch (error) {
-        console.error("Error loading marketing books:", error);
-        this.marketingBooksData = [];
-      }
-    },
-
-    async loadKidsBooks() {
-      try {
-        console.log("Loading kids education books...");
-        await this.getAllBooks({ subject: "kids education" });
-        this.kidsBooksData = this.books;
-
-        // console.log("Kids books loaded:", this.kidsBooksData.length);
-
-        // Auto-select first book
-        if (this.kidsBooksData.length > 0) {
-          this.selectedBook = this.kidsBooksData[0];
-          console.log("Selected book:", this.selectedBook?.title);
-        }
-      } catch (error) {
-        console.error("Error loading kids books:", error);
-        this.kidsBooksData = [];
-      }
-    },
 
     selectBook(book) {
       this.selectedBook = book;

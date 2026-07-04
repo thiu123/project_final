@@ -97,7 +97,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState } from "vuex";
 import { bookSubjects } from "@/constants/bookSubjects";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Pagination } from "swiper/modules";
@@ -115,86 +115,35 @@ export default {
       modules: [Pagination],
     };
   },
-  data() {
-    return {
-      categoryBooks: {},
-    };
-  },
   computed: {
-    ...mapState("book", ["books"]),
+    ...mapState("book", ["homeSubjects"]),
     displayCategories() {
-      // Flatten all subcategories with their cover_url
       const allCategories = [];
-
       bookSubjects.forEach((subject) => {
         if (subject.subcategories) {
-          // Add each subcategory
           subject.subcategories.forEach((subcat) => {
+            const key = subcat.toLowerCase();
             allCategories.push({
               name: subcat,
-              route: subcat.toLowerCase(),
-              subject: subcat.toLowerCase(),
-              cover_url:
-                this.categoryBooks[subcat.toLowerCase()]?.[0]?.cover_url ||
-                null,
+              route: key,
+              subject: key,
+              cover_url: this.homeSubjects[key]?.[0]?.cover_url || null,
             });
           });
         } else {
-          // Add category itself if no subcategories
+          const key = subject.category.toLowerCase();
           allCategories.push({
             name: subject.category,
-            route: subject.category.toLowerCase(),
-            subject: subject.category.toLowerCase(),
-            cover_url:
-              this.categoryBooks[subject.category.toLowerCase()]?.[0]
-                ?.cover_url || null,
+            route: key,
+            subject: key,
+            cover_url: this.homeSubjects[key]?.[0]?.cover_url || null,
           });
         }
       });
-
       return allCategories.slice(0, 8);
     },
   },
-  async mounted() {
-    // Load all categories in parallel for better performance
-    await this.loadAllCategoryImages();
-  },
   methods: {
-    ...mapActions("book", ["getAllBooks"]),
-
-    async loadAllCategoryImages() {
-      // Get all subjects to load
-      const subjectsToLoad = [];
-
-      bookSubjects.forEach((subject) => {
-        if (subject.subcategories) {
-          subject.subcategories.forEach((subcat) => {
-            subjectsToLoad.push(subcat.toLowerCase());
-          });
-        } else {
-          subjectsToLoad.push(subject.category.toLowerCase());
-        }
-      });
-
-      // Load books for each subject one by one
-      for (const subjectName of subjectsToLoad) {
-        try {
-          // console.log(`Loading books for subject: ${subjectName}`);
-          await this.getAllBooks({ subject: subjectName });
-          if (this.books && this.books.length > 0) {
-            // Store the first book's cover for this subject
-            this.categoryBooks[subjectName] = [this.books[0]];
-            // console.log(
-            //   `Loaded cover for ${subjectName}:`,
-            //   this.books[0].cover_url
-            // );
-          }
-        } catch (error) {
-          console.error(`Error loading books for ${subjectName}:`, error);
-        }
-      }
-    },
-
     navigateToCategory(category) {
       this.$router.push(`/subjects/${category.route}`);
     },

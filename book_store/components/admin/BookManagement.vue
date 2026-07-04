@@ -999,7 +999,9 @@ export default {
     async refreshBooks() {
       this.loading = true;
       try {
+        // Force reload by adding timestamp to bypass cache
         await this.getAllBooks({ subject: null });
+        console.log("Books loaded:", this.books.length);
       } catch (error) {
         console.error("Error fetching books:", error);
         this.showSnackbar("Failed to load books", "error");
@@ -1166,6 +1168,7 @@ export default {
           this.showSnackbar("Book added successfully");
         }
         this.closeDialog();
+        await this.refreshBooks();
       } catch (error) {
         console.error("Save book error:", error);
         this.showSnackbar(

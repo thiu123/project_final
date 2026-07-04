@@ -110,7 +110,7 @@
                     @click:append-inner="showPassword = !showPassword"
                   ></v-text-field>
 
-                  <div class="d-flex justify-space-between align-center mb-3">
+                  <div class="d-flex align-center mb-4">
                     <v-checkbox
                       v-model="rememberMe"
                       label="Remember me"
@@ -118,15 +118,6 @@
                       hide-details
                       density="compact"
                     ></v-checkbox>
-                    <v-btn
-                      variant="text"
-                      color="primary"
-                      density="comfortable"
-                      class="text-caption text-decoration-none"
-                      @click="forgotPassword"
-                    >
-                      Forgot password?
-                    </v-btn>
                   </div>
 
                   <v-btn
@@ -136,7 +127,7 @@
                     size="large"
                     :loading="isLoading"
                     :disabled="!isFormValid"
-                    class="mb-6"
+                    class="mb-4"
                     elevation="2"
                     :ripple="true"
                   >
@@ -149,16 +140,16 @@
                       v-if="errorMessage"
                       type="error"
                       variant="tonal"
-                      closable
-                      class="mb-6"
                       density="compact"
+                      class="mb-4"
+                      closable
                       @click:close="errorMessage = ''"
                     >
                       {{ errorMessage }}
                     </v-alert>
                   </v-expand-transition>
 
-                  <v-divider class="mb-3"></v-divider>
+                  <v-divider class="mb-4"></v-divider>
 
                   <div class="text-center mb-2">
                     <span class="text-body-2 text-medium-emphasis"
@@ -227,6 +218,7 @@ export default {
       username: "",
       password: "",
       rememberMe: false,
+      showPassword: false,
     };
   },
   computed: {
@@ -245,20 +237,17 @@ export default {
 
         await this.fetchCart();
 
-        // Emit success snackbar
         this.$emit("show-snackbar", {
           message: `Welcome back, ${this.currentUser?.username || "User"}!`,
           color: "success",
         });
 
-        // Delay redirect để user thấy được thông báo
         setTimeout(() => {
           this.$router.push("/");
         }, 1500);
       } catch (error) {
         console.error("Login failed:", error);
 
-        // Emit error snackbar
         const errorMessage =
           error.response?.data?.message ||
           error.message ||

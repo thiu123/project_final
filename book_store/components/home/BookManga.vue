@@ -34,7 +34,7 @@
     </div>
 
     <!-- Enhanced Loading Skeletons -->
-    <div v-if="isLoading && mangaBooks.length === 0">
+    <div v-if="mangaBooks.length === 0">
       <swiper
         :slides-per-view="2"
         :space-between="16"
@@ -220,7 +220,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState } from "vuex";
 import { Swiper, SwiperSlide } from "swiper/vue";
 import { Pagination } from "swiper/modules";
 import "swiper/css";
@@ -236,11 +236,6 @@ export default {
       modules: [Pagination],
     };
   },
-  data() {
-    return {
-      isLoading: false,
-    };
-  },
   props: {
     toggleFavorites: {
       type: Function,
@@ -252,10 +247,12 @@ export default {
     },
   },
   computed: {
-    ...mapState("book", ["mangaBooks"]),
+    ...mapState("book", ["homeSubjects"]),
+    mangaBooks() {
+      return this.homeSubjects["manga"] || [];
+    },
   },
   methods: {
-    ...mapActions("book", ["getMangaBooks"]),
     async handleToggleFavorites(bookId) {
       try {
         await this.toggleFavorites(bookId);
@@ -269,17 +266,6 @@ export default {
         return favoriteBookId === bookId;
       });
     },
-  },
-  async mounted() {
-    if (this.mangaBooks.length === 0) {
-      this.isLoading = true;
-      try {
-        await this.getMangaBooks({ subject: "manga" });
-      } catch (error) {
-        console.error("Error fetching books:", error);
-      }
-      this.isLoading = false;
-    }
   },
   slidePrev() {
     this.$refs.mangaSwiper.$el.swiper.slidePrev();

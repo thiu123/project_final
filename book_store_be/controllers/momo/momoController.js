@@ -20,7 +20,6 @@ const momoController = {
       const orderInfo = `Thanh toán đơn hàng ${orderId}`;
       const lang = "vi";
 
-      // Tạo raw signature theo đúng format của MoMo
       const rawSignature =
         `accessKey=${MOMO_CONFIG.accessKey}` +
         `&amount=${amount}` +
@@ -45,7 +44,6 @@ const momoController = {
       // console.log("--------------------SIGNATURE----------------");
       // console.log(signature);
 
-      // Chuẩn bị request body
       const requestBody = {
         partnerCode: MOMO_CONFIG.partnerCode,
         accessKey: MOMO_CONFIG.accessKey,

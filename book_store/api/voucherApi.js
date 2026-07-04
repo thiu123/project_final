@@ -42,10 +42,14 @@ export const applyVoucher = async (code) => {
   }
 };
 
-// Get all vouchers (including inactive and expired)
-export const getAllVouchers = async () => {
+// Get vouchers. Pass activeOnly=true to only get vouchers a customer could
+// actually redeem right now (used by checkout); omit it for the admin panel,
+// which needs to see and manage inactive/expired vouchers too.
+export const getAllVouchers = async (activeOnly = false) => {
   try {
-    const response = await axios.get(`${BASE_URL}/all`);
+    const response = await axios.get(`${BASE_URL}/all`, {
+      params: activeOnly ? { activeOnly: true } : {},
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;

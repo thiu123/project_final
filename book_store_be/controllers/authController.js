@@ -3,7 +3,6 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-
 // const cookieParser = require('cookie-parser');
 
 const authController = {
@@ -79,7 +78,6 @@ const authController = {
       if (!user) {
         return res.status(400).json({ msg: "User not found" });
       }
-
       const validPassword = await bcrypt.compare(
         req.body.password,
         user.password

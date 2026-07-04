@@ -642,7 +642,7 @@ export default {
     async loadAvailableVouchers() {
       try {
         this.loadingVouchers = true;
-        const response = await getAllVouchers();
+        const response = await getAllVouchers(true);
         if (response) {
           this.availableVouchers = response;
         }

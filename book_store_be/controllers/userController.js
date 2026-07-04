@@ -5,7 +5,7 @@ const fs = require("fs");
 const userController = {
   getAllUsers: async (req, res) => {
     try {
-      const users = await User.find();
+      const users = await User.find().select("-password");
       return res.status(200).json(users);
     } catch (err) {
       return res.status(500).json({ msg: err.message });
