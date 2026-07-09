@@ -1,72 +1,48 @@
-import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
-const API_URL = "http://localhost:5000/api/reviews";
-const token = () => `Bearer ${localStorage.getItem("accessToken")}`;
+const API_URL = API_ENDPOINTS.REVIEWS;
 
 export const fetchReviews = (id) => {
-  return axios.get(`${API_URL}/${id}`, {
-    headers: { token: token() },
-  });
+  return axiosInstance.get(`${API_URL}/${id}`);
 };
 
 export const fetchUserReviews = () => {
-  return axios.get(`${API_URL}/user/reviews`, {
-    headers: { token: token() },
-  });
+  return axiosInstance.get(`${API_URL}/user/reviews`);
 };
 
 export const createReview = (bookId, rating, comment) => {
-  return axios.post(
-    `${API_URL}/create`,
-    { bookId, rating, comment },
-    { headers: { token: token() } }
-  );
+  return axiosInstance.post(`${API_URL}/create`, { bookId, rating, comment });
 };
 
 export const editReview = (reviewId, rating, comment) => {
-  return axios.put(
-    `${API_URL}/edit/${reviewId}`,
-    { rating, comment },
-    { headers: { token: token() } }
-  );
+  return axiosInstance.put(`${API_URL}/edit/${reviewId}`, { rating, comment });
 };
 
 export const deleteReview = (id) => {
-  return axios.delete(`${API_URL}/${id}`, {
-    headers: { token: token() },
-  });
+  return axiosInstance.delete(`${API_URL}/${id}`);
 };
 
 export const getAverageRating = (bookId) => {
-  return axios.get(`${API_URL}/average/${bookId}`);
+  return axiosInstance.get(`${API_URL}/average/${bookId}`);
 };
 
 // ========== ADMIN REPLY API ==========
 export const createReply = (reviewId, content) => {
-  return axios.post(
-    `${API_URL}/${reviewId}/reply`,
-    { content },
-    { headers: { token: token() } }
-  );
+  return axiosInstance.post(`${API_URL}/${reviewId}/reply`, { content });
 };
 
 export const updateReply = (reviewId, replyId, content) => {
-  return axios.put(
-    `${API_URL}/${reviewId}/reply/${replyId}`,
-    { content },
-    { headers: { token: token() } }
-  );
+  return axiosInstance.put(`${API_URL}/${reviewId}/reply/${replyId}`, {
+    content,
+  });
 };
 
 export const deleteReply = (reviewId, replyId) => {
-  return axios.delete(`${API_URL}/${reviewId}/reply/${replyId}`, {
-    headers: { token: token() },
-  });
+  return axiosInstance.delete(`${API_URL}/${reviewId}/reply/${replyId}`);
 };
 
 // ========== ADMIN REVIEW MANAGEMENT API ==========
 export const getAllReviewsAdmin = () => {
-  return axios.get(`${API_URL}/admin/all`, {
-    headers: { token: token() },
-  });
+  return axiosInstance.get(`${API_URL}/admin/all`);
 };

@@ -13,4 +13,4 @@ router.post("/", middlewareController.verifyTokenAndAdmin, bookController.addBoo
 router.put("/:id", middlewareController.verifyTokenAndAdmin, bookController.updateBook);
 router.delete("/:id", middlewareController.verifyTokenAndAdmin, bookController.deleteBook);
 
-module.exports = router;
+module.exports = router; 

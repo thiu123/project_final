@@ -5,6 +5,7 @@ const bookSchema = new mongoose.Schema(
     key: { type: String, unique: true, required: true },
     title: { type: String, required: true },
     cover_url: { type: String },
+    pdf_url: { type: String, default: null },
     first_publish_year: { type: Number },
     authors: { type: [String], required: true },
     price: { type: Number, default: 0 },

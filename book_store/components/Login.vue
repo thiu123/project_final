@@ -218,6 +218,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
 export default {
   name: "Login",
@@ -271,7 +272,8 @@ export default {
       if (provider === "google") {
         try {
           // Redirect to Google OAuth
-          window.location.href = "http://localhost:5000/api/auth/google";
+          const baseUrl = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
+          window.location.href = `${baseUrl}${API_ENDPOINTS.AUTH}/google`;
         } catch (error) {
           console.error("Google login error:", error);
           this.$emit("show-snackbar", {

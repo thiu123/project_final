@@ -1,7 +1,23 @@
 <template>
   <div>
+    <v-container v-if="!isLoadingBook && !book?.pdf_url" class="py-16">
+      <v-row justify="center">
+        <v-col cols="12" md="6" class="text-center">
+          <v-icon size="64" color="grey">mdi-file-document-alert-outline</v-icon>
+          <h2 class="text-h5 font-weight-bold mt-4 mb-2">
+            No ebook file available yet
+          </h2>
+          <p class="text-body-1 text-medium-emphasis">
+            This book doesn't have an ebook file uploaded yet. Please check
+            back later.
+          </p>
+        </v-col>
+      </v-row>
+    </v-container>
+
     <EpubReader
-      pdf-url="/sample.pdf"
+      v-else-if="book?.pdf_url"
+      :pdf-url="book.pdf_url"
       :is-purchased="hasPurchasedEbook"
       :preview-limit="20"
       :book-id="bookId"
@@ -11,11 +27,14 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
+import { getBookById } from "@/api/bookApi";
 
 export default {
   data() {
     return {
       bookId: null,
+      book: null,
+      isLoadingBook: true,
     };
   },
 
@@ -37,23 +56,19 @@ export default {
     // Lấy bookId từ query string
     this.bookId = this.$route.query.bookId;
 
-    console.log("📖 Reader Page Mounted");
-    console.log("📚 Book ID:", this.bookId);
-    console.log("� Current User:", this.currentUser);
-    console.log("🔐 Is Logged In:", this.isLoggedIn);
+    if (this.bookId) {
+      try {
+        const response = await getBookById(this.bookId);
+        this.book = response.data;
+      } catch (error) {
+        console.error("Failed to load book:", error);
+      }
+    }
+    this.isLoadingBook = false;
 
     // Kiểm tra user đã login chưa
     if (this.isLoggedIn && this.bookId) {
       await this.checkEbookPurchase(this.bookId);
-      console.log("✅ Purchase status from store:", this.hasPurchasedEbook);
-    } else {
-      if (!this.isLoggedIn) {
-        console.log("⚠️ User chưa login");
-      }
-      if (!this.bookId) {
-        console.log("⚠️ Không có bookId trong query");
-      }
-      console.log("⚠️ Default isPurchased: false");
     }
   },
 

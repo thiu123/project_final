@@ -1,34 +1,29 @@
-import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
-const API_URL = "http://localhost:5000/api/contact";
-
-// Get token from localStorage
-const getAuthHeader = () => {
-  const token = localStorage.getItem("accessToken");
-  return token ? { headers: { token: `Bearer ${token}` } } : {};
-};
+const API_URL = API_ENDPOINTS.CONTACT;
 
 // Create contact
 export const createContact = async (message) => {
-  return await axios.post(API_URL, { message }, getAuthHeader());
+  return await axiosInstance.post(API_URL, { message });
 };
 
 // Get user's contacts
 export const getUserContacts = async () => {
-  return await axios.get(`${API_URL}/user`, getAuthHeader());
+  return await axiosInstance.get(`${API_URL}/user`);
 };
 
 // Get all contacts (Admin)
 export const getAllContacts = async () => {
-  return await axios.get(API_URL, getAuthHeader());
+  return await axiosInstance.get(API_URL);
 };
 
 // Get contact by ID
 export const getContactById = async (id) => {
-  return await axios.get(`${API_URL}/${id}`, getAuthHeader());
+  return await axiosInstance.get(`${API_URL}/${id}`);
 };
 
 // Delete contact (Admin)
 export const deleteContact = async (id) => {
-  return await axios.delete(`${API_URL}/${id}`, getAuthHeader());
+  return await axiosInstance.delete(`${API_URL}/${id}`);
 };

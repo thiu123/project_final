@@ -1,35 +1,22 @@
-import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
-const API_URL = "http://localhost:5000/api/carts";
-const token = () => `Bearer ${localStorage.getItem("accessToken")}`;
+const API_URL = API_ENDPOINTS.CARTS;
 
 export const fetchCart = () => {
-  return axios.get(API_URL, {
-    headers: { token: token() },
-  });
+  return axiosInstance.get(API_URL);
 };
 
 export const addToCart = (bookId, quantity, productType) => {
-  return axios.post(
-    `${API_URL}/add`,
-    { bookId, quantity, productType }, // ✅ Thêm productType
-    { headers: { token: token() } }
-  );
+  return axiosInstance.post(`${API_URL}/add`, { bookId, quantity, productType });
 };
 
 export const updateCartItem = (bookId, quantity) => {
-  return axios.put(
-    `${API_URL}/update`,
-    { bookId, quantity },
-    {
-      headers: { token: token() },
-    }
-  );
+  return axiosInstance.put(`${API_URL}/update`, { bookId, quantity });
 };
 
 export const removeCartItem = (bookId) => {
-  return axios.delete(`${API_URL}/delete`, {
+  return axiosInstance.delete(`${API_URL}/delete`, {
     data: { bookId },
-    headers: { token: token() },
   });
 };

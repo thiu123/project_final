@@ -1,10 +1,10 @@
-import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
-const API_URL = "http://localhost:5000/api/books";
-const token = () => `Bearer ${localStorage.getItem("accessToken")}`;
+const API_URL = API_ENDPOINTS.BOOKS;
 
 export const getBooksBySubject = (subject) => {
-  return axios.get(API_URL, {
+  return axiosInstance.get(API_URL, {
     params: {
       subject,
     },
@@ -12,29 +12,27 @@ export const getBooksBySubject = (subject) => {
 };
 
 export const getHomeBooks = () => {
-  return axios.get(`${API_URL}/home`);
+  return axiosInstance.get(`${API_URL}/home`);
+};
+
+export const getBookById = (id) => {
+  return axiosInstance.get(`${API_URL}/${id}`);
 };
 
 export const searchBooksByTitle = (title) => {
-  return axios.get(`${API_URL}/search`, {
+  return axiosInstance.get(`${API_URL}/search`, {
     params: { title },
   });
 };
 
 export const createBook = (bookData) => {
-  return axios.post(API_URL, bookData, {
-    headers: { token: token() },
-  });
+  return axiosInstance.post(API_URL, bookData);
 };
 
 export const updateBook = (id, bookData) => {
-  return axios.put(`${API_URL}/${id}`, bookData, {
-    headers: { token: token() },
-  });
+  return axiosInstance.put(`${API_URL}/${id}`, bookData);
 };
 
 export const deleteBookById = (id) => {
-  return axios.delete(`${API_URL}/${id}`, {
-    headers: { token: token() },
-  });
+  return axiosInstance.delete(`${API_URL}/${id}`);
 };
