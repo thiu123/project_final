@@ -446,7 +446,7 @@
 </template>
 
 <script>
-import axios from "axios";
+import { getBookById } from "@/api/bookApi";
 import { mapActions, mapState } from "vuex";
 
 export default {
@@ -569,9 +569,7 @@ export default {
           throw new Error("Invalid book ID");
         }
 
-        const response = await axios.get(
-          `http://localhost:5000/api/books/${bookId}`
-        );
+        const response = await getBookById(bookId);
         this.detailsBooks = response.data;
 
         await this.getAverageRating(bookId);

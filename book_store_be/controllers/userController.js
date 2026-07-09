@@ -32,12 +32,13 @@ const userController = {
       const folderMap = {
         avatar: "avatars",
         book: "books",
+        ebook_file: "ebook_files",
       };
 
-      // Upload lên Cloudinary
+      // Upload lên Cloudinary (ebook file là raw, không phải ảnh)
       const result = await cloudinary.uploader.upload(req.file.path, {
         folder: folderMap[uploadType] || "uploads",
-        resource_type: "image",
+        resource_type: uploadType === "ebook_file" ? "raw" : "image",
       });
 
       // Xóa file tạm sau khi upload

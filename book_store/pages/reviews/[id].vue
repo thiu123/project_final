@@ -542,6 +542,7 @@
 <script>
 import { mapActions, mapState } from "vuex";
 import { createReply, updateReply, deleteReply } from "~/api/reviewApi";
+import { getBookById } from "~/api/bookApi";
 
 export default {
   name: "BookReviewsUI",
@@ -629,10 +630,7 @@ export default {
         this.totalReviews = ratingResponse.data.totalReviews;
 
         // Lấy thông tin book để có rating mặc định
-        const axios = (await import("axios")).default;
-        const bookResponse = await axios.get(
-          `http://localhost:5000/api/books/${bookId}`
-        );
+        const bookResponse = await getBookById(bookId);
         this.bookRating = bookResponse.data.rating || 0;
       } catch (error) {
         console.error("Error loading rating data:", error);

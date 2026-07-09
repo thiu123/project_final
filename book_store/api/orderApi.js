@@ -1,21 +1,16 @@
-import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
-const API_URL = "http://localhost:5000/api/order";
-
-const token = () => `Bearer ${localStorage.getItem("accessToken")}`;
+const API_URL = API_ENDPOINTS.ORDER;
 
 const orderApi = {
   getUserOrders: async () => {
-    const res = await axios.get(`${API_URL}/user`, {
-      headers: { token: token() },
-    });
+    const res = await axiosInstance.get(`${API_URL}/user`);
     return res.data;
   },
 
   getOrderById: async (orderId) => {
-    const res = await axios.get(`${API_URL}/${orderId}`, {
-      headers: { token: token() },
-    });
+    const res = await axiosInstance.get(`${API_URL}/${orderId}`);
     if (!res.data) {
       throw new Error("Order not found");
     }
@@ -24,86 +19,62 @@ const orderApi = {
 
   // VNPAY checkout
   createOrderFromCart: async (voucherCode = null) => {
-    const res = await axios.post(
+    const res = await axiosInstance.post(
       `${API_URL}/checkout`,
-      voucherCode ? { voucherCode } : {},
-      {
-        headers: { token: token() },
-      }
+      voucherCode ? { voucherCode } : {}
     );
     return res.data;
   },
 
   // MoMo checkout
   createMomoOrderFromCart: async (voucherCode = null) => {
-    const res = await axios.post(
+    const res = await axiosInstance.post(
       `${API_URL}/checkout_momo`,
-      voucherCode ? { voucherCode } : {},
-      {
-        headers: { token: token() },
-      }
+      voucherCode ? { voucherCode } : {}
     );
     return res.data;
   },
 
   // ✅ Kiểm tra user đã mua ebook chưa
   checkEbookPurchase: async (bookId) => {
-    const res = await axios.get(`${API_URL}/check-ebook`, {
+    const res = await axiosInstance.get(`${API_URL}/check-ebook`, {
       params: { bookId },
-      headers: { token: token() },
     });
     return res.data;
   },
 
   // Admin: Get all orders
   getAllOrders: async () => {
-    const res = await axios.get(`${API_URL}/admin/all`, {
-      headers: { token: token() },
-    });
+    const res = await axiosInstance.get(`${API_URL}/admin/all`);
     return res.data;
   },
 
   // Admin: Get dashboard statistics
   getDashboardStats: async () => {
-    const res = await axios.get(`${API_URL}/admin/dashboard/stats`, {
-      headers: { token: token() },
-    });
+    const res = await axiosInstance.get(`${API_URL}/admin/dashboard/stats`);
     return res.data;
   },
 
   // Admin: Update order status
   updateOrderStatus: async (orderId, status) => {
-    const res = await axios.put(
-      `${API_URL}/admin/${orderId}/status`,
-      { status },
-      {
-        headers: { token: token() },
-      }
-    );
+    const res = await axiosInstance.put(`${API_URL}/admin/${orderId}/status`, {
+      status,
+    });
     return res.data;
   },
 
   // Admin: Confirm order
   confirmOrder: async (orderId) => {
-    const res = await axios.put(
+    const res = await axiosInstance.put(
       `${API_URL}/admin/${orderId}/confirm`,
-      {},
-      {
-        headers: { token: token() },
-      }
+      {}
     );
     return res.data;
   },
 
   // User: Cancel order
   cancelOrder: async (orderId) => {
-    const res = await axios.put(
-      `${API_URL}/${orderId}/cancel`,
-      {},
-      {
-        headers: { token: token() },
-      }
-    );
+    const res = await axiosInstance.put(`${API_URL}/${orderId}/cancel`, {});
     return res.data;
   },
 };

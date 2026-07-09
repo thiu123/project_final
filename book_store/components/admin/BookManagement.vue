@@ -372,6 +372,27 @@
                       </div>
                     </div>
                   </v-col>
+
+                  <v-col cols="12" md="6">
+                    <v-file-input
+                      v-model="uploadedEbookFile"
+                      label="Ebook File (PDF, optional)"
+                      variant="outlined"
+                      density="comfortable"
+                      prepend-inner-icon="mdi-file-pdf-box"
+                      accept="application/pdf"
+                      show-size
+                      hint="PDF only, max 10MB. Only needed if this book is sold as an ebook"
+                      persistent-hint
+                      @update:modelValue="handleEbookFileUpload"
+                    ></v-file-input>
+                    <div v-if="editedItem.pdf_url" class="mt-2">
+                      <v-chip color="success" size="small">
+                        <v-icon start>mdi-check</v-icon>
+                        Ebook file uploaded
+                      </v-chip>
+                    </div>
+                  </v-col>
                 </v-row>
               </div>
 
@@ -784,7 +805,7 @@
 
 <script>
 import { mapState, mapActions } from "vuex";
-import { uploadBookImage } from "~/api/userApi";
+import { uploadBookImage, uploadBookEbookFile } from "~/api/userApi";
 import { v4 as uuidv4 } from "uuid";
 export default {
   name: "BookManagement",
@@ -809,6 +830,7 @@ export default {
       bookToDelete: null,
       viewedBook: null,
       uploadedFile: null, // For v-file-input binding
+      uploadedEbookFile: null, // For ebook file v-file-input binding
 
       // Form validation
       errors: {},
@@ -1000,6 +1022,7 @@ export default {
         stock: 0,
         subjects: [],
         description: "",
+        pdf_url: null,
       };
     },
 
@@ -1060,6 +1083,7 @@ export default {
         this.editedIndex = -1;
         this.errors = {};
         this.uploadedFile = null; // Reset file input
+        this.uploadedEbookFile = null;
       });
     },
 
@@ -1147,6 +1171,39 @@ export default {
         console.error("Error response:", error.response);
         this.showSnackbar(
           "Failed to upload image: " +
+            (error.response?.data?.message || error.message || "Unknown error"),
+          "error"
+        );
+      }
+    },
+
+    async handleEbookFileUpload(file) {
+      if (!file) return;
+
+      if (file.type !== "application/pdf") {
+        this.showSnackbar("Please select a PDF file", "error");
+        return;
+      }
+
+      if (file.size > 10 * 1024 * 1024) {
+        this.showSnackbar("Ebook file size must be less than 10MB", "error");
+        return;
+      }
+
+      try {
+        this.showSnackbar("Uploading ebook file...", "info");
+        const response = await uploadBookEbookFile(file);
+
+        if (response.data && response.data.data && response.data.data.url) {
+          this.editedItem.pdf_url = response.data.data.url;
+          this.showSnackbar("Ebook file uploaded successfully!", "success");
+        } else {
+          throw new Error("No URL returned from server");
+        }
+      } catch (error) {
+        console.error("Ebook upload error:", error);
+        this.showSnackbar(
+          "Failed to upload ebook file: " +
             (error.response?.data?.message || error.message || "Unknown error"),
           "error"
         );

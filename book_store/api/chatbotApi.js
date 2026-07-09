@@ -1,21 +1,13 @@
-import axios from "axios";
+import axiosInstance from "@/utils/axiosInstance";
+import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
-const BASE_URL = "http://localhost:5000/api/chatbot";
-const token = () => `Bearer ${localStorage.getItem("accessToken")}`;
+const BASE_URL = API_ENDPOINTS.CHATBOT;
 
 export const getBookSuggestions = async (userPreferences) => {
   try {
-    const response = await axios.post(
-      `${BASE_URL}/suggestions`,
-      {
-        userPreferences: userPreferences,
-      },
-      {
-        headers: {
-          token: token(),
-        },
-      }
-    );
+    const response = await axiosInstance.post(`${BASE_URL}/suggestions`, {
+      userPreferences: userPreferences,
+    });
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;
@@ -24,14 +16,9 @@ export const getBookSuggestions = async (userPreferences) => {
 
 export const generateSmartReview = async (reviewData) => {
   try {
-    const response = await axios.post(
+    const response = await axiosInstance.post(
       `${BASE_URL}/review/generate`,
-      reviewData,
-      {
-        headers: {
-          token: token(),
-        },
-      }
+      reviewData
     );
     return response.data;
   } catch (error) {
