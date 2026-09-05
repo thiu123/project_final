@@ -1,398 +1,439 @@
 <template>
-  <v-container class="h-screen position-relative" fluid>
-    <v-row class="h-100 d-flex justify-center align-center">
-      <v-col cols="12" sm="10" md="8" lg="7" xl="6">
-        <v-card class="elevation-12 rounded-lg overflow-hidden">
-          <v-row class="h-100">
+  <div class="relative h-screen w-full p-4">
+    <div class="flex h-full items-center justify-center">
+      <div class="w-full sm:w-10/12 md:w-8/12 lg:w-7/12 xl:w-6/12">
+        <UiCard class="overflow-hidden rounded-lg shadow-2xl">
+          <div class="grid grid-cols-12">
             <!-- Image section - hidden on xs screens -->
-            <v-col cols="12" md="6" class="pa-0 d-none d-md-block">
-              <div class="h-100 position-relative login-image-container">
-                <v-img
-                  src="assets/bg.jpg"
-                  class="h-100"
-                  cover
-                  gradient="to top, rgba(0,0,0,.7), rgba(0,0,0,.1)"
+            <div class="relative col-span-12 hidden bg-muted md:col-span-6 md:block">
+              <img
+                src="~/assets/bg.jpg"
+                alt="BookStore background"
+                class="absolute inset-0 h-full w-full object-cover"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-black/10"></div>
+              <div
+                class="relative flex h-full min-h-[540px] flex-col items-center justify-center px-6"
+              >
+                <div
+                  class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary"
                 >
-                  <div
-                    class="d-flex flex-column justify-center align-center h-100 px-6"
-                  >
-                    <v-avatar color="primary" size="64" class="mb-4">
-                      <v-icon size="36" color="white"
-                        >mdi-book-open-page-variant</v-icon
-                      >
-                    </v-avatar>
-                    <h2 class="text-h4 font-weight-bold text-white mb-2">
-                      BookStore
-                    </h2>
-                    <p class="text-subtitle-1 text-white text-center">
-                      Join thousands of book lovers today
-                    </p>
-                  </div>
-                </v-img>
+                  <BookOpen class="h-9 w-9 text-white" />
+                </div>
+                <h2 class="mb-2 text-3xl font-bold text-white">BookStore</h2>
+                <p class="text-center text-base font-medium text-white">
+                  Join thousands of book lovers today
+                </p>
               </div>
-            </v-col>
+            </div>
 
             <!-- Form section -->
-            <v-col cols="12" md="6" class="pa-8">
-              <div class="d-flex flex-column justify-center h-100">
-                <!-- Header with theme toggle -->
-                <div class="d-flex align-center justify-space-between mb-6">
+            <div class="col-span-12 p-8 md:col-span-6">
+              <div class="flex h-full flex-col justify-center">
+                <!-- Header -->
+                <div class="mb-6 flex items-center justify-between">
                   <!-- Logo for mobile view -->
-                  <div class="d-flex align-center">
-                    <v-avatar color="primary" size="42" class="me-3 d-md-none">
-                      <v-icon size="24" color="white"
-                        >mdi-book-open-page-variant</v-icon
-                      >
-                    </v-avatar>
+                  <div class="flex items-center">
+                    <div
+                      class="mr-3 flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-primary md:hidden"
+                    >
+                      <BookOpen class="h-6 w-6 text-white" />
+                    </div>
                     <div>
-                      <h2 class="text-h5 font-weight-bold d-md-none">
-                        BookStore
-                      </h2>
-                      <h3 class="text-h5 font-weight-bold mb-1">
-                        Create Account
-                      </h3>
-                      <p class="text-subtitle-2 text-medium-emphasis">
+                      <h2 class="text-2xl font-bold md:hidden">BookStore</h2>
+                      <h3 class="mb-1 text-2xl font-bold">Create Account</h3>
+                      <p class="text-sm font-medium text-muted-foreground">
                         Start your reading journey today
                       </p>
                     </div>
                   </div>
-                  <!-- <v-btn
-                    icon
-                    variant="text"
-                    @click="toggleTheme"
-                    class="ms-2"
-                    size="small"
-                  >
-                    <v-icon>{{
-                      isDarkMode ? "mdi-weather-sunny" : "mdi-weather-night"
-                    }}</v-icon>
-                  </v-btn> -->
                 </div>
 
-                <v-form
-                  @submit.prevent="onSubmit"
-                  ref="form"
-                  v-model="isFormValid"
-                  lazy-validation
-                  class="login-form"
-                >
-                  <v-text-field
+                <form @submit.prevent="onSubmit">
+                  <UiInput
                     v-model="email"
                     label="Email Address"
-                    :rules="emailRules"
-                    variant="outlined"
-                    density="comfortable"
-                    bg-color="surface"
-                    prepend-inner-icon="mdi-email"
-                    required
-                    autocomplete="email"
                     type="email"
-                    :error-messages="emailError"
+                    autocomplete="email"
+                    required
+                    :error-message="emailError"
+                    wrapper-class="mb-4"
                     @focus="emailError = ''"
-                  ></v-text-field>
+                  >
+                    <template #prepend>
+                      <Mail class="h-4 w-4" />
+                    </template>
+                  </UiInput>
 
-                  <v-text-field
+                  <UiInput
                     v-model="username"
                     label="Username"
-                    :rules="usernameRules"
-                    variant="outlined"
-                    density="comfortable"
-                    bg-color="surface"
-                    prepend-inner-icon="mdi-account"
-                    required
                     autocomplete="username"
-                    :error-messages="usernameError"
+                    required
+                    :error-message="usernameError"
+                    wrapper-class="mb-4"
                     @focus="usernameError = ''"
-                  ></v-text-field>
+                  >
+                    <template #prepend>
+                      <User class="h-4 w-4" />
+                    </template>
+                  </UiInput>
 
-                  <v-text-field
+                  <UiInput
                     v-model="password"
                     label="Password"
-                    :rules="passwordRules"
-                    variant="outlined"
-                    density="comfortable"
-                    bg-color="surface"
-                    prepend-inner-icon="mdi-lock"
-                    :append-inner-icon="
-                      showPassword ? 'mdi-eye-off' : 'mdi-eye'
-                    "
                     :type="showPassword ? 'text' : 'password'"
-                    required
                     autocomplete="new-password"
-                    :error-messages="passwordError"
+                    required
+                    :error-message="passwordError"
+                    wrapper-class="mb-4"
                     @focus="passwordError = ''"
-                    @click:append-inner="showPassword = !showPassword"
-                  ></v-text-field>
+                  >
+                    <template #prepend>
+                      <Lock class="h-4 w-4" />
+                    </template>
+                    <template #append>
+                      <button
+                        type="button"
+                        class="text-muted-foreground transition-colors hover:text-foreground"
+                        :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                        @click="showPassword = !showPassword"
+                      >
+                        <EyeOff v-if="showPassword" class="h-4 w-4" />
+                        <Eye v-else class="h-4 w-4" />
+                      </button>
+                    </template>
+                  </UiInput>
 
-                  <v-text-field
+                  <UiInput
                     v-model="confirmPassword"
                     label="Confirm Password"
-                    :rules="confirmPasswordRules"
-                    variant="outlined"
-                    density="comfortable"
-                    bg-color="surface"
-                    prepend-inner-icon="mdi-lock-check"
-                    :append-inner-icon="
-                      showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'
-                    "
                     :type="showConfirmPassword ? 'text' : 'password'"
-                    class="mb-3"
-                    required
                     autocomplete="new-password"
-                    :error-messages="confirmPasswordError"
+                    required
+                    :error-message="confirmPasswordError"
+                    wrapper-class="mb-3"
                     @focus="confirmPasswordError = ''"
-                    @click:append-inner="
-                      showConfirmPassword = !showConfirmPassword
-                    "
-                  ></v-text-field>
+                  >
+                    <template #prepend>
+                      <LockKeyhole class="h-4 w-4" />
+                    </template>
+                    <template #append>
+                      <button
+                        type="button"
+                        class="text-muted-foreground transition-colors hover:text-foreground"
+                        :aria-label="showConfirmPassword ? 'Hide password' : 'Show password'"
+                        @click="showConfirmPassword = !showConfirmPassword"
+                      >
+                        <EyeOff v-if="showConfirmPassword" class="h-4 w-4" />
+                        <Eye v-else class="h-4 w-4" />
+                      </button>
+                    </template>
+                  </UiInput>
 
-                  <div class="d-flex justify-space-between align-center mb-6">
-                    <v-checkbox
+                  <div class="mb-6">
+                    <UiCheckbox
                       v-model="agreeToTerms"
-                      color="primary"
-                      density="compact"
-                      :rules="termsRules"
+                      @update:model-value="termsError = ''"
                     >
-                      <template v-slot:label>
-                        <div
-                          class="text-caption"
-                          v-html="
-                            'I agree to the <span class=\'text-blue-500 underline\'>Term Of Use</span>'
-                          "
-                        ></div>
-                      </template>
-                    </v-checkbox>
+                      <span class="text-xs" v-html="termsLabelHtml"></span>
+                    </UiCheckbox>
+                    <p v-if="termsError" class="mt-1 text-xs text-destructive">
+                      {{ termsError }}
+                    </p>
                   </div>
 
-                  <v-btn
-                    color="primary"
+                  <UiButton
                     type="submit"
                     block
-                    size="large"
-                    class="mb-6"
-                    elevation="2"
-                    :ripple="true"
-                    :disabled="!isFormValid || !agreeToTerms"
+                    size="lg"
+                    :disabled="!agreeToTerms"
+                    class="mb-6 shadow"
                   >
-                    <v-icon start class="me-1">mdi-account-plus</v-icon>
+                    <UserPlus class="mr-1 h-5 w-5" />
                     Create Account
-                  </v-btn>
+                  </UiButton>
 
-                  <v-expand-transition>
-                    <v-alert
+                  <Transition
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="-translate-y-1 opacity-0"
+                    enter-to-class="translate-y-0 opacity-100"
+                    leave-active-class="transition duration-150 ease-in"
+                    leave-from-class="opacity-100"
+                    leave-to-class="opacity-0"
+                  >
+                    <UiAlert
                       v-if="errorMessage"
-                      type="error"
-                      variant="tonal"
+                      variant="error"
                       closable
                       class="mb-6"
-                      density="compact"
-                      @click:close="errorMessage = ''"
+                      @close="errorMessage = ''"
                     >
                       {{ errorMessage }}
-                    </v-alert>
-                  </v-expand-transition>
+                    </UiAlert>
+                  </Transition>
 
-                  <v-expand-transition>
-                    <v-alert
+                  <Transition
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="-translate-y-1 opacity-0"
+                    enter-to-class="translate-y-0 opacity-100"
+                    leave-active-class="transition duration-150 ease-in"
+                    leave-from-class="opacity-100"
+                    leave-to-class="opacity-0"
+                  >
+                    <UiAlert
                       v-if="successMessage"
-                      type="success"
-                      variant="tonal"
+                      variant="success"
                       closable
                       class="mb-6"
-                      density="compact"
-                      @click:close="successMessage = ''"
+                      @close="successMessage = ''"
                     >
                       {{ successMessage }}
-                    </v-alert>
-                  </v-expand-transition>
+                    </UiAlert>
+                  </Transition>
 
-                  <v-divider class="mb-3"></v-divider>
+                  <UiSeparator class="mb-3" />
 
-                  <div class="text-center mb-1">
-                    <span class="text-body-2 text-medium-emphasis"
+                  <div class="mb-1 text-center">
+                    <span class="text-sm text-muted-foreground"
                       >Already have an account?
                     </span>
-                    <v-btn
-                      variant="text"
-                      color="primary"
-                      class="text-decoration-none font-weight-medium"
+                    <UiButton
+                      type="button"
+                      variant="link"
+                      class="px-1 font-medium"
                       @click="$emit('toggleLinkSignIn', 'sign-in')"
                     >
                       Sign In
-                    </v-btn>
+                    </UiButton>
                   </div>
 
                   <!-- Social login options -->
                   <div>
-                    <p
-                      class="text-center text-body-2 text-medium-emphasis mb-4"
-                    >
+                    <p class="mb-4 text-center text-sm text-muted-foreground">
                       Or continue with
                     </p>
-                    <div class="d-flex justify-center ga-3">
-                      <v-btn
-                        variant="elevated"
-                        rounded="lg"
-                        color="surface-variant"
-                        class="social-btn"
+                    <div class="flex justify-center gap-3">
+                      <UiButton
+                        type="button"
+                        variant="outline"
+                        class="rounded-lg shadow"
                         @click="socialSignup('google')"
                       >
-                        <v-icon color="#DB4437" class="me-2">mdi-google</v-icon>
+                        <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            fill="#4285F4"
+                            d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"
+                          />
+                        </svg>
                         Google
-                      </v-btn>
-                      <!-- <v-btn
-                        variant="elevated"
-                        rounded="lg"
-                        color="surface-variant"
-                        class="social-btn"
-                        @click="socialSignup('facebook')"
-                      >
-                        <v-icon color="#4267B2" class="me-2"
-                          >mdi-facebook</v-icon
-                        >
-                        Facebook
-                      </v-btn> -->
+                      </UiButton>
                     </div>
                   </div>
-                </v-form>
+                </form>
               </div>
-            </v-col>
-          </v-row>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+            </div>
+          </div>
+        </UiCard>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script>
-import { mapActions } from "vuex";
+<script setup lang="ts">
+import { useAuthStore } from "@/stores/auth";
+import {
+  BookOpen,
+  Eye,
+  EyeOff,
+  Lock,
+  LockKeyhole,
+  Mail,
+  User,
+  UserPlus,
+} from "lucide-vue-next";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
-export default {
-  name: "Signup",
-  data() {
-    return {
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      isSignUp: false,
-      showPassword: false,
-      showConfirmPassword: false,
-      isFormValid: false,
-      agreeToTerms: false,
-      emailError: "",
-      usernameError: "",
-      passwordError: "",
-      confirmPasswordError: "",
-      errorMessage: "",
-      successMessage: "",
-      emailRules: [
-        (v) => !!v || "Email is required",
-        (v) => /^\S+@\S+\.\S+$/.test(v) || "Email is invalid",
-      ],
-      usernameRules: [
-        (v) => !!v || "Username is required",
-        (v) => v.length >= 3 || "Username must be at least 3 characters",
-        (v) =>
-          /^[a-zA-Z0-9_]+$/.test(v) ||
-          "Username can only contain letters, numbers, and underscores",
-      ],
-      passwordRules: [
-        (v) => !!v || "Password is required",
-        (v) => v.length >= 6 || "Password must be at least 6 characters",
-        (v) =>
-          /[A-Z]/.test(v) ||
-          "Password must contain at least 1 uppercase letter",
-        (v) => /[0-9]/.test(v) || "Password must contain at least 1 number",
-      ],
-      confirmPasswordRules: [
-        (v) => !!v || "Please confirm your password",
-        (v) => v === this.password || "Passwords don't match",
-      ],
-      // Terms of use validation rules
-      termsRules: [
-        (v) => v || "You must agree to the terms of use to continue",
-      ],
-    };
-  },
-  methods: {
-    ...mapActions("auth", ["register"]),
-    async onSubmit() {
-      // Validate form before submitting
-      const { valid } = await this.$refs.form.validate();
 
-      if (!valid) {
-        this.errorMessage =
-          "Please fill in all required fields and fix the errors";
-        return;
+const emit = defineEmits<{
+  (e: "checkIsSignUp", value: boolean): void;
+  (e: "toggleLinkSignIn", tab: string): void;
+}>();
+
+const runtimeConfig = useRuntimeConfig();
+const authStore = useAuthStore();
+
+const username = ref("");
+const email = ref("");
+const password = ref("");
+const confirmPassword = ref("");
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+const agreeToTerms = ref(false);
+
+const emailError = ref("");
+const usernameError = ref("");
+const passwordError = ref("");
+const confirmPasswordError = ref("");
+const termsError = ref("");
+const errorMessage = ref("");
+const successMessage = ref("");
+
+const termsLabelHtml =
+  'I agree to the <span class="text-blue-500 underline">Term Of Use</span>';
+
+type Rule = (v: string) => true | string;
+
+const emailRules: Rule[] = [
+  (v) => !!v || "Email is required",
+  (v) => /^\S+@\S+\.\S+$/.test(v) || "Email is invalid",
+];
+const usernameRules: Rule[] = [
+  (v) => !!v || "Username is required",
+  (v) => v.length >= 3 || "Username must be at least 3 characters",
+  (v) =>
+    /^[a-zA-Z0-9_]+$/.test(v) ||
+    "Username can only contain letters, numbers, and underscores",
+];
+const passwordRules: Rule[] = [
+  (v) => !!v || "Password is required",
+  (v) => v.length >= 6 || "Password must be at least 6 characters",
+  (v) => /[A-Z]/.test(v) || "Password must contain at least 1 uppercase letter",
+  (v) => /[0-9]/.test(v) || "Password must contain at least 1 number",
+];
+const confirmPasswordRules: Rule[] = [
+  (v) => !!v || "Please confirm your password",
+  (v) => v === password.value || "Passwords don't match",
+];
+
+function runRules(rules: Rule[], value: string): string {
+  for (const rule of rules) {
+    const result = rule(value);
+    if (result !== true) return result;
+  }
+  return "";
+}
+
+function validateForm(): boolean {
+  emailError.value = runRules(emailRules, email.value);
+  usernameError.value = runRules(usernameRules, username.value);
+  passwordError.value = runRules(passwordRules, password.value);
+  confirmPasswordError.value = runRules(confirmPasswordRules, confirmPassword.value);
+  // Terms of use validation (message preserved from the original rules)
+  termsError.value = agreeToTerms.value
+    ? ""
+    : "You must agree to the terms of use to continue";
+
+  return (
+    !emailError.value &&
+    !usernameError.value &&
+    !passwordError.value &&
+    !confirmPasswordError.value
+  );
+}
+
+function resetForm() {
+  username.value = "";
+  email.value = "";
+  password.value = "";
+  confirmPassword.value = "";
+  agreeToTerms.value = false;
+  emailError.value = "";
+  usernameError.value = "";
+  passwordError.value = "";
+  confirmPasswordError.value = "";
+  termsError.value = "";
+}
+
+async function onSubmit() {
+  // Validate form before submitting
+  const valid = validateForm();
+
+  if (!valid) {
+    errorMessage.value = "Please fill in all required fields and fix the errors";
+    return;
+  }
+
+  if (!agreeToTerms.value) {
+    errorMessage.value = "You must agree to the terms of use to continue";
+    return;
+  }
+
+  // Reset error messages
+  errorMessage.value = "";
+  emailError.value = "";
+  usernameError.value = "";
+  passwordError.value = "";
+  confirmPasswordError.value = "";
+
+  try {
+    const data = await authStore.register({
+      username: username.value,
+      email: email.value,
+      password: password.value,
+    });
+
+    successMessage.value =
+      "Account registration successful! You can now log in.";
+    emit("checkIsSignUp", true);
+
+    resetForm();
+    return data;
+  } catch (error: any) {
+    console.error("Registration failed:", error);
+
+    // The auth store rethrows `err.response?.data` (the server payload) or a
+    // plain message string, so support both that shape and a raw axios error.
+    const data =
+      error?.response?.data ??
+      (error && typeof error === "object" ? error : null);
+
+    if (data) {
+      if (data.message) {
+        errorMessage.value = data.message;
+      } else if (data.error) {
+        errorMessage.value = data.error;
+      } else {
+        errorMessage.value = "Registration failed. Please try again later.";
       }
 
-      if (!this.agreeToTerms) {
-        this.errorMessage = "You must agree to the terms of use to continue";
-        return;
-      }
-
-      // Reset error messages
-      this.errorMessage = "";
-      this.emailError = "";
-      this.usernameError = "";
-      this.passwordError = "";
-      this.confirmPasswordError = "";
-
-      try {
-        const data = await this.register({
-          username: this.username,
-          email: this.email,
-          password: this.password,
-        });
-
-        this.successMessage =
-          "Account registration successful! You can now log in.";
-        this.$emit("checkIsSignUp", true);
-
-        this.$refs.form.reset();
-        return data;
-      } catch (error) {
-        console.error("Registration failed:", error);
-
-        if (error.response) {
-          const { data } = error.response;
-
-          if (data.message) {
-            this.errorMessage = data.message;
-          } else if (data.error) {
-            this.errorMessage = data.error;
-          } else {
-            this.errorMessage = "Registration failed. Please try again later.";
-          }
-
-          if (data.errors) {
-            if (data.errors.email) {
-              this.emailError = data.errors.email;
-            }
-            if (data.errors.username) {
-              this.usernameError = data.errors.username;
-            }
-            if (data.errors.password) {
-              this.passwordError = data.errors.password;
-            }
-          }
-        } else {
-          this.errorMessage = "Connection error. Please try again later.";
+      if (data.errors) {
+        if (data.errors.email) {
+          emailError.value = data.errors.email;
+        }
+        if (data.errors.username) {
+          usernameError.value = data.errors.username;
+        }
+        if (data.errors.password) {
+          passwordError.value = data.errors.password;
         }
       }
-    },
-    async socialSignup(provider) {
-      if (provider === "google") {
-        try {
-          // Redirect to Google OAuth (same endpoint for login/signup)
-          const baseUrl = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
-          window.location.href = `${baseUrl}${API_ENDPOINTS.AUTH}/google`;
-        } catch (error) {
-          console.error("Google signup error:", error);
-        }
-      }
-    },
-  },
-};
+    } else {
+      errorMessage.value = "Connection error. Please try again later.";
+    }
+  }
+}
+
+function socialSignup(provider: string) {
+  if (provider === "google") {
+    try {
+      // Redirect to Google OAuth (same endpoint for login/signup)
+      const baseUrl = runtimeConfig.public.apiBase;
+      window.location.href = `${baseUrl}${API_ENDPOINTS.AUTH}/google`;
+    } catch (error: any) {
+      console.error("Google signup error:", error);
+    }
+  }
+}
 </script>

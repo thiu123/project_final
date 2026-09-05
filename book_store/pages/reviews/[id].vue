@@ -1,117 +1,84 @@
 <template>
-  <v-container fluid class="pa-0">
+  <div class="px-2 sm:px-4">
     <!-- Header Section -->
-    <v-card flat class="reviews-container my-8 rounded-xl elevation-2">
-      <v-card-title
-        class="header-section text-h5 font-weight-bold d-flex align-center"
+    <div
+      class="mx-auto my-8 w-full max-w-[1200px] overflow-hidden rounded-xl border border-border bg-card shadow"
+    >
+      <div
+        class="flex items-center bg-gradient-to-br from-primary to-primary/80 px-8 py-5 text-lg font-bold tracking-wide text-primary-foreground"
       >
-        <v-icon start color="white" size="large" class="me-3"
-          >mdi-star-outline</v-icon
-        >
+        <Star class="mr-3 h-7 w-7" />
         REVIEWS
-      </v-card-title>
+      </div>
 
       <!-- Rating Summary -->
-      <v-card-text class="rating-summary pa-8">
-        <v-row align="center" no-gutters>
-          <v-col cols="auto">
-            <div class="overall-rating text-center">
-              <div class="text-h2 font-weight-bold text-primary mb-2">
-                <span class="rating-number">{{ displayRating }}</span>
-                <span class="text-h5 text-medium-emphasis">/5</span>
-              </div>
-              <v-rating
-                :model-value="displayRating"
-                color="amber"
-                density="compact"
-                readonly
-                size="small"
-                class="mb-2"
-              ></v-rating>
-              <div class="text-caption text-medium-emphasis">
-                Based on {{ totalReviews }} reviews
-              </div>
-            </div>
-          </v-col>
+      <div
+        class="flex flex-col items-center gap-6 border-b border-border bg-card p-8 sm:flex-row"
+      >
+        <div class="flex flex-col items-center text-center">
+          <div class="mb-2 font-bold text-primary">
+            <span class="text-5xl font-bold">{{ displayRating }}</span>
+            <span class="text-2xl text-muted-foreground">/5</span>
+          </div>
+          <UiRating
+            :model-value="displayRating"
+            :size="16"
+            readonly
+            class="mb-2"
+          />
+          <div class="text-xs text-muted-foreground">
+            Based on {{ totalReviews }} reviews
+          </div>
+        </div>
 
-          <v-col cols="auto" class="mx-8">
-            <div class="rating-breakdown">
-              <v-row
-                v-for="(rating, index) in ratingBreakdown"
-                :key="index"
-                align="center"
-                no-gutters
-                class="rating-row mb-1"
-              >
-                <v-col cols="auto" class="me-2">
-                  <span class="text-body-2 font-weight-medium">{{
-                    5 - index
-                  }}</span>
-                </v-col>
-                <v-col cols="auto" class="me-2">
-                  <v-icon color="amber" size="small">mdi-star</v-icon>
-                </v-col>
-                <!-- <v-col cols="auto">
-                  <v-progress-linear
-                    :model-value="(rating.count / 24) * 100"
-                    color="amber"
-                    height="8"
-                    rounded
-                    class="me-3"
-                  ></v-progress-linear>
-                </v-col>
-                <v-col cols="auto">
-                  <span class="text-caption text-medium-emphasis"
-                    >({{ rating.count }})</span
-                  >
-                </v-col> -->
-              </v-row>
-            </div>
-          </v-col>
+        <div class="mx-8">
+          <div
+            v-for="(rating, index) in ratingBreakdown"
+            :key="index"
+            class="mb-2 flex items-center"
+          >
+            <span class="mr-2 text-sm font-medium">{{ 5 - index }}</span>
+            <Star class="h-4 w-4 fill-amber-400 text-amber-400" />
+          </div>
+        </div>
 
-          <v-spacer></v-spacer>
-
-          <v-col cols="auto">
-            <v-btn
-              color="primary"
-              variant="elevated"
-              rounded="lg"
-              size="large"
-              class="write-review-btn elevation-2"
-              @click="showCreateReviewsDialog = true"
-            >
-              <v-icon start>mdi-pencil-plus</v-icon>
-              Write a Review
-            </v-btn>
-          </v-col>
-        </v-row>
-      </v-card-text>
+        <div class="sm:ml-auto">
+          <UiButton
+            size="lg"
+            class="rounded-lg shadow"
+            @click="showCreateReviewsDialog = true"
+          >
+            <Pencil class="h-4 w-4" />
+            Write a Review
+          </UiButton>
+        </div>
+      </div>
 
       <!-- Create Review Dialog -->
-      <v-dialog v-model="showCreateReviewsDialog" max-width="600" persistent>
-        <v-card rounded="xl" class="elevation-8">
-          <v-card-title
-            class="text-h6 text-center pa-6 pb-4 bg-primary text-white"
-          >
-            <v-icon start color="white" class="me-2">mdi-pencil</v-icon>
-            WRITE A BOOK REVIEW
-          </v-card-title>
+      <UiDialog v-model:open="showCreateReviewsDialog">
+        <UiDialogContent
+          hide-close
+          class="gap-0 overflow-hidden p-0 sm:max-w-xl"
+          @pointer-down-outside.prevent
+          @escape-key-down.prevent
+        >
+          <UiDialogTitle class="sr-only">Write a Book Review</UiDialogTitle>
 
-          <v-card-text class="pa-6">
+          <div
+            class="flex items-center justify-center bg-primary p-6 pb-4 text-lg font-semibold text-primary-foreground"
+          >
+            <Pencil class="mr-2 h-5 w-5" />
+            WRITE A BOOK REVIEW
+          </div>
+
+          <div class="p-6">
             <!-- Rating -->
-            <div class="text-center mb-6">
-              <div class="text-body-1 text-medium-emphasis mb-3">
+            <div class="mb-6 text-center">
+              <div class="mb-3 text-base text-muted-foreground">
                 Rate this book:
               </div>
-              <v-rating
-                v-model="rating"
-                color="amber"
-                length="5"
-                size="40"
-                hover
-                class="mb-2"
-              />
-              <div class="text-caption text-medium-emphasis">
+              <UiRating v-model="rating" :length="5" :size="40" class="mb-2" />
+              <div class="text-xs text-muted-foreground">
                 {{
                   rating > 0
                     ? `${rating} star${rating > 1 ? "s" : ""}`
@@ -121,802 +88,705 @@
             </div>
 
             <!-- Comment box -->
-            <v-textarea
+            <UiTextarea
               v-model="comment"
               label="Share your thoughts about this book..."
-              variant="outlined"
-              rows="4"
-              auto-grow
-              color="primary"
-              class="mb-4"
-              :rules="[(v) => !!v || 'Review comment is required']"
+              :rows="4"
+              wrapper-class="mb-4"
+              :error-message="commentError"
+              @blur="validateComment"
             />
-          </v-card-text>
+          </div>
 
           <!-- Buttons -->
-          <v-card-actions class="pa-6 pt-0">
-            <v-spacer></v-spacer>
-            <v-btn
-              variant="text"
+          <div class="flex items-center justify-end p-6 pt-0">
+            <UiButton
+              variant="ghost"
+              class="mr-3"
               @click="showCreateReviewsDialog = false"
-              class="me-3"
             >
               Cancel
-            </v-btn>
-            <v-btn
-              color="primary"
-              variant="elevated"
-              @click="handleWriteReview($route.params.id, rating, comment)"
+            </UiButton>
+            <UiButton
               :disabled="!rating || !comment.trim()"
               :loading="loading"
+              @click="handleWriteReview(bookId, rating, comment)"
             >
-              <v-icon start>mdi-send</v-icon>
+              <Send class="h-4 w-4" />
               Submit Review
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+            </UiButton>
+          </div>
+        </UiDialogContent>
+      </UiDialog>
 
       <!-- Delete Confirmation Dialog -->
-      <v-dialog v-model="showDeleteDialog" max-width="450" persistent>
-        <v-card rounded="xl" class="elevation-8">
-          <v-card-title
-            class="text-h6 text-center pa-6 pb-4 bg-error text-white"
+      <UiDialog v-model:open="showDeleteDialog">
+        <UiDialogContent
+          hide-close
+          class="gap-0 overflow-hidden p-0 sm:max-w-md"
+          @pointer-down-outside.prevent
+          @escape-key-down.prevent
+        >
+          <UiDialogTitle class="sr-only">Delete Review</UiDialogTitle>
+
+          <div
+            class="flex items-center justify-center bg-destructive p-6 pb-4 text-lg font-semibold text-destructive-foreground"
           >
-            <v-icon start color="white" class="me-2">mdi-delete-alert</v-icon>
+            <Trash2 class="mr-2 h-5 w-5" />
             Delete Review
-          </v-card-title>
-          <v-card-text class="pa-6 text-center">
-            <v-icon color="error" size="large" class="mb-4"
-              >mdi-alert-circle</v-icon
-            >
-            <div class="text-body-1 mb-2">
+          </div>
+          <div class="p-6 text-center">
+            <AlertCircle class="mx-auto mb-4 h-8 w-8 text-destructive" />
+            <div class="mb-2 text-base">
               Are you sure you want to delete this review?
             </div>
-            <div class="text-caption text-medium-emphasis">
+            <div class="text-xs text-muted-foreground">
               This action cannot be undone.
             </div>
-          </v-card-text>
-          <v-card-actions class="pa-6 pt-0">
-            <v-spacer></v-spacer>
-            <v-btn
-              variant="text"
+          </div>
+          <div class="flex items-center justify-end p-6 pt-0">
+            <UiButton
+              variant="ghost"
+              class="mr-3"
               @click="showDeleteDialog = false"
-              class="me-3"
             >
               Cancel
-            </v-btn>
-            <v-btn
-              color="error"
-              variant="elevated"
-              @click="confirmDeleteReview"
+            </UiButton>
+            <UiButton
+              variant="destructive"
               :loading="deleteLoading"
+              @click="confirmDeleteReview"
             >
-              <v-icon start>mdi-delete</v-icon>
+              <Trash2 class="h-4 w-4" />
               Delete
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+            </UiButton>
+          </div>
+        </UiDialogContent>
+      </UiDialog>
 
       <!-- Edit Review Dialog -->
-      <v-dialog v-model="showEditDialog" max-width="500" persistent>
-        <v-card>
-          <v-card-title class="bg-primary text-white">
+      <UiDialog v-model:open="showEditDialog">
+        <UiDialogContent
+          hide-close
+          class="gap-0 overflow-hidden p-0 sm:max-w-lg"
+          @pointer-down-outside.prevent
+          @escape-key-down.prevent
+        >
+          <UiDialogTitle class="sr-only">Edit Review</UiDialogTitle>
+
+          <div
+            class="bg-primary px-6 py-4 text-lg font-semibold text-primary-foreground"
+          >
             Edit Review
-          </v-card-title>
-          <v-card-text class="pt-4">
-            <v-rating
-              v-model="editRating"
-              color="amber"
-              length="5"
-              size="large"
-              hover
-            />
-            <v-textarea
+          </div>
+          <div class="px-6 pt-4">
+            <UiRating v-model="editRating" :length="5" :size="32" />
+            <UiTextarea
               v-model="editComment"
               label="Your review"
-              rows="4"
-              variant="outlined"
-              class="mt-4"
+              :rows="4"
+              wrapper-class="mt-4"
             />
-          </v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn @click="showEditDialog = false">Cancel</v-btn>
-            <v-btn
-              color="primary"
-              @click="confirmEditReview"
-              :loading="editLoading"
+          </div>
+          <div class="flex items-center justify-end gap-2 p-6">
+            <UiButton variant="ghost" @click="showEditDialog = false"
+              >Cancel</UiButton
             >
+            <UiButton :loading="editLoading" @click="confirmEditReview">
               Save
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+            </UiButton>
+          </div>
+        </UiDialogContent>
+      </UiDialog>
 
       <!-- Edit Reply Dialog -->
-      <v-dialog v-model="editReplyDialog" max-width="600" persistent>
-        <v-card rounded="xl" class="elevation-8">
-          <v-card-title
-            class="text-h6 text-center pa-6 pb-4 bg-primary text-white"
-          >
-            <v-icon start color="white" class="me-2">mdi-pencil</v-icon>
-            EDIT ADMIN REPLY
-          </v-card-title>
+      <UiDialog v-model:open="editReplyDialog">
+        <UiDialogContent
+          hide-close
+          class="gap-0 overflow-hidden p-0 sm:max-w-xl"
+          @pointer-down-outside.prevent
+          @escape-key-down.prevent
+        >
+          <UiDialogTitle class="sr-only">Edit Admin Reply</UiDialogTitle>
 
-          <v-card-text class="pa-6">
-            <v-textarea
+          <div
+            class="flex items-center justify-center bg-primary p-6 pb-4 text-lg font-semibold text-primary-foreground"
+          >
+            <Pencil class="mr-2 h-5 w-5" />
+            EDIT ADMIN REPLY
+          </div>
+
+          <div class="p-6">
+            <UiTextarea
               v-model="editReplyContent"
               label="Reply content"
-              variant="outlined"
-              rows="4"
-              auto-grow
-              :rules="[(v) => !!v || 'Reply content is required']"
-            ></v-textarea>
-          </v-card-text>
+              :rows="4"
+              :error-message="editReplyError"
+              @blur="validateEditReply"
+            />
+          </div>
 
-          <v-card-actions class="pa-6 pt-0">
-            <v-spacer></v-spacer>
-            <v-btn variant="text" @click="editReplyDialog = false" class="me-3">
-              Cancel
-            </v-btn>
-            <v-btn
-              color="primary"
-              variant="elevated"
-              @click="confirmEditReply"
-              :disabled="!editReplyContent || editReplyContent.trim() === ''"
+          <div class="flex items-center justify-end p-6 pt-0">
+            <UiButton
+              variant="ghost"
+              class="mr-3"
+              @click="editReplyDialog = false"
             >
-              <v-icon start>mdi-check</v-icon>
+              Cancel
+            </UiButton>
+            <UiButton
+              :disabled="!editReplyContent || editReplyContent.trim() === ''"
+              @click="confirmEditReply"
+            >
+              <Check class="h-4 w-4" />
               Update Reply
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+            </UiButton>
+          </div>
+        </UiDialogContent>
+      </UiDialog>
 
-      <v-divider></v-divider>
+      <UiSeparator />
 
       <!-- Reviews List -->
-      <v-card-text class="pa-0">
+      <div>
         <template v-if="isLoaded">
-          <v-list v-if="loading" class="pa-8">
-            <v-row class="fill-height ma-0" align="center" justify="center">
-              <v-col cols="auto" class="text-center">
-                <v-progress-circular
-                  indeterminate
-                  color="primary"
-                  size="64"
-                ></v-progress-circular>
-                <div class="text-body-1 text-medium-emphasis mt-4">
-                  Loading reviews...
-                </div>
-              </v-col>
-            </v-row>
-          </v-list>
+          <div
+            v-if="loading"
+            class="flex flex-col items-center justify-center p-8 text-center"
+          >
+            <UiSpinner size="xl" class="text-primary" />
+            <div class="mt-4 text-base text-muted-foreground">
+              Loading reviews...
+            </div>
+          </div>
 
-          <v-list v-else-if="reviews && reviews.length > 0" class="pa-0">
+          <div v-else-if="reviews && reviews.length > 0">
             <div
               v-for="(review, index) in reviews"
               :key="index"
-              class="review-item"
+              class="bg-card transition-colors hover:bg-muted/40"
             >
-              <v-container class="pa-6">
+              <div class="p-6">
                 <!-- Reviewer Info -->
-                <v-row class="mb-4" align="center">
-                  <v-col cols="11">
-                    <div class="d-flex align-center">
-                      <v-avatar color="primary" size="40" class="me-3">
-                        <template v-if="review.userId?.avatar_url">
-                          <v-img
-                            :src="review.userId.avatar_url"
-                            alt="User avatar"
-                          />
-                        </template>
-                        <template v-else>
-                          <v-icon color="white" size="20">mdi-account</v-icon>
-                        </template>
-                      </v-avatar>
+                <div class="mb-4 flex items-start justify-between gap-2">
+                  <div class="flex grow items-center">
+                    <UiAvatar
+                      class="mr-3 size-10 bg-primary text-primary-foreground"
+                    >
+                      <UiAvatarImage
+                        :src="reviewAvatar(review) || ''"
+                        alt="User avatar"
+                      />
+                      <UiAvatarFallback
+                        class="flex h-full w-full items-center justify-center"
+                      >
+                        <User class="h-5 w-5" />
+                      </UiAvatarFallback>
+                    </UiAvatar>
 
-                      <div class="flex-grow-1">
-                        <div class="d-flex align-center mb-1">
-                          <h3
-                            class="text-h6 font-weight-bold text-primary mb-0 me-3"
-                          >
-                            {{ review.userId?.username || "Anonymous" }}
-                          </h3>
-                          <!-- <v-chip
-                            size="small"
-                            color="success"
-                            variant="tonal"
-                            class="text-caption"
-                          >
-                            Verified
-                          </v-chip> -->
-                        </div>
-                        <div class="d-flex align-center">
-                          <v-rating
-                            :model-value="review.rating"
-                            color="amber"
-                            density="compact"
-                            readonly
-                            size="small"
-                            class="me-2"
-                          ></v-rating>
-                          <span class="text-caption text-medium-emphasis">
-                            {{ formatDate(review.createdAt) }}
-                          </span>
-                        </div>
+                    <div class="grow">
+                      <div class="mb-1 flex items-center">
+                        <h3 class="mr-3 text-lg font-bold text-primary">
+                          {{ reviewUsername(review) }}
+                        </h3>
+                      </div>
+                      <div class="flex items-center">
+                        <UiRating
+                          :model-value="review.rating"
+                          :size="16"
+                          readonly
+                          class="mr-2"
+                        />
+                        <span class="text-xs text-muted-foreground">
+                          {{ formatDate(review.createdAt) }}
+                        </span>
                       </div>
                     </div>
-                  </v-col>
-                  <v-col cols="1" class="d-flex justify-end">
-                    <!-- Edit/Delete buttons - only show for current user's reviews -->
-                    <div v-if="isCurrentUserReview(review)">
-                      <v-btn
-                        icon
-                        size="small"
-                        color="primary"
-                        variant="text"
-                        @click="openEditDialog(review)"
-                        class="me-1"
-                      >
-                        <v-icon size="small">mdi-pencil</v-icon>
-                        <v-tooltip activator="parent" location="top">
+                  </div>
+
+                  <!-- Edit/Delete buttons - only show for current user's reviews -->
+                  <div v-if="isCurrentUserReview(review)" class="flex shrink-0">
+                    <UiTooltipProvider :delay-duration="200">
+                      <UiTooltip>
+                        <UiTooltipTrigger as-child>
+                          <UiButton
+                            variant="ghost"
+                            size="iconSm"
+                            class="mr-1 text-primary"
+                            aria-label="Edit review"
+                            @click="openEditDialog(review)"
+                          >
+                            <Pencil class="h-4 w-4" />
+                          </UiButton>
+                        </UiTooltipTrigger>
+                        <UiTooltipContent side="top">
                           Edit review
-                        </v-tooltip>
-                      </v-btn>
-                      <v-btn
-                        icon
-                        size="small"
-                        color="error"
-                        variant="text"
-                        @click="showDeleteConfirmation(review._id)"
-                        class="delete-btn"
-                      >
-                        <v-icon size="small">mdi-delete</v-icon>
-                        <v-tooltip activator="parent" location="top">
+                        </UiTooltipContent>
+                      </UiTooltip>
+                      <UiTooltip>
+                        <UiTooltipTrigger as-child>
+                          <UiButton
+                            variant="ghost"
+                            size="iconSm"
+                            class="text-destructive opacity-60 transition-all hover:scale-110 hover:opacity-100"
+                            aria-label="Delete my review"
+                            @click="showDeleteConfirmation(review._id)"
+                          >
+                            <Trash2 class="h-4 w-4" />
+                          </UiButton>
+                        </UiTooltipTrigger>
+                        <UiTooltipContent side="top">
                           Delete my review
-                        </v-tooltip>
-                      </v-btn>
-                    </div>
-                  </v-col>
-                </v-row>
+                        </UiTooltipContent>
+                      </UiTooltip>
+                    </UiTooltipProvider>
+                  </div>
+                </div>
 
                 <!-- Review Content -->
-                <v-row>
-                  <v-col cols="12">
-                    <div class="review-content">
-                      <p class="text-body-1 text-high-emphasis line-height-1-6">
-                        {{ review.comment }}
-                      </p>
-                    </div>
-                  </v-col>
-                </v-row>
+                <p class="text-base leading-relaxed text-foreground">
+                  {{ review.comment }}
+                </p>
 
                 <!-- Admin Replies Section -->
-                <v-row
+                <div
                   v-if="review.replies && review.replies.length > 0"
-                  class="mt-2"
+                  class="ml-8 mt-4"
                 >
-                  <v-col cols="12">
-                    <div class="admin-replies ml-8">
-                      <div
-                        v-for="(reply, replyIndex) in review.replies"
-                        :key="replyIndex"
-                        class="admin-reply pa-4 mb-3 rounded-lg"
-                        style="
-                          background: rgba(25, 118, 210, 0.05);
-                          border-left: 3px solid #1976d2;
-                        "
+                  <div
+                    v-for="(reply, replyIndex) in review.replies"
+                    :key="replyIndex"
+                    class="mb-3 rounded-lg border-l-[3px] border-l-primary bg-primary/5 p-4"
+                  >
+                    <div class="mb-2 flex items-center">
+                      <UiAvatar
+                        class="mr-2 size-8 bg-primary text-primary-foreground"
                       >
-                        <div class="d-flex align-center mb-2">
-                          <v-avatar color="primary" size="32" class="me-2">
-                            <v-icon color="white" size="16"
-                              >mdi-shield-account</v-icon
-                            >
-                          </v-avatar>
-                          <div class="flex-grow-1">
-                            <span
-                              class="text-subtitle-2 font-weight-bold text-primary"
-                            >
-                              {{ reply.adminId?.username || "Admin" }}
-                            </span>
-                            <v-chip
-                              size="x-small"
-                              color="primary"
-                              variant="flat"
-                              class="ml-2"
-                            >
-                              Admin
-                            </v-chip>
-                            <span
-                              class="text-caption text-medium-emphasis ml-2"
-                            >
-                              · {{ formatDate(reply.createdAt) }}
-                            </span>
-                          </div>
-                          <!-- Edit/Delete buttons for admin's own reply -->
-                          <div v-if="isAdmin && isCurrentUserReply(reply)">
-                            <v-btn
-                              icon
-                              size="x-small"
-                              variant="text"
-                              color="primary"
-                              @click="showEditReplyDialog(review._id, reply)"
-                            >
-                              <v-icon size="small">mdi-pencil</v-icon>
-                            </v-btn>
-                            <v-btn
-                              icon
-                              size="x-small"
-                              variant="text"
-                              color="error"
-                              @click="confirmDeleteReply(review._id, reply._id)"
-                            >
-                              <v-icon size="small">mdi-delete</v-icon>
-                            </v-btn>
-                          </div>
-                        </div>
-                        <p class="text-body-2 mb-0 ml-10">
-                          {{ reply.content }}
-                        </p>
+                        <UiAvatarFallback
+                          class="flex h-full w-full items-center justify-center"
+                        >
+                          <ShieldCheck class="h-4 w-4" />
+                        </UiAvatarFallback>
+                      </UiAvatar>
+                      <div class="grow">
+                        <span class="text-sm font-bold text-primary">
+                          {{ replyAdminName(reply) }}
+                        </span>
+                        <UiBadge class="ml-2 px-1.5 text-[10px]">
+                          Admin
+                        </UiBadge>
+                        <span class="ml-2 text-xs text-muted-foreground">
+                          · {{ formatDate(reply.createdAt) }}
+                        </span>
+                      </div>
+                      <!-- Edit/Delete buttons for admin's own reply -->
+                      <div v-if="isAdmin && isCurrentUserReply(reply)">
+                        <UiButton
+                          variant="ghost"
+                          size="iconSm"
+                          class="text-primary"
+                          aria-label="Edit reply"
+                          @click="showEditReplyDialog(review._id, reply)"
+                        >
+                          <Pencil class="h-4 w-4" />
+                        </UiButton>
+                        <UiButton
+                          variant="ghost"
+                          size="iconSm"
+                          class="text-destructive"
+                          aria-label="Delete reply"
+                          @click="confirmDeleteReply(review._id, reply._id)"
+                        >
+                          <Trash2 class="h-4 w-4" />
+                        </UiButton>
                       </div>
                     </div>
-                  </v-col>
-                </v-row>
+                    <p class="mb-0 ml-10 text-sm">
+                      {{ reply.content }}
+                    </p>
+                  </div>
+                </div>
 
                 <!-- Admin Reply Form (only visible to admin) -->
-                <v-row v-if="isAdmin" class="mt-3">
-                  <v-col cols="12">
-                    <div class="admin-reply-form ml-8">
-                      <v-textarea
-                        v-model="replyTexts[review._id]"
-                        label="Write admin reply..."
-                        variant="outlined"
-                        rows="2"
-                        density="comfortable"
-                        hide-details
-                        class="mb-2"
-                      ></v-textarea>
-                      <v-btn
-                        color="primary"
-                        variant="flat"
-                        size="small"
-                        :disabled="
-                          !replyTexts[review._id] ||
-                          replyTexts[review._id].trim() === ''
-                        "
-                        @click="submitReply(review._id)"
-                        :loading="replyLoading[review._id]"
-                      >
-                        <v-icon start size="small">mdi-send</v-icon>
-                        Post Reply
-                      </v-btn>
-                    </div>
-                  </v-col>
-                </v-row>
-              </v-container>
+                <div v-if="isAdmin" class="ml-8 mt-3">
+                  <UiTextarea
+                    v-model="replyTexts[review._id]"
+                    label="Write admin reply..."
+                    :rows="2"
+                    wrapper-class="mb-2"
+                  />
+                  <UiButton
+                    size="sm"
+                    :disabled="
+                      !replyTexts[review._id] ||
+                      replyTexts[review._id].trim() === ''
+                    "
+                    :loading="replyLoading[review._id]"
+                    @click="submitReply(review._id)"
+                  >
+                    <Send class="h-3.5 w-3.5" />
+                    Post Reply
+                  </UiButton>
+                </div>
+              </div>
 
-              <v-divider v-if="index < reviews.length - 1"></v-divider>
+              <UiSeparator v-if="index < reviews.length - 1" />
             </div>
-          </v-list>
+          </div>
 
-          <v-list v-else class="pa-8">
-            <v-row class="fill-height ma-0" align="center" justify="center">
-              <v-col cols="auto" class="text-center">
-                <v-icon color="grey-lighten-1" size="64" class="mb-4"
-                  >mdi-comment-outline</v-icon
-                >
-                <div class="text-h6 text-medium-emphasis mb-2">
-                  No reviews yet
-                </div>
-                <div class="text-body-2 text-medium-emphasis">
-                  Be the first to share your thoughts about this book!
-                </div>
-              </v-col>
-            </v-row>
-          </v-list>
+          <div
+            v-else
+            class="flex flex-col items-center justify-center p-8 text-center"
+          >
+            <MessageSquare class="mb-4 h-16 w-16 text-muted-foreground/50" />
+            <div class="mb-2 text-lg font-semibold text-muted-foreground">
+              No reviews yet
+            </div>
+            <div class="text-sm text-muted-foreground">
+              Be the first to share your thoughts about this book!
+            </div>
+          </div>
         </template>
 
         <template v-else>
-          <v-list class="pa-8">
-            <v-row class="fill-height ma-0" align="center" justify="center">
-              <v-col cols="auto" class="text-center">
-                <v-progress-circular
-                  indeterminate
-                  color="primary"
-                  size="64"
-                ></v-progress-circular>
-                <div class="text-body-1 text-medium-emphasis mt-4">
-                  Loading...
-                </div>
-              </v-col>
-            </v-row>
-          </v-list>
+          <div class="flex flex-col items-center justify-center p-8 text-center">
+            <UiSpinner size="xl" class="text-primary" />
+            <div class="mt-4 text-base text-muted-foreground">Loading...</div>
+          </div>
         </template>
-      </v-card-text>
-    </v-card>
-  </v-container>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script>
-import { mapActions, mapState } from "vuex";
-import { createReply, updateReply, deleteReply } from "~/api/reviewApi";
-import { getBookById } from "~/api/bookApi";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
+import { useReviewStore } from "@/stores/review";
+import {
+  AlertCircle,
+  Check,
+  MessageSquare,
+  Pencil,
+  Send,
+  ShieldCheck,
+  Star,
+  Trash2,
+  User,
+} from "lucide-vue-next";
+import {
+  createReply,
+  updateReply,
+  deleteReply,
+  editReview,
+  getAverageRating,
+} from "@/api/reviewApi";
+import { getBookById } from "@/api/bookApi";
+import type { Review, ReviewReply, User as UserType } from "@/types";
 
-export default {
-  name: "BookReviewsUI",
-  data() {
-    return {
-      rating: 0,
-      comment: "",
-      showCreateReviewsDialog: false,
-      showDeleteDialog: false,
-      deleteLoading: false,
-      reviewToDelete: null,
-      averageRating: 0,
-      totalReviews: 0,
-      bookRating: 0, // Rating từ database
-      ratingBreakdown: [
-        { count: 20 },
-        { count: 2 },
-        { count: 2 },
-        { count: 0 },
-        { count: 0 },
-      ],
-      loading: false,
-      isLoaded: false,
-      // Reply management
-      replyTexts: {},
-      replyLoading: {},
-      editReplyDialog: false,
-      editingReply: null,
-      editingReviewId: null,
-      editReplyContent: "",
-      // Edit review
-      showEditDialog: false,
-      editLoading: false,
-      editReviewId: null,
-      editRating: 0,
-      editComment: "",
-    };
-  },
-  computed: {
-    ...mapState("review", ["reviews"]),
-    ...mapState("auth", ["currentUser"]),
-    isAdmin() {
-      return this.currentUser?.admin === true;
-    },
-    // Hiển thị rating: nếu có review thì dùng average, không thì dùng rating mặc định từ database
-    displayRating() {
-      if (this.totalReviews > 0) {
-        return this.averageRating;
-      }
-      return this.bookRating;
-    },
-  },
-  watch: {
-    reviews(newVal) {
-      if (newVal && newVal.length > 0) {
-        console.log("Reviews updated:", newVal);
-      }
-    },
-  },
-  async mounted() {
-    this.isLoaded = false;
-    this.loading = true;
-    try {
-      const bookId = this.$route.params.id;
+const route = useRoute();
 
-      await this.loadReviews(bookId);
-      await this.loadRatingData(bookId);
-    } catch (error) {
-      console.error("Error loading reviews:", error);
-    } finally {
-      this.loading = false;
-      this.isLoaded = true;
-    }
-  },
+const reviewStore = useReviewStore();
+const authStore = useAuthStore();
 
-  methods: {
-    ...mapActions("review", ["addNewReview", "loadReviews", "deleteReview"]),
+const { reviews } = storeToRefs(reviewStore);
+const { currentUser } = storeToRefs(authStore);
 
-    async loadRatingData(bookId) {
-      try {
-        // Lấy average rating từ reviews
-        const { getAverageRating } = await import("~/api/reviewApi");
-        const ratingResponse = await getAverageRating(bookId);
-        this.averageRating = ratingResponse.data.averageRating;
-        this.totalReviews = ratingResponse.data.totalReviews;
+const bookId = computed(() => route.params.id as string);
 
-        // Lấy thông tin book để có rating mặc định
-        const bookResponse = await getBookById(bookId);
-        this.bookRating = bookResponse.data.rating || 0;
-      } catch (error) {
-        console.error("Error loading rating data:", error);
-        this.averageRating = 0;
-        this.totalReviews = 0;
-        this.bookRating = 0;
-      }
-    },
+const rating = ref(0);
+const comment = ref("");
+const commentError = ref("");
+const showCreateReviewsDialog = ref(false);
+const showDeleteDialog = ref(false);
+const deleteLoading = ref(false);
+const reviewToDelete = ref<string | null>(null);
+const averageRating = ref(0);
+const totalReviews = ref(0);
+const bookRating = ref(0); // Rating từ database
+const ratingBreakdown = ref([
+  { count: 20 },
+  { count: 2 },
+  { count: 2 },
+  { count: 0 },
+  { count: 0 },
+]);
+const loading = ref(false);
+const isLoaded = ref(false);
+// Reply management
+const replyTexts = reactive<Record<string, string>>({});
+const replyLoading = reactive<Record<string, boolean>>({});
+const editReplyDialog = ref(false);
+const editingReply = ref<ReviewReply | null>(null);
+const editingReviewId = ref<string | null>(null);
+const editReplyContent = ref("");
+const editReplyError = ref("");
+// Edit review
+const showEditDialog = ref(false);
+const editLoading = ref(false);
+const editReviewId = ref<string | null>(null);
+const editRating = ref(0);
+const editComment = ref("");
 
-    // Format date for display
-    formatDate(dateString) {
-      if (!dateString) return "";
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    },
+const isAdmin = computed(() => currentUser.value?.admin === true);
 
-    // Check if the review belongs to the current user
-    isCurrentUserReview(review) {
-      return (
-        this.currentUser &&
-        review.userId &&
-        (review.userId._id === this.currentUser._id ||
-          review.userId === this.currentUser._id)
-      );
-    },
+// Hiển thị rating: nếu có review thì dùng average, không thì dùng rating mặc định từ database
+const displayRating = computed(() => {
+  if (totalReviews.value > 0) {
+    return averageRating.value;
+  }
+  return bookRating.value;
+});
 
-    // Check if reply belongs to current admin
-    isCurrentUserReply(reply) {
-      return (
-        this.currentUser &&
-        reply.adminId &&
-        (reply.adminId._id === this.currentUser._id ||
-          reply.adminId === this.currentUser._id)
-      );
-    },
+watch(reviews, (newVal) => {
+  if (newVal && newVal.length > 0) {
+    console.log("Reviews updated:", newVal);
+  }
+});
 
-    // Submit admin reply
-    async submitReply(reviewId) {
-      const content = this.replyTexts[reviewId];
-      if (!content || content.trim() === "") return;
+onMounted(async () => {
+  isLoaded.value = false;
+  loading.value = true;
+  try {
+    await reviewStore.loadReviews(bookId.value);
+    await loadRatingData(bookId.value);
+  } catch (error) {
+    console.error("Error loading reviews:", error);
+  } finally {
+    loading.value = false;
+    isLoaded.value = true;
+  }
+});
 
-      this.$set(this.replyLoading, reviewId, true);
-      try {
-        await createReply(reviewId, content);
-        this.$set(this.replyTexts, reviewId, "");
-        await this.loadReviews(this.$route.params.id);
-        console.log("Reply added successfully");
-      } catch (error) {
-        console.error("Error adding reply:", error);
-        alert("Failed to add reply. Please try again.");
-      } finally {
-        this.$set(this.replyLoading, reviewId, false);
-      }
-    },
+async function loadRatingData(id: string) {
+  try {
+    // Lấy average rating từ reviews
+    const ratingResponse = await getAverageRating(id);
+    averageRating.value = ratingResponse.data.averageRating;
+    totalReviews.value = ratingResponse.data.totalReviews;
 
-    // Show edit reply dialog
-    showEditReplyDialog(reviewId, reply) {
-      this.editingReviewId = reviewId;
-      this.editingReply = reply;
-      this.editReplyContent = reply.content;
-      this.editReplyDialog = true;
-    },
+    // Lấy thông tin book để có rating mặc định
+    const bookResponse = await getBookById(id);
+    bookRating.value = bookResponse.data.rating || 0;
+  } catch (error) {
+    console.error("Error loading rating data:", error);
+    averageRating.value = 0;
+    totalReviews.value = 0;
+    bookRating.value = 0;
+  }
+}
 
-    // Update reply
-    async confirmEditReply() {
-      if (!this.editReplyContent || this.editReplyContent.trim() === "") return;
+// Format date for display
+function formatDate(dateString?: string) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+}
 
-      try {
-        await updateReply(
-          this.editingReviewId,
-          this.editingReply._id,
-          this.editReplyContent
-        );
-        this.editReplyDialog = false;
-        this.editingReply = null;
-        this.editingReviewId = null;
-        this.editReplyContent = "";
-        await this.loadReviews(this.$route.params.id);
-        console.log("Reply updated successfully");
-      } catch (error) {
-        console.error("Error updating reply:", error);
-        alert("Failed to update reply. Please try again.");
-      }
-    },
+// Validation (was a Vuetify rules array on the textarea)
+function validateComment() {
+  commentError.value = comment.value ? "" : "Review comment is required";
+}
 
-    // Delete reply
-    async confirmDeleteReply(reviewId, replyId) {
-      if (!confirm("Are you sure you want to delete this reply?")) return;
+function validateEditReply() {
+  editReplyError.value = editReplyContent.value
+    ? ""
+    : "Reply content is required";
+}
 
-      try {
-        await deleteReply(reviewId, replyId);
-        await this.loadReviews(this.$route.params.id);
-        console.log("Reply deleted successfully");
-      } catch (error) {
-        console.error("Error deleting reply:", error);
-        alert("Failed to delete reply. Please try again.");
-      }
-    },
+// Display helpers (userId/adminId can be populated objects or plain ids)
+function reviewUsername(review: Review): string {
+  return (review.userId as UserType | null)?.username || "Anonymous";
+}
 
-    // Open edit dialog
-    openEditDialog(review) {
-      this.editReviewId = review._id;
-      this.editRating = review.rating;
-      this.editComment = review.comment;
-      this.showEditDialog = true;
-    },
+function reviewAvatar(review: Review): string | null {
+  return (review.userId as UserType | null)?.avatar_url || null;
+}
 
-    // Confirm edit review
-    async confirmEditReview() {
-      if (!this.editRating || !this.editComment.trim()) {
-        alert("Please provide rating and comment");
-        return;
-      }
+function replyAdminName(reply: ReviewReply): string {
+  return (reply.adminId as UserType | null)?.username || "Admin";
+}
 
-      this.editLoading = true;
-      try {
-        const { editReview } = await import("~/api/reviewApi");
-        await editReview(this.editReviewId, this.editRating, this.editComment);
+// Check if the review belongs to the current user
+function isCurrentUserReview(review: Review) {
+  const userId = review.userId as any;
+  return (
+    !!currentUser.value &&
+    !!userId &&
+    (userId._id === currentUser.value._id || userId === currentUser.value._id)
+  );
+}
 
-        this.showEditDialog = false;
-        this.editReviewId = null;
-        this.editRating = 0;
-        this.editComment = "";
+// Check if reply belongs to current admin
+function isCurrentUserReply(reply: ReviewReply) {
+  const adminId = reply.adminId as any;
+  return (
+    !!currentUser.value &&
+    !!adminId &&
+    (adminId._id === currentUser.value._id || adminId === currentUser.value._id)
+  );
+}
 
-        await this.loadReviews(this.$route.params.id);
-        await this.loadRatingData(this.$route.params.id);
-        console.log("Review updated successfully");
-      } catch (error) {
-        console.error("Error updating review:", error);
-        alert("Failed to update review");
-      } finally {
-        this.editLoading = false;
-      }
-    },
+// Submit admin reply
+async function submitReply(reviewId: string) {
+  const content = replyTexts[reviewId];
+  if (!content || content.trim() === "") return;
 
-    // Show delete confirmation dialog
-    showDeleteConfirmation(reviewId) {
-      this.reviewToDelete = reviewId;
-      this.showDeleteDialog = true;
-    },
+  replyLoading[reviewId] = true;
+  try {
+    await createReply(reviewId, content);
+    replyTexts[reviewId] = "";
+    await reviewStore.loadReviews(bookId.value);
+    console.log("Reply added successfully");
+  } catch (error) {
+    console.error("Error adding reply:", error);
+    alert("Failed to add reply. Please try again.");
+  } finally {
+    replyLoading[reviewId] = false;
+  }
+}
 
-    // Confirm and delete the review
-    async confirmDeleteReview() {
-      if (!this.reviewToDelete) return;
+// Show edit reply dialog
+function showEditReplyDialog(reviewId: string, reply: ReviewReply) {
+  editingReviewId.value = reviewId;
+  editingReply.value = reply;
+  editReplyContent.value = reply.content;
+  editReplyError.value = "";
+  editReplyDialog.value = true;
+}
 
-      this.deleteLoading = true;
-      try {
-        await this.deleteReview(this.reviewToDelete);
-        this.showDeleteDialog = false;
-        this.reviewToDelete = null;
-        const bookId = this.$route.params.id;
-        await this.loadReviews(bookId);
-        await this.loadRatingData(bookId);
-      } catch (error) {
-        console.error("Error deleting review:", error);
-      } finally {
-        this.deleteLoading = false;
-      }
-    },
+// Update reply
+async function confirmEditReply() {
+  if (!editReplyContent.value || editReplyContent.value.trim() === "") return;
 
-    async handleWriteReview(bookId, rating, comment) {
-      this.loading = true;
-      try {
-        await this.addNewReview({ bookId, rating, comment });
-        console.log("Review written successfully", { bookId, rating, comment });
-        this.showCreateReviewsDialog = false;
-        this.rating = 0;
-        this.comment = "";
-        // Reload reviews and rating data
-        await this.loadReviews(bookId);
-        await this.loadRatingData(bookId);
-        console.log("Reviews and rating reloaded after writing a new review");
-      } catch (error) {
-        console.error("Error writing review:", error);
-      } finally {
-        this.loading = false;
-      }
-    },
-  },
-};
+  try {
+    await updateReply(
+      editingReviewId.value as string,
+      editingReply.value?._id as string,
+      editReplyContent.value
+    );
+    editReplyDialog.value = false;
+    editingReply.value = null;
+    editingReviewId.value = null;
+    editReplyContent.value = "";
+    await reviewStore.loadReviews(bookId.value);
+    console.log("Reply updated successfully");
+  } catch (error) {
+    console.error("Error updating reply:", error);
+    alert("Failed to update reply. Please try again.");
+  }
+}
+
+// Delete reply
+async function confirmDeleteReply(reviewId: string, replyId?: string) {
+  if (!confirm("Are you sure you want to delete this reply?")) return;
+
+  try {
+    await deleteReply(reviewId, replyId as string);
+    await reviewStore.loadReviews(bookId.value);
+    console.log("Reply deleted successfully");
+  } catch (error) {
+    console.error("Error deleting reply:", error);
+    alert("Failed to delete reply. Please try again.");
+  }
+}
+
+// Open edit dialog
+function openEditDialog(review: Review) {
+  editReviewId.value = review._id;
+  editRating.value = review.rating;
+  editComment.value = review.comment;
+  showEditDialog.value = true;
+}
+
+// Confirm edit review
+async function confirmEditReview() {
+  if (!editRating.value || !editComment.value.trim()) {
+    alert("Please provide rating and comment");
+    return;
+  }
+
+  editLoading.value = true;
+  try {
+    await editReview(
+      editReviewId.value as string,
+      editRating.value,
+      editComment.value
+    );
+
+    showEditDialog.value = false;
+    editReviewId.value = null;
+    editRating.value = 0;
+    editComment.value = "";
+
+    await reviewStore.loadReviews(bookId.value);
+    await loadRatingData(bookId.value);
+    console.log("Review updated successfully");
+  } catch (error) {
+    console.error("Error updating review:", error);
+    alert("Failed to update review");
+  } finally {
+    editLoading.value = false;
+  }
+}
+
+// Show delete confirmation dialog
+function showDeleteConfirmation(reviewId: string) {
+  reviewToDelete.value = reviewId;
+  showDeleteDialog.value = true;
+}
+
+// Confirm and delete the review
+async function confirmDeleteReview() {
+  if (!reviewToDelete.value) return;
+
+  deleteLoading.value = true;
+  try {
+    await reviewStore.deleteReview(reviewToDelete.value);
+    showDeleteDialog.value = false;
+    reviewToDelete.value = null;
+    await reviewStore.loadReviews(bookId.value);
+    await loadRatingData(bookId.value);
+  } catch (error) {
+    console.error("Error deleting review:", error);
+  } finally {
+    deleteLoading.value = false;
+  }
+}
+
+async function handleWriteReview(
+  reviewBookId: string,
+  reviewRating: number,
+  reviewComment: string
+) {
+  loading.value = true;
+  try {
+    await reviewStore.addNewReview({
+      bookId: reviewBookId,
+      rating: reviewRating,
+      comment: reviewComment,
+    });
+    console.log("Review written successfully", {
+      bookId: reviewBookId,
+      rating: reviewRating,
+      comment: reviewComment,
+    });
+    showCreateReviewsDialog.value = false;
+    rating.value = 0;
+    comment.value = "";
+    commentError.value = "";
+    // Reload reviews and rating data
+    await reviewStore.loadReviews(reviewBookId);
+    await loadRatingData(reviewBookId);
+    console.log("Reviews and rating reloaded after writing a new review");
+  } catch (error) {
+    console.error("Error writing review:", error);
+  } finally {
+    loading.value = false;
+  }
+}
 </script>
-
-<style scoped>
-.reviews-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  background-color: #fafafa;
-}
-
-.header-section {
-  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
-  color: white !important;
-  font-size: 18px !important;
-  font-weight: bold !important;
-  letter-spacing: 1px !important;
-  padding: 20px 30px !important;
-  border-radius: 12px 12px 0 0 !important;
-}
-
-.rating-summary {
-  background-color: white !important;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.overall-rating {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.rating-number {
-  font-size: 48px;
-  font-weight: bold;
-  color: #1976d2;
-}
-
-.rating-breakdown .rating-row {
-  margin-bottom: 8px;
-}
-
-.review-item {
-  background-color: white;
-  transition: all 0.3s ease;
-}
-
-.review-item:hover {
-  background-color: #f8f9fa;
-}
-
-.review-content {
-  line-height: 1.6;
-}
-
-.line-height-1-6 {
-  line-height: 1.6;
-}
-
-.ai-review-btn {
-  background: linear-gradient(135deg, #6a1b9a 0%, #8e24aa 100%) !important;
-  color: white !important;
-  transition: all 0.3s ease;
-}
-
-.ai-review-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(106, 27, 154, 0.3) !important;
-}
-
-.delete-btn {
-  opacity: 0.6;
-  transition: all 0.2s ease;
-}
-
-.delete-btn:hover {
-  opacity: 1;
-  transform: scale(1.1);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .rating-summary .v-row {
-    flex-direction: column !important;
-    align-items: center !important;
-  }
-
-  .rating-summary .v-col:last-child {
-    width: 100%;
-    margin-top: 20px;
-  }
-
-  .header-section {
-    padding: 15px 20px !important;
-  }
-
-  .rating-summary {
-    padding: 20px !important;
-  }
-}
-
-@media (max-width: 480px) {
-  .reviews-container {
-    margin: 0 10px;
-  }
-}
-</style>

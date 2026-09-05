@@ -1,299 +1,267 @@
 <template>
-  <v-container fluid class="pdf-reader pa-0">
-    <v-overlay
-      :model-value="isLoading"
-      class="align-center justify-center"
-      contained
+  <div class="relative h-screen bg-gradient-to-b from-muted/60 to-muted">
+    <!-- Loading overlay -->
+    <div
+      v-if="isLoading"
+      class="absolute inset-0 z-50 flex items-center justify-center bg-black/60"
     >
       <div class="text-center">
-        <v-progress-circular
-          indeterminate
-          size="64"
-          color="primary"
-          width="4"
-        ></v-progress-circular>
-        <p class="text-h6 mt-4">Loading PDF...</p>
+        <UiSpinner size="xl" class="mx-auto text-primary" />
+        <p class="mt-4 text-lg font-semibold text-white">Loading PDF...</p>
       </div>
-    </v-overlay>
+    </div>
 
     <template v-if="!isLoading">
       <!-- Purchase Overlay -->
-      <v-dialog
-        :model-value="!isPurchased && currentPage >= previewLimit"
-        persistent
-        max-width="500"
-      >
-        <v-card class="purchase-card" rounded="xl">
-          <v-card-text class="text-center pa-8">
-            <div class="lock-icon text-h1 mb-4">🔒</div>
-            <h2 class="text-h4 font-weight-bold mb-3">Preview Limit Reached</h2>
-            <p class="text-body-1 text-medium-emphasis mb-2">
+      <UiDialog :open="!isPurchased && currentPage >= previewLimit">
+        <UiDialogContent
+          hide-close
+          class="rounded-xl sm:max-w-md"
+          @pointer-down-outside.prevent
+          @escape-key-down.prevent
+        >
+          <UiDialogTitle class="sr-only">Preview Limit Reached</UiDialogTitle>
+
+          <div class="purchase-card px-2 py-4 text-center sm:px-4">
+            <div class="lock-icon mb-4 text-8xl">🔒</div>
+            <h2 class="mb-3 text-3xl font-bold">Preview Limit Reached</h2>
+            <p class="mb-2 text-base text-muted-foreground">
               You've viewed all {{ previewLimit }} available preview pages
             </p>
-            <p class="text-h6 text-primary font-weight-bold my-6">
+            <p class="my-6 text-lg font-bold text-primary">
               Unlock all {{ totalPages }} pages with full access
             </p>
-            <v-btn
-              color="primary"
-              size="x-large"
-              rounded="lg"
-              variant="flat"
-              class="purchase-btn"
-              prepend-icon="mdi-credit-card"
+            <UiButton
+              size="lg"
+              class="purchase-btn rounded-lg shadow-lg"
               @click="goToPurchase"
             >
+              <CreditCard class="mr-1 h-5 w-5" />
               Purchase Full Access
-            </v-btn>
-          </v-card-text>
-        </v-card>
-      </v-dialog>
+            </UiButton>
+          </div>
+        </UiDialogContent>
+      </UiDialog>
 
       <!-- Controls Bar -->
-      <v-toolbar color="white" elevation="1" class="controls-toolbar">
-        <v-container class="d-flex align-center justify-space-between px-6">
-          <v-btn
-            color="primary"
-            variant="flat"
-            size="large"
-            rounded="lg"
+      <header class="sticky top-0 z-10 border-b border-border bg-card shadow-sm">
+        <div class="container mx-auto flex items-center justify-between px-6">
+          <UiButton
+            size="lg"
+            class="nav-btn min-w-12 rounded-lg px-3 sm:min-w-[120px] sm:px-6"
             :disabled="!hasPdf || currentPage <= 1"
-            prepend-icon="mdi-chevron-left"
             @click="prevPage"
-            class="nav-btn"
           >
-            <span class="d-none d-sm-inline">Previous</span>
-          </v-btn>
+            <ChevronLeft class="h-5 w-5" />
+            <span class="hidden sm:inline">Previous</span>
+          </UiButton>
 
-          <div class="page-info-wrapper py-10 text-center">
-            <div class="d-flex align-center justify-center ga-2">
-              <span class="current-page text-h4 font-weight-bold text-primary">
+          <div class="min-w-[100px] py-10 text-center sm:min-w-[150px]">
+            <div class="flex items-center justify-center gap-2">
+              <span class="text-3xl font-bold leading-none text-primary">
                 {{ currentPage }}
               </span>
-              <span class="text-h5 text-medium-emphasis">/</span>
-              <span class="text-h5 text-medium-emphasis">
+              <span class="text-2xl text-muted-foreground">/</span>
+              <span class="text-2xl text-muted-foreground">
                 {{ isPurchased ? totalPages : previewLimit }}
               </span>
             </div>
-            <div
-              v-if="!isPurchased"
-              class="text-red font-weight-bold"
-            >
+            <div v-if="!isPurchased" class="font-bold text-destructive">
               PREVIEW
             </div>
           </div>
 
-          <v-btn
-            color="primary"
-            variant="flat"
-            size="large"
-            rounded="lg"
+          <UiButton
+            size="lg"
+            class="nav-btn min-w-12 rounded-lg px-3 sm:min-w-[120px] sm:px-6"
             :disabled="!hasPdf || !canGoNext"
-            append-icon="mdi-chevron-right"
             @click="nextPage"
-            class="nav-btn"
           >
-            <span class="d-none d-sm-inline">Next</span>
-          </v-btn>
-        </v-container>
-      </v-toolbar>
+            <span class="hidden sm:inline">Next</span>
+            <ChevronRight class="h-5 w-5" />
+          </UiButton>
+        </div>
+      </header>
 
       <!-- PDF Viewer -->
-      <v-main class="pdf-viewer-main">
-        <v-container class="d-flex justify-center py-8">
-          <v-card elevation="8" rounded="xl" class="canvas-card">
-            <canvas ref="pdfCanvas" class="pdf-canvas"></canvas>
-          </v-card>
-        </v-container>
-      </v-main>
+      <main class="h-[calc(100vh-88px)] overflow-y-auto">
+        <div class="container mx-auto flex justify-center px-4 py-8">
+          <div class="rounded-xl bg-card p-4 shadow-lg sm:p-6">
+            <canvas
+              ref="pdfCanvas"
+              class="block h-auto max-w-full rounded"
+            ></canvas>
+          </div>
+        </div>
+      </main>
     </template>
-  </v-container>
+  </div>
 </template>
 
-<script>
-export default {
-  props: {
-    pdfUrl: { type: String, required: true },
-    isPurchased: { type: Boolean, default: false },
-    previewLimit: { type: Number, default: 20 },
-    bookId: { type: [String, Number], default: null },
-  },
+<script setup lang="ts">
+import { ChevronLeft, ChevronRight, CreditCard } from "lucide-vue-next";
 
-  data() {
-    return {
-      currentPage: 1,
-      totalPages: 0,
-      isLoading: true,
-      hasPdf: false,
-      scale: 1.25,
+const props = withDefaults(
+  defineProps<{
+    pdfUrl: string;
+    isPurchased?: boolean;
+    previewLimit?: number;
+    bookId?: string | number | null;
+  }>(),
+  {
+    isPurchased: false,
+    previewLimit: 20,
+    bookId: null,
+  }
+);
+
+const router = useRouter();
+
+const currentPage = ref(1);
+const totalPages = ref(0);
+const isLoading = ref(true);
+const hasPdf = ref(false);
+const scale = 1.25;
+
+const pdfCanvas = ref<HTMLCanvasElement | null>(null);
+
+// pdf.js is loaded from a CDN at runtime; its objects stay non-reactive on purpose
+let pdfjsLib: any = null;
+let pdfDoc: any = null;
+
+const canGoNext = computed(() =>
+  props.isPurchased
+    ? currentPage.value < totalPages.value
+    : currentPage.value < props.previewLimit &&
+      currentPage.value < totalPages.value
+);
+
+onMounted(() => {
+  initPdfReader();
+});
+
+onBeforeUnmount(() => {
+  if (pdfDoc) {
+    try {
+      pdfDoc.destroy();
+    } catch {
+      /* ignore */
+    }
+    pdfDoc = null;
+  }
+});
+
+async function initPdfReader() {
+  if (import.meta.client) {
+    await loadPdfJsLibrary();
+    await loadPdfDocument();
+  }
+}
+
+function loadPdfJsLibrary(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if ((window as any).pdfjsLib) {
+      pdfjsLib = (window as any).pdfjsLib;
+      configurePdfJs();
+      resolve();
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    script.async = true;
+
+    script.onload = () => {
+      pdfjsLib = (window as any).pdfjsLib;
+      if (!pdfjsLib) {
+        reject(new Error("Failed to load PDF.js"));
+        return;
+      }
+      configurePdfJs();
+      resolve();
     };
-  },
 
-  computed: {
-    canGoNext() {
-      return this.isPurchased
-        ? this.currentPage < this.totalPages
-        : this.currentPage < this.previewLimit &&
-            this.currentPage < this.totalPages;
-    },
-  },
+    script.onerror = () => reject(new Error("Unable to load PDF.js library"));
+    document.head.appendChild(script);
+  });
+}
 
-  mounted() {
-    this.initPdfReader();
-  },
+function configurePdfJs() {
+  if (pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  }
+}
 
-  methods: {
-    async initPdfReader() {
-      if (import.meta.client) {
-        await this.loadPdfJsLibrary();
-        await this.loadPdfDocument();
-      }
-    },
+async function loadPdfDocument() {
+  try {
+    if (!pdfjsLib) throw new Error("PDF.js not loaded");
 
-    loadPdfJsLibrary() {
-      return new Promise((resolve, reject) => {
-        if (window.pdfjsLib) {
-          this.pdfjsLib = window.pdfjsLib;
-          this.configurePdfJs();
-          resolve();
-          return;
-        }
+    const loadingTask = pdfjsLib.getDocument(props.pdfUrl);
+    pdfDoc = await loadingTask.promise;
 
-        const script = document.createElement("script");
-        script.src =
-          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-        script.async = true;
+    totalPages.value = pdfDoc.numPages;
+    hasPdf.value = true;
+    isLoading.value = false;
 
-        script.onload = () => {
-          this.pdfjsLib = window.pdfjsLib;
-          if (!this.pdfjsLib) {
-            reject(new Error("Failed to load PDF.js"));
-            return;
-          }
-          this.configurePdfJs();
-          resolve();
-        };
+    await nextTick();
+    await renderPage(currentPage.value);
+  } catch (err: any) {
+    console.error("❌ Error loading PDF:", err.message);
+    isLoading.value = false;
+  }
+}
 
-        script.onerror = () =>
-          reject(new Error("Unable to load PDF.js library"));
-        document.head.appendChild(script);
-      });
-    },
+async function renderPage(num: number) {
+  if (!pdfDoc || !pdfCanvas.value) return;
+  try {
+    const page = await pdfDoc.getPage(num);
+    const canvas = pdfCanvas.value;
+    const ctx = canvas.getContext("2d");
+    const viewport = page.getViewport({ scale });
 
-    configurePdfJs() {
-      if (this.pdfjsLib) {
-        this.pdfjsLib.GlobalWorkerOptions.workerSrc =
-          "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-      }
-    },
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
 
-    async loadPdfDocument() {
-      try {
-        if (!this.pdfjsLib) throw new Error("PDF.js not loaded");
+    await page.render({ canvasContext: ctx, viewport }).promise;
+  } catch (err: any) {
+    console.error(`❌ Error rendering page ${num}:`, err.message);
+  }
+}
 
-        const loadingTask = this.pdfjsLib.getDocument(this.pdfUrl);
-        this.pdfDoc = await loadingTask.promise;
+async function nextPage() {
+  if (!props.isPurchased && currentPage.value >= props.previewLimit) return;
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+    await renderPage(currentPage.value);
+  }
+}
 
-        this.totalPages = this.pdfDoc.numPages;
-        this.hasPdf = true;
-        this.isLoading = false;
+async function prevPage() {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+    await renderPage(currentPage.value);
+  }
+}
 
-        await this.$nextTick();
-        await this.renderPage(this.currentPage);
-      } catch (err) {
-        console.error("❌ Error loading PDF:", err.message);
-        this.isLoading = false;
-      }
-    },
-
-    async renderPage(num) {
-      if (!this.pdfDoc || !this.$refs.pdfCanvas) return;
-      try {
-        const page = await this.pdfDoc.getPage(num);
-        const canvas = this.$refs.pdfCanvas;
-        const ctx = canvas.getContext("2d");
-        const viewport = page.getViewport({ scale: this.scale });
-
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-
-        await page.render({ canvasContext: ctx, viewport }).promise;
-      } catch (err) {
-        console.error(`❌ Error rendering page ${num}:`, err.message);
-      }
-    },
-
-    async nextPage() {
-      if (!this.isPurchased && this.currentPage >= this.previewLimit) return;
-      if (this.currentPage < this.totalPages) {
-        this.currentPage++;
-        await this.renderPage(this.currentPage);
-      }
-    },
-
-    async prevPage() {
-      if (this.currentPage > 1) {
-        this.currentPage--;
-        await this.renderPage(this.currentPage);
-      }
-    },
-
-    goToPurchase() {
-      this.$router.push(this.bookId ? `/details/${this.bookId}` : "/");
-    },
-  },
-};
+function goToPurchase() {
+  router.push(props.bookId ? `/details/${props.bookId}` : "/");
+}
 </script>
 
 <style scoped>
-.pdf-reader {
-  height: 100vh;
-  background: linear-gradient(to bottom, #f5f5f5 0%, #e0e0e0 100%);
-}
-
-.controls-toolbar {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
-}
-
 .nav-btn {
-  min-width: 120px;
-  box-shadow: 0 2px 8px rgba(var(--v-theme-primary), 0.3) !important;
-  transition: all 0.3s ease !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .nav-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(var(--v-theme-primary), 0.4) !important;
+  box-shadow: 0 4px 12px rgba(82, 149, 208, 0.4);
 }
 
 .nav-btn:active:not(:disabled) {
   transform: translateY(0);
-}
-
-.page-info-wrapper {
-  min-width: 150px;
-}
-
-.current-page {
-  line-height: 1;
-}
-
-.pdf-viewer-main {
-  height: calc(100vh - 88px);
-  overflow-y: auto;
-  background: linear-gradient(to bottom, #f5f5f5 0%, #e0e0e0 100%);
-}
-
-.canvas-card {
-  padding: 24px;
-  background: white;
-  transition: all 0.3s ease;
-}
-
-.pdf-canvas {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  border-radius: 4px;
 }
 
 /* Purchase Card Animations */
@@ -327,32 +295,16 @@ export default {
 }
 
 .purchase-btn {
-  box-shadow: 0 6px 20px rgba(var(--v-theme-primary), 0.4) !important;
-  transition: all 0.3s ease !important;
+  box-shadow: 0 6px 20px rgba(82, 149, 208, 0.4);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .purchase-btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(var(--v-theme-primary), 0.5) !important;
+  box-shadow: 0 8px 28px rgba(82, 149, 208, 0.5);
 }
 
 .purchase-btn:active {
   transform: translateY(-1px);
-}
-
-/* Mobile Responsive */
-@media (max-width: 600px) {
-  .nav-btn {
-    min-width: 48px !important;
-    padding: 0 12px !important;
-  }
-
-  .canvas-card {
-    padding: 16px;
-  }
-
-  .page-info-wrapper {
-    min-width: 100px;
-  }
 }
 </style>

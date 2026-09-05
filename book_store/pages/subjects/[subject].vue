@@ -1,570 +1,461 @@
 <template>
-  <v-container class="py-8">
-    <v-row>
+  <div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-12 gap-4">
       <!-- Enhanced Sidebar -->
-      <v-col cols="12" sm="3" class="mb-6">
-        <v-card
-          elevation="2"
-          rounded="xl"
-          class="sticky-sidebar"
-          color="surface"
-        >
+      <div class="col-span-12 mb-6 sm:col-span-3">
+        <div class="rounded-xl border border-border bg-card shadow">
           <!-- Categories Section -->
-          <v-card-title class="pa-6 pb-4 d-flex align-center">
-            <v-icon start class="mr-3 text-primary"
-              >mdi-format-list-bulleted</v-icon
-            >
-            <span class="text-h6 font-weight-bold">Categories</span>
-          </v-card-title>
+          <div class="flex items-center p-6 pb-4">
+            <List class="mr-3 h-6 w-6 text-primary" />
+            <span class="text-lg font-bold">Categories</span>
+          </div>
 
-          <v-list density="comfortable" class="pa-0 bg-transparent">
+          <div class="pb-2">
             <template v-for="(category, index) in bookSubjects" :key="index">
               <!-- Categories with subcategories -->
-              <v-list-group v-if="category.subcategories" class="mb-2">
-                <template v-slot:activator="{ props }">
-                  <v-list-item v-bind="props" class="rounded-lg mx-2">
-                    <template v-slot:prepend>
-                      <v-icon size="20" color="grey-darken-1"
-                        >mdi-book-outline</v-icon
-                      >
-                    </template>
-                    <v-list-item-title class="text-body-1 font-weight-medium">{{
-                      category.category
-                    }}</v-list-item-title>
-                  </v-list-item>
-                </template>
-
-                <template
-                  v-for="(subcategory, subIndex) in category.subcategories"
-                  :key="subIndex"
+              <div v-if="category.subcategories" class="mb-2">
+                <button
+                  type="button"
+                  class="mx-2 flex w-[calc(100%-1rem)] items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted"
+                  @click="toggleCategory(index)"
                 >
-                  <v-list-item
-                    @click="
-                      $router.push(
-                        `/subjects/${encodeURIComponent(
-                          subcategory.toLowerCase()
-                        )}`
-                      )
-                    "
-                    class="category-item mx-2 rounded-lg"
-                    :class="{
-                      'bg-primary-lighten-5':
-                        $route.params.subject === subcategory.toLowerCase(),
-                    }"
-                  >
-                    <v-list-item-title class="text-body-2 font-weight-medium">{{
-                      subcategory
-                    }}</v-list-item-title>
-                  </v-list-item>
+                  <BookIcon class="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <span class="grow text-base font-medium">{{
+                    category.category
+                  }}</span>
+                  <ChevronDown
+                    class="h-4 w-4 shrink-0 text-muted-foreground transition-transform"
+                    :class="{ 'rotate-180': openedCategories[index] }"
+                  />
+                </button>
 
-                  <v-divider
-                    v-if="subIndex < category.subcategories.length - 1"
-                    class="mx-4 opacity-25"
-                  ></v-divider>
+                <template v-if="openedCategories[index]">
+                  <template
+                    v-for="(subcategory, subIndex) in category.subcategories"
+                    :key="subIndex"
+                  >
+                    <button
+                      type="button"
+                      class="mx-2 flex w-[calc(100%-1rem)] items-center rounded-lg px-3 py-2 pl-11 text-left text-sm font-medium transition-all hover:translate-x-1 hover:bg-primary/10"
+                      :class="{
+                        'bg-primary/10 text-primary':
+                          route.params.subject === subcategory.toLowerCase(),
+                      }"
+                      @click="
+                        router.push(
+                          `/subjects/${encodeURIComponent(
+                            subcategory.toLowerCase()
+                          )}`
+                        )
+                      "
+                    >
+                      {{ subcategory }}
+                    </button>
+
+                    <div
+                      v-if="subIndex < category.subcategories.length - 1"
+                      class="mx-4 h-px bg-border opacity-25"
+                    />
+                  </template>
                 </template>
-              </v-list-group>
+              </div>
 
               <!-- Categories without subcategories -->
-              <v-list-item
+              <button
                 v-else
+                type="button"
+                class="mx-2 mb-2 flex w-[calc(100%-1rem)] items-center gap-3 rounded-lg px-3 py-2 text-left transition-all hover:translate-x-1 hover:bg-primary/10"
+                :class="{
+                  'bg-primary/10 text-primary':
+                    route.params.subject === category.category.toLowerCase(),
+                }"
                 @click="
-                  $router.push(
+                  router.push(
                     `/subjects/${encodeURIComponent(
                       category.category.toLowerCase()
                     )}`
                   )
                 "
-                class="category-item mx-2 rounded-lg mb-2"
-                :class="{
-                  'bg-primary-lighten-5':
-                    $route.params.subject === category.category.toLowerCase(),
-                }"
               >
-                <template v-slot:prepend>
-                  <v-icon size="20" color="grey-darken-1"
-                    >mdi-book-outline</v-icon
-                  >
-                </template>
-                <v-list-item-title class="text-body-1 font-weight-medium">{{
+                <BookIcon class="h-5 w-5 shrink-0 text-muted-foreground" />
+                <span class="text-base font-medium">{{
                   category.category
-                }}</v-list-item-title>
-              </v-list-item>
+                }}</span>
+              </button>
 
-              <v-divider
+              <div
                 v-if="index < bookSubjects.length - 1"
-                class="mx-4 my-2 opacity-25"
-              ></v-divider>
+                class="mx-4 my-2 h-px bg-border opacity-25"
+              />
             </template>
-          </v-list>
+          </div>
 
-          <v-divider class="mx-4 my-4"></v-divider>
+          <div class="mx-4 my-4 h-px bg-border" />
 
           <!-- Price Section -->
-          <v-card-title class="pa-6 pb-4 d-flex align-center">
-            <v-icon start class="mr-3 text-primary">mdi-currency-usd</v-icon>
-            <span class="text-h6 font-weight-bold">Price Range</span>
-          </v-card-title>
+          <div class="flex items-center p-6 pb-4">
+            <DollarSign class="mr-3 h-6 w-6 text-primary" />
+            <span class="text-lg font-bold">Price Range</span>
+          </div>
 
-          <v-card-text class="pa-6 pt-0">
-            <v-checkbox
+          <div class="p-6 pt-0">
+            <UiCheckbox
               v-for="(price, i) in prices"
               :key="i"
-              v-model="selectedPrice"
               :label="price"
-              :value="price"
-              density="comfortable"
-              hide-details
               class="mb-3"
-              color="primary"
-            ></v-checkbox>
-          </v-card-text>
-        </v-card>
-      </v-col>
+              :model-value="selectedPrice === price"
+              @update:model-value="selectedPrice = $event ? price : ''"
+            />
+          </div>
+        </div>
+      </div>
 
       <!-- Enhanced Books List -->
-      <v-col cols="12" sm="9">
-        <v-card elevation="2" rounded="xl" class="h-100">
+      <div class="col-span-12 sm:col-span-9">
+        <div class="h-full rounded-xl border border-border bg-card shadow">
           <!-- Enhanced Header -->
-          <v-card-title class="pa-6 pb-4">
-            <div class="d-flex justify-space-between align-center w-100">
-              <div class="d-flex align-center">
-                <v-icon class="mr-3 text-primary" size="28"
-                  >mdi-book-multiple</v-icon
+          <div class="p-6 pb-4">
+            <div class="flex w-full flex-wrap items-center justify-between gap-4">
+              <div class="flex items-center">
+                <Library class="mr-3 h-7 w-7 text-primary" />
+                <span class="text-2xl font-bold">Our Collection</span>
+                <UiBadge
+                  v-if="route.params.subject"
+                  class="ml-4 text-sm font-medium"
                 >
-                <span class="text-h5 font-weight-bold">Our Collection</span>
-                <v-chip
-                  v-if="$route.params.subject"
-                  color="primary"
-                  variant="flat"
-                  class="ml-4 text-body-2 font-weight-medium"
-                  size="small"
-                >
-                  {{
-                    $route.params.subject
-                      .replace(/-/g, " ")
-                      .replace(/\b\w/g, (l) => l.toUpperCase())
-                  }}
-                </v-chip>
+                  {{ formattedSubject }}
+                </UiBadge>
               </div>
 
               <!-- Enhanced Sort Dropdown -->
-              <div class="d-flex align-center">
-                <span class="text-body-1 mr-3 font-weight-medium">Sort by</span>
-                <v-select
-                  v-model="sortBy"
-                  :items="items"
-                  item-title="title"
-                  item-value="title"
-                  variant="outlined"
-                  density="compact"
-                  class="text-body-2 font-weight-medium"
-                  style="min-width: 150px"
-                  hide-details
-                ></v-select>
+              <div class="flex items-center">
+                <span class="mr-3 text-base font-medium">Sort by</span>
+                <UiSelect v-model="sortBy">
+                  <UiSelectTrigger class="min-w-[150px] text-sm font-medium">
+                    <UiSelectValue placeholder="Sort by" />
+                  </UiSelectTrigger>
+                  <UiSelectContent>
+                    <UiSelectItem v-for="item in items" :key="item" :value="item">
+                      {{ item }}
+                    </UiSelectItem>
+                  </UiSelectContent>
+                </UiSelect>
               </div>
             </div>
-          </v-card-title>
+          </div>
 
-          <v-card-text class="pa-6 pt-0">
+          <div class="p-6 pt-0">
             <!-- Enhanced Loading Indicator -->
             <div
-              class="d-flex justify-center py-16"
               v-if="isLoading && paginatedBooks.length === 0"
+              class="flex justify-center py-16"
             >
               <div class="text-center">
-                <v-progress-circular
-                  indeterminate
-                  color="primary"
-                  size="64"
-                  width="6"
-                  class="mb-6"
-                ></v-progress-circular>
-                <div class="text-h6 text-grey-darken-1 font-weight-medium">
+                <UiSpinner size="xl" class="mx-auto mb-6 text-primary" />
+                <div class="text-lg font-medium text-muted-foreground">
                   Loading books...
                 </div>
-                <div class="text-body-2 text-grey-darken-2 mt-2">
+                <div class="mt-2 text-sm text-muted-foreground">
                   Please wait while we fetch your collection
                 </div>
               </div>
             </div>
 
             <!-- Enhanced Books Grid -->
-            <v-row v-else>
-              <v-col
+            <div v-else class="grid grid-cols-12 gap-4">
+              <div
                 v-for="(book, i) in paginatedBooks"
                 :key="i"
-                cols="12"
-                sm="6"
-                md="4"
-                lg="3"
-                class="mb-6"
+                class="col-span-12 mb-6 sm:col-span-6 md:col-span-4 lg:col-span-3"
               >
-                <v-card
-                  class="book-card h-100"
-                  elevation="3"
-                  rounded="xl"
-                  hover
+                <div
+                  class="group flex h-full flex-col overflow-hidden rounded-xl border border-transparent bg-card shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl"
                 >
-                  <div class="position-relative book-cover-container">
-                    <div class="book-cover-wrapper">
+                  <div
+                    class="relative flex min-h-[320px] items-center justify-center bg-gradient-to-br from-muted/60 to-muted p-5"
+                  >
+                    <div
+                      class="relative aspect-[2/3] w-[70%] max-w-[200px] overflow-hidden shadow-lg transition-all duration-500 group-hover:-translate-y-2 group-hover:scale-105 group-hover:shadow-2xl"
+                    >
                       <img
                         v-if="book?.cover_url"
-                        class="cursor-pointer book-cover-image"
-                        @click="$router.push(`/details/${book._id}`)"
+                        class="block h-full w-full cursor-pointer object-cover"
                         :src="book.cover_url"
                         :alt="book.title"
+                        @click="router.push(`/details/${book._id}`)"
                       />
                     </div>
 
                     <!-- Enhanced Wishlist Button -->
-                    <v-btn
-                      icon
-                      variant="flat"
-                      color="white"
-                      :ripple="false"
-                      size="small"
-                      class="position-absolute top-0 right-0 mt-3 mr-3"
-                      elevation="4"
+                    <button
+                      type="button"
+                      class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-105 dark:bg-card"
+                      :aria-label="
+                        isFavorite(book._id)
+                          ? 'Remove from favorites'
+                          : 'Add to favorites'
+                      "
                       @click.stop="toggleFavoriteBook(book._id)"
                     >
-                      <v-icon
-                        :color="isFavorite(book._id) ? 'red' : 'grey-darken-2'"
-                        size="24"
-                      >
-                        {{
+                      <Heart
+                        class="h-6 w-6"
+                        :class="
                           isFavorite(book._id)
-                            ? "mdi-heart"
-                            : "mdi-heart-outline"
-                        }}
-                      </v-icon>
-                    </v-btn>
+                            ? 'fill-current text-red-500'
+                            : 'text-muted-foreground'
+                        "
+                      />
+                    </button>
 
                     <!-- Price Badge -->
-                    <v-chip
-                      color="primary"
-                      variant="flat"
-                      size="small"
-                      class="position-absolute bottom-0 left-0 ml-3 mb-3"
-                      elevation="2"
-                    >
+                    <UiBadge class="absolute bottom-3 left-3 shadow">
                       ${{ book.price }}
-                    </v-chip>
+                    </UiBadge>
                   </div>
 
-                  <v-card-text class="pa-4">
+                  <div class="grow p-4">
                     <!-- Enhanced Rating -->
-                    <div class="d-flex align-center mb-3">
-                      <v-rating
-                        :model-value="book.rating"
-                        color="amber"
-                        density="compact"
-                        size="small"
+                    <div class="mb-3 flex items-center">
+                      <UiRating
+                        :model-value="book.rating || 0"
+                        :size="16"
                         readonly
                         class="mr-2"
-                      ></v-rating>
-                      <!-- <span
-                        class="text-caption text-grey-darken-1 font-weight-medium"
-                        >{{ book.reviews }} reviews</span
-                      > -->
+                      />
                     </div>
 
                     <!-- Enhanced Title -->
                     <div
-                      class="text-subtitle-1 font-weight-bold mb-2 text-truncate cursor-pointer"
-                      @click="$router.push(`/details/${book._id}`)"
+                      class="mb-2 cursor-pointer truncate text-base font-bold"
+                      @click="router.push(`/details/${book._id}`)"
                     >
                       {{ book.title }}
                     </div>
 
                     <!-- Author -->
-                    <div class="text-body-2 text-grey-darken-1 mb-3">
+                    <div class="mb-3 text-sm text-muted-foreground">
                       by {{ book.authors[0] || "Unknown Author" }}
                     </div>
 
                     <!-- Sold Count -->
-                    <v-chip
-                      size="x-small"
-                      variant="flat"
-                      color="success"
-                      class="mb-2"
-                    >
-                      <v-icon start size="x-small">mdi-fire</v-icon>
+                    <UiBadge variant="success" class="mb-2 text-[10px]">
+                      <Flame class="h-3 w-3" />
                       Sold {{ book.sold || 0 }}
-                    </v-chip>
-                  </v-card-text>
+                    </UiBadge>
+                  </div>
 
                   <!-- Enhanced Card Actions -->
-                  <v-card-actions class="pa-4 pt-0">
-                    <v-btn
-                      color="primary"
-                      variant="flat"
-                      size="large"
+                  <div class="p-4 pt-0">
+                    <UiButton
+                      size="lg"
                       block
-                      rounded="lg"
-                      class="text-body-2 font-weight-bold"
-                      prepend-icon="mdi-cart-plus"
+                      class="rounded-lg text-sm font-bold"
                     >
+                      <ShoppingCart class="h-5 w-5" />
                       Add to Cart
-                    </v-btn>
-                  </v-card-actions>
-                </v-card>
-              </v-col>
-            </v-row>
+                    </UiButton>
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <!-- No Books Message -->
             <div
               v-if="!isLoading && paginatedBooks.length === 0"
-              class="text-center py-16"
+              class="py-16 text-center"
             >
-              <v-icon size="80" color="grey-lighten-2" class="mb-6"
-                >mdi-book-open-variant</v-icon
-              >
-              <h3 class="text-h5 font-weight-bold mb-3">No books found</h3>
-              <p class="text-body-1 text-grey-darken-1 mb-6">
+              <BookOpen
+                class="mx-auto mb-6 h-20 w-20 text-muted-foreground/40"
+              />
+              <h3 class="mb-3 text-2xl font-bold">No books found</h3>
+              <p class="mb-6 text-base text-muted-foreground">
                 We couldn't find any books in this category. Try selecting a
                 different category or check back later.
               </p>
-              <v-btn
-                color="primary"
-                variant="flat"
-                size="large"
-                rounded="lg"
-                to="/"
-              >
-                Browse All Books
-              </v-btn>
+              <NuxtLink to="/">
+                <UiButton size="lg" class="rounded-lg">
+                  Browse All Books
+                </UiButton>
+              </NuxtLink>
             </div>
-          </v-card-text>
-        </v-card>
-      </v-col>
-    </v-row>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Enhanced Pagination -->
-    <div class="d-flex justify-center align-center mt-8">
-      <v-pagination
-        v-model="page"
-        :length="totalPages"
-        :total-visible="7"
-        rounded="lg"
-        color="primary"
-        variant="outlined"
-        class="d-flex align-center"
-        size="large"
+    <div class="mt-8 flex items-center justify-center">
+      <UiPagination
+        v-slot="{ page: currentPage }"
+        v-model:page="page"
+        :total="filteredSubject.length"
+        :items-per-page="itemsPerPage"
+        :sibling-count="1"
+        show-edges
       >
-        <template v-slot:prev>
-          <div class="d-flex justify-center align-center h-100">
-            <v-icon>mdi-chevron-left</v-icon>
-          </div>
-        </template>
-        <template v-slot:next>
-          <div class="d-flex justify-center align-center h-100">
-            <v-icon>mdi-chevron-right</v-icon>
-          </div>
-        </template>
-      </v-pagination>
+        <UiPaginationContent v-slot="{ items: pageItems }">
+          <UiPaginationPrevious />
+          <template v-for="(pageItem, index) in pageItems">
+            <UiPaginationItem
+              v-if="pageItem.type === 'page'"
+              :key="index"
+              :value="pageItem.value"
+              :is-active="pageItem.value === currentPage"
+            >
+              {{ pageItem.value }}
+            </UiPaginationItem>
+            <UiPaginationEllipsis
+              v-else
+              :key="pageItem.type"
+              :index="index"
+            />
+          </template>
+          <UiPaginationNext />
+        </UiPaginationContent>
+      </UiPagination>
     </div>
-  </v-container>
+  </div>
 </template>
 
-<script>
-import { mapState, mapActions } from "vuex";
-import { bookSubjects } from "@/constants/bookSubjects.js";
-export default {
-  data() {
-    return {
-      isLoading: false,
-      items: [
-        { title: "Newest" },
-        { title: "From A to Z" },
-        { title: "From Z to A" },
-      ],
-      bookSubjects,
-      prices: ["Under $10", "$10 - $20", "$20 - $30", "Above $50"],
-      selectedPrice: "",
-      page: 1,
-      itemsPerPage: 12,
-      sortBy: "Newest",
-    };
-  },
-  computed: {
-    ...mapState("book", ["books"]),
-    ...mapState("favorite", ["favorites"]),
-    paginatedBooks() {
-      const start = (this.page - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.filteredSubject.slice(start, end);
-    },
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useBookStore } from "@/stores/book";
+import { useFavoriteStore } from "@/stores/favorite";
+import {
+  Book as BookIcon,
+  BookOpen,
+  ChevronDown,
+  DollarSign,
+  Flame,
+  Heart,
+  Library,
+  List,
+  ShoppingCart,
+} from "lucide-vue-next";
+import { bookSubjects } from "@/constants/bookSubjects";
 
-    totalPages() {
-      return Math.ceil(this.filteredSubject.length / this.itemsPerPage);
-    },
-    filteredSubject() {
-      let filtered = [...this.books];
+const route = useRoute();
+const router = useRouter();
 
-      if (this.sortBy === "Newest") {
-        filtered.sort(
-          (a, b) => new Date(b.publishedDate) - new Date(a.publishedDate)
-        );
-      } else if (this.sortBy === "From A to Z") {
-        filtered.sort((a, b) => a.title.localeCompare(b.title));
-      } else if (this.sortBy === "From Z to A") {
-        filtered.sort((a, b) => b.title.localeCompare(a.title));
-      }
+const bookStore = useBookStore();
+const favoriteStore = useFavoriteStore();
 
-      if (this.selectedPrice) {
-        filtered = filtered.filter((book) => {
-          const price = book.price;
-          switch (this.selectedPrice) {
-            case "Under $10":
-              return price < 10;
-            case "$10 - $20":
-              return price >= 10 && price <= 20;
-            case "$20 - $30":
-              return price >= 20 && price <= 30;
-            case "Above $50":
-              return price > 50;
-            default:
-              return true;
-          }
-        });
+const { books } = storeToRefs(bookStore);
+const { favorites } = storeToRefs(favoriteStore);
+
+const isLoading = ref(false);
+const items = ["Newest", "From A to Z", "From Z to A"];
+const prices = ["Under $10", "$10 - $20", "$20 - $30", "Above $50"];
+const selectedPrice = ref("");
+const page = ref(1);
+const itemsPerPage = 12;
+const sortBy = ref("Newest");
+const openedCategories = ref<Record<number, boolean>>({});
+
+function toggleCategory(index: number) {
+  openedCategories.value[index] = !openedCategories.value[index];
+}
+
+const filteredSubject = computed(() => {
+  let filtered = [...books.value];
+
+  if (sortBy.value === "Newest") {
+    filtered.sort(
+      (a, b) =>
+        new Date((b as any).publishedDate).getTime() -
+        new Date((a as any).publishedDate).getTime()
+    );
+  } else if (sortBy.value === "From A to Z") {
+    filtered.sort((a, b) => a.title.localeCompare(b.title));
+  } else if (sortBy.value === "From Z to A") {
+    filtered.sort((a, b) => b.title.localeCompare(a.title));
+  }
+
+  if (selectedPrice.value) {
+    filtered = filtered.filter((book) => {
+      const price = book.price;
+      switch (selectedPrice.value) {
+        case "Under $10":
+          return price < 10;
+        case "$10 - $20":
+          return price >= 10 && price <= 20;
+        case "$20 - $30":
+          return price >= 20 && price <= 30;
+        case "Above $50":
+          return price > 50;
+        default:
+          return true;
       }
-      return filtered;
-    },
+    });
+  }
+  return filtered;
+});
+
+const paginatedBooks = computed(() => {
+  const start = (page.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredSubject.value.slice(start, end);
+});
+
+const formattedSubject = computed(() => {
+  const subject = route.params.subject as string | undefined;
+  if (!subject) return "";
+  return subject.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+});
+
+async function fetchBooks() {
+  isLoading.value = true;
+  try {
+    const subject = route.params.subject as string;
+    if (subject) {
+      await bookStore.getAllBooks({ subject });
+    }
+  } catch (error) {
+    console.error("Error fetching books:", error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function fetchFavorites() {
+  try {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      await favoriteStore.getFavoritesForEachUser();
+    }
+  } catch (error) {
+    console.error("Error fetching favorites:", error);
+  }
+}
+
+async function toggleFavoriteBook(bookId: string) {
+  try {
+    await favoriteStore.toggleFavorites(bookId);
+  } catch (error) {
+    console.error("Error toggling favorite:", error);
+  }
+}
+
+function isFavorite(bookId: string) {
+  return favorites.value.some((favorite: any) => {
+    // Handle case where bookId is populated (contains full book object)
+    const favoriteBookId = favorite.bookId?._id || favorite.bookId;
+    return favoriteBookId === bookId;
+  });
+}
+
+onMounted(async () => {
+  await fetchBooks();
+  await fetchFavorites();
+});
+
+watch(
+  () => route.params.subject,
+  () => {
+    page.value = 1;
+    fetchBooks();
   },
-  methods: {
-    ...mapActions("book", ["getAllBooks"]),
-    ...mapActions("favorite", ["toggleFavorites", "getFavoritesForEachUser"]),
-    async fetchBooks() {
-      this.isLoading = true;
-      try {
-        const subject = this.$route.params.subject;
-        // console.log("Subject:", subject);
-        if (subject) {
-          await this.getAllBooks({ subject: subject }, false);
-        }
-        // console.log("Books:", this.books);
-      } catch (error) {
-        console.error("Error fetching books:", error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    async fetchFavorites() {
-      try {
-        const token = localStorage.getItem("accessToken");
-        if (token) {
-          await this.getFavoritesForEachUser();
-        }
-      } catch (error) {
-        console.error("Error fetching favorites:", error);
-      }
-    },
-    async toggleFavoriteBook(bookId) {
-      try {
-        await this.toggleFavorites(bookId);
-      } catch (error) {
-        console.error("Error toggling favorite:", error);
-      }
-    },
-    isFavorite(bookId) {
-      return this.favorites.some((favorite) => {
-        // Handle case where bookId is populated (contains full book object)
-        const favoriteBookId = favorite.bookId?._id || favorite.bookId;
-        return favoriteBookId === bookId;
-      });
-    },
-  },
-  async mounted() {
-    await this.fetchBooks();
-    await this.fetchFavorites();
-  },
-  watch: {
-    "$route.params.subject": {
-      handler() {
-        this.page = 1;
-        this.fetchBooks();
-      },
-      immediate: true,
-    },
-  },
-};
+  { immediate: true }
+);
 </script>
-
-<style scoped>
-.custom-btn:hover {
-  color: #f4ce70 !important;
-}
-
-/* .sticky-sidebar {
-  position: sticky;
-  top: 24px;
-} */
-
-.category-item {
-  transition: all 0.2s ease;
-}
-
-.category-item:hover {
-  background-color: rgba(var(--v-theme-primary), 0.08) !important;
-  transform: translateX(4px);
-}
-
-.book-card {
-  transition: all 0.3s ease;
-  border: 1px solid transparent;
-}
-
-.book-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
-  border-color: rgba(var(--v-theme-primary), 0.2);
-}
-
-.book-cover-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  padding: 20px;
-  min-height: 320px;
-  position: relative;
-}
-
-.book-cover-wrapper {
-  width: 70%;
-  max-width: 200px;
-  aspect-ratio: 2/3;
-  position: relative;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.book-cover-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.3s ease;
-}
-
-.book-card:hover .book-cover-wrapper {
-  transform: translateY(-8px) scale(1.05);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
-}
-
-.cursor-pointer {
-  cursor: pointer;
-}
-
-/* Enhanced focus states for accessibility */
-.v-list-item:focus-visible {
-  outline: 2px solid var(--v-theme-primary);
-  outline-offset: 2px;
-}
-
-.v-btn:focus-visible {
-  outline: 2px solid var(--v-theme-primary);
-  outline-offset: 2px;
-}
-</style>

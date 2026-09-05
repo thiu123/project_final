@@ -1,363 +1,217 @@
 <template>
-  <v-container max-width="1440" class="mt-4 mt-md-8 px-3 px-md-4">
-    <v-card
-      elevation="12"
-      class="pa-4 pa-md-8 best-sellers-card"
-      style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
+  <div class="container mx-auto mt-4 max-w-[1440px] px-3 md:mt-8 md:px-4">
+    <div
+      class="rounded-xl border border-border bg-gradient-to-br from-card to-muted/60 p-4 shadow-lg md:p-8"
     >
       <!-- Enhanced Header -->
       <div
-        class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center mb-4 mb-md-8 border-b"
+        class="mb-4 flex flex-col items-start justify-between border-b border-border pb-4 md:mb-8 md:flex-row md:items-center"
       >
-        <div class="d-flex align-center mb-4 mb-md-0">
+        <div class="mb-4 flex items-center md:mb-0">
           <div>
             <h2
-              class="text-h5 text-md-h3 text-customblack font-weight-bold mb-2"
+              class="mb-2 text-2xl font-bold text-foreground md:text-4xl"
             >
               Trending Best Sellers
             </h2>
-            <p
-              class="text-caption text-md-subtitle-1 text-medium-emphasis ma-0"
-            >
+            <p class="m-0 text-xs text-muted-foreground md:text-base">
               Discover our most popular titles across all categories
             </p>
           </div>
         </div>
-
-        <!-- <v-btn
-          color="waterblue"
-          variant="outlined"
-          rounded="xl"
-          class="font-weight-bold"
-          :size="$vuetify.display.mobile ? 'small' : 'large'"
-        >
-          <v-icon start :size="$vuetify.display.mobile ? 'x-small' : 'small'"
-            >mdi-eye</v-icon
-          >
-          <span class="d-none d-sm-inline">View All</span>
-          <span class="d-inline d-sm-none">View</span>
-        </v-btn> -->
       </div>
 
-      <v-row>
-        <v-col cols="12" class="pa-0">
-          <!-- Enhanced Tabs Card -->
-          <v-card class="overflow-hidden">
-            <!-- Enhanced Tabs Navigation -->
-            <v-tabs
-              v-model="tab"
-              color="waterblue"
-              :align-tabs="$vuetify.display.mobile ? 'center' : 'start'"
-              class="enhanced-tabs"
-              bg-color="grey-lighten-5"
-              slider-color="waterblue"
-              :height="$vuetify.display.mobile ? '56' : '72'"
-              :show-arrows="$vuetify.display.mobile"
+      <!-- Enhanced Tabs Card -->
+      <div class="overflow-hidden rounded-lg border border-border bg-card">
+        <!-- Tabs Navigation -->
+        <div
+          class="flex overflow-x-auto border-b border-border bg-muted/50"
+          role="tablist"
+        >
+          <button
+            v-for="(subject, i) in bestSellerSubjects"
+            :key="i"
+            type="button"
+            role="tab"
+            :aria-selected="tab === subject"
+            class="shrink-0 whitespace-nowrap border-b-2 px-3 py-3 text-xs font-bold capitalize transition-colors md:px-6 md:py-5 md:text-base"
+            :class="
+              tab === subject
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:bg-muted hover:text-foreground'
+            "
+            @click="tab = subject"
+          >
+            {{ subject }}
+          </button>
+        </div>
+
+        <!-- Tabs Content -->
+        <div class="p-3 md:p-6">
+          <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+            <div
+              v-for="(book, i) in bestSellersStories.slice(0, 8)"
+              :key="i"
+              class="group relative flex h-full cursor-pointer flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+              @click="router.push(`/details/${book._id}`)"
             >
-              <v-tab
-                v-for="(subject, i) in bestSellerSubjects"
-                :key="i"
-                :value="subject"
-                class="text-capitalize font-weight-bold tab-item"
-                rounded="lg"
+              <!-- Bestseller Badge -->
+              <UiBadge
+                variant="destructive"
+                class="absolute left-2 top-2 z-[2] shadow md:left-3 md:top-3"
               >
-                {{ subject }}
-              </v-tab>
-            </v-tabs>
+                <Flame class="h-3 w-3" />
+                #{{ i + 1 }}
+              </UiBadge>
 
-            <!-- Enhanced Tabs Content -->
-            <v-tabs-window class="pa-3 pa-md-6" v-model="tab">
-              <v-tabs-window-item
-                v-for="subject in bestSellerSubjects"
-                :key="subject"
-                :value="subject"
-                class="tab-content"
+              <!-- Enhanced Book Cover -->
+              <div
+                class="relative flex h-[200px] items-center justify-center bg-muted/40 md:h-[280px] lg:h-[340px]"
               >
-                <v-row>
-                  <v-col
-                    v-for="(book, i) in bestSellersStories.slice(0, 8)"
-                    :key="i"
-                    cols="6"
-                    sm="6"
-                    md="3"
-                  >
-                    <!-- Enhanced Book Card -->
-                    <v-card
-                      class="book-card h-100 position-relative cursor-pointer"
-                      @click="$router.push(`/details/${book._id}`)"
-                      hover
-                    >
-                      <!-- Bestseller Badge -->
-                      <v-chip
-                        color="red"
-                        :size="$vuetify.display.mobile ? 'x-small' : 'small'"
-                        class="bestseller-badge"
-                        variant="elevated"
-                      >
-                        <v-icon start size="x-small">mdi-fire</v-icon>
-                        #{{ i + 1 }}
-                      </v-chip>
+                <img
+                  :src="book?.cover_url"
+                  :alt="book.title"
+                  class="h-full max-h-[180px] w-auto object-cover transition-transform duration-300 group-hover:scale-105 md:max-h-[260px] lg:max-h-[320px]"
+                />
+              </div>
 
-                      <!-- Enhanced Book Cover -->
-                      <div class="position-relative book-cover-container">
-                        <img :src="book?.cover_url" cover class="book-cover" />
-                      </div>
-
-                      <!-- Enhanced Card Content -->
-                      <v-card-text class="pa-2 pa-md-4 d-flex flex-column">
-                        <!-- Rating Section -->
-                        <div class="d-flex align-center mb-2 mb-md-3">
-                          <v-rating
-                            :model-value="book?.rating"
-                            color="amber"
-                            density="compact"
-                            :size="
-                              $vuetify.display.mobile ? 'x-small' : 'small'
-                            "
-                            readonly
-                            half-increments
-                          ></v-rating>
-                        </div>
-
-                        <!-- Book Title -->
-                        <div
-                          class="text-caption text-md-subtitle-1 text-truncate font-weight-bold mb-1 mb-md-2 text-customblack"
-                          :title="book.title"
-                        >
-                          {{ book.title }}
-                        </div>
-
-                        <!-- Author -->
-                        <div
-                          v-for="(author, index) in book.authors?.slice(0, 1)"
-                          :key="index"
-                          class="text-caption text-medium-emphasis mb-2 mb-md-3"
-                        >
-                          <span class="text-truncate d-block">{{
-                            author
-                          }}</span>
-                        </div>
-
-                        <!-- Genre Tag & Sold Count -->
-                        <div
-                          class="d-flex flex-column flex-md-row ga-1 ga-md-2 mb-2 mb-md-3"
-                        >
-                          <v-chip
-                            :size="
-                              $vuetify.display.mobile ? 'x-small' : 'small'
-                            "
-                            variant="outlined"
-                            color="waterblue"
-                            class="text-capitalize"
-                          >
-                            {{ subject }}
-                          </v-chip>
-                          <v-chip
-                            :size="
-                              $vuetify.display.mobile ? 'x-small' : 'small'
-                            "
-                            variant="flat"
-                            color="success"
-                            class="text-capitalize"
-                          >
-                            <v-icon start size="x-small">mdi-fire</v-icon>
-                            Sold {{ book.sold || 0 }}
-                          </v-chip>
-                        </div>
-
-                        <v-spacer></v-spacer>
-
-                        <!-- Price Section -->
-                        <div
-                          class="d-flex justify-space-between align-center mb-2 mb-md-3"
-                        >
-                          <div class="d-flex align-center">
-                            <span
-                              class="text-subtitle-2 text-md-h6 font-weight-bold text-customblack"
-                            >
-                              ${{ book.price }}
-                            </span>
-                          </div>
-                        </div>
-                      </v-card-text>
-
-                      <!-- Enhanced Card Actions -->
-                      <v-card-actions class="pa-2 pa-md-4 pt-0">
-                        <v-btn
-                          block
-                          color="darkgreen"
-                          variant="elevated"
-                          :size="$vuetify.display.mobile ? 'small' : 'large'"
-                          class="font-weight-bold rounded-xl add-to-cart-btn"
-                          elevation="2"
-                          @click.stop="handleAddToCart(book._id, 1)"
-                        >
-                          <v-icon
-                            start
-                            :size="
-                              $vuetify.display.mobile ? 'x-small' : 'small'
-                            "
-                            >mdi-cart-plus</v-icon
-                          >
-                          <span class="d-none d-sm-inline">Add to Cart</span>
-                          <span class="d-inline d-sm-none">Add</span>
-                        </v-btn>
-                      </v-card-actions>
-                    </v-card>
-                  </v-col>
-                </v-row>
-
-                <!-- Load More Section -->
-                <div class="text-center mt-6 mt-md-8">
-                  <v-btn
-                    color="waterblue"
-                    variant="outlined"
-                    :size="$vuetify.display.mobile ? 'default' : 'large'"
-                    rounded="xl"
-                    class="font-weight-bold"
-                  >
-                    <v-icon start>mdi-plus</v-icon>
-                    Load More Books
-                  </v-btn>
+              <!-- Enhanced Card Content -->
+              <div class="flex flex-1 flex-col p-2 md:p-4">
+                <!-- Rating Section -->
+                <div class="mb-2 flex items-center md:mb-3">
+                  <UiRating
+                    :model-value="book?.rating ?? 0"
+                    :size="16"
+                    readonly
+                  />
                 </div>
-              </v-tabs-window-item>
-            </v-tabs-window>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-card>
-  </v-container>
+
+                <!-- Book Title -->
+                <div
+                  class="mb-1 truncate text-xs font-bold text-foreground md:mb-2 md:text-base"
+                  :title="book.title"
+                >
+                  {{ book.title }}
+                </div>
+
+                <!-- Author -->
+                <div
+                  v-for="(author, index) in book.authors?.slice(0, 1)"
+                  :key="index"
+                  class="mb-2 text-xs text-muted-foreground md:mb-3"
+                >
+                  <span class="block truncate">{{ author }}</span>
+                </div>
+
+                <!-- Genre Tag & Sold Count -->
+                <div
+                  class="mb-2 flex flex-col gap-1 md:mb-3 md:flex-row md:gap-2"
+                >
+                  <UiBadge
+                    variant="outline"
+                    class="self-start border-primary/50 capitalize text-primary"
+                  >
+                    {{ tab }}
+                  </UiBadge>
+                  <UiBadge variant="success" class="self-start capitalize">
+                    <Flame class="h-3 w-3" />
+                    Sold {{ book.sold || 0 }}
+                  </UiBadge>
+                </div>
+
+                <!-- Price Section -->
+                <div
+                  class="mb-2 mt-auto flex items-center justify-between md:mb-3"
+                >
+                  <div class="flex items-center">
+                    <span
+                      class="text-sm font-bold text-foreground md:text-lg"
+                    >
+                      ${{ book.price }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Enhanced Card Actions -->
+              <div class="p-2 pt-0 md:p-4 md:pt-0">
+                <UiButton
+                  block
+                  variant="secondary"
+                  class="h-8 rounded-xl text-xs font-bold shadow transition-transform hover:-translate-y-0.5 md:h-11 md:text-base"
+                  @click.stop="handleAddToCart(book._id, 1)"
+                >
+                  <ShoppingCart class="h-3 w-3 md:h-4 md:w-4" />
+                  <span class="hidden sm:inline">Add to Cart</span>
+                  <span class="inline sm:hidden">Add</span>
+                </UiButton>
+              </div>
+            </div>
+          </div>
+
+          <!-- Load More Section -->
+          <div class="mt-6 text-center md:mt-8">
+            <UiButton
+              variant="outline"
+              size="lg"
+              class="rounded-full border-primary font-bold text-primary hover:bg-primary/10 hover:text-primary"
+            >
+              <Plus class="h-4 w-4" />
+              Load More Books
+            </UiButton>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script>
-import { mapState } from "vuex";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useBookStore } from "@/stores/book";
+import { Flame, Plus, ShoppingCart } from "lucide-vue-next";
+import type { Book, Favorite } from "@/types";
 
-export default {
-  name: "BestSellingBooks",
-  props: {
-    favorites: {
-      type: Array,
-      default: () => [],
-    },
-  },
-  data() {
-    return {
-      tab: "historical fiction",
-      bestSellerSubjects: ["historical fiction", "manga", "cooking"],
-    };
-  },
-  computed: {
-    ...mapState("book", ["homeSubjects"]),
-    bestSellersStories() {
-      return this.homeSubjects[this.tab] || [];
-    },
-  },
-  methods: {
-    handleAddToCart(bookId, quantity) {
-      // Emit event to parent component
-      this.$emit("add-to-cart", bookId, quantity);
-    },
+const props = withDefaults(
+  defineProps<{
+    favorites?: Favorite[];
+  }>(),
+  {
+    favorites: () => [],
+  }
+);
 
-    handleToggleFavorites(bookId) {
-      // Emit event to parent component
-      this.$emit("toggle-favorites", bookId);
-    },
+const emit = defineEmits<{
+  "add-to-cart": [bookId: string, quantity: number];
+  "toggle-favorites": [bookId: string];
+}>();
 
-    isFavorite(bookId) {
-      return this.favorites.some((favorite) => {
-        const favoriteBookId = favorite.bookId?._id || favorite.bookId;
-        return favoriteBookId === bookId;
-      });
-    },
-  },
-};
+const router = useRouter();
+
+const bookStore = useBookStore();
+const { homeSubjects } = storeToRefs(bookStore);
+
+const tab = ref("historical fiction");
+const bestSellerSubjects = ["historical fiction", "manga", "cooking"];
+
+const bestSellersStories = computed<Book[]>(
+  () => homeSubjects.value[tab.value] || []
+);
+
+function handleAddToCart(bookId: string, quantity: number) {
+  // Emit event to parent component
+  emit("add-to-cart", bookId, quantity);
+}
+
+function handleToggleFavorites(bookId: string) {
+  // Emit event to parent component
+  emit("toggle-favorites", bookId);
+}
+
+function isFavorite(bookId: string): boolean {
+  return props.favorites.some((favorite) => {
+    const favoriteBookId = (favorite.bookId as Book)?._id || favorite.bookId;
+    return favoriteBookId === bookId;
+  });
+}
 </script>
-
-<style scoped>
-.position-relative {
-  position: relative;
-}
-
-.position-absolute {
-  position: absolute;
-}
-
-.best-sellers-card {
-  border: 1px solid #dee2e6;
-}
-
-.enhanced-tabs {
-  border-bottom: 1px solid #e9ecef;
-}
-
-.tab-item {
-  font-size: 1rem;
-  padding: 16px 24px;
-}
-
-.bestseller-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 2;
-}
-
-.book-cover-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 340px;
-}
-
-.book-cover {
-  width: auto;
-  height: 100%;
-  max-height: 320px;
-  object-fit: cover !important;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.add-to-cart-btn {
-  transition: all 0.2s ease;
-}
-
-.add-to-cart-btn:hover {
-  transform: translateY(-2px);
-}
-
-/* Responsive adjustments */
-@media (max-width: 959px) {
-  .book-cover-container {
-    height: 280px;
-  }
-
-  .book-cover {
-    max-height: 260px;
-  }
-}
-
-@media (max-width: 599px) {
-  .tab-item {
-    font-size: 0.75rem;
-    padding: 8px 12px;
-    min-width: auto;
-  }
-
-  .book-cover-container {
-    height: 200px;
-  }
-
-  .book-cover {
-    max-height: 180px;
-  }
-
-  .book-card {
-    margin-bottom: 12px;
-  }
-
-  .bestseller-badge {
-    top: 8px;
-    left: 8px;
-  }
-}
-</style>

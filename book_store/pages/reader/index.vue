@@ -1,19 +1,20 @@
 <template>
   <div>
-    <v-container v-if="!isLoadingBook && !book?.pdf_url" class="py-16">
-      <v-row justify="center">
-        <v-col cols="12" md="6" class="text-center">
-          <v-icon size="64" color="grey">mdi-file-document-alert-outline</v-icon>
-          <h2 class="text-h5 font-weight-bold mt-4 mb-2">
-            No ebook file available yet
-          </h2>
-          <p class="text-body-1 text-medium-emphasis">
-            This book doesn't have an ebook file uploaded yet. Please check
-            back later.
-          </p>
-        </v-col>
-      </v-row>
-    </v-container>
+    <div
+      v-if="!isLoadingBook && !book?.pdf_url"
+      class="container mx-auto px-4 py-16"
+    >
+      <div class="mx-auto max-w-xl text-center">
+        <FileWarning class="mx-auto h-16 w-16 text-muted-foreground" />
+        <h2 class="mb-2 mt-4 text-2xl font-bold">
+          No ebook file available yet
+        </h2>
+        <p class="text-base text-muted-foreground">
+          This book doesn't have an ebook file uploaded yet. Please check back
+          later.
+        </p>
+      </div>
+    </div>
 
     <EpubReader
       v-else-if="book?.pdf_url"
@@ -25,55 +26,48 @@
   </div>
 </template>
 
-<script>
-import { mapState, mapActions } from "vuex";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
+import { useOrderStore } from "@/stores/order";
+import { FileWarning } from "lucide-vue-next";
 import { getBookById } from "@/api/bookApi";
+import type { Book } from "@/types";
 
-export default {
-  data() {
-    return {
-      bookId: null,
-      book: null,
-      isLoadingBook: true,
-    };
-  },
+const route = useRoute();
+const authStore = useAuthStore();
+const orderStore = useOrderStore();
+const { currentUser } = storeToRefs(authStore);
+const { purchasedEbooks } = storeToRefs(orderStore);
 
-  computed: {
-    ...mapState("auth", ["currentUser"]),
-    ...mapState("order", ["purchasedEbooks"]),
+const bookId = ref<string | null>(null);
+const book = ref<Book | null>(null);
+const isLoadingBook = ref(true);
 
-    isLoggedIn() {
-      return this.currentUser !== null;
-    },
+const isLoggedIn = computed(() => currentUser.value !== null);
 
-    // ✅ Lấy purchase status từ store
-    hasPurchasedEbook() {
-      return this.purchasedEbooks[this.bookId] || false;
-    },
-  },
+// ✅ Lấy purchase status từ store
+const hasPurchasedEbook = computed(() =>
+  bookId.value ? purchasedEbooks.value[bookId.value] || false : false
+);
 
-  async mounted() {
-    // Lấy bookId từ query string
-    this.bookId = this.$route.query.bookId;
+onMounted(async () => {
+  // Lấy bookId từ query string
+  bookId.value = (route.query.bookId as string) || null;
 
-    if (this.bookId) {
-      try {
-        const response = await getBookById(this.bookId);
-        this.book = response.data;
-      } catch (error) {
-        console.error("Failed to load book:", error);
-      }
+  if (bookId.value) {
+    try {
+      const response = await getBookById(bookId.value);
+      book.value = response.data;
+    } catch (error: any) {
+      console.error("Failed to load book:", error);
     }
-    this.isLoadingBook = false;
+  }
+  isLoadingBook.value = false;
 
-    // Kiểm tra user đã login chưa
-    if (this.isLoggedIn && this.bookId) {
-      await this.checkEbookPurchase(this.bookId);
-    }
-  },
-
-  methods: {
-    ...mapActions("order", ["checkEbookPurchase"]),
-  },
-};
+  // Kiểm tra user đã login chưa
+  if (isLoggedIn.value && bookId.value) {
+    await orderStore.checkEbookPurchase(bookId.value);
+  }
+});
 </script>

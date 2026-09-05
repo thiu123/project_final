@@ -1,290 +1,283 @@
 <template>
-  <v-container class="h-screen position-relative" fluid>
-    <v-row class="h-100 d-flex justify-center align-center">
-      <v-col cols="12" sm="10" md="8" lg="7" xl="6">
-        <v-card class="elevation-12 rounded-lg overflow-hidden">
-          <v-row class="h-100">
+  <div class="relative h-screen w-full p-4">
+    <div class="flex h-full items-center justify-center">
+      <div class="w-full sm:w-10/12 md:w-8/12 lg:w-7/12 xl:w-6/12">
+        <UiCard class="overflow-hidden rounded-lg shadow-2xl">
+          <div class="grid grid-cols-12">
             <!-- Image section - hidden on xs screens -->
-            <v-col cols="12" md="6" class="pa-0 d-none d-md-block">
-              <div class="h-100 position-relative login-image-container">
-                <v-img
-                  src="assets/bg.jpg"
-                  class="h-100"
-                  cover
-                  gradient="to top, rgba(0,0,0,.7), rgba(0,0,0,.1)"
+            <div class="relative col-span-12 hidden bg-muted md:col-span-6 md:block">
+              <img
+                src="~/assets/bg.jpg"
+                alt="BookStore background"
+                class="absolute inset-0 h-full w-full object-cover"
+              />
+              <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-black/10"></div>
+              <div
+                class="relative flex h-full min-h-[540px] flex-col items-center justify-center px-6"
+              >
+                <div
+                  class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary"
                 >
-                  <div
-                    class="d-flex flex-column justify-center align-center h-100 px-6"
-                  >
-                    <v-avatar color="primary" size="64" class="mb-4">
-                      <v-icon size="36" color="white"
-                        >mdi-book-open-page-variant</v-icon
-                      >
-                    </v-avatar>
-                    <h2 class="text-h4 font-weight-bold text-white mb-2">
-                      BookStore
-                    </h2>
-                    <p class="text-subtitle-1 text-white text-center">
-                      Your gateway to endless stories and knowledge
-                    </p>
-                  </div>
-                </v-img>
+                  <BookOpen class="h-9 w-9 text-white" />
+                </div>
+                <h2 class="mb-2 text-3xl font-bold text-white">BookStore</h2>
+                <p class="text-center text-base font-medium text-white">
+                  Your gateway to endless stories and knowledge
+                </p>
               </div>
-            </v-col>
+            </div>
 
             <!-- Form section -->
-            <v-col cols="12" md="6" class="pa-8">
-              <div class="d-flex flex-column justify-center h-100">
+            <div class="col-span-12 p-8 md:col-span-6">
+              <div class="flex h-full flex-col justify-center">
                 <!-- Header with theme toggle -->
-                <div class="d-flex align-center justify-space-between mb-6">
+                <div class="mb-6 flex items-center justify-between">
                   <!-- Logo for mobile view -->
-                  <div class="d-flex align-center">
-                    <v-avatar color="primary" size="42" class="me-3 d-md-none">
-                      <v-icon size="24" color="white"
-                        >mdi-book-open-page-variant</v-icon
-                      >
-                    </v-avatar>
+                  <div class="flex items-center">
+                    <div
+                      class="mr-3 flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full bg-primary md:hidden"
+                    >
+                      <BookOpen class="h-6 w-6 text-white" />
+                    </div>
                     <div>
-                      <h2 class="text-h5 font-weight-bold d-md-none">
-                        BookStore
-                      </h2>
-                      <h3 class="text-h5 font-weight-bold mb-1">
-                        Welcome back
-                      </h3>
-                      <p class="text-subtitle-2 text-medium-emphasis">
+                      <h2 class="text-2xl font-bold md:hidden">BookStore</h2>
+                      <h3 class="mb-1 text-2xl font-bold">Welcome back</h3>
+                      <p class="text-sm font-medium text-muted-foreground">
                         Sign in to your account to continue
                       </p>
                     </div>
                   </div>
-                  <v-btn
-                    icon
-                    variant="text"
-                    @click="toggleTheme"
-                    class="ms-2"
-                    size="small"
-                  >
-                    <!-- <v-icon>{{
-                      isDarkMode ? "mdi-weather-sunny" : "mdi-weather-night"
-                    }}</v-icon> -->
-                  </v-btn>
+                  <ThemeToggle class="ml-2" />
                 </div>
 
-                <v-form
-                  @submit.prevent="onSubmit"
-                  ref="form"
-                  v-model="isFormValid"
-                  lazy-validation
-                  class="login-form"
-                >
-                  <v-text-field
+                <form @submit.prevent="onSubmit">
+                  <UiInput
                     v-model="username"
                     label="Username"
-                    :rules="usernameRules"
-                    variant="outlined"
-                    density="comfortable"
-                    bg-color="surface"
-                    prepend-inner-icon="mdi-account"
-                    class="mb-2"
-                    required
                     autocomplete="username"
-                    :error-messages="usernameError"
+                    required
+                    :error-message="usernameError"
+                    wrapper-class="mb-4"
                     @focus="usernameError = ''"
-                  ></v-text-field>
+                  >
+                    <template #prepend>
+                      <User class="h-4 w-4" />
+                    </template>
+                  </UiInput>
 
-                  <v-text-field
+                  <UiInput
                     v-model="password"
                     label="Password"
-                    :rules="passwordRules"
-                    variant="outlined"
-                    density="comfortable"
-                    bg-color="surface"
-                    prepend-inner-icon="mdi-lock"
-                    :append-inner-icon="
-                      showPassword ? 'mdi-eye-off' : 'mdi-eye'
-                    "
                     :type="showPassword ? 'text' : 'password'"
-                    required
                     autocomplete="current-password"
-                    :error-messages="passwordError"
+                    required
+                    :error-message="passwordError"
+                    wrapper-class="mb-4"
                     @focus="passwordError = ''"
-                    @click:append-inner="showPassword = !showPassword"
-                  ></v-text-field>
+                  >
+                    <template #prepend>
+                      <Lock class="h-4 w-4" />
+                    </template>
+                    <template #append>
+                      <button
+                        type="button"
+                        class="text-muted-foreground transition-colors hover:text-foreground"
+                        :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                        @click="showPassword = !showPassword"
+                      >
+                        <EyeOff v-if="showPassword" class="h-4 w-4" />
+                        <Eye v-else class="h-4 w-4" />
+                      </button>
+                    </template>
+                  </UiInput>
 
-                  <div class="d-flex justify-space-between align-center mb-4">
-                    <v-checkbox
-                      v-model="rememberMe"
-                      label="Remember me"
-                      color="primary"
-                      hide-details
-                      density="compact"
-                    ></v-checkbox>
-                    <v-btn
-                      variant="text"
-                      color="primary"
-                      size="small"
-                      class="text-caption"
+                  <div class="mb-4 flex items-center justify-between">
+                    <UiCheckbox v-model="rememberMe" label="Remember me" />
+                    <UiButton
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      class="text-xs"
                       @click="$emit('toggleLinkForgotPassword')"
                     >
                       Forgot password?
-                    </v-btn>
+                    </UiButton>
                   </div>
 
-                  <v-btn
-                    color="primary"
+                  <UiButton
                     type="submit"
                     block
-                    size="large"
-                    :loading="isLoading"
-                    :disabled="!isFormValid"
-                    class="mb-4"
-                    elevation="2"
-                    :ripple="true"
+                    size="lg"
+                    :loading="isFetching"
+                    class="mb-4 shadow"
                   >
-                    <v-icon start class="me-1">mdi-login</v-icon>
+                    <LogIn class="mr-1 h-5 w-5" />
                     Sign In
-                  </v-btn>
+                  </UiButton>
 
-                  <v-expand-transition>
-                    <v-alert
+                  <Transition
+                    enter-active-class="transition duration-200 ease-out"
+                    enter-from-class="-translate-y-1 opacity-0"
+                    enter-to-class="translate-y-0 opacity-100"
+                    leave-active-class="transition duration-150 ease-in"
+                    leave-from-class="opacity-100"
+                    leave-to-class="opacity-0"
+                  >
+                    <UiAlert
                       v-if="errorMessage"
-                      type="error"
-                      variant="tonal"
-                      density="compact"
-                      class="mb-4"
+                      variant="error"
                       closable
-                      @click:close="errorMessage = ''"
+                      class="mb-4"
+                      @close="errorMessage = ''"
                     >
                       {{ errorMessage }}
-                    </v-alert>
-                  </v-expand-transition>
+                    </UiAlert>
+                  </Transition>
 
-                  <v-divider class="mb-4"></v-divider>
+                  <UiSeparator class="mb-4" />
 
-                  <div class="text-center mb-2">
-                    <span class="text-body-2 text-medium-emphasis"
+                  <div class="mb-2 text-center">
+                    <span class="text-sm text-muted-foreground"
                       >Don't have an account?
                     </span>
-                    <v-btn
-                      variant="text"
-                      color="primary"
-                      class="text-decoration-none font-weight-medium"
+                    <UiButton
+                      type="button"
+                      variant="link"
+                      class="px-1 font-medium"
                       @click="$emit('toggleLinkSignUp', 'sign-up')"
                     >
                       Sign Up
-                    </v-btn>
+                    </UiButton>
                   </div>
 
                   <!-- Social login options -->
                   <div>
-                    <p
-                      class="text-center text-body-2 text-medium-emphasis mb-4"
-                    >
+                    <p class="mb-4 text-center text-sm text-muted-foreground">
                       Or continue with
                     </p>
-                    <div class="d-flex justify-center ga-3">
-                      <v-btn
-                        variant="elevated"
-                        rounded="lg"
-                        color="surface-variant"
-                        class="social-btn"
+                    <div class="flex justify-center gap-3">
+                      <UiButton
+                        type="button"
+                        variant="outline"
+                        class="rounded-lg shadow"
                         @click="socialLogin('google')"
                       >
-                        <v-icon color="#DB4437" class="me-2">mdi-google</v-icon>
+                        <svg class="mr-2 h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+                          <path
+                            fill="#4285F4"
+                            d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.86-3c-1.08.72-2.45 1.16-4.07 1.16-3.13 0-5.78-2.11-6.73-4.96H1.29v3.09C3.26 21.3 7.31 24 12 24z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M5.27 14.29c-.25-.72-.38-1.49-.38-2.29s.14-1.57.38-2.29V6.62H1.29C.47 8.24 0 10.06 0 12s.47 3.76 1.29 5.38l3.98-3.09z"
+                          />
+                          <path
+                            fill="#EA4335"
+                            d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.26 2.7 1.29 6.62l3.98 3.09c.95-2.85 3.6-4.96 6.73-4.96z"
+                          />
+                        </svg>
                         Google
-                      </v-btn>
-                      <!-- <v-btn
-                        variant="elevated"
-                        rounded="lg"
-                        color="surface-variant"
-                        class="social-btn"
-                        @click="socialLogin('facebook')"
-                      >
-                        <v-icon color="#4267B2" class="me-2"
-                          >mdi-facebook</v-icon
-                        >
-                        Facebook
-                      </v-btn> -->
+                      </UiButton>
                     </div>
                   </div>
-                </v-form>
+                </form>
               </div>
-            </v-col>
-          </v-row>
-        </v-card>
-      </v-col>
-    </v-row>
-  </v-container>
+            </div>
+          </div>
+        </UiCard>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script>
-import { mapState, mapActions } from "vuex";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
+import { useCartStore } from "@/stores/cart";
+import { BookOpen, Eye, EyeOff, Lock, LogIn, User } from "lucide-vue-next";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
+import type { SnackbarPayload } from "@/types";
 
-export default {
-  name: "Login",
-  emits: ["show-snackbar", "toggleLinkSignUp", "toggleLinkForgotPassword"],
-  data() {
-    return {
-      username: "",
-      password: "",
-      rememberMe: false,
-      showPassword: false,
-    };
-  },
-  computed: {
-    ...mapState("auth", ["isFetching", "error", "currentUser"]),
-    ...mapState("cart", ["cart"]),
-  },
-  methods: {
-    ...mapActions("auth", ["login", "loginWithGoogle"]),
-    ...mapActions("cart", ["fetchCart"]),
-    async onSubmit() {
-      try {
-        await this.login({
-          username: this.username,
-          password: this.password,
-        });
+const emit = defineEmits<{
+  (e: "show-snackbar", payload: SnackbarPayload): void;
+  (e: "toggleLinkSignUp", tab: string): void;
+  (e: "toggleLinkForgotPassword"): void;
+}>();
 
-        await this.fetchCart();
+const router = useRouter();
+const runtimeConfig = useRuntimeConfig();
 
-        this.$emit("show-snackbar", {
-          message: `Welcome back, ${this.currentUser?.username || "User"}!`,
-          color: "success",
-        });
+const authStore = useAuthStore();
+const cartStore = useCartStore();
+const { currentUser, isFetching } = storeToRefs(authStore);
 
-        setTimeout(() => {
-          this.$router.push("/");
-        }, 1500);
-      } catch (error) {
-        console.error("Login failed:", error);
+const username = ref("");
+const password = ref("");
+const rememberMe = ref(false);
+const showPassword = ref(false);
 
-        const errorMessage =
-          error.response?.data?.message ||
-          error.message ||
-          "Login failed. Please check your credentials.";
-        this.$emit("show-snackbar", {
-          message: errorMessage,
-          color: "error",
-        });
-      }
-    },
-    async socialLogin(provider) {
-      if (provider === "google") {
-        try {
-          // Redirect to Google OAuth
-          const baseUrl = import.meta.env.VITE_BASE_URL || "http://localhost:5000";
-          window.location.href = `${baseUrl}${API_ENDPOINTS.AUTH}/google`;
-        } catch (error) {
-          console.error("Google login error:", error);
-          this.$emit("show-snackbar", {
-            message: "Google login failed. Please try again.",
-            color: "error",
-          });
-        }
-      }
-    },
-  },
-};
+const usernameError = ref("");
+const passwordError = ref("");
+const errorMessage = ref("");
+
+function validate(): boolean {
+  usernameError.value = username.value ? "" : "Username is required";
+  passwordError.value = password.value ? "" : "Password is required";
+  return !usernameError.value && !passwordError.value;
+}
+
+async function onSubmit() {
+  if (!validate()) return;
+
+  try {
+    await authStore.login({
+      username: username.value,
+      password: password.value,
+    });
+
+    await cartStore.fetchCart();
+    errorMessage.value = "";
+
+    emit("show-snackbar", {
+      message: `Welcome back, ${currentUser.value?.username || "User"}!`,
+      color: "success",
+    });
+
+    setTimeout(() => {
+      router.push("/");
+    }, 1500);
+  } catch (error: any) {
+    console.error("Login failed:", error);
+
+    const message =
+      error.response?.data?.message ||
+      error.message ||
+      "Login failed. Please check your credentials.";
+    errorMessage.value = message;
+    emit("show-snackbar", {
+      message,
+      color: "error",
+    });
+  }
+}
+
+function socialLogin(provider: string) {
+  if (provider === "google") {
+    try {
+      // Redirect to Google OAuth
+      const baseUrl = runtimeConfig.public.apiBase;
+      window.location.href = `${baseUrl}${API_ENDPOINTS.AUTH}/google`;
+    } catch (error: any) {
+      console.error("Google login error:", error);
+      emit("show-snackbar", {
+        message: "Google login failed. Please try again.",
+        color: "error",
+      });
+    }
+  }
+}
 </script>
-
-<style scoped></style>

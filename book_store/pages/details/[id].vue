@@ -1,440 +1,435 @@
 <template>
-  <div class="book-details-page">
+  <div class="min-h-screen bg-background">
     <!-- Loading State -->
-    <v-container
+    <div
       v-if="isLoading"
-      class="d-flex justify-center align-center"
-      style="min-height: 50vh"
+      class="flex min-h-[50vh] items-center justify-center px-4"
     >
       <div class="text-center">
-        <v-progress-circular
-          indeterminate
-          color="primary"
-          size="60"
-          width="4"
-          class="mb-4"
-        ></v-progress-circular>
-        <p class="text-h6 text-grey-darken-2">Loading book details...</p>
+        <UiSpinner size="xl" class="mx-auto mb-4 text-primary" />
+        <p class="text-lg font-semibold text-muted-foreground">
+          Loading book details...
+        </p>
       </div>
-    </v-container>
+    </div>
 
     <!-- Main Content -->
-    <v-container v-else class="py-6" fluid>
+    <div v-else class="px-4 py-6">
       <!-- Breadcrumb -->
-      <v-breadcrumbs :items="breadcrumbItems" class="px-0 mb-6">
-        <template v-slot:divider>
-          <v-icon size="small">mdi-chevron-right</v-icon>
-        </template>
-      </v-breadcrumbs>
+      <nav aria-label="Breadcrumb" class="mb-6">
+        <ol class="flex flex-wrap items-center gap-1 text-sm">
+          <template v-for="(item, i) in breadcrumbItems" :key="i">
+            <ChevronRight
+              v-if="i > 0"
+              class="h-4 w-4 text-muted-foreground"
+            />
+            <li>
+              <NuxtLink
+                v-if="!item.disabled && item.href"
+                :to="item.href"
+                class="text-primary hover:underline"
+              >
+                {{ item.title }}
+              </NuxtLink>
+              <span v-else class="text-muted-foreground">{{ item.title }}</span>
+            </li>
+          </template>
+        </ol>
+      </nav>
 
       <!-- Book Overview Section -->
-      <v-card class="mb-6" elevation="2" rounded="lg">
-        <v-card-text class="pa-6">
-          <v-row>
+      <UiCard class="mb-6 shadow">
+        <div class="p-6">
+          <div class="grid grid-cols-12 gap-4">
             <!-- Book Cover -->
-            <v-col cols="12" md="4">
+            <div class="col-span-12 md:col-span-4">
               <div class="text-center">
-                <v-img
-                  :src="
-                    detailsBooks?.cover_url ||
-                    '/placeholder.svg?height=400&width=260'
-                  "
-                  alt="Book Cover"
-                  class="mx-auto"
-                  max-width="380"
-                  height="480"
-                  cover
+                <div
+                  class="mx-auto max-w-[380px] overflow-hidden rounded-lg bg-muted"
                 >
-                  <template v-slot:placeholder>
-                    <v-skeleton-loader
-                      type="image"
-                      width="280"
-                      height="380"
-                    ></v-skeleton-loader>
-                  </template>
-                </v-img>
+                  <img
+                    :src="
+                      detailsBooks?.cover_url ||
+                      '/placeholder.svg?height=400&width=260'
+                    "
+                    alt="Book Cover"
+                    class="mx-auto h-[480px] w-full object-cover"
+                  />
+                </div>
               </div>
-            </v-col>
+            </div>
 
             <!-- Book Info -->
-            <v-col cols="12" md="8">
-              <div class="book-info">
+            <div class="col-span-12 md:col-span-8">
+              <div>
                 <!-- Title -->
-                <h1 class="text-h4 font-weight-bold mb-4 text-primary">
+                <h1 class="mb-4 text-3xl font-bold text-primary">
                   {{ detailsBooks.title }}
                 </h1>
 
                 <!-- Author -->
-                <div class="d-flex align-center mb-4">
-                  <v-icon color="grey-darken-2" class="mr-2"
-                    >mdi-account-edit</v-icon
-                  >
-                  <span class="text-subtitle-1 text-grey-darken-2 mr-2"
+                <div class="mb-4 flex items-center">
+                  <UserPen class="mr-2 h-6 w-6 text-muted-foreground" />
+                  <span class="mr-2 text-base font-medium text-muted-foreground"
                     >by</span
                   >
-                  <v-chip color="primary" variant="outlined" size="default">
+                  <UiBadge
+                    variant="outline"
+                    class="border-primary px-3 py-1 text-sm text-primary"
+                  >
                     {{ detailsBooks.authors?.[0] }}
-                  </v-chip>
+                  </UiBadge>
                 </div>
 
                 <!-- Rating -->
-                <div class="d-flex align-center mb-6">
-                  <v-rating
+                <div class="mb-6 flex items-center">
+                  <UiRating
                     :model-value="displayRating"
-                    color="amber"
-                    density="compact"
+                    :size="16"
                     readonly
-                    size="small"
                     class="mr-2"
-                  ></v-rating>
-                  <span class="text-subtitle-1 font-weight-medium mr-1">{{
+                  />
+                  <span class="mr-1 text-base font-medium">{{
                     displayRating
                   }}</span>
-                  <span class="text-body-2 text-grey-darken-1"
+                  <span class="text-sm text-muted-foreground"
                     >({{ totalReviews }} reviews)</span
                   >
                 </div>
 
                 <!-- Sold Count -->
                 <div class="mb-4">
-                  <v-chip color="success" size="small" variant="elevated">
-                    <v-icon start size="small">mdi-fire</v-icon>
+                  <UiBadge variant="success">
+                    <Flame class="h-3.5 w-3.5" />
                     Sold {{ detailsBooks.sold || 0 }}
-                  </v-chip>
+                  </UiBadge>
                 </div>
 
                 <!-- Price & Stock -->
-                <div class="price-section mb-6">
-                  <div class="d-flex align-center justify-space-between mb-4">
+                <div class="mb-6 rounded-lg bg-muted p-4">
+                  <div class="mb-4 flex items-center justify-between">
                     <div>
-                      <div class="text-h3 font-weight-bold text-success mb-2">
+                      <div class="mb-2 text-4xl font-bold text-success">
                         ${{ displayPrice }}
                       </div>
                       <!-- Stock Status -->
                       <div v-if="productType === 'hardbook'">
-                        <v-chip
-                          v-if="detailsBooks.stock > 20"
-                          color="success"
-                          size="small"
-                          prepend-icon="mdi-check-circle"
+                        <UiBadge
+                          v-if="(detailsBooks.stock ?? 0) > 20"
+                          variant="success"
                         >
+                          <CheckCircle2 class="h-3.5 w-3.5" />
                           In Stock ({{ detailsBooks.stock }} available)
-                        </v-chip>
-                        <v-chip
-                          v-else-if="detailsBooks.stock > 0"
-                          color="warning"
-                          size="small"
-                          prepend-icon="mdi-alert"
+                        </UiBadge>
+                        <UiBadge
+                          v-else-if="(detailsBooks.stock ?? 0) > 0"
+                          variant="warning"
                         >
+                          <AlertTriangle class="h-3.5 w-3.5" />
                           Low Stock (Only {{ detailsBooks.stock }} left!)
-                        </v-chip>
-                        <v-chip
-                          v-else
-                          color="error"
-                          size="small"
-                          prepend-icon="mdi-close-circle"
-                        >
+                        </UiBadge>
+                        <UiBadge v-else variant="destructive">
+                          <XCircle class="h-3.5 w-3.5" />
                           Out of Stock
-                        </v-chip>
+                        </UiBadge>
                       </div>
-                      <v-chip
-                        v-else
-                        color="info"
-                        size="small"
-                        prepend-icon="mdi-infinity"
-                      >
+                      <UiBadge v-else variant="info">
+                        <InfinityIcon class="h-3.5 w-3.5" />
                         Digital Product - Always Available
-                      </v-chip>
+                      </UiBadge>
                     </div>
-                    <v-btn
-                      :icon="
+                    <UiButton
+                      variant="outline"
+                      size="icon"
+                      :aria-label="
                         isFavorite(detailsBooks._id)
-                          ? 'mdi-heart'
-                          : 'mdi-heart-outline'
+                          ? 'Remove from favorites'
+                          : 'Add to favorites'
                       "
-                      :color="isFavorite(detailsBooks._id) ? 'red' : 'grey'"
-                      variant="outlined"
                       @click="handleToggleFavorites(detailsBooks._id)"
-                    ></v-btn>
+                    >
+                      <Heart
+                        class="h-5 w-5"
+                        :class="
+                          isFavorite(detailsBooks._id)
+                            ? 'fill-current text-destructive'
+                            : 'text-muted-foreground'
+                        "
+                      />
+                    </UiButton>
                   </div>
                 </div>
 
                 <!-- Product Type Selection -->
-                <div class="product-type-section mb-6">
-                  <v-label
-                    class="text-subtitle-2 font-weight-medium mb-3 d-block"
-                    >Choose Product Type</v-label
+                <div class="mb-6 rounded-lg border border-border bg-muted/50 p-4">
+                  <span class="mb-3 block text-sm font-medium"
+                    >Choose Product Type</span
                   >
-                  <v-radio-group v-model="productType" inline>
-                    <v-radio value="hardbook" color="primary">
-                      <template v-slot:label>
-                        <div class="d-flex align-center">
-                          <v-icon class="mr-2" color="primary">mdi-book</v-icon>
-                          <div>
-                            <span class="font-weight-medium">📚 Hardbook</span>
-                            <div class="text-caption text-grey">
-                              ${{ detailsBooks.price }}
-                            </div>
-                          </div>
-                        </div>
-                      </template>
-                    </v-radio>
+                  <div class="flex flex-wrap items-center gap-4">
+                    <label class="flex cursor-pointer items-center">
+                      <input
+                        v-model="productType"
+                        type="radio"
+                        value="hardbook"
+                        class="h-4 w-4 accent-primary"
+                      />
+                      <span class="ml-2 flex items-center">
+                        <BookOpen class="mr-2 h-6 w-6 text-primary" />
+                        <span>
+                          <span class="font-medium">📚 Hardbook</span>
+                          <span class="block text-xs text-muted-foreground">
+                            ${{ detailsBooks.price }}
+                          </span>
+                        </span>
+                      </span>
+                    </label>
 
-                    <v-radio value="ebook" color="success" class="ml-4">
-                      <template v-slot:label>
-                        <div class="d-flex align-center">
-                          <v-icon class="mr-2" color="success"
-                            >mdi-tablet</v-icon
-                          >
-                          <div>
-                            <span class="font-weight-medium"
-                              >📱 Ebook (PDF)</span
-                            >
-
-                            <div class="text-caption text-grey">
-                              ${{ ebookPrice }}
-                            </div>
-                          </div>
-                        </div>
-                      </template>
-                    </v-radio>
-                  </v-radio-group>
+                    <label class="ml-4 flex cursor-pointer items-center">
+                      <input
+                        v-model="productType"
+                        type="radio"
+                        value="ebook"
+                        class="h-4 w-4 accent-success"
+                      />
+                      <span class="ml-2 flex items-center">
+                        <Tablet class="mr-2 h-6 w-6 text-success" />
+                        <span>
+                          <span class="font-medium">📱 Ebook (PDF)</span>
+                          <span class="block text-xs text-muted-foreground">
+                            ${{ ebookPrice }}
+                          </span>
+                        </span>
+                      </span>
+                    </label>
+                  </div>
 
                   <!-- Ebook Preview Button -->
-                  <v-btn
+                  <UiButton
                     v-if="productType === 'ebook'"
-                    :color="hasPurchasedEbook ? 'success' : 'info'"
-                    variant="outlined"
-                    size="small"
+                    variant="outline"
+                    size="sm"
                     class="mt-2"
-                    :prepend-icon="
+                    :class="
                       hasPurchasedEbook
-                        ? 'mdi-check-circle'
-                        : 'mdi-book-open-page-variant'
+                        ? 'border-success text-success hover:text-success'
+                        : 'border-info text-info hover:text-info'
                     "
                     @click="previewEbook"
                   >
+                    <CheckCircle2 v-if="hasPurchasedEbook" class="h-4 w-4" />
+                    <BookOpen v-else class="h-4 w-4" />
                     {{ previewButtonText }}
-                  </v-btn>
+                  </UiButton>
                 </div>
 
                 <!-- Quantity & Actions -->
-                <div class="purchase-section">
+                <div class="rounded-lg border border-border bg-card p-4">
                   <!-- Quantity -->
                   <div class="mb-4">
-                    <v-label class="text-subtitle-2 font-weight-medium mb-2"
-                      >Quantity</v-label
-                    >
-                    <div class="d-flex align-center" style="max-width: 200px">
-                      <v-btn
-                        icon="mdi-minus"
-                        variant="outlined"
-                        size="small"
-                        @click="quantity > 1 ? quantity-- : 1"
+                    <span class="mb-2 block text-sm font-medium">Quantity</span>
+                    <div class="flex max-w-[200px] items-center">
+                      <UiButton
+                        variant="outline"
+                        size="iconSm"
+                        aria-label="Decrease quantity"
                         :disabled="quantity <= 1 || isOutOfStock"
-                      ></v-btn>
-                      <v-text-field
-                        v-model="quantity"
+                        @click="quantity > 1 ? quantity-- : 1"
+                      >
+                        <Minus class="h-4 w-4" />
+                      </UiButton>
+                      <input
+                        v-model.number="quantity"
                         type="number"
-                        variant="outlined"
-                        density="compact"
-                        hide-details
-                        class="mx-2"
-                        style="max-width: 80px"
                         min="1"
                         :max="maxQuantity"
                         :disabled="isOutOfStock"
-                      ></v-text-field>
-                      <v-btn
-                        icon="mdi-plus"
-                        variant="outlined"
-                        size="small"
-                        @click="quantity++"
+                        class="mx-2 h-9 w-20 rounded-md border border-input bg-background px-2 text-center text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                      />
+                      <UiButton
+                        variant="outline"
+                        size="iconSm"
+                        aria-label="Increase quantity"
                         :disabled="quantity >= maxQuantity || isOutOfStock"
-                      ></v-btn>
+                        @click="quantity++"
+                      >
+                        <Plus class="h-4 w-4" />
+                      </UiButton>
                     </div>
                     <div
                       v-if="
                         productType === 'hardbook' &&
-                        detailsBooks.stock > 0 &&
-                        detailsBooks.stock < 10
+                        (detailsBooks.stock ?? 0) > 0 &&
+                        (detailsBooks.stock ?? 0) < 10
                       "
-                      class="text-caption text-warning mt-1"
+                      class="mt-1 text-xs text-warning"
                     >
                       Maximum {{ detailsBooks.stock }} items available
                     </div>
                   </div>
 
                   <!-- Action Buttons -->
-                  <div class="d-flex flex-column flex-sm-row ga-3">
-                    <v-btn
-                      color="primary"
-                      variant="flat"
-                      size="large"
-                      class="flex-grow-1"
-                      prepend-icon="mdi-cart-plus"
-                      @click="handleAddToCart(detailsBooks._id, quantity)"
+                  <div class="flex flex-col gap-3 sm:flex-row">
+                    <UiButton
+                      size="lg"
+                      class="grow"
                       :disabled="isOutOfStock"
+                      @click="handleAddToCart(detailsBooks._id, quantity)"
                     >
+                      <ShoppingCart class="h-5 w-5" />
                       {{ isOutOfStock ? "Out of Stock" : "Add to Cart" }}
-                    </v-btn>
-                    <v-btn
-                      color="success"
-                      variant="flat"
-                      size="large"
-                      class="flex-grow-1"
-                      prepend-icon="mdi-lightning-bolt"
+                    </UiButton>
+                    <UiButton
+                      variant="success"
+                      size="lg"
+                      class="grow"
                       :disabled="isOutOfStock"
                       @click="handleBuyNow"
                     >
+                      <Zap class="h-5 w-5" />
                       Buy Now
-                    </v-btn>
+                    </UiButton>
                   </div>
                 </div>
               </div>
-            </v-col>
-          </v-row>
-        </v-card-text>
-      </v-card>
+            </div>
+          </div>
+        </div>
+      </UiCard>
 
-      <v-row>
+      <div class="grid grid-cols-12 gap-4">
         <!-- Book Details -->
-        <v-col cols="12" md="6">
-          <v-card elevation="2" rounded="lg" height="100%">
-            <v-card-title class="bg-primary text-white">
-              <v-icon class="mr-2">mdi-book-information-variant</v-icon>
+        <div class="col-span-12 md:col-span-6">
+          <UiCard class="h-full overflow-hidden shadow">
+            <div
+              class="flex items-center bg-primary px-4 py-3 font-semibold text-primary-foreground"
+            >
+              <BookOpen class="mr-2 h-5 w-5" />
               Book Details
-            </v-card-title>
-            <v-card-text class="pa-0">
-              <v-list>
-                <v-list-item>
-                  <template v-slot:prepend>
-                    <v-icon color="primary">mdi-identifier</v-icon>
-                  </template>
-                  <v-list-item-title>Book ID</v-list-item-title>
-                  <v-list-item-subtitle>
+            </div>
+            <div>
+              <div class="flex items-start gap-4 px-4 py-3">
+                <Hash class="mt-0.5 h-6 w-6 text-primary" />
+                <div>
+                  <div class="text-sm font-medium">Book ID</div>
+                  <div class="text-sm text-muted-foreground">
                     {{ detailsBooks.key?.split("/").pop() || "8935250707640" }}
-                  </v-list-item-subtitle>
-                </v-list-item>
+                  </div>
+                </div>
+              </div>
 
-                <v-divider></v-divider>
+              <UiSeparator />
 
-                <v-list-item>
-                  <template v-slot:prepend>
-                    <v-icon color="primary">mdi-account-edit</v-icon>
-                  </template>
-                  <v-list-item-title>Author</v-list-item-title>
-                  <v-list-item-subtitle>
+              <div class="flex items-start gap-4 px-4 py-3">
+                <UserPen class="mt-0.5 h-6 w-6 text-primary" />
+                <div>
+                  <div class="text-sm font-medium">Author</div>
+                  <div class="text-sm text-muted-foreground">
                     {{ detailsBooks.authors?.[0] }}
-                  </v-list-item-subtitle>
-                </v-list-item>
+                  </div>
+                </div>
+              </div>
 
-                <v-divider></v-divider>
+              <UiSeparator />
 
-                <v-list-item>
-                  <template v-slot:prepend>
-                    <v-icon color="primary">mdi-calendar</v-icon>
-                  </template>
-                  <v-list-item-title>Publication Year</v-list-item-title>
-                  <v-list-item-subtitle>
+              <div class="flex items-start gap-4 px-4 py-3">
+                <Calendar class="mt-0.5 h-6 w-6 text-primary" />
+                <div>
+                  <div class="text-sm font-medium">Publication Year</div>
+                  <div class="text-sm text-muted-foreground">
                     {{ detailsBooks.first_publish_year }}
-                  </v-list-item-subtitle>
-                </v-list-item>
-              </v-list>
-            </v-card-text>
-          </v-card>
-        </v-col>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </UiCard>
+        </div>
 
         <!-- Customer Reviews -->
-        <v-col cols="12" md="6">
-          <v-card elevation="2" rounded="lg" height="100%">
-            <v-card-title class="bg-amber text-white">
-              <v-icon class="mr-2">mdi-star</v-icon>
+        <div class="col-span-12 md:col-span-6">
+          <UiCard class="h-full overflow-hidden shadow">
+            <div
+              class="flex items-center bg-amber-500 px-4 py-3 font-semibold text-white"
+            >
+              <Star class="mr-2 h-5 w-5" />
               Customer Reviews
-            </v-card-title>
-            <v-card-text class="pa-4">
-              <div class="text-center mb-4">
-                <div class="text-h3 font-weight-bold text-amber mb-2">
+            </div>
+            <div class="p-4">
+              <div class="mb-4 text-center">
+                <div class="mb-2 text-4xl font-bold text-amber-500">
                   {{ displayRating.toFixed(1)
-                  }}<span class="text-h5 text-grey-darken-1">/5</span>
+                  }}<span class="text-2xl font-semibold text-muted-foreground"
+                    >/5</span
+                  >
                 </div>
-                <v-rating
+                <UiRating
                   :model-value="displayRating"
-                  color="amber"
+                  :size="16"
                   readonly
-                  size="small"
-                  class="mb-2"
-                ></v-rating>
-                <div class="text-body-2 text-grey-darken-1">
+                  class="mb-2 justify-center"
+                />
+                <div class="text-sm text-muted-foreground">
                   Based on {{ totalReviews }}
                   {{ totalReviews === 1 ? "review" : "reviews" }}
                 </div>
               </div>
 
               <!-- Rating Breakdown -->
-              <div class="rating-breakdown mb-4">
+              <div class="mb-4">
                 <div
-                  class="d-flex align-center mb-1"
                   v-for="(rating, index) in ratingBreakdown"
                   :key="index"
+                  class="mb-1 flex items-center"
                 >
-                  <span class="text-caption mr-2" style="min-width: 15px">{{
-                    5 - index
-                  }}</span>
-                  <v-icon color="amber" size="x-small" class="mr-2"
-                    >mdi-star</v-icon
+                  <span class="mr-2 min-w-[15px] text-xs">{{ 5 - index }}</span>
+                  <Star
+                    class="mr-2 h-3.5 w-3.5 fill-amber-400 text-amber-400"
+                  />
+                  <div
+                    class="mr-2 h-1.5 grow overflow-hidden rounded-full bg-muted"
                   >
-                  <v-progress-linear
-                    :model-value="rating.percentage"
-                    color="amber"
-                    height="6"
-                    rounded
-                    class="flex-grow-1 mr-2"
-                  ></v-progress-linear>
-                  <span class="text-caption" style="min-width: 25px"
-                    >({{ rating.count }})</span
-                  >
+                    <div
+                      class="h-full rounded-full bg-amber-400 transition-all"
+                      :style="{ width: `${rating.percentage}%` }"
+                    />
+                  </div>
+                  <span class="min-w-[25px] text-xs">({{ rating.count }})</span>
                 </div>
               </div>
 
               <div class="text-center">
-                <v-btn
-                  color="primary"
-                  variant="outlined"
-                  size="small"
-                  prepend-icon="mdi-pencil"
-                  @click="$router.push(`/reviews/${detailsBooks._id}`)"
+                <UiButton
+                  variant="outline"
+                  size="sm"
+                  class="border-primary text-primary hover:text-primary"
+                  @click="router.push(`/reviews/${detailsBooks._id}`)"
                 >
+                  <Pencil class="h-4 w-4" />
                   Write Review
-                </v-btn>
+                </UiButton>
               </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
+            </div>
+          </UiCard>
+        </div>
+      </div>
 
       <!-- Description -->
-      <v-card
+      <UiCard
         v-if="detailsBooks.description"
-        class="mt-6"
-        elevation="2"
-        rounded="lg"
+        class="mt-6 overflow-hidden shadow"
       >
-        <v-card-title class="bg-secondary text-white">
-          <v-icon class="mr-2">mdi-text-box</v-icon>
+        <div
+          class="flex items-center bg-secondary px-4 py-3 font-semibold text-secondary-foreground"
+        >
+          <FileText class="mr-2 h-5 w-5" />
           Description
-        </v-card-title>
-        <v-card-text class="pa-4">
-          <p class="text-body-1 line-height-1-6">
-            {{
-              typeof detailsBooks.description === "object"
-                ? detailsBooks.description.value
-                : detailsBooks.description
-            }}
+        </div>
+        <div class="p-4">
+          <p class="text-base leading-relaxed">
+            {{ displayDescription }}
           </p>
-        </v-card-text>
-      </v-card>
-    </v-container>
+        </div>
+      </UiCard>
+    </div>
 
     <!-- Snackbar -->
     <SnackbarAlert
@@ -445,278 +440,264 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
+import { useCartStore } from "@/stores/cart";
+import { useFavoriteStore } from "@/stores/favorite";
+import { useOrderStore } from "@/stores/order";
+import { useReviewStore } from "@/stores/review";
+import {
+  AlertTriangle,
+  BookOpen,
+  Calendar,
+  CheckCircle2,
+  ChevronRight,
+  FileText,
+  Flame,
+  Hash,
+  Heart,
+  Infinity as InfinityIcon,
+  Minus,
+  Pencil,
+  Plus,
+  ShoppingCart,
+  Star,
+  Tablet,
+  UserPen,
+  XCircle,
+  Zap,
+} from "lucide-vue-next";
 import { getBookById } from "@/api/bookApi";
-import { mapActions, mapState } from "vuex";
+import { getAverageRating as fetchAverageRating } from "@/api/reviewApi";
+import type { Book, ProductType } from "@/types";
 
-export default {
-  data() {
-    return {
-      detailsBooks: {},
-      isLoading: false,
-      quantity: 1,
-      productType: "hardbook",
-      authors: [],
-      showSnackbar: false,
-      snackbarText: "",
-      snackbarColor: "success",
-      averageRating: 0,
-      totalReviews: 0,
-    };
-  },
-  computed: {
-    ...mapState("favorite", ["favorites"]),
-    ...mapState("auth", ["currentUser"]),
-    ...mapState("order", ["purchasedEbooks"]),
-    ...mapState("review", ["reviews"]),
+const route = useRoute();
+const router = useRouter();
 
-    ratingBreakdown() {
-      if (!this.reviews || this.reviews.length === 0) {
-        return [
-          { percentage: 0, count: 0 },
-          { percentage: 0, count: 0 },
-          { percentage: 0, count: 0 },
-          { percentage: 0, count: 0 },
-          { percentage: 0, count: 0 },
-        ];
-      }
+const cartStore = useCartStore();
+const orderStore = useOrderStore();
+const favoriteStore = useFavoriteStore();
+const reviewStore = useReviewStore();
+const authStore = useAuthStore();
 
-      const counts = [0, 0, 0, 0, 0];
-      this.reviews.forEach((review) => {
-        const rating = review.rating;
-        if (rating >= 1 && rating <= 5) {
-          counts[5 - rating]++;
-        }
-      });
+const { favorites } = storeToRefs(favoriteStore);
+const { currentUser } = storeToRefs(authStore);
+const { purchasedEbooks } = storeToRefs(orderStore);
+const { reviews } = storeToRefs(reviewStore);
 
-      const total = this.reviews.length;
-      return counts.map((count) => ({
-        percentage: total > 0 ? (count / total) * 100 : 0,
-        count,
-      }));
-    },
+const detailsBooks = ref<Partial<Book>>({});
+const isLoading = ref(false);
+const quantity = ref(1);
+const productType = ref<ProductType>("hardbook");
+const showSnackbar = ref(false);
+const snackbarText = ref("");
+const snackbarColor = ref("success");
+const averageRating = ref(0);
+const totalReviews = ref(0);
 
-    breadcrumbItems() {
-      return [
-        { title: "Home", disabled: false, href: "/" },
-        { title: this.detailsBooks.title || "Book Details", disabled: true },
-      ];
-    },
-    displayRating() {
-      if (this.totalReviews > 0) {
-        return this.averageRating;
-      }
-      return this.detailsBooks.rating || 0;
-    },
-    ebookPrice() {
-      const price = this.detailsBooks.price || 120;
-      return (price * 0.7).toFixed(2);
-    },
-    displayPrice() {
-      return this.productType === "ebook"
-        ? this.ebookPrice
-        : this.detailsBooks.price || "120.00";
-    },
-    hasPurchasedEbook() {
-      return this.purchasedEbooks[this.detailsBooks._id] || false;
-    },
-    previewButtonText() {
-      return this.hasPurchasedEbook
-        ? "Preview full"
-        : "Preview (20 pages free)";
-    },
-    isOutOfStock() {
-      return this.productType === "hardbook" && this.detailsBooks.stock === 0;
-    },
-    maxQuantity() {
-      if (this.productType === "ebook") {
-        return 10;
-      }
-      return Math.min(this.detailsBooks.stock || 0, 10);
-    },
-  },
-  watch: {
-    productType() {
-      if (this.quantity > this.maxQuantity) {
-        this.quantity = this.maxQuantity;
-      }
-    },
-  },
-  methods: {
-    ...mapActions("cart", ["addToCart"]),
-    ...mapActions("order", ["fetchUserOrders", "checkEbookPurchase"]),
-    ...mapActions("favorite", ["toggleFavorites"]),
-    ...mapActions("review", ["loadReviews"]),
-    async getAverageRating(bookId) {
-      try {
-        const { getAverageRating } = await import("~/api/reviewApi");
-        const response = await getAverageRating(bookId);
-        this.averageRating = response.data.averageRating;
-        this.totalReviews = response.data.totalReviews;
-      } catch (error) {
-        console.error("Error fetching average rating:", error);
-        this.averageRating = 0;
-        this.totalReviews = 0;
-      }
-    },
-    async getDetailsBooks() {
-      try {
-        this.isLoading = true;
-        const bookId = this.$route.params.id;
-        console.log("Book ID:", bookId);
+const ratingBreakdown = computed(() => {
+  if (!reviews.value || reviews.value.length === 0) {
+    return [
+      { percentage: 0, count: 0 },
+      { percentage: 0, count: 0 },
+      { percentage: 0, count: 0 },
+      { percentage: 0, count: 0 },
+      { percentage: 0, count: 0 },
+    ];
+  }
 
-        if (!bookId) {
-          throw new Error("Invalid book ID");
-        }
-
-        const response = await getBookById(bookId);
-        this.detailsBooks = response.data;
-
-        await this.getAverageRating(bookId);
-
-        if (this.currentUser) {
-          await this.checkEbookPurchase(bookId);
-        }
-      } catch (error) {
-        console.error("Fetch error:", error);
-      } finally {
-        this.isLoading = false;
-      }
-    },
-    async getOrderOfUser() {
-      try {
-        await this.fetchUserOrders();
-      } catch (error) {
-        console.error("Error fetching user orders:", error);
-      }
-    },
-    increaseQuantity() {
-      this.quantity++;
-    },
-    decreaseQuantity() {
-      if (this.quantity > 1) {
-        this.quantity--;
-      }
-    },
-    async handleAddToCart(bookId, quantity) {
-      try {
-        await this.addToCart({
-          bookId,
-          quantity,
-          productType: this.productType,
-        });
-
-        const typeName = this.productType === "ebook" ? "Ebook" : "Hardbook";
-        this.snackbarText = `${typeName} added to cart successfully!`;
-        this.showSnackbar = true;
-        this.snackbarColor = "success";
-      } catch (error) {
-        console.error("Error adding to cart:", error);
-        this.snackbarText = "Failed to add to cart.";
-        this.showSnackbar = true;
-        this.snackbarColor = "error";
-      }
-    },
-
-    async handleBuyNow() {
-      try {
-        // Add to cart first
-        await this.addToCart({
-          bookId: this.detailsBooks._id,
-          quantity: this.quantity,
-          productType: this.productType,
-        });
-
-        // Navigate to cart page for checkout
-        this.$router.push("/cart");
-      } catch (error) {
-        console.error("Error during buy now:", error);
-        this.snackbarText = "Failed to proceed to checkout.";
-        this.showSnackbar = true;
-        this.snackbarColor = "error";
-      }
-    },
-
-    previewEbook() {
-      this.$router.push({
-        path: "/reader",
-        query: { bookId: this.detailsBooks._id },
-      });
-    },
-
-    async handleToggleFavorites(bookId) {
-      try {
-        await this.toggleFavorites(bookId);
-        this.snackbarText = this.isFavorite(bookId)
-          ? "Added to favorites!"
-          : "Removed from favorites!";
-        this.showSnackbar = true;
-        this.snackbarColor = "success";
-      } catch (error) {
-        console.error("Error toggling favorites:", error);
-        this.snackbarText = "Failed to update favorites.";
-        this.showSnackbar = true;
-        this.snackbarColor = "error";
-      }
-    },
-    isFavorite(bookId) {
-      return this.favorites.some((favorite) => {
-        const favoriteBookId = favorite.bookId?._id || favorite.bookId;
-        return favoriteBookId === bookId;
-      });
-    },
-  },
-  async mounted() {
-    await this.getDetailsBooks();
-    await this.getOrderOfUser();
-
-    const bookId = this.$route.params.id;
-    if (bookId) {
-      await this.loadReviews(bookId);
+  const counts = [0, 0, 0, 0, 0];
+  reviews.value.forEach((review) => {
+    const rating = review.rating;
+    if (rating >= 1 && rating <= 5) {
+      counts[5 - rating]++;
     }
-  },
-};
+  });
+
+  const total = reviews.value.length;
+  return counts.map((count) => ({
+    percentage: total > 0 ? (count / total) * 100 : 0,
+    count,
+  }));
+});
+
+const breadcrumbItems = computed(() => [
+  { title: "Home", disabled: false, href: "/" },
+  { title: detailsBooks.value.title || "Book Details", disabled: true },
+]);
+
+const displayRating = computed(() => {
+  if (totalReviews.value > 0) {
+    return averageRating.value;
+  }
+  return detailsBooks.value.rating || 0;
+});
+
+const ebookPrice = computed(() => {
+  const price = detailsBooks.value.price || 120;
+  return (price * 0.7).toFixed(2);
+});
+
+const displayPrice = computed(() =>
+  productType.value === "ebook"
+    ? ebookPrice.value
+    : detailsBooks.value.price || "120.00"
+);
+
+const hasPurchasedEbook = computed(
+  () => purchasedEbooks.value[detailsBooks.value._id as string] || false
+);
+
+const previewButtonText = computed(() =>
+  hasPurchasedEbook.value ? "Preview full" : "Preview (20 pages free)"
+);
+
+const isOutOfStock = computed(
+  () => productType.value === "hardbook" && detailsBooks.value.stock === 0
+);
+
+const maxQuantity = computed(() => {
+  if (productType.value === "ebook") {
+    return 10;
+  }
+  return Math.min(detailsBooks.value.stock || 0, 10);
+});
+
+const displayDescription = computed(() => {
+  const description = detailsBooks.value.description as unknown;
+  return typeof description === "object" && description !== null
+    ? (description as { value: string }).value
+    : (description as string | undefined);
+});
+
+watch(productType, () => {
+  if (quantity.value > maxQuantity.value) {
+    quantity.value = maxQuantity.value;
+  }
+});
+
+async function getAverageRating(bookId: string) {
+  try {
+    const response = await fetchAverageRating(bookId);
+    averageRating.value = response.data.averageRating;
+    totalReviews.value = response.data.totalReviews;
+  } catch (error) {
+    console.error("Error fetching average rating:", error);
+    averageRating.value = 0;
+    totalReviews.value = 0;
+  }
+}
+
+async function getDetailsBooks() {
+  try {
+    isLoading.value = true;
+    const bookId = route.params.id as string;
+    console.log("Book ID:", bookId);
+
+    if (!bookId) {
+      throw new Error("Invalid book ID");
+    }
+
+    const response = await getBookById(bookId);
+    detailsBooks.value = response.data;
+
+    await getAverageRating(bookId);
+
+    if (currentUser.value) {
+      await orderStore.checkEbookPurchase(bookId);
+    }
+  } catch (error) {
+    console.error("Fetch error:", error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function getOrderOfUser() {
+  try {
+    await orderStore.fetchUserOrders();
+  } catch (error) {
+    console.error("Error fetching user orders:", error);
+  }
+}
+
+async function handleAddToCart(bookId: string | undefined, qty: number) {
+  try {
+    await cartStore.addToCart({
+      bookId: bookId as string,
+      quantity: qty,
+      productType: productType.value,
+    });
+
+    const typeName = productType.value === "ebook" ? "Ebook" : "Hardbook";
+    snackbarText.value = `${typeName} added to cart successfully!`;
+    showSnackbar.value = true;
+    snackbarColor.value = "success";
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    snackbarText.value = "Failed to add to cart.";
+    showSnackbar.value = true;
+    snackbarColor.value = "error";
+  }
+}
+
+async function handleBuyNow() {
+  try {
+    // Add to cart first
+    await cartStore.addToCart({
+      bookId: detailsBooks.value._id as string,
+      quantity: quantity.value,
+      productType: productType.value,
+    });
+
+    // Navigate to cart page for checkout
+    router.push("/cart");
+  } catch (error) {
+    console.error("Error during buy now:", error);
+    snackbarText.value = "Failed to proceed to checkout.";
+    showSnackbar.value = true;
+    snackbarColor.value = "error";
+  }
+}
+
+function previewEbook() {
+  router.push({
+    path: "/reader",
+    query: { bookId: detailsBooks.value._id },
+  });
+}
+
+async function handleToggleFavorites(bookId: string | undefined) {
+  try {
+    await favoriteStore.toggleFavorites(bookId as string);
+    snackbarText.value = isFavorite(bookId)
+      ? "Added to favorites!"
+      : "Removed from favorites!";
+    showSnackbar.value = true;
+    snackbarColor.value = "success";
+  } catch (error) {
+    console.error("Error toggling favorites:", error);
+    snackbarText.value = "Failed to update favorites.";
+    showSnackbar.value = true;
+    snackbarColor.value = "error";
+  }
+}
+
+function isFavorite(bookId: string | undefined) {
+  return favorites.value.some((favorite: any) => {
+    const favoriteBookId = favorite.bookId?._id || favorite.bookId;
+    return favoriteBookId === bookId;
+  });
+}
+
+onMounted(async () => {
+  await getDetailsBooks();
+  await getOrderOfUser();
+
+  const bookId = route.params.id as string;
+  if (bookId) {
+    await reviewStore.loadReviews(bookId);
+  }
+});
 </script>
-
-<style scoped>
-.book-details-page {
-  background-color: #fafafa;
-  min-height: 100vh;
-}
-
-.line-height-1-6 {
-  line-height: 1.6;
-}
-
-.price-section {
-  background-color: #f5f5f5;
-  padding: 16px;
-  border-radius: 8px;
-}
-
-.purchase-section {
-  background-color: #ffffff;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-}
-
-.product-type-section {
-  background-color: #f9f9f9;
-  padding: 16px;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-}
-
-:deep(.v-rating .v-icon) {
-  padding: 0;
-}
-
-:deep(.v-radio-group .v-selection-control) {
-  margin-right: 0;
-}
-
-:deep(.v-radio .v-label) {
-  opacity: 1 !important;
-}
-</style>

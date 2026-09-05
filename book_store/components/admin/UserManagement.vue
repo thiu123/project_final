@@ -1,336 +1,411 @@
 <template>
   <div>
-    <v-container fluid>
+    <div class="p-4">
       <!-- Header Section -->
-      <v-row class="mb-4">
-        <v-col cols="12">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <h1 class="text-h4 font-weight-bold mb-2 admin-heading">
-                User Management
-              </h1>
-              <p class="text-subtitle-1 text-grey">
-                Manage all users in the system
-              </p>
-            </div>
-            <v-btn
-              color="waterblue"
-              @click="refreshUsers"
-              :loading="loading"
-              prepend-icon="mdi-refresh"
-            >
-              Refresh
-            </v-btn>
-          </div>
-        </v-col>
-      </v-row>
+      <div class="mb-4 flex items-center justify-between gap-4">
+        <div>
+          <h1 class="mb-2 text-3xl font-bold text-foreground">User Management</h1>
+          <p class="text-base text-muted-foreground">
+            Manage all users in the system
+          </p>
+        </div>
+        <UiButton
+          class="bg-waterblue text-white hover:bg-waterblue/90"
+          :loading="loading"
+          @click="refreshUsers"
+        >
+          <RefreshCw v-if="!loading" class="h-4 w-4" />
+          Refresh
+        </UiButton>
+      </div>
 
       <!-- Statistics Cards -->
-      <v-row class="mb-6">
-        <v-col cols="12" md="3">
-          <v-card class="admin-card stat-card" elevation="0">
-            <v-card-text>
-              <div class="d-flex align-center">
-                <v-avatar color="customyellow" rounded="lg" class="mr-3">
-                  <v-icon color="customblack">mdi-account-multiple</v-icon>
-                </v-avatar>
-                <div>
-                  <p class="text-caption text-grey mb-0">Total Users</p>
-                  <p class="text-h5 font-weight-bold mb-0 stat-value">
-                    {{ totalUsers }}
-                  </p>
-                </div>
+      <div class="mb-6 grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-3">
+          <div
+            class="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div class="flex items-center">
+              <div class="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-customyellow">
+                <Users class="h-5 w-5 text-customblack" />
               </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="3">
-          <v-card class="admin-card stat-card" elevation="0">
-            <v-card-text>
-              <div class="d-flex align-center">
-                <v-avatar color="waterblue" rounded="lg" class="mr-3">
-                  <v-icon color="white">mdi-account-check</v-icon>
-                </v-avatar>
-                <div>
-                  <p class="text-caption text-grey mb-0">Regular Users</p>
-                  <p class="text-h5 font-weight-bold mb-0 stat-value">
-                    {{ regularUsers }}
-                  </p>
-                </div>
+              <div>
+                <p class="mb-0 text-xs text-muted-foreground">Total Users</p>
+                <p class="mb-0 text-2xl font-bold tabular-nums text-foreground">
+                  {{ totalUsers }}
+                </p>
               </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="3">
-          <v-card class="admin-card stat-card" elevation="0">
-            <v-card-text>
-              <div class="d-flex align-center">
-                <v-avatar color="darkgreen" rounded="lg" class="mr-3">
-                  <v-icon color="white">mdi-account-star</v-icon>
-                </v-avatar>
-                <div>
-                  <p class="text-caption text-grey mb-0">Admins</p>
-                  <p class="text-h5 font-weight-bold mb-0 stat-value">
-                    {{ adminUsers }}
-                  </p>
-                </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-span-12 md:col-span-3">
+          <div
+            class="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div class="flex items-center">
+              <div class="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-waterblue">
+                <UserCheck class="h-5 w-5 text-white" />
               </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="3">
-          <v-card class="admin-card stat-card" elevation="0">
-            <v-card-text>
-              <div class="d-flex align-center">
-                <v-avatar color="lightgreen" rounded="lg" class="mr-3">
-                  <v-icon color="white">mdi-account-plus</v-icon>
-                </v-avatar>
-                <div>
-                  <p class="text-caption text-grey mb-0">This Month</p>
-                  <p class="text-h5 font-weight-bold mb-0 stat-value">
-                    {{ newUsersThisMonth }}
-                  </p>
-                </div>
+              <div>
+                <p class="mb-0 text-xs text-muted-foreground">Regular Users</p>
+                <p class="mb-0 text-2xl font-bold tabular-nums text-foreground">
+                  {{ regularUsers }}
+                </p>
               </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-span-12 md:col-span-3">
+          <div
+            class="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div class="flex items-center">
+              <div class="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-darkgreen">
+                <ShieldCheck class="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p class="mb-0 text-xs text-muted-foreground">Admins</p>
+                <p class="mb-0 text-2xl font-bold tabular-nums text-foreground">
+                  {{ adminUsers }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-span-12 md:col-span-3">
+          <div
+            class="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
+          >
+            <div class="flex items-center">
+              <div class="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-lightgreen">
+                <UserPlus class="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p class="mb-0 text-xs text-muted-foreground">This Month</p>
+                <p class="mb-0 text-2xl font-bold tabular-nums text-foreground">
+                  {{ newUsersThisMonth }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Search and Filter Section -->
-      <v-row class="mb-4">
-        <v-col cols="12" md="6">
-          <v-text-field
-            v-model="search"
-            prepend-inner-icon="mdi-magnify"
-            label="Search users..."
-            single-line
-            hide-details
-            clearable
-            variant="outlined"
-          ></v-text-field>
-        </v-col>
-        <v-col cols="12" md="3">
-          <v-select
-            v-model="filterRole"
-            :items="roleOptions"
-            label="Filter by Role"
-            variant="outlined"
-            hide-details
-            clearable
-          ></v-select>
-        </v-col>
-      </v-row>
+      <div class="mb-4 grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-6">
+          <UiInput v-model="search" placeholder="Search users...">
+            <template #prepend>
+              <Search class="h-4 w-4" />
+            </template>
+            <template #append>
+              <button
+                v-if="search"
+                type="button"
+                class="text-muted-foreground transition-colors hover:text-foreground"
+                aria-label="Clear search"
+                @click="search = ''"
+              >
+                <X class="h-4 w-4" />
+              </button>
+            </template>
+          </UiInput>
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <div class="flex items-center gap-1">
+            <UiSelect v-model="filterRole">
+              <UiSelectTrigger class="w-full">
+                <UiSelectValue placeholder="Filter by Role" />
+              </UiSelectTrigger>
+              <UiSelectContent>
+                <UiSelectItem
+                  v-for="opt in roleOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
+                  {{ opt.label }}
+                </UiSelectItem>
+              </UiSelectContent>
+            </UiSelect>
+            <UiButton
+              v-if="filterRole"
+              variant="ghost"
+              size="iconSm"
+              aria-label="Clear role filter"
+              @click="filterRole = undefined"
+            >
+              <X class="h-4 w-4" />
+            </UiButton>
+          </div>
+        </div>
+      </div>
 
       <!-- Users Table -->
-      <v-card class="admin-card" elevation="0">
-        <v-data-table
-          :headers="headers"
-          :items="filteredUsers"
-          :loading="loading"
-          :search="search"
-          class="elevation-1"
-          item-value="_id"
-        >
-          <!-- Avatar Column -->
-          <template v-slot:item.avatar_url="{ item }">
-            <v-avatar size="40" class="my-2">
-              <v-img
-                v-if="item?.avatar_url"
-                :src="item?.avatar_url"
-                :alt="item?.username"
-              ></v-img>
-              <v-icon v-else>mdi-account-circle</v-icon>
-            </v-avatar>
-          </template>
+      <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <UiProgress v-if="loading" indeterminate class="h-1 rounded-none" />
 
-          <!-- Username Column -->
-          <template v-slot:item.username="{ item }">
-            <div class="d-flex align-center">
-              <div>
-                <div class="font-weight-medium">{{ item.username }}</div>
-                <div class="text-caption text-grey">{{ item.email }}</div>
-              </div>
-            </div>
-          </template>
+        <UiTooltipProvider :delay-duration="200">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead class="bg-muted/60 text-left">
+                <tr>
+                  <th class="w-[80px] px-4 py-3 font-medium text-muted-foreground">Avatar</th>
+                  <th class="px-4 py-3 font-medium text-muted-foreground">User</th>
+                  <th class="px-4 py-3 font-medium text-muted-foreground">Role</th>
+                  <th class="px-4 py-3 font-medium text-muted-foreground">Joined</th>
+                  <th class="w-[120px] px-4 py-3 font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-border">
+                <tr v-for="item in paginatedUsers" :key="item._id" class="hover:bg-muted/40">
+                  <!-- Avatar -->
+                  <td class="px-4 py-3">
+                    <UiAvatar class="my-2 size-10">
+                      <UiAvatarImage
+                        :src="item?.avatar_url || ''"
+                        :alt="item?.username"
+                      />
+                      <UiAvatarFallback>
+                        <CircleUser class="h-6 w-6" />
+                      </UiAvatarFallback>
+                    </UiAvatar>
+                  </td>
 
-          <!-- Role Column -->
-          <template v-slot:item.admin="{ item }">
-            <v-chip
-              :color="item.admin ? 'customyellow' : 'waterblue'"
-              variant="flat"
-              size="small"
-            >
-              <v-icon
-                start
-                :color="item.admin ? 'customblack' : 'white'"
-                :icon="item.admin ? 'mdi-account-star' : 'mdi-account'"
-              ></v-icon>
-              <span :style="{ color: item.admin ? '#191b24' : '#fff' }">{{
-                item.admin ? "Admin" : "User"
-              }}</span>
-            </v-chip>
-          </template>
+                  <!-- Username -->
+                  <td class="px-4 py-3">
+                    <div class="flex items-center">
+                      <div>
+                        <div class="font-medium">{{ item.username }}</div>
+                        <div class="text-xs text-muted-foreground">{{ item.email }}</div>
+                      </div>
+                    </div>
+                  </td>
 
-          <!-- Created Date Column -->
-          <template v-slot:item.createdAt="{ item }">
-            <div class="text-caption">
-              {{ formatDate(item.createdAt) }}
-            </div>
-          </template>
+                  <!-- Role -->
+                  <td class="px-4 py-3">
+                    <UiBadge
+                      class="border-transparent"
+                      :class="
+                        item.admin
+                          ? 'bg-customyellow text-customblack'
+                          : 'bg-waterblue text-white'
+                      "
+                    >
+                      <ShieldCheck v-if="item.admin" class="h-3 w-3" />
+                      <UserIcon v-else class="h-3 w-3" />
+                      {{ item.admin ? "Admin" : "User" }}
+                    </UiBadge>
+                  </td>
 
-          <!-- Actions Column -->
-          <template v-slot:item.actions="{ item }">
-            <div class="d-flex gap-2">
-              <v-tooltip text="View Details">
-                <template v-slot:activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    icon="mdi-eye"
-                    size="small"
-                    variant="text"
-                    @click="viewUser(item)"
-                  ></v-btn>
-                </template>
-              </v-tooltip>
+                  <!-- Created Date -->
+                  <td class="px-4 py-3">
+                    <div class="text-xs">
+                      {{ formatDate(item.createdAt) }}
+                    </div>
+                  </td>
 
-              <v-tooltip text="Delete User">
-                <template v-slot:activator="{ props }">
-                  <v-btn
-                    v-bind="props"
-                    icon="mdi-delete"
-                    size="small"
-                    variant="text"
-                    color="red"
-                    @click="confirmDelete(item)"
-                    :disabled="
-                      item.admin && currentUser && item._id === currentUser._id
-                    "
-                  ></v-btn>
-                </template>
-              </v-tooltip>
-            </div>
-          </template>
+                  <!-- Actions -->
+                  <td class="px-4 py-3">
+                    <div class="flex gap-2">
+                      <UiTooltip>
+                        <UiTooltipTrigger as-child>
+                          <UiButton
+                            variant="ghost"
+                            size="iconSm"
+                            aria-label="View user details"
+                            @click="viewUser(item)"
+                          >
+                            <Eye class="h-4 w-4" />
+                          </UiButton>
+                        </UiTooltipTrigger>
+                        <UiTooltipContent>View Details</UiTooltipContent>
+                      </UiTooltip>
 
-          <!-- No data slot -->
-          <template v-slot:no-data>
-            <div class="text-center pa-8">
-              <v-icon size="80" color="grey-lighten-2">mdi-account-off</v-icon>
-              <h3 class="text-h6 mt-4 mb-2">No Users Found</h3>
-              <p class="text-grey">No users match your search criteria</p>
-            </div>
-          </template>
-        </v-data-table>
-      </v-card>
-    </v-container>
+                      <UiTooltip>
+                        <UiTooltipTrigger as-child>
+                          <UiButton
+                            variant="ghost"
+                            size="iconSm"
+                            class="text-destructive hover:text-destructive"
+                            aria-label="Delete user"
+                            :disabled="
+                              Boolean(
+                                item.admin && currentUser && item._id === currentUser._id
+                              )
+                            "
+                            @click="confirmDelete(item)"
+                          >
+                            <Trash2 class="h-4 w-4" />
+                          </UiButton>
+                        </UiTooltipTrigger>
+                        <UiTooltipContent>Delete User</UiTooltipContent>
+                      </UiTooltip>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- No data -->
+                <tr v-if="!paginatedUsers.length">
+                  <td colspan="5" class="px-4 py-8 text-center">
+                    <div v-if="loading" class="flex justify-center py-4">
+                      <UiSpinner size="lg" class="text-muted-foreground" />
+                    </div>
+                    <div v-else>
+                      <UserX class="mx-auto h-20 w-20 text-muted-foreground/40" />
+                      <h3 class="mb-2 mt-4 text-lg font-semibold text-foreground">
+                        No Users Found
+                      </h3>
+                      <p class="text-muted-foreground">
+                        No users match your search criteria
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </UiTooltipProvider>
+
+        <!-- Pagination -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4">
+          <div class="text-sm text-muted-foreground">
+            Showing {{ paginatedUsers.length }} of {{ filteredUsers.length }} users
+          </div>
+
+          <UiPagination
+            v-slot="{ page: currentPage }"
+            v-model:page="page"
+            :total="filteredUsers.length"
+            :items-per-page="itemsPerPage"
+            :sibling-count="1"
+            class="mx-0 w-auto justify-end"
+            show-edges
+          >
+            <UiPaginationContent v-slot="{ items }">
+              <UiPaginationPrevious />
+              <template v-for="(item, index) in items">
+                <UiPaginationItem
+                  v-if="item.type === 'page'"
+                  :key="index"
+                  :value="item.value"
+                  :is-active="item.value === currentPage"
+                >
+                  {{ item.value }}
+                </UiPaginationItem>
+                <UiPaginationEllipsis v-else :key="item.type" :index="index" />
+              </template>
+              <UiPaginationNext />
+            </UiPaginationContent>
+          </UiPagination>
+        </div>
+      </div>
+    </div>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="500">
-      <v-card>
-        <v-card-title class="text-h5">
-          <v-icon color="red" class="mr-2">mdi-delete-alert</v-icon>
-          Confirm Delete
-        </v-card-title>
-        <v-card-text>
+    <UiDialog v-model:open="deleteDialog">
+      <UiDialogContent class="sm:max-w-lg" hide-close>
+        <UiDialogHeader>
+          <UiDialogTitle class="flex items-center text-2xl font-semibold">
+            <Trash2 class="mr-2 h-6 w-6 text-destructive" />
+            Confirm Delete
+          </UiDialogTitle>
+        </UiDialogHeader>
+
+        <p class="text-sm text-foreground">
           Are you sure you want to delete user
           <strong>{{ selectedUser?.username }}</strong
           >?
           <br />
-          <span class="text-red">This action cannot be undone.</span>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="deleteDialog = false">Cancel</v-btn>
-          <v-btn
-            color="red"
-            variant="flat"
-            @click="deleteUser"
+          <span class="text-destructive">This action cannot be undone.</span>
+        </p>
+
+        <UiDialogFooter>
+          <UiButton variant="ghost" @click="deleteDialog = false">Cancel</UiButton>
+          <UiButton
+            variant="destructive"
             :loading="deleteLoading"
+            @click="deleteUser"
           >
             Delete
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+          </UiButton>
+        </UiDialogFooter>
+      </UiDialogContent>
+    </UiDialog>
 
     <!-- User Details Dialog -->
-    <v-dialog v-model="detailsDialog" max-width="600">
-      <v-card v-if="selectedUser">
-        <v-card-title class="text-h5">
-          <v-icon class="mr-2">mdi-account-details</v-icon>
-          User Details
-        </v-card-title>
-        <v-card-text>
-          <v-row>
-            <v-col cols="12" class="text-center">
-              <v-avatar size="100" class="mb-4">
-                <v-img
-                  v-if="selectedUser.avatar_url"
-                  :src="selectedUser.avatar_url"
-                  :alt="selectedUser.username"
-                ></v-img>
-                <v-icon v-else size="60">mdi-account-circle</v-icon>
-              </v-avatar>
-            </v-col>
-            <v-col cols="6">
-              <v-list-item>
-                <v-list-item-title>Username</v-list-item-title>
-                <v-list-item-subtitle>{{
-                  selectedUser.username
-                }}</v-list-item-subtitle>
-              </v-list-item>
-            </v-col>
-            <v-col cols="6">
-              <v-list-item>
-                <v-list-item-title>Email</v-list-item-title>
-                <v-list-item-subtitle>{{
-                  selectedUser.email
-                }}</v-list-item-subtitle>
-              </v-list-item>
-            </v-col>
-            <v-col cols="6">
-              <v-list-item>
-                <v-list-item-title>Role</v-list-item-title>
-                <v-list-item-subtitle>
-                  <v-chip
-                    :color="selectedUser.admin ? 'customyellow' : 'waterblue'"
-                    variant="flat"
-                    size="small"
-                  >
-                    <span
-                      :style="{
-                        color: selectedUser.admin ? '#191b24' : '#fff',
-                      }"
-                      >{{ selectedUser.admin ? "Admin" : "User" }}</span
-                    >
-                  </v-chip>
-                </v-list-item-subtitle>
-              </v-list-item>
-            </v-col>
-            <v-col cols="6">
-              <v-list-item>
-                <v-list-item-title>User ID</v-list-item-title>
-                <v-list-item-subtitle class="text-caption">{{
-                  selectedUser._id
-                }}</v-list-item-subtitle>
-              </v-list-item>
-            </v-col>
-            <v-col cols="12">
-              <v-list-item>
-                <v-list-item-title>Joined Date</v-list-item-title>
-                <v-list-item-subtitle>{{
-                  formatDate(selectedUser.createdAt)
-                }}</v-list-item-subtitle>
-              </v-list-item>
-            </v-col>
-          </v-row>
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn text @click="detailsDialog = false">Close</v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+    <UiDialog v-model:open="detailsDialog">
+      <UiDialogContent class="sm:max-w-xl" hide-close>
+        <UiDialogHeader>
+          <UiDialogTitle class="flex items-center text-2xl font-semibold">
+            <CircleUser class="mr-2 h-6 w-6" />
+            User Details
+          </UiDialogTitle>
+        </UiDialogHeader>
+
+        <div v-if="selectedUser" class="grid grid-cols-12 gap-4">
+          <div class="col-span-12 text-center">
+            <UiAvatar class="mx-auto mb-4 h-[100px] w-[100px]">
+              <UiAvatarImage
+                :src="selectedUser.avatar_url || ''"
+                :alt="selectedUser.username"
+              />
+              <UiAvatarFallback>
+                <CircleUser class="h-14 w-14" />
+              </UiAvatarFallback>
+            </UiAvatar>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-sm font-medium text-foreground">Username</div>
+            <div class="text-sm text-muted-foreground">
+              {{ selectedUser.username }}
+            </div>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-sm font-medium text-foreground">Email</div>
+            <div class="text-sm text-muted-foreground">
+              {{ selectedUser.email }}
+            </div>
+          </div>
+
+          <div class="col-span-6">
+            <div class="mb-1 text-sm font-medium text-foreground">Role</div>
+            <UiBadge
+              class="border-transparent"
+              :class="
+                selectedUser.admin
+                  ? 'bg-customyellow text-customblack'
+                  : 'bg-waterblue text-white'
+              "
+            >
+              {{ selectedUser.admin ? "Admin" : "User" }}
+            </UiBadge>
+          </div>
+
+          <div class="col-span-6">
+            <div class="text-sm font-medium text-foreground">User ID</div>
+            <div class="text-xs text-muted-foreground">
+              {{ selectedUser._id }}
+            </div>
+          </div>
+
+          <div class="col-span-12">
+            <div class="text-sm font-medium text-foreground">Joined Date</div>
+            <div class="text-sm text-muted-foreground">
+              {{ formatDate(selectedUser.createdAt) }}
+            </div>
+          </div>
+        </div>
+
+        <UiDialogFooter>
+          <UiButton variant="ghost" @click="detailsDialog = false">Close</UiButton>
+        </UiDialogFooter>
+      </UiDialogContent>
+    </UiDialog>
 
     <!-- Snackbar for notifications -->
     <SnackbarAlert
@@ -342,186 +417,193 @@
   </div>
 </template>
 
-<script>
-import { getAllUsers, deleteUser } from "~/api/userApi";
-import SnackbarAlert from "~/components/SnackbarAlert.vue";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
+import {
+  CircleUser,
+  Eye,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  Trash2,
+  User as UserIcon,
+  UserCheck,
+  UserPlus,
+  Users,
+  UserX,
+  X,
+} from "lucide-vue-next";
+import { getAllUsers, deleteUser as deleteUserApi } from "~/api/userApi";
+import type { User } from "@/types";
 
-export default {
-  name: "UserManagement",
-  components: {
-    SnackbarAlert,
-  },
-  data() {
-    return {
-      users: [],
-      loading: false,
-      deleteLoading: false,
-      search: "",
-      filterRole: null,
-      deleteDialog: false,
-      detailsDialog: false,
-      selectedUser: null,
-      snackbar: {
-        show: false,
-        message: "",
-        color: "success",
-      },
-      headers: [
-        {
-          title: "Avatar",
-          value: "avatar_url",
-          sortable: false,
-          width: "80px",
-        },
-        { title: "User", value: "username", sortable: true },
-        { title: "Role", value: "admin", sortable: true },
-        { title: "Joined", value: "createdAt", sortable: true },
-        { title: "Actions", value: "actions", sortable: false, width: "120px" },
-      ],
-      roleOptions: [
-        { title: "All Users", value: null },
-        { title: "Regular Users", value: false },
-        { title: "Admins", value: true },
-      ],
-    };
-  },
-  computed: {
-    currentUser() {
-      return this.$store.state.auth.user;
-    },
-    totalUsers() {
-      return this.users.length;
-    },
-    regularUsers() {
-      return this.users.filter((user) => !user.admin).length;
-    },
-    adminUsers() {
-      return this.users.filter((user) => user.admin).length;
-    },
-    newUsersThisMonth() {
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth();
-      const currentYear = currentDate.getFullYear();
+const authStore = useAuthStore();
+const { currentUser } = storeToRefs(authStore);
 
-      return this.users.filter((user) => {
-        const userDate = new Date(user.createdAt);
-        return (
-          userDate.getMonth() === currentMonth &&
-          userDate.getFullYear() === currentYear
-        );
-      }).length;
-    },
-    filteredUsers() {
-      let filtered = this.users;
+const users = ref<User[]>([]);
+const loading = ref(false);
+const deleteLoading = ref(false);
+const search = ref("");
+const filterRole = ref<string | undefined>(undefined);
+const deleteDialog = ref(false);
+const detailsDialog = ref(false);
+const selectedUser = ref<User | null>(null);
 
-      if (this.filterRole !== null) {
-        filtered = filtered.filter((user) => user.admin === this.filterRole);
-      }
+const page = ref(1);
+const itemsPerPage = 10;
 
-      return filtered;
-    },
-  },
-  async mounted() {
-    await this.fetchUsers();
-  },
-  methods: {
-    async fetchUsers() {
-      try {
-        this.loading = true;
-        const response = await getAllUsers();
-        this.users = response.data || [];
-        this.showSnackbar("Users loaded successfully", "success");
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        this.showSnackbar("Failed to load users", "error");
-      } finally {
-        this.loading = false;
-      }
-    },
-    async refreshUsers() {
-      await this.fetchUsers();
-    },
-    confirmDelete(user) {
-      this.selectedUser = user;
-      this.deleteDialog = true;
-    },
-    async deleteUser() {
-      if (!this.selectedUser) return;
+const snackbar = reactive({
+  show: false,
+  message: "",
+  color: "success",
+});
 
-      try {
-        this.deleteLoading = true;
-        await deleteUser(this.selectedUser._id);
+const roleOptions = [
+  { label: "All Users", value: "all" },
+  { label: "Regular Users", value: "user" },
+  { label: "Admins", value: "admin" },
+];
 
-        // Remove user from local array
-        this.users = this.users.filter(
-          (user) => user._id !== this.selectedUser._id
-        );
+const totalUsers = computed(() => users.value.length);
 
-        this.showSnackbar(
-          `User ${this.selectedUser.username} deleted successfully`,
-          "success"
-        );
-        this.deleteDialog = false;
-        this.selectedUser = null;
-      } catch (error) {
-        console.error("Error deleting user:", error);
-        this.showSnackbar("Failed to delete user", "error");
-      } finally {
-        this.deleteLoading = false;
-      }
-    },
-    viewUser(user) {
-      this.selectedUser = user;
-      this.detailsDialog = true;
-    },
-    formatDate(dateString) {
-      if (!dateString) return "N/A";
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    },
-    showSnackbar(message, color = "success") {
-      this.snackbar = {
-        show: true,
-        message,
-        color,
-      };
-    },
-  },
-};
+const regularUsers = computed(
+  () => users.value.filter((user) => !user.admin).length
+);
+
+const adminUsers = computed(
+  () => users.value.filter((user) => user.admin).length
+);
+
+const newUsersThisMonth = computed(() => {
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+
+  return users.value.filter((user) => {
+    const userDate = new Date(user.createdAt as string);
+    return (
+      userDate.getMonth() === currentMonth &&
+      userDate.getFullYear() === currentYear
+    );
+  }).length;
+});
+
+const filteredUsers = computed<User[]>(() => {
+  let filtered = users.value;
+
+  // Role filter (original values: null / false / true)
+  if (filterRole.value === "admin") {
+    filtered = filtered.filter((user) => user.admin);
+  } else if (filterRole.value === "user") {
+    filtered = filtered.filter((user) => !user.admin);
+  }
+
+  // Text search (previously handled internally by v-data-table's :search)
+  if (search.value) {
+    const query = search.value.toLowerCase();
+    filtered = filtered.filter((user) =>
+      [user.username, user.email, user._id].some((value) =>
+        String(value ?? "")
+          .toLowerCase()
+          .includes(query)
+      )
+    );
+  }
+
+  return filtered;
+});
+
+const paginatedUsers = computed(() => {
+  const start = (page.value - 1) * itemsPerPage;
+  return filteredUsers.value.slice(start, start + itemsPerPage);
+});
+
+const pageCount = computed(() =>
+  Math.ceil(filteredUsers.value.length / itemsPerPage)
+);
+
+async function fetchUsers() {
+  try {
+    loading.value = true;
+    const response = await getAllUsers();
+    users.value = response.data || [];
+    showSnackbar("Users loaded successfully", "success");
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    showSnackbar("Failed to load users", "error");
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function refreshUsers() {
+  await fetchUsers();
+}
+
+function confirmDelete(user: User) {
+  selectedUser.value = user;
+  deleteDialog.value = true;
+}
+
+async function deleteUser() {
+  if (!selectedUser.value) return;
+
+  try {
+    deleteLoading.value = true;
+    await deleteUserApi(selectedUser.value._id);
+
+    // Remove user from local array
+    users.value = users.value.filter(
+      (user) => user._id !== selectedUser.value?._id
+    );
+
+    showSnackbar(
+      `User ${selectedUser.value.username} deleted successfully`,
+      "success"
+    );
+    deleteDialog.value = false;
+    selectedUser.value = null;
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    showSnackbar("Failed to delete user", "error");
+  } finally {
+    deleteLoading.value = false;
+  }
+}
+
+function viewUser(user: User) {
+  selectedUser.value = user;
+  detailsDialog.value = true;
+}
+
+function formatDate(dateString?: string) {
+  if (!dateString) return "N/A";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function showSnackbar(message: string, color = "success") {
+  snackbar.show = true;
+  snackbar.message = message;
+  snackbar.color = color;
+}
+
+// Keep pagination consistent with the (re-implemented) filtering
+watch([search, filterRole], () => {
+  page.value = 1;
+});
+
+watch(pageCount, (val) => {
+  if (page.value > val) page.value = Math.max(1, val);
+});
+
+onMounted(async () => {
+  await fetchUsers();
+});
 </script>
-
-<style scoped>
-.gap-2 {
-  gap: 8px;
-}
-
-.admin-card {
-  border-radius: var(--admin-radius-md, 16px);
-  box-shadow: var(--admin-shadow-sm, 0 2px 10px -2px rgba(25, 27, 36, 0.08));
-}
-
-.admin-heading {
-  color: var(--admin-ink, #191b24);
-}
-
-.stat-card {
-  transition: transform var(--admin-transition, 200ms ease),
-    box-shadow var(--admin-transition, 200ms ease);
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--admin-shadow-md, 0 12px 28px -8px rgba(25, 27, 36, 0.14));
-}
-
-.stat-value {
-  font-variant-numeric: tabular-nums;
-  color: var(--admin-ink, #191b24);
-}
-</style>

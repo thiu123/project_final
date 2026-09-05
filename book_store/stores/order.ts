@@ -1,0 +1,83 @@
+import { defineStore } from "pinia";
+import { ref } from "vue";
+import orderApi from "@/api/orderApi";
+import type { Order, OrderItem } from "@/types";
+
+export const useOrderStore = defineStore("order", () => {
+  const cartItems = ref<OrderItem[]>([]);
+  const total = ref(0);
+  const orderStatus = ref("");
+  const order = ref<Order | null>(null); // order detail
+  const userOrders = ref<Order[]>([]); // all orders of user
+  const purchasedEbooks = ref<Record<string, boolean>>({}); // { bookId: true/false }
+
+  async function fetchUserOrders() {
+    try {
+      const orders = await orderApi.getUserOrders();
+      userOrders.value = orders;
+      return orders;
+    } catch (error) {
+      console.error("Error loading user orders:", error);
+    }
+  }
+
+  async function createOrder(voucherCode: string | null = null) {
+    try {
+      const { paymentUrl } = await orderApi.createOrderFromCart(voucherCode);
+      return paymentUrl;
+    } catch (error) {
+      console.error("Error creating order:", error);
+    }
+  }
+
+  async function createMomoOrder(voucherCode: string | null = null) {
+    try {
+      const { paymentUrl } = await orderApi.createMomoOrderFromCart(
+        voucherCode
+      );
+      return paymentUrl;
+    } catch (error) {
+      console.error("Error creating MoMo order:", error);
+    }
+  }
+
+  async function fetchOrderById(id: string) {
+    try {
+      const fetched = await orderApi.getOrderById(id);
+      order.value = fetched;
+      return fetched;
+    } catch (error) {
+      console.error("Error when retrieving order information:", error);
+    }
+  }
+
+  async function checkEbookPurchase(bookId: string) {
+    try {
+      const response = await orderApi.checkEbookPurchase(bookId);
+      const isPurchased = response.isPurchased;
+
+      purchasedEbooks.value[bookId] = isPurchased;
+
+      return isPurchased;
+    } catch (error) {
+      console.error("Error checking ebook purchase:", error);
+      // On error, assume the ebook has not been purchased
+      purchasedEbooks.value[bookId] = false;
+      return false;
+    }
+  }
+
+  return {
+    cartItems,
+    total,
+    orderStatus,
+    order,
+    userOrders,
+    purchasedEbooks,
+    fetchUserOrders,
+    createOrder,
+    createMomoOrder,
+    fetchOrderById,
+    checkEbookPurchase,
+  };
+});

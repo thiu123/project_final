@@ -1,741 +1,845 @@
 <template>
   <div>
-    <v-container fluid>
+    <div class="w-full p-4">
       <!-- Header Section -->
-      <v-row class="mb-4">
-        <v-col cols="12">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <h1 class="text-h4 font-weight-bold mb-2 admin-heading">
-                Order Management
-              </h1>
-              <p class="text-subtitle-1 text-grey">
-                Manage all orders in the system
-              </p>
-            </div>
-            <v-btn
-              color="waterblue"
-              @click="fetchOrders"
-              :loading="loading"
-              prepend-icon="mdi-refresh"
-            >
-              Refresh
-            </v-btn>
-          </div>
-        </v-col>
-      </v-row>
+      <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 class="mb-2 text-3xl font-bold text-foreground">
+            Order Management
+          </h1>
+          <p class="text-base font-medium text-muted-foreground">
+            Manage all orders in the system
+          </p>
+        </div>
+        <UiButton
+          class="bg-waterblue text-white hover:bg-waterblue/90"
+          :loading="loading"
+          @click="fetchOrders"
+        >
+          <RefreshCw v-if="!loading" class="h-4 w-4" />
+          Refresh
+        </UiButton>
+      </div>
 
       <!-- Statistics Cards -->
-      <v-row class="mb-6">
-        <v-col cols="12" md="3">
-          <v-card class="admin-card stat-card" elevation="0">
-            <v-card-text>
-              <div class="d-flex align-center">
-                <v-avatar color="customyellow" rounded="lg" class="mr-3">
-                  <v-icon color="customblack">mdi-package-variant</v-icon>
-                </v-avatar>
-                <div>
-                  <p class="text-caption text-grey mb-0">Total Orders</p>
-                  <p class="text-h5 font-weight-bold mb-0 stat-value">
-                    {{ totalOrders }}
-                  </p>
-                </div>
-              </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="3">
-          <v-card class="admin-card stat-card" elevation="0">
-            <v-card-text>
-              <div class="d-flex align-center">
-                <v-avatar color="success" class="mr-3">
-                  <v-icon>mdi-check-circle</v-icon>
-                </v-avatar>
-                <div>
-                  <p class="text-caption text-grey mb-0">Paid Orders</p>
-                  <p class="text-h5 font-weight-bold mb-0 stat-value">
-                    {{ paidOrders }}
-                  </p>
-                </div>
-              </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="3">
-          <v-card class="admin-card stat-card" elevation="0">
-            <v-card-text>
-              <div class="d-flex align-center">
-                <v-avatar color="warning" class="mr-3">
-                  <v-icon>mdi-clock-outline</v-icon>
-                </v-avatar>
-                <div>
-                  <p class="text-caption text-grey mb-0">Pending Orders</p>
-                  <p class="text-h5 font-weight-bold mb-0 stat-value">
-                    {{ pendingOrders }}
-                  </p>
-                </div>
-              </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-        <v-col cols="12" md="3">
-          <v-card class="admin-card stat-card" elevation="0">
-            <v-card-text>
-              <div class="d-flex align-center">
-                <v-avatar color="waterblue" rounded="lg" class="mr-3">
-                  <v-icon color="white">mdi-cash</v-icon>
-                </v-avatar>
-                <div>
-                  <p class="text-caption text-grey mb-0">Total Revenue</p>
-                  <p class="text-h5 font-weight-bold mb-0 stat-value">
-                    ${{ totalRevenue }}
-                  </p>
-                </div>
-              </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
+      <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+        <UiCard
+          class="rounded-2xl transition duration-200 hover:-translate-y-1 hover:shadow-md"
+        >
+          <div class="flex items-center p-4">
+            <span
+              class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-customyellow"
+            >
+              <Package class="h-6 w-6 text-customblack" />
+            </span>
+            <div>
+              <p class="mb-0 text-xs text-muted-foreground">Total Orders</p>
+              <p class="mb-0 text-2xl font-semibold tabular-nums text-foreground">
+                {{ totalOrders }}
+              </p>
+            </div>
+          </div>
+        </UiCard>
+        <UiCard
+          class="rounded-2xl transition duration-200 hover:-translate-y-1 hover:shadow-md"
+        >
+          <div class="flex items-center p-4">
+            <span
+              class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success"
+            >
+              <CheckCircle2 class="h-6 w-6 text-success-foreground" />
+            </span>
+            <div>
+              <p class="mb-0 text-xs text-muted-foreground">Paid Orders</p>
+              <p class="mb-0 text-2xl font-semibold tabular-nums text-foreground">
+                {{ paidOrders }}
+              </p>
+            </div>
+          </div>
+        </UiCard>
+        <UiCard
+          class="rounded-2xl transition duration-200 hover:-translate-y-1 hover:shadow-md"
+        >
+          <div class="flex items-center p-4">
+            <span
+              class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-warning"
+            >
+              <Clock class="h-6 w-6 text-warning-foreground" />
+            </span>
+            <div>
+              <p class="mb-0 text-xs text-muted-foreground">Pending Orders</p>
+              <p class="mb-0 text-2xl font-semibold tabular-nums text-foreground">
+                {{ pendingOrders }}
+              </p>
+            </div>
+          </div>
+        </UiCard>
+        <UiCard
+          class="rounded-2xl transition duration-200 hover:-translate-y-1 hover:shadow-md"
+        >
+          <div class="flex items-center p-4">
+            <span
+              class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-waterblue"
+            >
+              <Banknote class="h-6 w-6 text-white" />
+            </span>
+            <div>
+              <p class="mb-0 text-xs text-muted-foreground">Total Revenue</p>
+              <p class="mb-0 text-2xl font-semibold tabular-nums text-foreground">
+                ${{ totalRevenue }}
+              </p>
+            </div>
+          </div>
+        </UiCard>
+      </div>
 
       <!-- Search and Filter Section -->
-      <v-row class="mb-4">
-        <v-col cols="12" md="6">
-          <v-text-field
+      <div class="mb-4 grid grid-cols-12 gap-4">
+        <div class="col-span-12 md:col-span-6">
+          <UiInput
             v-model="search"
-            prepend-inner-icon="mdi-magnify"
-            label="Search orders (Order ID, User email)..."
-            single-line
-            hide-details
-            variant="outlined"
-            density="comfortable"
-            clearable
-          ></v-text-field>
-        </v-col>
-        <v-col cols="12" md="3">
-          <v-select
-            v-model="statusFilter"
-            :items="statusOptions"
-            label="Filter by Status"
-            variant="outlined"
-            density="comfortable"
-            hide-details
-            clearable
-          ></v-select>
-        </v-col>
-        <v-col cols="12" md="3">
-          <v-select
-            v-model="paymentFilter"
-            :items="paymentOptions"
-            label="Filter by Payment"
-            variant="outlined"
-            density="comfortable"
-            hide-details
-            clearable
-          ></v-select>
-        </v-col>
-      </v-row>
+            placeholder="Search orders (Order ID, User email)..."
+          >
+            <template #prepend>
+              <Search class="h-4 w-4" />
+            </template>
+            <template #append>
+              <button
+                v-if="search"
+                type="button"
+                class="pointer-events-auto rounded-full p-0.5 hover:text-foreground"
+                aria-label="Clear search"
+                @click="search = ''"
+              >
+                <X class="h-4 w-4" />
+              </button>
+            </template>
+          </UiInput>
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <UiSelect v-model="statusFilter">
+            <UiSelectTrigger class="w-full">
+              <UiSelectValue placeholder="Filter by Status" />
+            </UiSelectTrigger>
+            <UiSelectContent>
+              <UiSelectItem
+                v-for="opt in statusFilterItems"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </UiSelectItem>
+            </UiSelectContent>
+          </UiSelect>
+        </div>
+        <div class="col-span-12 md:col-span-3">
+          <UiSelect v-model="paymentFilter">
+            <UiSelectTrigger class="w-full">
+              <UiSelectValue placeholder="Filter by Payment" />
+            </UiSelectTrigger>
+            <UiSelectContent>
+              <UiSelectItem
+                v-for="opt in paymentFilterItems"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </UiSelectItem>
+            </UiSelectContent>
+          </UiSelect>
+        </div>
+      </div>
 
       <!-- Orders Table -->
-      <v-card class="admin-card" elevation="0">
-        <v-card-text class="pa-0">
-          <v-data-table
-            :headers="headers"
-            :items="filteredOrders"
-            :loading="loading"
-            :items-per-page="10"
-            class="elevation-0"
-          >
-            <!-- Order ID -->
-            <template v-slot:item.orderId="{ item }">
-              <div class="d-flex align-center">
-                <v-icon class="mr-2" size="small">mdi-package-variant</v-icon>
-                <span class="font-weight-medium">{{ item.orderId }}</span>
-              </div>
-            </template>
-
-            <!-- User -->
-            <template v-slot:item.userId="{ item }">
-              <div>
-                <div class="font-weight-medium">
-                  {{ item.userId?.username || "N/A" }}
-                </div>
-                <div class="text-caption text-grey">
-                  {{ item.userId?.email || "N/A" }}
-                </div>
-              </div>
-            </template>
-
-            <!-- Items -->
-            <template v-slot:item.items="{ item }">
-              <v-chip size="small" color="waterblue" variant="tonal">
-                {{ item.items.length }} item(s)
-              </v-chip>
-            </template>
-
-            <!-- Total -->
-            <template v-slot:item.total="{ item }">
-              <div class="font-weight-bold">
-                {{ formatCurrency(item.total) }}
-              </div>
-            </template>
-
-            <!-- Payment Method -->
-            <template v-slot:item.paymentMethod="{ item }">
-              <v-chip
-                size="small"
-                :color="getPaymentColor(item.paymentMethod)"
-                variant="outlined"
-              >
-                <v-icon start size="small">
-                  {{ getPaymentIcon(item.paymentMethod) }}
-                </v-icon>
-                {{ item.paymentMethod }}
-              </v-chip>
-            </template>
-
-            <!-- Status -->
-            <template v-slot:item.status="{ item }">
-              <v-chip
-                size="small"
-                :color="getStatusColor(item.status)"
-                variant="flat"
-              >
-                <v-icon start size="small">
-                  {{ getStatusIcon(item.status) }}
-                </v-icon>
-                {{ item.status }}
-              </v-chip>
-            </template>
-
-            <!-- Date -->
-            <template v-slot:item.createdAt="{ item }">
-              <div class="text-caption">
-                {{ formatDate(item.createdAt) }}
-              </div>
-            </template>
-
-            <!-- Actions -->
-            <template v-slot:item.actions="{ item }">
-              <div class="d-flex gap-2 align-center">
-                <v-select
-                  :model-value="item.status"
-                  :items="statusOptions"
-                  density="compact"
-                  variant="outlined"
-                  hide-details
-                  style="min-width: 100px"
-                  @update:model-value="(newStatus) => quickUpdateStatus(item, newStatus)"
+      <UiCard class="rounded-2xl">
+        <div class="overflow-x-auto rounded-2xl">
+          <table class="w-full text-sm">
+            <thead class="bg-muted/60 text-left">
+              <tr>
+                <th class="px-4 py-3 font-medium text-muted-foreground">
+                  Order ID
+                </th>
+                <th class="px-4 py-3 font-medium text-muted-foreground">
+                  Customer
+                </th>
+                <th class="px-4 py-3 font-medium text-muted-foreground">
+                  Items
+                </th>
+                <th class="px-4 py-3 font-medium text-muted-foreground">
+                  Total
+                </th>
+                <th class="px-4 py-3 font-medium text-muted-foreground">
+                  Payment
+                </th>
+                <th class="px-4 py-3 font-medium text-muted-foreground">
+                  Status
+                </th>
+                <th class="px-4 py-3 font-medium text-muted-foreground">
+                  Date
+                </th>
+                <th class="px-4 py-3 text-center font-medium text-muted-foreground">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <tr v-if="loading">
+                <td colspan="8" class="px-4 py-8 text-center">
+                  <UiSpinner size="lg" class="mx-auto text-waterblue" />
+                </td>
+              </tr>
+              <template v-else>
+                <tr
+                  v-for="order in paginatedOrders"
+                  :key="order._id"
+                  class="hover:bg-muted/40"
                 >
-                  <template v-slot:selection="{ item: statusItem }">
-                    <div class="d-flex align-center gap-1">
-                      <v-icon :color="getStatusColor(statusItem.value)" size="small">
-                        {{ getStatusIcon(statusItem.value) }}
-                      </v-icon>
-                      <span class="text-caption font-weight-medium">{{ statusItem.value }}</span>
+                  <!-- Order ID -->
+                  <td class="px-4 py-3">
+                    <div class="flex items-center">
+                      <Package class="mr-2 h-4 w-4 text-muted-foreground" />
+                      <span class="font-medium">{{ order.orderId }}</span>
                     </div>
-                  </template>
-                  <template v-slot:item="{ props, item: statusItem }">
-                    <v-list-item v-bind="props">
-                      <template v-slot:prepend>
-                        <v-icon :color="getStatusColor(statusItem.value)">
-                          {{ getStatusIcon(statusItem.value) }}
-                        </v-icon>
-                      </template>
-                    </v-list-item>
-                  </template>
-                </v-select>
-                <v-btn
-                  icon
-                  size="small"
-                  variant="text"
-                  color="primary"
-                  @click="viewOrderDetails(item)"
-                >
-                  <v-icon>mdi-eye</v-icon>
-                  <v-tooltip activator="parent" location="top"
-                    >View Details</v-tooltip
+                  </td>
+
+                  <!-- User -->
+                  <td class="px-4 py-3">
+                    <div>
+                      <div class="font-medium">
+                        {{ orderUser(order)?.username || "N/A" }}
+                      </div>
+                      <div class="text-xs text-muted-foreground">
+                        {{ orderUser(order)?.email || "N/A" }}
+                      </div>
+                    </div>
+                  </td>
+
+                  <!-- Items -->
+                  <td class="px-4 py-3">
+                    <span
+                      class="inline-flex items-center rounded-full bg-waterblue/15 px-2.5 py-0.5 text-xs font-semibold text-waterblue"
+                    >
+                      {{ order.items.length }} item(s)
+                    </span>
+                  </td>
+
+                  <!-- Total -->
+                  <td class="px-4 py-3">
+                    <div class="font-bold">
+                      {{ formatCurrency(order.total) }}
+                    </div>
+                  </td>
+
+                  <!-- Payment Method -->
+                  <td class="px-4 py-3">
+                    <span
+                      class="inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold"
+                      :class="getPaymentClass(order.paymentMethod)"
+                    >
+                      <component
+                        :is="getPaymentIcon(order.paymentMethod)"
+                        class="h-3.5 w-3.5"
+                      />
+                      {{ order.paymentMethod }}
+                    </span>
+                  </td>
+
+                  <!-- Status -->
+                  <td class="px-4 py-3">
+                    <span
+                      class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                      :class="getStatusClass(order.status)"
+                    >
+                      <component
+                        :is="getStatusIcon(order.status)"
+                        class="h-3.5 w-3.5"
+                      />
+                      {{ order.status }}
+                    </span>
+                  </td>
+
+                  <!-- Date -->
+                  <td class="px-4 py-3">
+                    <div class="text-xs">
+                      {{ formatDate(order.createdAt) }}
+                    </div>
+                  </td>
+
+                  <!-- Actions -->
+                  <td class="px-4 py-3">
+                    <div class="flex items-center justify-center gap-2">
+                      <UiSelect
+                        :model-value="order.status"
+                        @update:model-value="
+                          (newStatus) =>
+                            quickUpdateStatus(order, newStatus as string)
+                        "
+                      >
+                        <UiSelectTrigger class="w-36">
+                          <UiSelectValue />
+                        </UiSelectTrigger>
+                        <UiSelectContent>
+                          <UiSelectItem
+                            v-for="opt in statusOptions"
+                            :key="opt"
+                            :value="opt"
+                          >
+                            {{ opt }}
+                          </UiSelectItem>
+                        </UiSelectContent>
+                      </UiSelect>
+                      <UiTooltipProvider :delay-duration="200">
+                        <UiTooltip>
+                          <UiTooltipTrigger as-child>
+                            <UiButton
+                              variant="ghost"
+                              size="iconSm"
+                              class="text-primary"
+                              @click="viewOrderDetails(order)"
+                            >
+                              <Eye class="h-5 w-5" />
+                            </UiButton>
+                          </UiTooltipTrigger>
+                          <UiTooltipContent side="top">
+                            View Details
+                          </UiTooltipContent>
+                        </UiTooltip>
+                      </UiTooltipProvider>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="!paginatedOrders.length">
+                  <td
+                    colspan="8"
+                    class="px-4 py-8 text-center text-muted-foreground"
                   >
-                </v-btn>
-              </div>
-            </template>
-          </v-data-table>
-        </v-card-text>
-      </v-card>
-    </v-container>
+                    No orders found
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div
+          v-if="filteredOrders.length > itemsPerPage"
+          class="flex justify-center border-t border-border py-3"
+        >
+          <UiPagination
+            v-slot="{ page: currentPage }"
+            v-model:page="page"
+            :total="filteredOrders.length"
+            :items-per-page="itemsPerPage"
+            :sibling-count="1"
+            show-edges
+          >
+            <UiPaginationContent v-slot="{ items }">
+              <UiPaginationPrevious />
+              <template v-for="(item, index) in items">
+                <UiPaginationItem
+                  v-if="item.type === 'page'"
+                  :key="index"
+                  :value="item.value"
+                  :is-active="item.value === currentPage"
+                >
+                  {{ item.value }}
+                </UiPaginationItem>
+                <UiPaginationEllipsis v-else :key="item.type" :index="index" />
+              </template>
+              <UiPaginationNext />
+            </UiPaginationContent>
+          </UiPagination>
+        </div>
+      </UiCard>
+    </div>
 
     <!-- Order Details Dialog -->
-    <v-dialog v-model="detailsDialog" max-width="900px" scrollable>
-      <v-card v-if="selectedOrder" rounded="lg">
-        <v-card-title class="bg-customblack text-white">
-          <v-icon class="mr-2" color="customyellow">mdi-package-variant</v-icon>
-          Order Details - {{ selectedOrder.orderId }}
-        </v-card-title>
+    <UiDialog v-model:open="detailsDialog">
+      <UiDialogContent class="max-h-[85vh] overflow-y-auto sm:max-w-4xl">
+        <UiDialogHeader>
+          <UiDialogTitle class="flex items-center gap-2">
+            <Package class="h-5 w-5 text-waterblue" />
+            <span>Order Details - {{ selectedOrder?.orderId }}</span>
+          </UiDialogTitle>
+        </UiDialogHeader>
 
-        <v-card-text class="pa-4">
-          <v-row>
-            <!-- Order Information -->
-            <v-col cols="12" md="6">
-              <v-card variant="outlined">
-                <v-card-title class="text-subtitle-1 font-weight-bold">
-                  <v-icon class="mr-2">mdi-information</v-icon>
-                  Order Information
-                </v-card-title>
-                <v-card-text>
-                  <v-list density="compact">
-                    <v-list-item>
-                      <template v-slot:prepend>
-                        <v-icon>mdi-identifier</v-icon>
-                      </template>
-                      <v-list-item-title>Order ID</v-list-item-title>
-                      <v-list-item-subtitle>{{
-                        selectedOrder.orderId
-                      }}</v-list-item-subtitle>
-                    </v-list-item>
-                    <v-list-item>
-                      <template v-slot:prepend>
-                        <v-icon>mdi-cash</v-icon>
-                      </template>
-                      <v-list-item-title>Payment Method</v-list-item-title>
-                      <v-list-item-subtitle>{{
-                        selectedOrder.paymentMethod
-                      }}</v-list-item-subtitle>
-                    </v-list-item>
-                    <v-list-item>
-                      <template v-slot:prepend>
-                        <v-icon>mdi-tag</v-icon>
-                      </template>
-                      <v-list-item-title>Status</v-list-item-title>
-                      <v-list-item-subtitle>
-                        <v-chip
-                          size="small"
-                          :color="getStatusColor(selectedOrder.status)"
-                        >
-                          {{ selectedOrder.status }}
-                        </v-chip>
-                      </v-list-item-subtitle>
-                    </v-list-item>
-                    <v-list-item>
-                      <template v-slot:prepend>
-                        <v-icon>mdi-calendar</v-icon>
-                      </template>
-                      <v-list-item-title>Order Date</v-list-item-title>
-                      <v-list-item-subtitle>{{
-                        formatDate(selectedOrder.createdAt)
-                      }}</v-list-item-subtitle>
-                    </v-list-item>
-                  </v-list>
-                </v-card-text>
-              </v-card>
-            </v-col>
-
-            <!-- Customer Information -->
-            <v-col cols="12" md="6">
-              <v-card variant="outlined">
-                <v-card-title class="text-subtitle-1 font-weight-bold">
-                  <v-icon class="mr-2">mdi-account</v-icon>
-                  Customer Information
-                </v-card-title>
-                <v-card-text>
-                  <v-list density="compact">
-                    <v-list-item>
-                      <template v-slot:prepend>
-                        <v-icon>mdi-account</v-icon>
-                      </template>
-                      <v-list-item-title>Username</v-list-item-title>
-                      <v-list-item-subtitle>{{
-                        selectedOrder.userId?.username || "N/A"
-                      }}</v-list-item-subtitle>
-                    </v-list-item>
-                    <v-list-item>
-                      <template v-slot:prepend>
-                        <v-icon>mdi-email</v-icon>
-                      </template>
-                      <v-list-item-title>Email</v-list-item-title>
-                      <v-list-item-subtitle>{{
-                        selectedOrder.userId?.email || "N/A"
-                      }}</v-list-item-subtitle>
-                    </v-list-item>
-                  </v-list>
-                </v-card-text>
-              </v-card>
-            </v-col>
-
-            <!-- Voucher Information (if exists) -->
-            <v-col cols="12" v-if="selectedOrder.voucher">
-              <v-card variant="outlined" color="success">
-                <v-card-title class="text-subtitle-1 font-weight-bold">
-                  <v-icon class="mr-2">mdi-ticket-percent</v-icon>
-                  Voucher Applied
-                </v-card-title>
-                <v-card-text>
-                  <div class="d-flex align-center justify-space-between">
-                    <div>
-                      <v-chip v-if="selectedOrder.voucher.code" color="success" variant="flat" class="mb-2">
-                        {{ selectedOrder.voucher.code }}
-                      </v-chip>
-                      <v-chip v-else color="red" variant="flat" class="mb-2">
-                        No Voucher
-                      </v-chip>
-                    </div>
-                    <div class="text-h6 text-success">
-                      -{{
-                        formatCurrency(selectedOrder.voucher.discountAmount)
-                      }}
-                    </div>
+        <div v-if="selectedOrder" class="grid grid-cols-12 gap-4">
+          <!-- Order Information -->
+          <div class="col-span-12 md:col-span-6">
+            <div class="h-full rounded-lg border border-border">
+              <div class="flex items-center gap-2 px-4 pt-4 text-base font-bold">
+                <Info class="h-5 w-5" />
+                Order Information
+              </div>
+              <div class="space-y-3 p-4">
+                <div class="flex items-start gap-3">
+                  <Hash class="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p class="text-sm font-medium">Order ID</p>
+                    <p class="text-sm text-muted-foreground">
+                      {{ selectedOrder.orderId }}
+                    </p>
                   </div>
-                </v-card-text>
-              </v-card>
-            </v-col>
+                </div>
+                <div class="flex items-start gap-3">
+                  <Banknote class="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p class="text-sm font-medium">Payment Method</p>
+                    <p class="text-sm text-muted-foreground">
+                      {{ selectedOrder.paymentMethod }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <Tag class="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p class="text-sm font-medium">Status</p>
+                    <span
+                      class="mt-0.5 inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                      :class="getStatusClass(selectedOrder.status)"
+                    >
+                      {{ selectedOrder.status }}
+                    </span>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <Calendar class="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p class="text-sm font-medium">Order Date</p>
+                    <p class="text-sm text-muted-foreground">
+                      {{ formatDate(selectedOrder.createdAt) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-            <!-- Order Items -->
-            <v-col cols="12">
-              <v-card variant="outlined">
-                <v-card-title class="text-subtitle-1 font-weight-bold">
-                  <v-icon class="mr-2">mdi-cart</v-icon>
-                  Order Items
-                </v-card-title>
-                <v-card-text class="pa-0">
-                  <v-table>
-                    <thead>
-                      <tr>
-                        <th>Book</th>
-                        <th>Type</th>
-                        <th class="text-center">Quantity</th>
-                        <th class="text-end">Price</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr
-                        v-for="(item, index) in selectedOrder.items"
-                        :key="index"
-                      >
-                        <td>
-                          <div class="d-flex align-center py-2">
-                            <img
-                              :src="item.bookId?.cover_url"
-                              width="40"
-                              height="60"
-                              class="rounded mr-3"
-                            ></img>
-                            <div>
-                              <div class="font-weight-medium">
-                                {{ item.bookId?.title || "N/A" }}
-                              </div>
-                              <div class="text-caption text-grey">
-                                {{ item.bookId?.authors?.[0] || "Unknown" }}
-                              </div>
+          <!-- Customer Information -->
+          <div class="col-span-12 md:col-span-6">
+            <div class="h-full rounded-lg border border-border">
+              <div class="flex items-center gap-2 px-4 pt-4 text-base font-bold">
+                <UserIcon class="h-5 w-5" />
+                Customer Information
+              </div>
+              <div class="space-y-3 p-4">
+                <div class="flex items-start gap-3">
+                  <UserIcon class="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p class="text-sm font-medium">Username</p>
+                    <p class="text-sm text-muted-foreground">
+                      {{ orderUser(selectedOrder)?.username || "N/A" }}
+                    </p>
+                  </div>
+                </div>
+                <div class="flex items-start gap-3">
+                  <Mail class="h-5 w-5 shrink-0 text-muted-foreground" />
+                  <div>
+                    <p class="text-sm font-medium">Email</p>
+                    <p class="text-sm text-muted-foreground">
+                      {{ orderUser(selectedOrder)?.email || "N/A" }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Voucher Information (if exists) -->
+          <div v-if="selectedOrder.voucher" class="col-span-12">
+            <div class="rounded-lg border border-success/50 bg-success/5">
+              <div class="flex items-center gap-2 px-4 pt-4 text-base font-bold">
+                <TicketPercent class="h-5 w-5 text-success" />
+                Voucher Applied
+              </div>
+              <div class="flex items-center justify-between p-4">
+                <div>
+                  <span
+                    v-if="selectedOrder.voucher.code"
+                    class="mb-2 inline-flex items-center rounded-full bg-success px-2.5 py-0.5 text-xs font-semibold text-success-foreground"
+                  >
+                    {{ selectedOrder.voucher.code }}
+                  </span>
+                  <span
+                    v-else
+                    class="mb-2 inline-flex items-center rounded-full bg-destructive px-2.5 py-0.5 text-xs font-semibold text-destructive-foreground"
+                  >
+                    No Voucher
+                  </span>
+                </div>
+                <div class="text-lg font-semibold text-success">
+                  -{{ formatCurrency(selectedOrder.voucher.discountAmount) }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Order Items -->
+          <div class="col-span-12">
+            <div class="rounded-lg border border-border">
+              <div class="flex items-center gap-2 px-4 pt-4 text-base font-bold">
+                <ShoppingCart class="h-5 w-5" />
+                Order Items
+              </div>
+              <div class="overflow-x-auto p-0 pt-2">
+                <table class="w-full text-sm">
+                  <thead>
+                    <tr class="border-b border-border text-left">
+                      <th class="px-4 py-2 font-medium text-muted-foreground">
+                        Book
+                      </th>
+                      <th class="px-4 py-2 font-medium text-muted-foreground">
+                        Type
+                      </th>
+                      <th class="px-4 py-2 text-center font-medium text-muted-foreground">
+                        Quantity
+                      </th>
+                      <th class="px-4 py-2 text-right font-medium text-muted-foreground">
+                        Price
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-border">
+                    <tr v-for="(item, index) in selectedOrder.items" :key="index">
+                      <td class="px-4">
+                        <div class="flex items-center py-2">
+                          <img
+                            :src="item.bookId?.cover_url"
+                            width="40"
+                            height="60"
+                            class="mr-3 rounded bg-muted object-cover"
+                          />
+                          <div>
+                            <div class="font-medium">
+                              {{ item.bookId?.title || "N/A" }}
+                            </div>
+                            <div class="text-xs text-muted-foreground">
+                              {{ item.bookId?.authors?.[0] || "Unknown" }}
                             </div>
                           </div>
-                        </td>
-                        <td>
-                          <v-chip
-                            size="small"
-                            :color="
-                              item.productType === 'ebook'
-                                ? 'success'
-                                : 'waterblue'
-                            "
-                            variant="tonal"
-                          >
-                            {{
-                              item.productType === "ebook"
-                                ? "📱 Ebook"
-                                : "📚 Hardbook"
-                            }}
-                          </v-chip>
-                        </td>
-                        <td class="text-center">{{ item.quantity }}</td>
-                        <td class="text-end font-weight-medium">
-                          ${{
-                            (
-                              item.bookId?.price *
-                              item.quantity *
-                              (item.productType === "ebook" ? 0.7 : 1)
-                            ).toFixed(2)
+                        </div>
+                      </td>
+                      <td class="px-4 py-2">
+                        <span
+                          class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold"
+                          :class="
+                            item.productType === 'ebook'
+                              ? 'bg-success/15 text-success'
+                              : 'bg-waterblue/15 text-waterblue'
+                          "
+                        >
+                          {{
+                            item.productType === "ebook"
+                              ? "📱 Ebook"
+                              : "📚 Hardbook"
                           }}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </v-table>
-                </v-card-text>
-              </v-card>
-            </v-col>
+                        </span>
+                      </td>
+                      <td class="px-4 py-2 text-center">{{ item.quantity }}</td>
+                      <td class="px-4 py-2 text-right font-medium">
+                        ${{ calculateItemPrice(item) }}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
 
-            <!-- Order Summary -->
-            <v-col cols="12">
-              <v-card variant="outlined" color="waterblue">
-                <v-card-text>
-                  <div class="d-flex justify-space-between align-center mb-2">
-                    <span class="text-subtitle-1">Subtotal:</span>
-                    <span class="text-subtitle-1 font-weight-medium">
-                      {{ formatCurrency(calculateSubtotal(selectedOrder)) }}
-                    </span>
-                  </div>
-                  <div
-                    v-if="selectedOrder.voucher"
-                    class="d-flex justify-space-between align-center mb-2"
-                  >
-                    <span class="text-subtitle-1 text-success">Discount:</span>
-                    <span
-                      class="text-subtitle-1 font-weight-medium text-success"
-                    >
-                      -{{
-                        formatCurrency(selectedOrder.voucher.discountAmount)
-                      }}
-                    </span>
-                  </div>
-                  <v-divider class="my-2"></v-divider>
-                  <div class="d-flex justify-space-between align-center">
-                    <span class="text-h6 font-weight-bold">Total:</span>
-                    <span class="text-h6 font-weight-bold text-waterblue">
-                      {{ formatCurrency(selectedOrder.total) }}
-                    </span>
-                  </div>
-                </v-card-text>
-              </v-card>
-            </v-col>
-          </v-row>
-        </v-card-text>
+          <!-- Order Summary -->
+          <div class="col-span-12">
+            <div class="rounded-lg border border-waterblue/50 bg-waterblue/5 p-4">
+              <div class="mb-2 flex items-center justify-between">
+                <span class="text-base font-medium">Subtotal:</span>
+                <span class="text-base font-medium">
+                  {{ formatCurrency(calculateSubtotal(selectedOrder)) }}
+                </span>
+              </div>
+              <div
+                v-if="selectedOrder.voucher"
+                class="mb-2 flex items-center justify-between"
+              >
+                <span class="text-base font-medium text-success">Discount:</span>
+                <span class="text-base font-medium text-success">
+                  -{{ formatCurrency(selectedOrder.voucher.discountAmount) }}
+                </span>
+              </div>
+              <UiSeparator class="my-2" />
+              <div class="flex items-center justify-between">
+                <span class="text-lg font-bold">Total:</span>
+                <span class="text-lg font-bold text-waterblue">
+                  {{ formatCurrency(selectedOrder.total) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="detailsDialog = false">
+        <UiDialogFooter>
+          <UiButton
+            variant="ghost"
+            class="text-muted-foreground"
+            @click="detailsDialog = false"
+          >
             Close
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+          </UiButton>
+        </UiDialogFooter>
+      </UiDialogContent>
+    </UiDialog>
 
     <!-- Snackbar -->
-    <v-snackbar
+    <SnackbarAlert
       v-model="snackbar"
+      :text="snackbarText"
       :color="snackbarColor"
       :timeout="3000"
-      location="top"
-    >
-      {{ snackbarText }}
-      <template v-slot:actions>
-        <v-btn variant="text" @click="snackbar = false">Close</v-btn>
-      </template>
-    </v-snackbar>
+    />
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import type { Component } from "vue";
 import orderApi from "~/api/orderApi";
+import type { Order, OrderItem, OrderStatus, PaymentMethod, User } from "@/types";
+import {
+  Ban,
+  Banknote,
+  Calendar,
+  CheckCircle2,
+  Clock,
+  CreditCard,
+  Eye,
+  Hash,
+  HelpCircle,
+  Info,
+  Mail,
+  Package,
+  PackageCheck,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  ShoppingCart,
+  Tag,
+  TicketPercent,
+  Truck,
+  User as UserIcon,
+  Wallet,
+  X,
+  XCircle,
+} from "lucide-vue-next";
 
-export default {
-  name: "OrderManagement",
-  data() {
-    return {
-      orders: [],
-      loading: false,
-      search: "",
-      statusFilter: null,
-      paymentFilter: null,
-      detailsDialog: false,
-      selectedOrder: null,
-      snackbar: false,
-      snackbarText: "",
-      snackbarColor: "success",
-      headers: [
-        { title: "Order ID", key: "orderId", sortable: true },
-        { title: "Customer", key: "userId", sortable: false },
-        { title: "Items", key: "items", sortable: false },
-        { title: "Total", key: "total", sortable: true },
-        { title: "Payment", key: "paymentMethod", sortable: true },
-        { title: "Status", key: "status", sortable: true },
-        { title: "Date", key: "createdAt", sortable: true },
-        { title: "Actions", key: "actions", sortable: false, align: "center" },
-      ],
-      statusOptions: ["Pending", "Paid", "Confirmed", "In Delivery", "Delivered", "Cancelled", "Failed"],
-      paymentOptions: ["Vnpay", "Momo"],
-    };
-  },
-  computed: {
-    filteredOrders() {
-      let filtered = this.orders;
+const orders = ref<Order[]>([]);
+const loading = ref(false);
+const search = ref("");
+const statusFilter = ref("");
+const paymentFilter = ref("");
+const detailsDialog = ref(false);
+const selectedOrder = ref<Order | null>(null);
+const snackbar = ref(false);
+const snackbarText = ref("");
+const snackbarColor = ref("success");
 
-      // Search filter
-      if (this.search) {
-        const searchLower = this.search.toLowerCase();
-        filtered = filtered.filter(
-          (order) =>
-            order.orderId.toLowerCase().includes(searchLower) ||
-            order.userId?.email?.toLowerCase().includes(searchLower) ||
-            order.userId?.username?.toLowerCase().includes(searchLower)
-        );
+const page = ref(1);
+const itemsPerPage = 10;
+
+const statusOptions: OrderStatus[] = [
+  "Pending",
+  "Paid",
+  "Confirmed",
+  "In Delivery",
+  "Delivered",
+  "Cancelled",
+  "Failed",
+];
+const paymentOptions = ["Vnpay", "Momo"];
+
+const statusFilterItems = [
+  { label: "All Statuses", value: "all" },
+  ...statusOptions.map((s) => ({ label: s, value: s as string })),
+];
+const paymentFilterItems = [
+  { label: "All Payments", value: "all" },
+  ...paymentOptions.map((p) => ({ label: p, value: p })),
+];
+
+const filteredOrders = computed<Order[]>(() => {
+  let filtered = orders.value;
+
+  // Search filter
+  if (search.value) {
+    const searchLower = search.value.toLowerCase();
+    filtered = filtered.filter(
+      (order) =>
+        order.orderId.toLowerCase().includes(searchLower) ||
+        orderUser(order)?.email?.toLowerCase().includes(searchLower) ||
+        orderUser(order)?.username?.toLowerCase().includes(searchLower)
+    );
+  }
+
+  // Status filter
+  if (statusFilter.value && statusFilter.value !== "all") {
+    filtered = filtered.filter((order) => order.status === statusFilter.value);
+  }
+
+  // Payment filter
+  if (paymentFilter.value && paymentFilter.value !== "all") {
+    filtered = filtered.filter(
+      (order) => order.paymentMethod === paymentFilter.value
+    );
+  }
+
+  return filtered;
+});
+
+const paginatedOrders = computed<Order[]>(() => {
+  const start = (page.value - 1) * itemsPerPage;
+  return filteredOrders.value.slice(start, start + itemsPerPage);
+});
+
+watch([search, statusFilter, paymentFilter], () => {
+  page.value = 1;
+});
+
+const totalOrders = computed(() => orders.value.length);
+const paidOrders = computed(
+  () => orders.value.filter((order) => order.status === "Paid").length
+);
+const pendingOrders = computed(
+  () => orders.value.filter((order) => order.status === "Pending").length
+);
+const totalRevenue = computed(() => {
+  const revenue = orders.value
+    .filter((order) => order.status === "Paid")
+    .reduce((sum, order) => sum + order.total, 0);
+  return (revenue / 24000).toFixed(2); // Convert VND to USD
+});
+
+function orderUser(order: Order): User | null {
+  return typeof order.userId === "object" && order.userId !== null
+    ? order.userId
+    : null;
+}
+
+async function fetchOrders() {
+  try {
+    loading.value = true;
+    orders.value = await orderApi.getAllOrders();
+  } catch (error: any) {
+    console.error("Error fetching orders:", error);
+    showSnackbar("Failed to fetch orders", "error");
+  } finally {
+    loading.value = false;
+  }
+}
+
+function viewOrderDetails(order: Order) {
+  selectedOrder.value = order;
+  detailsDialog.value = true;
+}
+
+async function quickUpdateStatus(order: Order, newStatus?: string) {
+  if (!newStatus || newStatus === order.status) {
+    return;
+  }
+
+  try {
+    await orderApi.updateOrderStatus(order._id, newStatus as OrderStatus);
+
+    // Update local order
+    const index = orders.value.findIndex((o) => o._id === order._id);
+    if (index !== -1) {
+      orders.value[index].status = newStatus as OrderStatus;
+      // If changing to Confirmed, also update confirmedByAdmin
+      if (newStatus === "Confirmed") {
+        orders.value[index].confirmedByAdmin = true;
+        orders.value[index].confirmedAt = new Date().toISOString();
       }
+    }
 
-      // Status filter
-      if (this.statusFilter) {
-        filtered = filtered.filter(
-          (order) => order.status === this.statusFilter
-        );
-      }
+    showSnackbar(`Order status updated to ${newStatus}`, "success");
+  } catch (error: any) {
+    console.error("Error updating order status:", error);
+    showSnackbar(
+      error.response?.data?.msg || "Failed to update order status",
+      "error"
+    );
+    // Revert on error
+    await fetchOrders();
+  }
+}
 
-      // Payment filter
-      if (this.paymentFilter) {
-        filtered = filtered.filter(
-          (order) => order.paymentMethod === this.paymentFilter
-        );
-      }
+function getStatusClass(status: OrderStatus): string {
+  const classes: Record<string, string> = {
+    Pending: "bg-warning text-warning-foreground",
+    Paid: "bg-success text-success-foreground",
+    Confirmed: "bg-info text-info-foreground",
+    "In Delivery": "bg-purple-600 text-purple-50 dark:bg-purple-500",
+    Delivered: "bg-teal-600 text-teal-50 dark:bg-teal-500",
+    Failed: "bg-destructive text-destructive-foreground",
+    Cancelled: "bg-muted text-muted-foreground",
+  };
+  return classes[status] || "bg-muted text-muted-foreground";
+}
 
-      return filtered;
-    },
-    totalOrders() {
-      return this.orders.length;
-    },
-    paidOrders() {
-      return this.orders.filter((order) => order.status === "Paid").length;
-    },
-    pendingOrders() {
-      return this.orders.filter((order) => order.status === "Pending").length;
-    },
-    totalRevenue() {
-      const revenue = this.orders
-        .filter((order) => order.status === "Paid")
-        .reduce((sum, order) => sum + order.total, 0);
-      return (revenue / 24000).toFixed(2); // Convert VND to USD
-    },
-  },
-  methods: {
-    async fetchOrders() {
-      try {
-        this.loading = true;
-        this.orders = await orderApi.getAllOrders();
-      } catch (error) {
-        console.error("Error fetching orders:", error);
-        this.showSnackbar("Failed to fetch orders", "error");
-      } finally {
-        this.loading = false;
-      }
-    },
-    viewOrderDetails(order) {
-      this.selectedOrder = order;
-      this.detailsDialog = true;
-    },
-    async quickUpdateStatus(order, newStatus) {
-      if (newStatus === order.status) {
-        return;
-      }
+function getStatusIcon(status: OrderStatus): Component {
+  const icons: Record<string, Component> = {
+    Pending: Clock,
+    Paid: CheckCircle2,
+    Confirmed: ShieldCheck,
+    "In Delivery": Truck,
+    Delivered: PackageCheck,
+    Failed: XCircle,
+    Cancelled: Ban,
+  };
+  return icons[status] || HelpCircle;
+}
 
-      try {
-        await orderApi.updateOrderStatus(order._id, newStatus);
+function getPaymentClass(method: PaymentMethod): string {
+  return method === "Vnpay"
+    ? "border-primary/40 text-primary"
+    : "border-success/40 text-success";
+}
 
-        // Update local order
-        const index = this.orders.findIndex((o) => o._id === order._id);
-        if (index !== -1) {
-          this.orders[index].status = newStatus;
-          // If changing to Confirmed, also update confirmedByAdmin
-          if (newStatus === "Confirmed") {
-            this.orders[index].confirmedByAdmin = true;
-            this.orders[index].confirmedAt = new Date();
-          }
-        }
+function getPaymentIcon(method: PaymentMethod): Component {
+  return method === "Vnpay" ? CreditCard : Wallet;
+}
 
-        this.showSnackbar(`Order status updated to ${newStatus}`, "success");
-      } catch (error) {
-        console.error("Error updating order status:", error);
-        this.showSnackbar(
-          error.response?.data?.msg || "Failed to update order status",
-          "error"
-        );
-        // Revert on error
-        await this.fetchOrders();
-      }
-    },
+function formatDate(date?: string): string {
+  if (!date) return "";
+  return new Date(date).toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
-    getStatusColor(status) {
-      const colors = {
-        Pending: "warning",
-        Paid: "success",
-        Confirmed: "info",
-        "In Delivery": "purple",
-        Delivered: "teal",
-        Failed: "error",
-        Cancelled: "grey",
-      };
-      return colors[status] || "grey";
-    },
-    getStatusIcon(status) {
-      const icons = {
-        Pending: "mdi-clock-outline",
-        Paid: "mdi-check-circle",
-        Confirmed: "mdi-shield-check",
-        "In Delivery": "mdi-truck-delivery",
-        Delivered: "mdi-package-variant-closed",
-        Failed: "mdi-close-circle",
-        Cancelled: "mdi-cancel",
-      };
-      return icons[status] || "mdi-help-circle";
-    },
-    getPaymentColor(method) {
-      return method === "Vnpay" ? "primary" : "success";
-    },
-    getPaymentIcon(method) {
-      return method === "Vnpay" ? "mdi-credit-card" : "mdi-wallet";
-    },
-    formatDate(date) {
-      return new Date(date).toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    },
-    formatCurrency(amount) {
-      return new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-      }).format(amount);
-    },
-    calculateSubtotal(order) {
-      return order.total + (order.voucher?.discountAmount || 0);
-    },
-    showSnackbar(text, color = "success") {
-      this.snackbarText = text;
-      this.snackbarColor = color;
-      this.snackbar = true;
-    },
-  },
-  mounted() {
-    this.fetchOrders();
-  },
-};
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+  }).format(amount);
+}
+
+function calculateItemPrice(item: OrderItem): string {
+  const price =
+    (item.bookId?.price as number) *
+    item.quantity *
+    (item.productType === "ebook" ? 0.7 : 1);
+  return price.toFixed(2);
+}
+
+function calculateSubtotal(order: Order): number {
+  return order.total + (order.voucher?.discountAmount || 0);
+}
+
+function showSnackbar(text: string, color = "success") {
+  snackbarText.value = text;
+  snackbarColor.value = color;
+  snackbar.value = true;
+}
+
+onMounted(() => {
+  fetchOrders();
+});
 </script>
-
-<style scoped>
-.admin-card {
-  border-radius: var(--admin-radius-md, 16px);
-  box-shadow: var(--admin-shadow-sm, 0 2px 10px -2px rgba(25, 27, 36, 0.08));
-}
-
-.admin-heading {
-  color: var(--admin-ink, #191b24);
-}
-
-.stat-card {
-  transition: transform var(--admin-transition, 200ms ease),
-    box-shadow var(--admin-transition, 200ms ease);
-}
-
-.stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--admin-shadow-md, 0 12px 28px -8px rgba(25, 27, 36, 0.14));
-}
-
-.stat-value {
-  font-variant-numeric: tabular-nums;
-  color: var(--admin-ink, #191b24);
-}
-
-.v-table {
-  font-size: 0.875rem;
-}
-
-.v-data-table :deep(.v-data-table__td) {
-  padding: 8px 16px;
-}
-</style>

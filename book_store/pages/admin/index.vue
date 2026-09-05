@@ -1,6 +1,6 @@
 <template>
   <div>
-    <transition name="admin-tab-fade" mode="out-in">
+    <Transition name="admin-tab-fade" mode="out-in">
       <!-- Dashboard -->
       <AdminDashboardManagement v-if="currentTab === 'dashboard'" />
 
@@ -23,54 +23,48 @@
       <AdminVoucherManagement v-else-if="currentTab === 'voucher-management'" />
 
       <!-- Default Dashboard -->
-      <div v-else class="text-center pa-8">
-        <div class="admin-empty-icon mx-auto mb-4">
-          <v-icon size="40" color="customblack">mdi-view-dashboard</v-icon>
+      <div v-else class="p-8 text-center">
+        <div
+          class="mx-auto mb-4 flex h-[88px] w-[88px] items-center justify-center rounded-3xl bg-customyellow"
+        >
+          <LayoutDashboard class="h-10 w-10 text-customblack" />
         </div>
-        <h2 class="text-h4 font-weight-bold mb-2">Welcome to Admin Panel</h2>
-        <p class="text-grey">Select a tab from sidebar to get started</p>
+        <h2 class="mb-2 text-3xl font-bold text-foreground">
+          Welcome to Admin Panel
+        </h2>
+        <p class="text-muted-foreground">Select a tab from sidebar to get started</p>
       </div>
-    </transition>
+    </Transition>
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import type { NavigationGuard } from "vue-router";
+import { definePageMeta } from "#imports";
+import { LayoutDashboard } from "lucide-vue-next";
+
 definePageMeta({
   layout: "admin",
-  middleware: "admin",
+  // Named middleware from middleware/admin.ts. The #imports typing only exposes
+  // NavigationGuard, so the registered name is cast; the cast erases at build.
+  middleware: "admin" as unknown as NavigationGuard,
 });
 
-export default {
-  name: "AdminPage",
-  data() {
-    return {
-      currentTab: "dashboard",
-    };
+const route = useRoute();
+const currentTab = ref("dashboard");
+
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab) {
+      currentTab.value = newTab as string;
+    }
   },
-  watch: {
-    "$route.query.tab": {
-      handler(newTab) {
-        if (newTab) {
-          this.currentTab = newTab;
-        }
-      },
-      immediate: true,
-    },
-  },
-};
+  { immediate: true }
+);
 </script>
 
 <style scoped>
-.admin-empty-icon {
-  width: 88px;
-  height: 88px;
-  border-radius: var(--admin-radius-lg, 24px);
-  background: var(--admin-accent, #dcf763);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
 .admin-tab-fade-enter-active,
 .admin-tab-fade-leave-active {
   transition: opacity 200ms ease;

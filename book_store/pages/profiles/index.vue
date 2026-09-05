@@ -1,28 +1,26 @@
 <template>
-  <div class="profile-page">
-    <v-container fluid class="pa-0">
-      <v-row no-gutters>
-        <!-- Left Sidebar -->
-        <v-col class="bg-transparent" cols="12" md="3" lg="1">
-          <ProfilesProfileSidebar
-            v-model:drawer="drawer"
-            v-model:activeTab="activeTab"
-          />
-        </v-col>
+  <div
+    class="min-h-screen bg-gradient-to-br from-white to-[#d4dfed] pt-16 dark:from-background dark:to-card md:pt-0"
+  >
+    <div class="md:flex">
+      <!-- Left Sidebar -->
+      <ProfilesProfileSidebar
+        v-model:drawer="drawer"
+        v-model:activeTab="activeTab"
+      />
 
-        <!-- Main Content -->
-        <v-col cols="12" md="9" lg="11">
-          <ProfilesProfileContent
-            :active-tab="activeTab"
-            :loading-orders="loadingOrders"
-            :loading-favorites="loadingFavorites"
-            :loading-reviews="loadingReviews"
-            @toggle-drawer="drawer = !drawer"
-            @show-snackbar="showSnackbar"
-          />
-        </v-col>
-      </v-row>
-    </v-container>
+      <!-- Main Content -->
+      <div class="min-w-0 flex-1">
+        <ProfilesProfileContent
+          :active-tab="activeTab"
+          :loading-orders="loadingOrders"
+          :loading-favorites="loadingFavorites"
+          :loading-reviews="loadingReviews"
+          @toggle-drawer="drawer = !drawer"
+          @show-snackbar="showSnackbar"
+        />
+      </div>
+    </div>
 
     <SnackbarAlert
       v-model="snackbar.show"
@@ -33,109 +31,99 @@
   </div>
 </template>
 
-<script>
-import { mapState, mapActions } from "vuex";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
+import { useFavoriteStore } from "@/stores/favorite";
+import { useOrderStore } from "@/stores/order";
+import { useReviewStore } from "@/stores/review";
+import type { SnackbarPayload } from "@/types";
 
-export default {
-  data() {
-    return {
-      drawer: true,
-      activeTab: "personal",
-      loadingOrders: false,
-      loadingFavorites: false,
-      loadingReviews: false,
-      snackbar: {
-        show: false,
-        message: "",
-        color: "success",
-        timeout: 4000,
-      },
-    };
-  },
-  computed: {
-    ...mapState("auth", ["currentUser"]),
-  },
-  watch: {
-    activeTab(newTab) {
-      this.$router.replace({ query: { tab: newTab } });
+const router = useRouter();
+const route = useRoute();
 
-      if (newTab === "orders") {
-        this.loadUserOrders();
-      }
-      if (newTab === "favorites") {
-        this.loadFavorites();
-      }
-      if (newTab === "reviews") {
-        this.loadUserReviews();
-      }
-    },
-  },
-  mounted() {
-    // Check if user is authenticated
-    if (!this.currentUser) {
-      this.$router.push("/login");
-    }
+const authStore = useAuthStore();
+const orderStore = useOrderStore();
+const favoriteStore = useFavoriteStore();
+const reviewStore = useReviewStore();
 
-    // Handle tab parameter from URL query
-    const tabParam = this.$route.query.tab;
-    if (tabParam) {
-      this.activeTab = tabParam;
-    }
-  },
-  methods: {
-    ...mapActions("order", ["fetchUserOrders"]),
-    ...mapActions("favorite", ["getFavoritesForEachUser"]),
-    ...mapActions("review", ["loadUserReviewsAction"]),
+const { currentUser } = storeToRefs(authStore);
 
-    async loadUserOrders() {
-      this.loadingOrders = true;
-      try {
-        await this.fetchUserOrders();
-      } catch (error) {
-        console.error("Error loading orders:", error);
-      } finally {
-        this.loadingOrders = false;
-      }
-    },
-    async loadFavorites() {
-      this.loadingFavorites = true;
-      try {
-        await this.getFavoritesForEachUser();
-      } catch (error) {
-        console.error("Error loading favorites:", error);
-      } finally {
-        this.loadingFavorites = false;
-      }
-    },
-    async loadUserReviews() {
-      this.loadingReviews = true;
-      try {
-        await this.loadUserReviewsAction();
-      } catch (error) {
-        console.error("Error loading reviews:", error);
-      } finally {
-        this.loadingReviews = false;
-      }
-    },
-    showSnackbar(data) {
-      console.log("showSnackbar called with:", data);
-      this.snackbar.message = data.message;
-      this.snackbar.color = data.color || "success";
-      this.snackbar.show = true;
-    },
-  },
-};
-</script>
+const drawer = ref(true);
+const activeTab = ref("personal");
+const loadingOrders = ref(false);
+const loadingFavorites = ref(false);
+const loadingReviews = ref(false);
+const snackbar = reactive({
+  show: false,
+  message: "",
+  color: "success",
+  timeout: 4000,
+});
 
-<style scoped>
-.profile-page {
-  background: linear-gradient(115deg, #ffffff, #d4dfed);
-  min-height: 100vh;
-}
+watch(activeTab, (newTab) => {
+  router.replace({ query: { tab: newTab } });
 
-@media (max-width: 960px) {
-  .profile-page {
-    padding-top: 64px;
+  if (newTab === "orders") {
+    loadUserOrders();
+  }
+  if (newTab === "favorites") {
+    loadFavorites();
+  }
+  if (newTab === "reviews") {
+    loadUserReviews();
+  }
+});
+
+onMounted(() => {
+  // Check if user is authenticated
+  if (!currentUser.value) {
+    router.push("/login");
+  }
+
+  // Handle tab parameter from URL query
+  const tabParam = route.query.tab;
+  if (tabParam) {
+    activeTab.value = tabParam as string;
+  }
+});
+
+async function loadUserOrders() {
+  loadingOrders.value = true;
+  try {
+    await orderStore.fetchUserOrders();
+  } catch (error) {
+    console.error("Error loading orders:", error);
+  } finally {
+    loadingOrders.value = false;
   }
 }
-</style>
+
+async function loadFavorites() {
+  loadingFavorites.value = true;
+  try {
+    await favoriteStore.getFavoritesForEachUser();
+  } catch (error) {
+    console.error("Error loading favorites:", error);
+  } finally {
+    loadingFavorites.value = false;
+  }
+}
+
+async function loadUserReviews() {
+  loadingReviews.value = true;
+  try {
+    await reviewStore.loadUserReviewsAction();
+  } catch (error) {
+    console.error("Error loading reviews:", error);
+  } finally {
+    loadingReviews.value = false;
+  }
+}
+
+function showSnackbar(data: SnackbarPayload) {
+  snackbar.message = data.message;
+  snackbar.color = data.color || "success";
+  snackbar.show = true;
+}
+</script>

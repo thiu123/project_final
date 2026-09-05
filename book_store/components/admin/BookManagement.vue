@@ -1,797 +1,823 @@
 <template>
   <div class="book-management">
     <!-- Header Actions -->
-    <v-card class="mb-6 admin-card" elevation="0">
-      <v-card-text class="pa-6">
-        <div class="d-flex justify-space-between align-center mb-4">
+    <div class="mb-6 rounded-2xl border border-border bg-card shadow-sm">
+      <div class="p-6">
+        <div class="mb-4 flex items-center justify-between gap-4">
           <div>
-            <h2 class="text-h4 font-weight-bold mb-2 admin-heading">
-              Book List
-            </h2>
-            <p class="text-grey text-body-1 mb-0">
+            <h2 class="mb-2 text-3xl font-bold text-foreground">Book List</h2>
+            <p class="mb-0 text-base text-muted-foreground">
               Manage book information in the system
             </p>
           </div>
 
-          <div class="d-flex align-center ga-3">
-            <v-btn
-              color="customyellow"
-              prepend-icon="mdi-plus"
-              variant="elevated"
-              class="admin-btn-accent"
+          <div class="flex items-center gap-3">
+            <UiButton
+              class="bg-customyellow text-customblack transition-transform hover:-translate-y-px hover:bg-customyellow/90"
               @click="openAddDialog"
             >
+              <Plus class="h-4 w-4" />
               Add Book
-            </v-btn>
+            </UiButton>
 
-            <v-btn
-              color="waterblue"
-              prepend-icon="mdi-refresh"
-              variant="outlined"
-              @click="refreshBooks"
+            <UiButton
+              variant="outline"
+              class="border-waterblue text-waterblue hover:bg-waterblue/10 hover:text-waterblue"
               :loading="loading"
+              @click="refreshBooks"
             >
+              <RefreshCw v-if="!loading" class="h-4 w-4" />
               Refresh
-            </v-btn>
+            </UiButton>
           </div>
         </div>
 
         <!-- Filters -->
-        <v-row>
-          <v-col cols="12" md="4">
-            <v-text-field
-              v-model="search"
-              label="Search books..."
-              prepend-inner-icon="mdi-magnify"
-              variant="outlined"
-              density="compact"
-              hide-details
-              clearable
-            ></v-text-field>
-          </v-col>
+        <div class="grid grid-cols-12 items-center gap-4">
+          <div class="col-span-12 md:col-span-4">
+            <UiInput v-model="search" placeholder="Search books...">
+              <template #prepend>
+                <Search class="h-4 w-4" />
+              </template>
+              <template #append>
+                <button
+                  v-if="search"
+                  type="button"
+                  class="text-muted-foreground transition-colors hover:text-foreground"
+                  aria-label="Clear search"
+                  @click="search = ''"
+                >
+                  <X class="h-4 w-4" />
+                </button>
+              </template>
+            </UiInput>
+          </div>
 
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="filterSubject"
-              :items="subjects"
-              label="Filter by category"
-              variant="outlined"
-              density="compact"
-              hide-details
-              clearable
-            ></v-select>
-          </v-col>
-
-          <v-col cols="12" md="2">
-            <v-select
-              v-model="sortBy"
-              :items="sortOptions"
-              label="Sort by"
-              variant="outlined"
-              density="compact"
-              hide-details
-            ></v-select>
-          </v-col>
-
-          <v-col cols="12" md="3">
-            <div class="d-flex align-center">
-              <v-switch
-                v-model="showThemSach"
-                label="Add books"
-                color="success"
-                hide-details
-                inset
-              ></v-switch>
-
-              <v-btn
-                icon="mdi-filter"
-                variant="text"
-                @click="toggleAdvancedFilter"
-                class="ml-2"
-              ></v-btn>
+          <div class="col-span-12 md:col-span-3">
+            <div class="flex items-center gap-1">
+              <UiSelect
+                :model-value="filterSubject"
+                @update:model-value="filterSubject = ($event as string) || undefined"
+              >
+                <UiSelectTrigger class="w-full capitalize">
+                  <UiSelectValue placeholder="Filter by category" />
+                </UiSelectTrigger>
+                <UiSelectContent>
+                  <UiSelectItem
+                    v-for="subject in subjects"
+                    :key="subject"
+                    :value="subject"
+                    class="capitalize"
+                  >
+                    {{ subject }}
+                  </UiSelectItem>
+                </UiSelectContent>
+              </UiSelect>
+              <UiButton
+                v-if="filterSubject"
+                variant="ghost"
+                size="iconSm"
+                aria-label="Clear category filter"
+                @click="filterSubject = undefined"
+              >
+                <X class="h-4 w-4" />
+              </UiButton>
             </div>
-          </v-col>
-        </v-row>
-      </v-card-text>
-    </v-card>
+          </div>
+
+          <div class="col-span-12 md:col-span-2">
+            <UiSelect
+              :model-value="sortBy"
+              @update:model-value="sortBy = $event as string"
+            >
+              <UiSelectTrigger class="w-full">
+                <UiSelectValue placeholder="Sort by" />
+              </UiSelectTrigger>
+              <UiSelectContent>
+                <UiSelectItem
+                  v-for="opt in sortOptions"
+                  :key="opt.value"
+                  :value="opt.value"
+                >
+                  {{ opt.label }}
+                </UiSelectItem>
+              </UiSelectContent>
+            </UiSelect>
+          </div>
+
+          <div class="col-span-12 md:col-span-3">
+            <div class="flex items-center">
+              <UiSwitch v-model="showThemSach" label="Add books" />
+
+              <UiButton
+                variant="ghost"
+                size="icon"
+                class="ml-2"
+                aria-label="Advanced filter"
+                @click="toggleAdvancedFilter"
+              >
+                <Filter class="h-5 w-5" />
+              </UiButton>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Books Table -->
-    <v-card class="admin-card" elevation="0">
-      <v-data-table
-        v-model:page="page"
-        :headers="headers"
-        :items="filteredBooks"
-        :loading="loading"
-        :items-per-page="itemsPerPage"
-        :search="search"
-        class="elevation-0"
-        item-key="_id"
-      >
-        <!-- Mã Sách Column -->
-        <template v-slot:item.key="{ item }">
-          <v-chip
-            color="waterblue"
-            variant="tonal"
-            size="small"
-            class="font-mono"
-          >
-            {{ item._id?.slice(-8) || "N/A" }}
-          </v-chip>
-        </template>
+    <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <UiProgress v-if="loading" indeterminate class="h-1 rounded-none" />
 
-        <!-- Tên Sách Column -->
-        <template v-slot:item.title="{ item }">
-          <div class="d-flex align-center">
-            <v-avatar size="40" rounded="lg" class="mr-3">
-              <v-img :src="item?.cover_url" :alt="item?.title" cover>
-                <template v-slot:placeholder>
-                  <v-icon>mdi-book</v-icon>
-                </template>
-              </v-img>
-            </v-avatar>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-muted/60 text-left">
+            <tr>
+              <th class="w-[120px] px-4 py-3 font-medium text-muted-foreground">Book ID</th>
+              <th class="w-[300px] px-4 py-3 font-medium text-muted-foreground">Book Title</th>
+              <th class="w-[140px] px-4 py-3 text-center font-medium text-muted-foreground">
+                Publication Year
+              </th>
+              <th class="w-[180px] px-4 py-3 font-medium text-muted-foreground">Categories</th>
+              <th class="w-[100px] px-4 py-3 text-center font-medium text-muted-foreground">Price</th>
+              <th class="w-[100px] px-4 py-3 text-center font-medium text-muted-foreground">Stock</th>
+              <th class="w-[100px] px-4 py-3 text-center font-medium text-muted-foreground">Sold</th>
+              <th class="w-[250px] px-4 py-3 font-medium text-muted-foreground">Description</th>
+              <th class="w-[120px] px-4 py-3 text-center font-medium text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-border">
+            <tr v-for="item in paginatedBooks" :key="item._id" class="hover:bg-muted/40">
+              <!-- Book ID -->
+              <td class="px-4 py-3">
+                <UiBadge class="border-transparent bg-waterblue/15 font-mono text-waterblue">
+                  {{ item._id?.slice(-8) || "N/A" }}
+                </UiBadge>
+              </td>
 
-            <div>
-              <div class="font-weight-medium">{{ item.title }}</div>
-              <div class="text-caption text-grey">
-                {{ item.authors?.join(", ") || "Unknown Author" }}
-              </div>
-            </div>
-          </div>
-        </template>
+              <!-- Book Title -->
+              <td class="px-4 py-3">
+                <div class="flex items-center">
+                  <div
+                    class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted"
+                  >
+                    <img
+                      v-if="item?.cover_url"
+                      :src="item?.cover_url"
+                      :alt="item?.title"
+                      class="h-full w-full object-cover"
+                    />
+                    <BookOpen v-else class="h-5 w-5 text-muted-foreground" />
+                  </div>
 
-        <!-- Năm Xuất Bản Column -->
-        <template v-slot:item.first_publish_year="{ item }">
-          <v-chip
-            :color="getYearColor(item.first_publish_year)"
-            variant="flat"
-            size="small"
-          >
-            {{ item.first_publish_year || "N/A" }}
-          </v-chip>
-        </template>
-
-        <!-- Thể Loại Column -->
-        <template v-slot:item.subjects="{ item }">
-          <div class="d-flex flex-wrap ga-1">
-            <v-chip
-              v-for="(subject, index) in (item.subjects || []).slice(0, 2)"
-              :key="index"
-              color="darkgreen"
-              variant="tonal"
-              size="x-small"
-              class="text-capitalize"
-            >
-              {{ subject }}
-            </v-chip>
-            <v-chip
-              v-if="(item.subjects || []).length > 2"
-              color="grey"
-              variant="tonal"
-              size="x-small"
-            >
-              +{{ (item.subjects || []).length - 2 }}
-            </v-chip>
-          </div>
-        </template>
-
-        <!-- Giá Column -->
-        <template v-slot:item.price="{ item }">
-          <div class="text-h6 font-weight-bold text-success">
-            ${{ item.price || "0" }}
-          </div>
-        </template>
-
-        <!-- Stock Column -->
-        <template v-slot:item.stock="{ item }">
-          <v-chip
-            :color="getStockColor(item.stock)"
-            variant="flat"
-            size="small"
-            class="font-weight-bold"
-          >
-            {{ item.stock || 0 }}
-          </v-chip>
-        </template>
-
-        <!-- Sold Column -->
-        <template v-slot:item.sold="{ item }">
-          <v-chip
-            color="success"
-            variant="flat"
-            size="small"
-            class="font-weight-bold"
-          >
-            <v-icon start size="x-small">mdi-fire</v-icon>
-            {{ item.sold || 0 }}
-          </v-chip>
-        </template>
-
-        <!-- Mô Tả Column -->
-        <template v-slot:item.description="{ item }">
-          <div class="description-cell">
-            <v-tooltip>
-              <template v-slot:activator="{ props }">
-                <div
-                  v-bind="props"
-                  class="text-truncate"
-                  style="max-width: 200px"
-                >
-                  {{ item.description || "No description" }}
+                  <div>
+                    <div class="font-medium">{{ item.title }}</div>
+                    <div class="text-xs text-muted-foreground">
+                      {{ item.authors?.join(", ") || "Unknown Author" }}
+                    </div>
+                  </div>
                 </div>
-              </template>
-              <span>{{ item.description || "No description" }}</span>
-            </v-tooltip>
-          </div>
-        </template>
+              </td>
 
-        <!-- Actions Column -->
-        <template v-slot:item.actions="{ item }">
-          <div class="d-flex align-center ga-1">
-            <v-btn
-              icon="mdi-eye"
-              variant="text"
-              size="small"
-              color="info"
-              @click="viewBook(item)"
-            ></v-btn>
+              <!-- Publication Year -->
+              <td class="px-4 py-3 text-center">
+                <UiBadge :variant="getYearColor(item.first_publish_year)">
+                  {{ item.first_publish_year || "N/A" }}
+                </UiBadge>
+              </td>
 
-            <v-btn
-              icon="mdi-pencil"
-              variant="text"
-              size="small"
-              color="primary"
-              @click="editBook(item)"
-            ></v-btn>
+              <!-- Categories -->
+              <td class="px-4 py-3">
+                <div class="flex flex-wrap gap-1">
+                  <UiBadge
+                    v-for="(subject, index) in (item.subjects || []).slice(0, 2)"
+                    :key="index"
+                    class="border-transparent bg-darkgreen/15 capitalize text-darkgreen dark:bg-darkgreen/50 dark:text-whitesmoke"
+                  >
+                    {{ subject }}
+                  </UiBadge>
+                  <UiBadge v-if="(item.subjects || []).length > 2" variant="muted">
+                    +{{ (item.subjects || []).length - 2 }}
+                  </UiBadge>
+                </div>
+              </td>
 
-            <v-btn
-              icon="mdi-delete"
-              variant="text"
-              size="small"
-              color="error"
-              @click="confirmDelete(item)"
-            ></v-btn>
-          </div>
-        </template>
+              <!-- Price -->
+              <td class="px-4 py-3 text-center">
+                <div class="text-lg font-bold text-success">${{ item.price || "0" }}</div>
+              </td>
 
-        <!-- Bottom -->
-        <template v-slot:bottom>
-          <div class="d-flex justify-space-between align-center pa-4">
-            <div class="text-body-2 text-grey">
-              Showing {{ paginatedBooks.length }} of {{ books.length }} books
-            </div>
+              <!-- Stock -->
+              <td class="px-4 py-3 text-center">
+                <UiBadge :variant="getStockColor(item.stock)" class="font-bold">
+                  {{ item.stock || 0 }}
+                </UiBadge>
+              </td>
 
-            <v-pagination
-              v-model="page"
-              :length="totalPages"
-              :total-visible="5"
-              variant="elevated"
-              density="comfortable"
-            ></v-pagination>
-          </div>
-        </template>
-      </v-data-table>
-    </v-card>
+              <!-- Sold -->
+              <td class="px-4 py-3 text-center">
+                <UiBadge variant="success" class="font-bold">
+                  <Flame class="h-3 w-3" />
+                  {{ item.sold || 0 }}
+                </UiBadge>
+              </td>
+
+              <!-- Description -->
+              <td class="px-4 py-3">
+                <UiTooltipProvider :delay-duration="200">
+                  <UiTooltip>
+                    <UiTooltipTrigger as-child>
+                      <div class="max-w-[200px] truncate">
+                        {{ item.description || "No description" }}
+                      </div>
+                    </UiTooltipTrigger>
+                    <UiTooltipContent side="top" class="max-w-sm">
+                      {{ item.description || "No description" }}
+                    </UiTooltipContent>
+                  </UiTooltip>
+                </UiTooltipProvider>
+              </td>
+
+              <!-- Actions -->
+              <td class="px-4 py-3">
+                <div class="flex items-center justify-center gap-1">
+                  <UiButton
+                    variant="ghost"
+                    size="iconSm"
+                    class="text-info hover:text-info"
+                    aria-label="View book"
+                    @click="viewBook(item)"
+                  >
+                    <Eye class="h-4 w-4" />
+                  </UiButton>
+
+                  <UiButton
+                    variant="ghost"
+                    size="iconSm"
+                    class="text-primary hover:text-primary"
+                    aria-label="Edit book"
+                    @click="editBook(item)"
+                  >
+                    <Pencil class="h-4 w-4" />
+                  </UiButton>
+
+                  <UiButton
+                    variant="ghost"
+                    size="iconSm"
+                    class="text-destructive hover:text-destructive"
+                    aria-label="Delete book"
+                    @click="confirmDelete(item)"
+                  >
+                    <Trash2 class="h-4 w-4" />
+                  </UiButton>
+                </div>
+              </td>
+            </tr>
+
+            <tr v-if="!paginatedBooks.length">
+              <td colspan="9" class="px-4 py-8 text-center text-muted-foreground">
+                {{ loading ? "Loading books..." : "No data available" }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Bottom -->
+      <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4">
+        <div class="text-sm text-muted-foreground">
+          Showing {{ paginatedBooks.length }} of {{ books.length }} books
+        </div>
+
+        <UiPagination
+          v-slot="{ page: currentPage }"
+          v-model:page="page"
+          :total="filteredBooks.length"
+          :items-per-page="itemsPerPage"
+          :sibling-count="1"
+          show-edges
+          class="mx-0 w-auto justify-end"
+        >
+          <UiPaginationContent v-slot="{ items }">
+            <UiPaginationPrevious />
+            <template v-for="(item, index) in items">
+              <UiPaginationItem
+                v-if="item.type === 'page'"
+                :key="index"
+                :value="item.value"
+                :is-active="item.value === currentPage"
+              >
+                {{ item.value }}
+              </UiPaginationItem>
+              <UiPaginationEllipsis v-else :key="item.type" :index="index" />
+            </template>
+            <UiPaginationNext />
+          </UiPaginationContent>
+        </UiPagination>
+      </div>
+    </div>
 
     <!-- Add/Edit Book Dialog -->
-    <v-dialog v-model="dialog" max-width="900px" persistent scrollable>
-      <v-card class="dialog-card" elevation="8" rounded="lg">
+    <UiDialog v-model:open="dialog">
+      <UiDialogContent
+        hide-close
+        class="gap-0 overflow-hidden p-0 sm:max-w-4xl"
+        @pointer-down-outside.prevent
+        @escape-key-down.prevent
+      >
         <!-- Header -->
-        <v-card-title class="px-6 py-4 bg-customblack text-white">
-          <div class="d-flex align-center justify-space-between">
-            <div class="d-flex align-center">
-              <v-icon class="mr-3" size="large" color="customyellow">
-                {{ isEditing ? "mdi-pencil" : "mdi-plus" }}
-              </v-icon>
-              <span class="text-h5 font-weight-medium">{{ dialogTitle }}</span>
-            </div>
-            <v-btn
-              icon="mdi-close"
-              variant="text"
-              color="white"
-              @click="closeDialog"
-            ></v-btn>
+        <div class="flex items-center justify-between bg-customblack px-6 py-4 text-white">
+          <div class="flex items-center">
+            <component :is="isEditing ? Pencil : Plus" class="mr-3 h-6 w-6 text-customyellow" />
+            <UiDialogTitle class="text-xl font-medium">{{ dialogTitle }}</UiDialogTitle>
+            <UiDialogDescription class="sr-only">
+              {{
+                isEditing
+                  ? "Update the details of this book."
+                  : "Fill in the details to add a new book."
+              }}
+            </UiDialogDescription>
           </div>
-        </v-card-title>
-
-        <v-divider></v-divider>
-
-        <!-- Content -->
-        <v-card-text class="pa-0" style="max-height: 70vh">
-          <v-container class="py-6">
-            <v-form>
-              <!-- Basic Information Section -->
-              <div class="mb-6">
-                <h3
-                  class="text-h6 font-weight-medium mb-4 text-primary d-flex align-center"
-                >
-                  <v-icon class="mr-2">mdi-information</v-icon>
-                  Basic Information
-                </h3>
-                <v-row>
-                  <!-- Book Key (auto-generated, readonly) -->
-                  <v-col cols="12" md="6">
-                    <v-text-field
-                      v-model="editedItem.key"
-                      label="Book Key"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-key"
-                      readonly
-                      hint="Auto-generated unique identifier"
-                      persistent-hint
-                    ></v-text-field>
-                  </v-col>
-
-                  <v-col cols="12" md="6">
-                    <v-text-field
-                      v-model="editedItem.title"
-                      label="Book Title"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-book"
-                      :error-messages="errors.title"
-                      required
-                    ></v-text-field>
-                  </v-col>
-
-                  <v-col cols="12" md="6">
-                    <v-combobox
-                      v-model="editedItem.authors"
-                      label="Authors"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-account-edit"
-                      multiple
-                      chips
-                      closable-chips
-                      :error-messages="errors.authors"
-                    ></v-combobox>
-                  </v-col>
-
-                  <v-col cols="12" md="6">
-                    <v-file-input
-                      v-model="uploadedFile"
-                      label="Cover Image"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-camera"
-                      accept="image/*"
-                      show-size
-                      @update:modelValue="handleBookUpload"
-                      :error-messages="errors.cover_url"
-                    ></v-file-input>
-                    <!-- Hiển thị URL ảnh hiện tại nếu có -->
-                    <div v-if="editedItem.cover_url" class="mt-2">
-                      <v-chip color="success" size="small">
-                        <v-icon start>mdi-check</v-icon>
-                        Image uploaded
-                      </v-chip>
-                      <div class="text-caption text-grey mt-1">
-                        {{ editedItem.cover_url.substring(0, 50)
-                        }}{{ editedItem.cover_url.length > 50 ? "..." : "" }}
-                      </div>
-                    </div>
-                  </v-col>
-
-                  <v-col cols="12" md="6">
-                    <v-file-input
-                      v-model="uploadedEbookFile"
-                      label="Ebook File (PDF, optional)"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-file-pdf-box"
-                      accept="application/pdf"
-                      show-size
-                      hint="PDF only, max 10MB. Only needed if this book is sold as an ebook"
-                      persistent-hint
-                      @update:modelValue="handleEbookFileUpload"
-                    ></v-file-input>
-                    <div v-if="editedItem.pdf_url" class="mt-2">
-                      <v-chip color="success" size="small">
-                        <v-icon start>mdi-check</v-icon>
-                        Ebook file uploaded
-                      </v-chip>
-                    </div>
-                  </v-col>
-                </v-row>
-              </div>
-
-              <v-divider class="mb-6"></v-divider>
-
-              <!-- Categories & Classification -->
-              <div class="mb-6">
-                <h3
-                  class="text-h6 font-weight-medium mb-4 text-secondary d-flex align-center"
-                >
-                  <v-icon class="mr-2">mdi-tag</v-icon>
-                  Categories & Classification
-                </h3>
-                <v-row>
-                  <v-col cols="12">
-                    <v-combobox
-                      v-model="editedItem.subjects"
-                      class="text-capitalize"
-                      label="Categories"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-tag-multiple"
-                      multiple
-                      chips
-                      closable-chips
-                      :items="subjects"
-                      :error-messages="errors.subjects"
-                    ></v-combobox>
-                  </v-col>
-                </v-row>
-              </div>
-
-              <v-divider class="mb-6"></v-divider>
-
-              <!-- Publication Details -->
-              <div class="mb-6">
-                <h3
-                  class="text-h6 font-weight-medium mb-4 text-info d-flex align-center"
-                >
-                  <v-icon class="mr-2">mdi-calendar</v-icon>
-                  Publication Details
-                </h3>
-                <v-row>
-                  <v-col cols="12" md="4">
-                    <v-text-field
-                      v-model.number="editedItem.first_publish_year"
-                      label="Publication Year"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-calendar"
-                      type="number"
-                      :error-messages="errors.first_publish_year"
-                    ></v-text-field>
-                  </v-col>
-                </v-row>
-              </div>
-
-              <v-divider class="mb-6"></v-divider>
-
-              <!-- Pricing, Rating & Description -->
-              <div class="mb-6">
-                <h3
-                  class="text-h6 font-weight-medium mb-4 text-success d-flex align-center"
-                >
-                  <v-icon class="mr-2">mdi-currency-usd</v-icon>
-                  Pricing & Details
-                </h3>
-                <v-row>
-                  <v-col cols="12" md="6">
-                    <v-text-field
-                      v-model.number="editedItem.price"
-                      label="Price"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-currency-usd"
-                      type="number"
-                      prefix="$"
-                      :error-messages="errors.price"
-                    ></v-text-field>
-                  </v-col>
-
-                  <v-col cols="12" md="6">
-                    <v-text-field
-                      v-model.number="editedItem.stock"
-                      label="Stock Quantity"
-                      variant="outlined"
-                      density="comfortable"
-                      prepend-inner-icon="mdi-package-variant"
-                      type="number"
-                      :error-messages="errors.stock"
-                      min="0"
-                      hint="0 = Out of stock / Ebook only"
-                      persistent-hint
-                    ></v-text-field>
-                  </v-col>
-
-                  <v-col cols="12" md="6">
-                    <v-rating
-                      v-model="editedItem.rating"
-                      label="Rating"
-                      density="comfortable"
-                      color="amber"
-                      half-increments
-                      hover
-                      :error-messages="errors.rating"
-                    ></v-rating>
-                    <div class="text-caption text-grey-darken-1 mt-1">
-                      Rating: {{ editedItem.rating || 0 }}/5 stars
-                    </div>
-                  </v-col>
-
-                  <v-col cols="12">
-                    <v-textarea
-                      v-model="editedItem.description"
-                      label="Description"
-                      variant="outlined"
-                      prepend-inner-icon="mdi-text-box"
-                      rows="4"
-                      auto-grow
-                      counter
-                      :error-messages="errors.description"
-                    ></v-textarea>
-                  </v-col>
-                </v-row>
-              </div>
-            </v-form>
-          </v-container>
-        </v-card-text>
-
-        <!-- Actions -->
-        <v-divider></v-divider>
-        <v-card-actions class="px-6 py-4 bg-whitesmoke">
-          <v-spacer></v-spacer>
-          <v-btn
-            color="grey-darken-2"
-            variant="outlined"
-            size="large"
+          <button
+            type="button"
+            class="rounded-md p-1 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+            aria-label="Close"
             @click="closeDialog"
-            class="mr-3"
           >
-            <v-icon start>mdi-close</v-icon>
-            Cancel
-          </v-btn>
-          <v-btn
-            color="customyellow"
-            variant="flat"
-            size="large"
-            @click="saveBook"
-            :loading="saving"
-            elevation="0"
-            class="admin-btn-accent"
-          >
-            <v-icon start>{{ isEditing ? "mdi-check" : "mdi-plus" }}</v-icon>
-            {{ isEditing ? "Update Book" : "Add Book" }}
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="500px" persistent>
-      <v-card class="text-center" elevation="8" rounded="xl">
-        <!-- Icon -->
-        <div class="pt-8 pb-4">
-          <v-avatar size="80" color="error" class="mb-4">
-            <v-icon size="40" color="white">mdi-delete-alert</v-icon>
-          </v-avatar>
-
-          <v-card-title class="text-h5 font-weight-bold text-center px-4">
-            Confirm Deletion
-          </v-card-title>
+            <X class="h-5 w-5" />
+          </button>
         </div>
 
         <!-- Content -->
-        <v-card-text class="px-6 pb-4">
-          <p class="text-body-1 mb-3">
-            Are you sure you want to delete this book?
-          </p>
+        <div class="max-h-[70vh] overflow-y-auto px-6 py-6">
+          <form @submit.prevent="saveBook">
+            <!-- Basic Information Section -->
+            <div class="mb-6">
+              <h3 class="mb-4 flex items-center text-lg font-medium text-primary">
+                <Info class="mr-2 h-5 w-5" />
+                Basic Information
+              </h3>
+              <div class="grid grid-cols-12 gap-4">
+                <!-- Book Key (auto-generated, readonly) -->
+                <div class="col-span-12 md:col-span-6">
+                  <UiInput
+                    v-model="editedItem.key"
+                    label="Book Key"
+                    readonly
+                    hint="Auto-generated unique identifier"
+                  >
+                    <template #prepend>
+                      <KeyRound class="h-4 w-4" />
+                    </template>
+                  </UiInput>
+                </div>
 
-          <v-alert
-            type="warning"
-            variant="tonal"
-            class="ma-3 text-left"
-            density="compact"
-          >
-            <div class="font-weight-medium">{{ bookToDelete?.title }}</div>
-            <div class="text-caption text-grey-darken-1">
-              This action cannot be undone.
-            </div>
-          </v-alert>
-        </v-card-text>
+                <div class="col-span-12 md:col-span-6">
+                  <UiInput
+                    v-model="editedItem.title"
+                    label="Book Title"
+                    required
+                    :error-message="errors.title?.[0]"
+                  >
+                    <template #prepend>
+                      <BookOpen class="h-4 w-4" />
+                    </template>
+                  </UiInput>
+                </div>
 
-        <!-- Actions -->
-        <v-card-actions class="justify-center px-6 pb-8">
-          <v-btn
-            color="grey"
-            variant="outlined"
-            size="large"
-            @click="deleteDialog = false"
-            class="mr-3"
-            min-width="100"
-          >
-            Cancel
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="flat"
-            size="large"
-            @click="deleteBookConfirmed"
-            :loading="deleting"
-            min-width="100"
-            elevation="2"
-          >
-            <v-icon start>mdi-delete</v-icon>
-            Delete
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
-
-    <!-- View Book Dialog -->
-    <v-dialog v-model="viewDialog" max-width="700px" scrollable>
-      <v-card v-if="viewedBook" elevation="8" rounded="lg">
-        <!-- Header with Book Cover Background -->
-        <div class="book-header position-relative">
-          <div class="book-header-overlay"></div>
-          <v-card-title class="pa-6 text-white position-relative">
-            <div class="d-flex align-center justify-space-between">
-              <div class="d-flex align-center">
-                <v-icon class="mr-3" size="large"
-                  >mdi-book-open-page-variant</v-icon
-                >
-                <div>
-                  <div class="text-h5 font-weight-bold">
-                    {{ viewedBook.title }}
+                <!-- Authors (multi-value combobox) -->
+                <div class="col-span-12 md:col-span-6">
+                  <UiLabel class="mb-1.5 block">Authors</UiLabel>
+                  <div
+                    class="flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm shadow-sm transition-colors focus-within:ring-2 focus-within:ring-ring"
+                    :class="errors.authors?.length ? 'border-destructive' : 'border-input'"
+                  >
+                    <UserPen class="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <UiBadge
+                      v-for="(author, index) in editedItem.authors"
+                      :key="index"
+                      variant="secondary"
+                      class="gap-1"
+                    >
+                      {{ author }}
+                      <button type="button" aria-label="Remove author" @click="removeAuthor(index)">
+                        <X class="h-3 w-3" />
+                      </button>
+                    </UiBadge>
+                    <input
+                      v-model="authorInput"
+                      type="text"
+                      class="min-w-[100px] flex-1 bg-transparent py-0.5 outline-none placeholder:text-muted-foreground"
+                      placeholder="Add author, press Enter"
+                      @keydown.enter.prevent="addAuthor"
+                      @blur="addAuthor"
+                    />
                   </div>
-                  <div class="text-subtitle-1 opacity-90">
-                    by {{ viewedBook.authors?.join(", ") || "Unknown Author" }}
+                  <p v-if="errors.authors?.length" class="mt-1 text-xs text-destructive">
+                    {{ errors.authors[0] }}
+                  </p>
+                </div>
+
+                <!-- Cover Image -->
+                <div class="col-span-12 md:col-span-6">
+                  <UiLabel class="mb-1.5 flex items-center gap-1.5">
+                    <Camera class="h-4 w-4 text-muted-foreground" />
+                    Cover Image
+                  </UiLabel>
+                  <input
+                    ref="coverFileInput"
+                    type="file"
+                    accept="image/*"
+                    class="block w-full cursor-pointer rounded-md border border-input bg-background text-sm text-muted-foreground shadow-sm file:mr-3 file:cursor-pointer file:rounded-l-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium file:text-foreground hover:file:bg-muted/70"
+                    @change="onCoverFileChange"
+                  />
+                  <p v-if="errors.cover_url?.length" class="mt-1 text-xs text-destructive">
+                    {{ errors.cover_url[0] }}
+                  </p>
+                  <!-- Hiển thị URL ảnh hiện tại nếu có -->
+                  <div v-if="editedItem.cover_url" class="mt-2">
+                    <UiBadge variant="success">
+                      <Check class="h-3 w-3" />
+                      Image uploaded
+                    </UiBadge>
+                    <div class="mt-1 text-xs text-muted-foreground">
+                      {{ editedItem.cover_url.substring(0, 50)
+                      }}{{ editedItem.cover_url.length > 50 ? "..." : "" }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Ebook File -->
+                <div class="col-span-12 md:col-span-6">
+                  <UiLabel class="mb-1.5 flex items-center gap-1.5">
+                    <FileText class="h-4 w-4 text-muted-foreground" />
+                    Ebook File (PDF, optional)
+                  </UiLabel>
+                  <input
+                    ref="ebookFileInput"
+                    type="file"
+                    accept="application/pdf"
+                    class="block w-full cursor-pointer rounded-md border border-input bg-background text-sm text-muted-foreground shadow-sm file:mr-3 file:cursor-pointer file:rounded-l-md file:border-0 file:bg-muted file:px-3 file:py-2 file:text-sm file:font-medium file:text-foreground hover:file:bg-muted/70"
+                    @change="onEbookFileChange"
+                  />
+                  <p class="mt-1 text-xs text-muted-foreground">
+                    PDF only, max 10MB. Only needed if this book is sold as an ebook
+                  </p>
+                  <div v-if="editedItem.pdf_url" class="mt-2">
+                    <UiBadge variant="success">
+                      <Check class="h-3 w-3" />
+                      Ebook file uploaded
+                    </UiBadge>
                   </div>
                 </div>
               </div>
-              <v-btn
-                icon="mdi-close"
-                variant="text"
-                color="white"
-                @click="viewDialog = false"
-              ></v-btn>
             </div>
-          </v-card-title>
-        </div>
 
-        <v-divider></v-divider>
+            <UiSeparator class="mb-6" />
 
-        <!-- Content -->
-        <v-card-text class="pa-0" style="max-height: 60vh">
-          <v-container class="py-4">
-            <v-row>
-              <!-- Book Cover -->
-              <v-col cols="12" md="4" v-if="viewedBook.cover_url">
-                <div class="text-center">
-                  <v-img
-                    :src="viewedBook.cover_url"
-                    :alt="viewedBook.title"
-                    aspect-ratio="0.7"
-                    max-width="200"
-                    cover
-                    class="rounded-lg mx-auto elevation-4"
+            <!-- Categories & Classification -->
+            <div class="mb-6">
+              <h3 class="mb-4 flex items-center text-lg font-medium text-secondary">
+                <Tag class="mr-2 h-5 w-5" />
+                Categories & Classification
+              </h3>
+              <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-12">
+                  <UiLabel class="mb-1.5 block">Categories</UiLabel>
+                  <div
+                    class="flex min-h-9 w-full flex-wrap items-center gap-1.5 rounded-md border bg-background px-3 py-1.5 text-sm capitalize shadow-sm transition-colors focus-within:ring-2 focus-within:ring-ring"
+                    :class="errors.subjects?.length ? 'border-destructive' : 'border-input'"
                   >
-                    <template v-slot:placeholder>
-                      <v-skeleton-loader type="image"></v-skeleton-loader>
-                    </template>
-                  </v-img>
-                </div>
-              </v-col>
-
-              <!-- Book Details -->
-              <v-col :cols="viewedBook.cover_url ? 8 : 12">
-                <v-card variant="tonal" color="waterblue" class="mb-4">
-                  <v-card-text class="pa-4">
-                    <div class="d-flex align-center mb-2">
-                      <v-icon color="lightgreen" class="mr-2"
-                        >mdi-currency-usd</v-icon
-                      >
-                      <span
-                        class="text-h5 font-weight-bold"
-                        style="color: var(--admin-emerald)"
-                      >
-                        ${{ viewedBook.price?.toFixed(2) || "0.00" }}
-                      </span>
-                    </div>
-
-                    <v-chip
-                      color="lightgreen"
-                      variant="flat"
-                      size="small"
-                      prepend-icon="mdi-check-circle"
-                    >
-                      Available
-                    </v-chip>
-                  </v-card-text>
-                </v-card>
-
-                <!-- Details List -->
-                <v-list class="pa-0">
-                  <v-list-item class="px-0">
-                    <template v-slot:prepend>
-                      <v-icon color="waterblue">mdi-calendar</v-icon>
-                    </template>
-                    <v-list-item-title>Publication Year</v-list-item-title>
-                    <v-list-item-subtitle>
-                      {{ viewedBook.first_publish_year || "N/A" }}
-                    </v-list-item-subtitle>
-                  </v-list-item>
-
-                  <v-list-item class="px-0">
-                    <template v-slot:prepend>
-                      <v-icon color="waterblue">mdi-translate</v-icon>
-                    </template>
-                    <v-list-item-title>Language</v-list-item-title>
-                    <v-list-item-subtitle>
-                      {{ viewedBook.language || "English" }}
-                    </v-list-item-subtitle>
-                  </v-list-item>
-
-                  <v-list-item class="px-0">
-                    <template v-slot:prepend>
-                      <v-icon color="waterblue">mdi-file-document</v-icon>
-                    </template>
-                    <v-list-item-title>Pages</v-list-item-title>
-                    <v-list-item-subtitle>
-                      {{ viewedBook.page_count || "N/A" }}
-                    </v-list-item-subtitle>
-                  </v-list-item>
-                </v-list>
-              </v-col>
-            </v-row>
-
-            <!-- Categories Section -->
-            <v-row v-if="viewedBook.subjects?.length" class="mt-4">
-              <v-col cols="12">
-                <v-card variant="outlined" class="pa-4">
-                  <h4
-                    class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center"
-                  >
-                    <v-icon class="mr-2" color="waterblue"
-                      >mdi-tag-multiple</v-icon
-                    >
-                    Categories
-                  </h4>
-                  <div class="d-flex text-capitalize flex-wrap ga-2">
-                    <v-chip
-                      v-for="subject in viewedBook.subjects"
-                      :key="subject"
-                      color="darkgreen"
-                      variant="tonal"
-                      size="small"
+                    <Tags class="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <UiBadge
+                      v-for="(subject, index) in editedItem.subjects"
+                      :key="index"
+                      variant="secondary"
+                      class="gap-1 capitalize"
                     >
                       {{ subject }}
-                    </v-chip>
+                      <button type="button" aria-label="Remove category" @click="removeSubject(index)">
+                        <X class="h-3 w-3" />
+                      </button>
+                    </UiBadge>
+                    <input
+                      v-model="subjectInput"
+                      type="text"
+                      list="book-subject-suggestions"
+                      class="min-w-[100px] flex-1 bg-transparent py-0.5 outline-none placeholder:text-muted-foreground"
+                      placeholder="Add category, press Enter"
+                      @keydown.enter.prevent="addSubject"
+                      @blur="addSubject"
+                    />
+                    <datalist id="book-subject-suggestions">
+                      <option v-for="subject in subjects" :key="subject" :value="subject" />
+                    </datalist>
                   </div>
-                </v-card>
-              </v-col>
-            </v-row>
-
-            <!-- Description Section -->
-            <v-row v-if="viewedBook.description" class="mt-4">
-              <v-col cols="12">
-                <v-card variant="outlined" class="pa-4">
-                  <h4
-                    class="text-subtitle-1 font-weight-bold mb-3 d-flex align-center"
-                  >
-                    <v-icon class="mr-2" color="waterblue">mdi-text-box</v-icon>
-                    Description
-                  </h4>
-                  <p class="text-body-2 line-height-1-6 mb-0">
-                    {{ viewedBook.description }}
+                  <p v-if="errors.subjects?.length" class="mt-1 text-xs text-destructive">
+                    {{ errors.subjects[0] }}
                   </p>
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-container>
-        </v-card-text>
+                </div>
+              </div>
+            </div>
+
+            <UiSeparator class="mb-6" />
+
+            <!-- Publication Details -->
+            <div class="mb-6">
+              <h3 class="mb-4 flex items-center text-lg font-medium text-info">
+                <Calendar class="mr-2 h-5 w-5" />
+                Publication Details
+              </h3>
+              <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-12 md:col-span-4">
+                  <UiInput
+                    v-model="editedItem.first_publish_year"
+                    label="Publication Year"
+                    type="number"
+                    :error-message="errors.first_publish_year?.[0]"
+                  >
+                    <template #prepend>
+                      <Calendar class="h-4 w-4" />
+                    </template>
+                  </UiInput>
+                </div>
+              </div>
+            </div>
+
+            <UiSeparator class="mb-6" />
+
+            <!-- Pricing, Rating & Description -->
+            <div class="mb-6">
+              <h3 class="mb-4 flex items-center text-lg font-medium text-success">
+                <DollarSign class="mr-2 h-5 w-5" />
+                Pricing & Details
+              </h3>
+              <div class="grid grid-cols-12 gap-4">
+                <div class="col-span-12 md:col-span-6">
+                  <UiInput
+                    v-model="editedItem.price"
+                    label="Price"
+                    type="number"
+                    :error-message="errors.price?.[0]"
+                  >
+                    <template #prepend>
+                      <DollarSign class="h-4 w-4" />
+                    </template>
+                  </UiInput>
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <UiInput
+                    v-model="editedItem.stock"
+                    label="Stock Quantity"
+                    type="number"
+                    min="0"
+                    hint="0 = Out of stock / Ebook only"
+                    :error-message="errors.stock?.[0]"
+                  >
+                    <template #prepend>
+                      <Package class="h-4 w-4" />
+                    </template>
+                  </UiInput>
+                </div>
+
+                <div class="col-span-12 md:col-span-6">
+                  <UiLabel class="mb-1.5 block">Rating</UiLabel>
+                  <UiRating v-model="editedItem.rating" :size="26" />
+                  <div class="mt-1 text-xs text-muted-foreground">
+                    Rating: {{ editedItem.rating || 0 }}/5 stars
+                  </div>
+                </div>
+
+                <div class="col-span-12">
+                  <UiTextarea
+                    v-model="editedItem.description"
+                    label="Description"
+                    :rows="4"
+                    :error-message="errors.description?.[0]"
+                  />
+                  <div class="mt-1 text-right text-xs text-muted-foreground">
+                    {{ (editedItem.description || "").length }} characters
+                  </div>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
 
         <!-- Actions -->
-        <v-divider></v-divider>
-        <v-card-actions class="justify-end pa-4 bg-whitesmoke">
-          <v-btn
-            color="customblack"
-            variant="flat"
-            @click="viewDialog = false"
-            size="large"
-            min-width="100"
+        <div class="flex items-center justify-end gap-3 border-t border-border bg-muted/50 px-6 py-4">
+          <UiButton variant="outline" size="lg" @click="closeDialog">
+            <X class="h-4 w-4" />
+            Cancel
+          </UiButton>
+          <UiButton
+            size="lg"
+            class="bg-customyellow text-customblack transition-transform hover:-translate-y-px hover:bg-customyellow/90"
+            :loading="saving"
+            @click="saveBook"
           >
-            <v-icon start>mdi-check</v-icon>
-            Close
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+            <component :is="isEditing ? Check : Plus" v-if="!saving" class="h-4 w-4" />
+            {{ isEditing ? "Update Book" : "Add Book" }}
+          </UiButton>
+        </div>
+      </UiDialogContent>
+    </UiDialog>
+
+    <!-- Delete Confirmation Dialog -->
+    <UiDialog v-model:open="deleteDialog">
+      <UiDialogContent
+        hide-close
+        class="gap-0 p-0 sm:max-w-lg"
+        @pointer-down-outside.prevent
+        @escape-key-down.prevent
+      >
+        <div class="px-6 pb-8 pt-8 text-center">
+          <!-- Icon -->
+          <div class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-destructive">
+            <Trash2 class="h-10 w-10 text-white" />
+          </div>
+
+          <UiDialogTitle class="mb-4 text-2xl font-bold text-foreground">
+            Confirm Deletion
+          </UiDialogTitle>
+
+          <!-- Content -->
+          <UiDialogDescription class="mb-3 text-base text-foreground">
+            Are you sure you want to delete this book?
+          </UiDialogDescription>
+
+          <UiAlert variant="warning" class="text-left">
+            <div class="font-medium">{{ bookToDelete?.title }}</div>
+            <div class="text-xs opacity-80">This action cannot be undone.</div>
+          </UiAlert>
+
+          <!-- Actions -->
+          <div class="mt-6 flex justify-center gap-3">
+            <UiButton
+              variant="outline"
+              size="lg"
+              class="min-w-[100px]"
+              @click="deleteDialog = false"
+            >
+              Cancel
+            </UiButton>
+            <UiButton
+              variant="destructive"
+              size="lg"
+              class="min-w-[100px]"
+              :loading="deleting"
+              @click="deleteBookConfirmed"
+            >
+              <Trash2 v-if="!deleting" class="h-4 w-4" />
+              Delete
+            </UiButton>
+          </div>
+        </div>
+      </UiDialogContent>
+    </UiDialog>
+
+    <!-- View Book Dialog -->
+    <UiDialog v-model:open="viewDialog">
+      <UiDialogContent hide-close class="gap-0 overflow-hidden p-0 sm:max-w-2xl">
+        <template v-if="viewedBook">
+          <!-- Header with dark background + accent overlay -->
+          <div class="relative overflow-hidden bg-customblack">
+            <div class="absolute inset-0 bg-gradient-to-br from-customyellow/20 to-transparent"></div>
+            <div class="relative flex items-center justify-between p-6 text-white">
+              <div class="flex items-center">
+                <BookOpen class="mr-3 h-8 w-8" />
+                <div>
+                  <UiDialogTitle class="text-2xl font-bold">
+                    {{ viewedBook.title }}
+                  </UiDialogTitle>
+                  <UiDialogDescription class="text-base text-white opacity-90">
+                    by {{ viewedBook.authors?.join(", ") || "Unknown Author" }}
+                  </UiDialogDescription>
+                </div>
+              </div>
+              <button
+                type="button"
+                class="rounded-md p-1 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+                aria-label="Close"
+                @click="viewDialog = false"
+              >
+                <X class="h-5 w-5" />
+              </button>
+            </div>
+          </div>
+
+          <!-- Content -->
+          <div class="max-h-[60vh] overflow-y-auto p-6">
+            <div class="grid grid-cols-12 gap-4">
+              <!-- Book Cover -->
+              <div v-if="viewedBook.cover_url" class="col-span-12 md:col-span-4">
+                <div class="text-center">
+                  <img
+                    :src="viewedBook.cover_url"
+                    :alt="viewedBook.title"
+                    class="mx-auto aspect-[0.7] w-full max-w-[200px] rounded-lg bg-muted object-cover shadow-md"
+                  />
+                </div>
+              </div>
+
+              <!-- Book Details -->
+              <div :class="viewedBook.cover_url ? 'col-span-12 md:col-span-8' : 'col-span-12'">
+                <div class="mb-4 rounded-lg bg-waterblue/10 p-4">
+                  <div class="mb-2 flex items-center">
+                    <DollarSign class="mr-2 h-5 w-5 text-lightgreen" />
+                    <span class="text-2xl font-bold text-lightgreen">
+                      ${{ viewedBook.price?.toFixed(2) || "0.00" }}
+                    </span>
+                  </div>
+
+                  <UiBadge class="border-transparent bg-lightgreen text-white">
+                    <CheckCircle2 class="h-3 w-3" />
+                    Available
+                  </UiBadge>
+                </div>
+
+                <!-- Details List -->
+                <div class="space-y-4">
+                  <div class="flex items-center gap-3">
+                    <Calendar class="h-5 w-5 shrink-0 text-waterblue" />
+                    <div>
+                      <div class="text-sm font-medium text-foreground">Publication Year</div>
+                      <div class="text-sm text-muted-foreground">
+                        {{ viewedBook.first_publish_year || "N/A" }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-3">
+                    <Languages class="h-5 w-5 shrink-0 text-waterblue" />
+                    <div>
+                      <div class="text-sm font-medium text-foreground">Language</div>
+                      <div class="text-sm text-muted-foreground">
+                        {{ viewedBook.language || "English" }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-3">
+                    <FileText class="h-5 w-5 shrink-0 text-waterblue" />
+                    <div>
+                      <div class="text-sm font-medium text-foreground">Pages</div>
+                      <div class="text-sm text-muted-foreground">
+                        {{ viewedBook.page_count || "N/A" }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Categories Section -->
+            <div v-if="viewedBook.subjects?.length" class="mt-4">
+              <div class="rounded-lg border border-border p-4">
+                <h4 class="mb-3 flex items-center text-base font-bold text-foreground">
+                  <Tags class="mr-2 h-5 w-5 text-waterblue" />
+                  Categories
+                </h4>
+                <div class="flex flex-wrap gap-2 capitalize">
+                  <UiBadge
+                    v-for="subject in viewedBook.subjects"
+                    :key="subject"
+                    class="border-transparent bg-darkgreen/15 capitalize text-darkgreen dark:bg-darkgreen/50 dark:text-whitesmoke"
+                  >
+                    {{ subject }}
+                  </UiBadge>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description Section -->
+            <div v-if="viewedBook.description" class="mt-4">
+              <div class="rounded-lg border border-border p-4">
+                <h4 class="mb-3 flex items-center text-base font-bold text-foreground">
+                  <FileText class="mr-2 h-5 w-5 text-waterblue" />
+                  Description
+                </h4>
+                <p class="mb-0 text-sm leading-relaxed">
+                  {{ viewedBook.description }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex justify-end border-t border-border bg-muted/50 p-4">
+            <UiButton
+              size="lg"
+              class="min-w-[100px] bg-customblack text-white hover:bg-customblack/90"
+              @click="viewDialog = false"
+            >
+              <Check class="h-4 w-4" />
+              Close
+            </UiButton>
+          </div>
+        </template>
+      </UiDialogContent>
+    </UiDialog>
 
     <!-- Snackbar Alert -->
     <SnackbarAlert
@@ -803,557 +829,503 @@
   </div>
 </template>
 
-<script>
-import { mapState, mapActions } from "vuex";
-import { uploadBookImage, uploadBookEbookFile } from "~/api/userApi";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useBookStore } from "@/stores/book";
+import {
+  BookOpen,
+  Calendar,
+  Camera,
+  Check,
+  CheckCircle2,
+  DollarSign,
+  Eye,
+  FileText,
+  Filter,
+  Flame,
+  Info,
+  KeyRound,
+  Languages,
+  Package,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Search,
+  Tag,
+  Tags,
+  Trash2,
+  UserPen,
+  X,
+} from "lucide-vue-next";
 import { v4 as uuidv4 } from "uuid";
-export default {
-  name: "BookManagement",
-  data() {
-    return {
-      loading: false,
-      search: "",
-      filterSubject: null,
-      sortBy: "newest",
-      showThemSach: true,
-      page: 1,
-      itemsPerPage: 10,
+import { uploadBookImage, uploadBookEbookFile } from "~/api/userApi";
+import type { Book } from "@/types";
 
-      // Dialog states
-      dialog: false,
-      deleteDialog: false,
-      viewDialog: false,
+interface BookFormData {
+  _id?: string;
+  key: string;
+  title: string;
+  cover_url: string;
+  first_publish_year?: number;
+  authors: string[];
+  price: number;
+  stock: number;
+  sold?: number;
+  subjects: string[];
+  description: string;
+  pdf_url: string | null;
+  rating?: number;
+}
 
-      // Form data
-      editedIndex: -1,
-      editedItem: this.getDefaultItem(),
-      bookToDelete: null,
-      viewedBook: null,
-      uploadedFile: null, // For v-file-input binding
-      uploadedEbookFile: null, // For ebook file v-file-input binding
+type ViewedBook = Book & { language?: string; page_count?: number };
 
-      // Form validation
-      errors: {},
+type BadgeVariant = "success" | "warning" | "info" | "destructive" | "muted";
 
-      // Loading states
-      saving: false,
-      deleting: false,
+const bookStore = useBookStore();
+const { books } = storeToRefs(bookStore);
 
-      headers: [
-        {
-          title: "Book ID",
-          key: "key",
-          align: "start",
-          sortable: false,
-          width: "120px",
-        },
-        {
-          title: "Book Title",
-          key: "title",
-          align: "start",
-          sortable: true,
-          width: "300px",
-        },
-        {
-          title: "Publication Year",
-          key: "first_publish_year",
-          align: "center",
-          sortable: true,
-          width: "140px",
-        },
-        {
-          title: "Categories",
-          key: "subjects",
-          align: "start",
-          sortable: false,
-          width: "180px",
-        },
-        {
-          title: "Price",
-          key: "price",
-          align: "center",
-          sortable: true,
-          width: "100px",
-        },
-        {
-          title: "Stock",
-          key: "stock",
-          align: "center",
-          sortable: true,
-          width: "100px",
-        },
-        {
-          title: "Sold",
-          key: "sold",
-          align: "center",
-          sortable: true,
-          width: "100px",
-        },
-        {
-          title: "Description",
-          key: "description",
-          align: "start",
-          sortable: false,
-          width: "250px",
-        },
-        {
-          title: "Actions",
-          key: "actions",
-          align: "center",
-          sortable: false,
-          width: "120px",
-        },
-      ],
+// NOTE: the original component declared a local `loading` in data() which
+// shadowed the store's `book/loading` state — kept local here on purpose.
+const loading = ref(false);
+const search = ref("");
+const filterSubject = ref<string | undefined>(undefined);
+const sortBy = ref("newest");
+const showThemSach = ref(true);
+const page = ref(1);
+const itemsPerPage = 10;
 
-      subjects: [],
+// Dialog states
+const dialog = ref(false);
+const deleteDialog = ref(false);
+const viewDialog = ref(false);
 
-      languageOptions: [
-        { title: "English", value: "en" },
-        { title: "Spanish", value: "es" },
-        { title: "French", value: "fr" },
-        { title: "German", value: "de" },
-        { title: "Italian", value: "it" },
-        { title: "Portuguese", value: "pt" },
-        { title: "Russian", value: "ru" },
-        { title: "Japanese", value: "ja" },
-        { title: "Chinese", value: "zh" },
-        { title: "Korean", value: "ko" },
-      ],
+// Form data
+const editedIndex = ref(-1);
+const editedItem = ref<BookFormData>(getDefaultItem());
+const bookToDelete = ref<Book | null>(null);
+const viewedBook = ref<ViewedBook | null>(null);
 
-      sortOptions: [
-        { title: "Newest", value: "newest" },
-        { title: "Oldest", value: "oldest" },
-        { title: "Name A-Z", value: "name-asc" },
-        { title: "Name Z-A", value: "name-desc" },
-        { title: "Price Low to High", value: "price-asc" },
-        { title: "Price High to Low", value: "price-desc" },
-      ],
+// Combobox inputs + file input refs (replace v-combobox / v-file-input)
+const authorInput = ref("");
+const subjectInput = ref("");
+const coverFileInput = ref<HTMLInputElement | null>(null);
+const ebookFileInput = ref<HTMLInputElement | null>(null);
 
-      // Notification
-      snackbar: {
-        show: false,
-        text: "",
-        color: "success",
-      },
-    };
-  },
+// Form validation
+const errors = ref<Record<string, string[]>>({});
 
-  computed: {
-    ...mapState("book", ["books", "loading"]),
-    getSubjectsFromBook() {
-      const allSubjects = this.books.map((book) => book.subjects);
-      return [...new Set(allSubjects.flat())];
-    },
+// Loading states
+const saving = ref(false);
+const deleting = ref(false);
 
-    dialogTitle() {
-      return this.editedIndex === -1 ? "Add New Book" : "Edit Book";
-    },
+const subjects = ref<string[]>([]);
 
-    isEditing() {
-      return this.editedIndex !== -1;
-    },
+const sortOptions = [
+  { label: "Newest", value: "newest" },
+  { label: "Oldest", value: "oldest" },
+  { label: "Name A-Z", value: "name-asc" },
+  { label: "Name Z-A", value: "name-desc" },
+  { label: "Price Low to High", value: "price-asc" },
+  { label: "Price High to Low", value: "price-desc" },
+];
 
-    filteredBooks() {
-      let filtered = [...this.books];
+// Notification
+const snackbar = reactive({
+  show: false,
+  text: "",
+  color: "success",
+});
 
-      // Filter by subject
-      if (this.filterSubject) {
-        filtered = filtered.filter((book) =>
-          book.subjects?.includes(this.filterSubject)
-        );
-      }
+const getSubjectsFromBook = computed(() => {
+  const allSubjects = books.value.map((book) => book.subjects || []);
+  return [...new Set(allSubjects.flat())];
+});
 
-      // Sort
-      switch (this.sortBy) {
-        case "newest":
-          filtered.sort(
-            (a, b) => (b.first_publish_year || 0) - (a.first_publish_year || 0)
-          );
-          break;
-        case "oldest":
-          filtered.sort(
-            (a, b) => (a.first_publish_year || 0) - (b.first_publish_year || 0)
-          );
-          break;
-        case "name-asc":
-          filtered.sort((a, b) => a.title.localeCompare(b.title));
-          break;
-        case "name-desc":
-          filtered.sort((a, b) => b.title.localeCompare(a.title));
-          break;
-        case "price-asc":
-          filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
-          break;
-        case "price-desc":
-          filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
-          break;
-      }
+const dialogTitle = computed(() =>
+  editedIndex.value === -1 ? "Add New Book" : "Edit Book"
+);
 
-      return filtered;
-    },
+const isEditing = computed(() => editedIndex.value !== -1);
 
-    paginatedBooks() {
-      const start = (this.page - 1) * this.itemsPerPage;
-      const end = start + this.itemsPerPage;
-      return this.filteredBooks.slice(start, end);
-    },
+const filteredBooks = computed<Book[]>(() => {
+  let filtered = [...books.value];
 
-    totalPages() {
-      return Math.ceil(this.filteredBooks.length / this.itemsPerPage);
-    },
-  },
+  // Text search (previously handled internally by v-data-table's :search)
+  if (search.value) {
+    const query = search.value.toLowerCase();
+    filtered = filtered.filter((book) =>
+      [
+        book._id,
+        book.title,
+        book.authors?.join(", "),
+        book.subjects?.join(", "),
+        book.description,
+        book.first_publish_year,
+        book.price,
+        book.stock,
+        book.sold,
+      ].some(
+        (value) =>
+          value !== undefined &&
+          value !== null &&
+          String(value).toLowerCase().includes(query)
+      )
+    );
+  }
 
-  methods: {
-    ...mapActions("book", [
-      "getAllBooks",
-      "deleteBookById",
-      "createBook",
-      "updateBook",
-    ]),
+  // Filter by subject
+  if (filterSubject.value) {
+    filtered = filtered.filter((book) =>
+      book.subjects?.includes(filterSubject.value as string)
+    );
+  }
 
-    getDefaultItem() {
-      return {
-        key: uuidv4(),
-        title: "",
-        cover_url: "",
-        first_publish_year: new Date().getFullYear(),
-        authors: [],
-        price: 0,
-        stock: 0,
-        subjects: [],
-        description: "",
-        pdf_url: null,
-      };
-    },
+  // Sort
+  switch (sortBy.value) {
+    case "newest":
+      filtered.sort(
+        (a, b) => (b.first_publish_year || 0) - (a.first_publish_year || 0)
+      );
+      break;
+    case "oldest":
+      filtered.sort(
+        (a, b) => (a.first_publish_year || 0) - (b.first_publish_year || 0)
+      );
+      break;
+    case "name-asc":
+      filtered.sort((a, b) => a.title.localeCompare(b.title));
+      break;
+    case "name-desc":
+      filtered.sort((a, b) => b.title.localeCompare(a.title));
+      break;
+    case "price-asc":
+      filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
+      break;
+    case "price-desc":
+      filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
+      break;
+  }
 
-    async refreshBooks() {
-      this.loading = true;
-      try {
-        // Force reload by adding timestamp to bypass cache
-        await this.getAllBooks({ subject: null });
-        console.log("Books loaded:", this.books.length);
-      } catch (error) {
-        console.error("Error fetching books:", error);
-        this.showSnackbar("Failed to load books", "error");
-      } finally {
-        this.loading = false;
-      }
-    },
+  return filtered;
+});
 
-    getYearColor(year) {
-      if (!year) return "grey";
-      const currentYear = new Date().getFullYear();
-      if (year >= currentYear - 5) return "success";
-      if (year >= currentYear - 20) return "warning";
-      return "error";
-    },
+const paginatedBooks = computed(() => {
+  const start = (page.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredBooks.value.slice(start, end);
+});
 
-    getStockColor(stock) {
-      if (stock === 0) return "error";
-      if (stock <= 10) return "warning";
-      if (stock <= 50) return "info";
-      return "success";
-    },
+const totalPages = computed(() =>
+  Math.ceil(filteredBooks.value.length / itemsPerPage)
+);
 
-    openAddDialog() {
-      this.editedIndex = -1;
-      this.editedItem = this.getDefaultItem();
-      this.errors = {};
-      this.dialog = true;
-    },
+function getDefaultItem(): BookFormData {
+  return {
+    key: uuidv4(),
+    title: "",
+    cover_url: "",
+    first_publish_year: new Date().getFullYear(),
+    authors: [],
+    price: 0,
+    stock: 0,
+    subjects: [],
+    description: "",
+    pdf_url: null,
+  };
+}
 
-    openDialog(action, item = null) {
-      if (action === "add") {
-        this.editedIndex = -1;
-        this.editedItem = this.getDefaultItem();
-      } else if (action === "edit" && item) {
-        this.editedIndex = this.books.findIndex(
-          (book) => book._id === item._id
-        );
-        this.editedItem = { ...item };
-      }
-      this.errors = {};
-      this.dialog = true;
-    },
+async function refreshBooks() {
+  loading.value = true;
+  try {
+    // Force reload by adding timestamp to bypass cache
+    await bookStore.getAllBooks({ subject: undefined });
+    console.log("Books loaded:", books.value.length);
+  } catch (error) {
+    console.error("Error fetching books:", error);
+    showSnackbar("Failed to load books", "error");
+  } finally {
+    loading.value = false;
+  }
+}
 
-    closeDialog() {
-      this.dialog = false;
-      this.$nextTick(() => {
-        this.editedItem = this.getDefaultItem();
-        this.editedIndex = -1;
-        this.errors = {};
-        this.uploadedFile = null; // Reset file input
-        this.uploadedEbookFile = null;
+function getYearColor(year?: number): BadgeVariant {
+  if (!year) return "muted";
+  const currentYear = new Date().getFullYear();
+  if (year >= currentYear - 5) return "success";
+  if (year >= currentYear - 20) return "warning";
+  return "destructive";
+}
+
+function getStockColor(stock?: number): BadgeVariant {
+  if (stock === 0) return "destructive";
+  if ((stock ?? 0) <= 10) return "warning";
+  if ((stock ?? 0) <= 50) return "info";
+  return "success";
+}
+
+function openAddDialog() {
+  editedIndex.value = -1;
+  editedItem.value = getDefaultItem();
+  errors.value = {};
+  dialog.value = true;
+}
+
+function openDialog(action: "add" | "edit", item: Book | null = null) {
+  if (action === "add") {
+    editedIndex.value = -1;
+    editedItem.value = getDefaultItem();
+  } else if (action === "edit" && item) {
+    editedIndex.value = books.value.findIndex((book) => book._id === item._id);
+    editedItem.value = { ...item } as BookFormData;
+  }
+  errors.value = {};
+  dialog.value = true;
+}
+
+function closeDialog() {
+  dialog.value = false;
+  nextTick(() => {
+    editedItem.value = getDefaultItem();
+    editedIndex.value = -1;
+    errors.value = {};
+    authorInput.value = "";
+    subjectInput.value = "";
+    // Reset file inputs
+    if (coverFileInput.value) coverFileInput.value.value = "";
+    if (ebookFileInput.value) ebookFileInput.value.value = "";
+  });
+}
+
+function validateForm() {
+  errors.value = {};
+
+  if (!editedItem.value.title?.trim()) {
+    errors.value.title = ["Title is required"];
+  }
+
+  if (!editedItem.value.authors?.length) {
+    errors.value.authors = ["At least one author is required"];
+  }
+
+  if (!editedItem.value.cover_url) {
+    errors.value.cover_url = ["Cover image is required"];
+  }
+
+  if (editedItem.value.price < 0) {
+    errors.value.price = ["Price must be non-negative"];
+  }
+
+  if (
+    editedItem.value.first_publish_year &&
+    (editedItem.value.first_publish_year < 1000 ||
+      editedItem.value.first_publish_year > new Date().getFullYear() + 1)
+  ) {
+    errors.value.first_publish_year = ["Please enter a valid publication year"];
+  }
+
+  return Object.keys(errors.value).length === 0;
+}
+
+function addAuthor() {
+  const value = authorInput.value.trim();
+  if (value && !editedItem.value.authors.includes(value)) {
+    editedItem.value.authors.push(value);
+  }
+  authorInput.value = "";
+}
+
+function removeAuthor(index: number) {
+  editedItem.value.authors.splice(index, 1);
+}
+
+function addSubject() {
+  const value = subjectInput.value.trim();
+  if (value && !editedItem.value.subjects.includes(value)) {
+    editedItem.value.subjects.push(value);
+  }
+  subjectInput.value = "";
+}
+
+function removeSubject(index: number) {
+  editedItem.value.subjects.splice(index, 1);
+}
+
+function onCoverFileChange(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+  handleBookUpload(file);
+}
+
+function onEbookFileChange(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0] ?? null;
+  handleEbookFileUpload(file);
+}
+
+async function handleBookUpload(file: File | null) {
+  if (!file) {
+    console.log("No file found!");
+    return;
+  }
+
+  // Validate file type
+  if (!file.type || !file.type.startsWith("image/")) {
+    console.log("❌ File type validation failed:", file.type);
+    showSnackbar("Please select a valid image file", "error");
+    return;
+  }
+
+  // Validate file size (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showSnackbar("File size must be less than 5MB", "error");
+    return;
+  }
+
+  try {
+    showSnackbar("Uploading image...", "info");
+    const response = await uploadBookImage(file);
+
+    if (response.data && response.data.data && response.data.data.url) {
+      editedItem.value.cover_url = response.data.data.url;
+      showSnackbar("Image uploaded successfully!", "success");
+    } else {
+      throw new Error("No URL returned from server");
+    }
+  } catch (error: any) {
+    console.error("Upload error:", error);
+    console.error("Error response:", error.response);
+    showSnackbar(
+      "Failed to upload image: " +
+        (error.response?.data?.message || error.message || "Unknown error"),
+      "error"
+    );
+  }
+}
+
+async function handleEbookFileUpload(file: File | null) {
+  if (!file) return;
+
+  if (file.type !== "application/pdf") {
+    showSnackbar("Please select a PDF file", "error");
+    return;
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    showSnackbar("Ebook file size must be less than 10MB", "error");
+    return;
+  }
+
+  try {
+    showSnackbar("Uploading ebook file...", "info");
+    const response = await uploadBookEbookFile(file);
+
+    if (response.data && response.data.data && response.data.data.url) {
+      editedItem.value.pdf_url = response.data.data.url;
+      showSnackbar("Ebook file uploaded successfully!", "success");
+    } else {
+      throw new Error("No URL returned from server");
+    }
+  } catch (error: any) {
+    console.error("Ebook upload error:", error);
+    showSnackbar(
+      "Failed to upload ebook file: " +
+        (error.response?.data?.message || error.message || "Unknown error"),
+      "error"
+    );
+  }
+}
+
+async function saveBook() {
+  if (!validateForm()) return;
+
+  // Check if cover_url is provided
+  if (!editedItem.value.cover_url) {
+    errors.value.cover_url = ["Please upload a cover image"];
+    return;
+  }
+
+  saving.value = true;
+  try {
+    if (isEditing.value) {
+      await bookStore.updateBook({
+        id: editedItem.value._id as string,
+        bookData: editedItem.value as Partial<Book>,
       });
-    },
+      showSnackbar("Book updated successfully");
+    } else {
+      await bookStore.createBook(editedItem.value as Partial<Book>);
+      showSnackbar("Book added successfully");
+    }
+    closeDialog();
+    await refreshBooks();
+  } catch (error: any) {
+    console.error("Save book error:", error);
+    showSnackbar(
+      "Failed to save book: " +
+        (error.response?.data?.message || error.message || "Unknown error"),
+      "error"
+    );
+  } finally {
+    saving.value = false;
+  }
+}
 
-    validateForm() {
-      this.errors = {};
+function viewBook(book: Book) {
+  viewedBook.value = book as ViewedBook;
+  viewDialog.value = true;
+}
 
-      if (!this.editedItem.title?.trim()) {
-        this.errors.title = ["Title is required"];
-      }
+function editBook(book: Book) {
+  openDialog("edit", book);
+}
 
-      if (!this.editedItem.authors?.length) {
-        this.errors.authors = ["At least one author is required"];
-      }
+function confirmDelete(item: Book) {
+  bookToDelete.value = item;
+  deleteDialog.value = true;
+}
 
-      if (!this.editedItem.cover_url) {
-        this.errors.cover_url = ["Cover image is required"];
-      }
+async function deleteBookConfirmed() {
+  if (!bookToDelete.value) return;
 
-      if (this.editedItem.price < 0) {
-        this.errors.price = ["Price must be non-negative"];
-      }
+  deleting.value = true;
+  try {
+    await bookStore.deleteBookById({ id: bookToDelete.value._id });
+    showSnackbar("Book deleted successfully");
+    deleteDialog.value = false;
+    bookToDelete.value = null;
+  } catch (error) {
+    showSnackbar("Failed to delete book", "error");
+  } finally {
+    deleting.value = false;
+  }
+}
 
-      if (
-        this.editedItem.first_publish_year &&
-        (this.editedItem.first_publish_year < 1000 ||
-          this.editedItem.first_publish_year > new Date().getFullYear() + 1)
-      ) {
-        this.errors.first_publish_year = [
-          "Please enter a valid publication year",
-        ];
-      }
+function toggleAdvancedFilter() {
+  console.log("Toggle advanced filter");
+}
 
-      return Object.keys(this.errors).length === 0;
-    },
+function showSnackbar(text: string, color = "success") {
+  snackbar.show = true;
+  snackbar.text = text;
+  snackbar.color = color;
+}
 
-    async handleBookUpload(file) {
-      // console.log("=== UPLOAD DEBUG START ===");
-      // console.log("1. Raw file received:", file);
-      // console.log("2. Type of file:", typeof file);
-      // console.log("3. Is it an array?", Array.isArray(file));
-      // console.log("4. Is it a File?", file instanceof File);
+watch(dialog, (val) => {
+  if (!val) closeDialog();
+});
 
-      if (!file) {
-        console.log("No file found!");
-        return;
-      }
+// Keep the pagination consistent with the (re-implemented) filtering
+watch([search, filterSubject, sortBy], () => {
+  page.value = 1;
+});
 
-      // console.log("5. File type:", file.type);
-      // console.log("6. File name:", file.name);
-      // console.log("7. File size:", file.size);
-      // console.log("=== UPLOAD DEBUG END ===");
+watch(totalPages, (val) => {
+  if (page.value > val) page.value = Math.max(1, val);
+});
 
-      // Validate file type
-      if (!file.type || !file.type.startsWith("image/")) {
-        console.log("❌ File type validation failed:", file.type);
-        this.showSnackbar("Please select a valid image file", "error");
-        return;
-      }
-
-      // Validate file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        this.showSnackbar("File size must be less than 5MB", "error");
-        return;
-      }
-
-      try {
-        this.showSnackbar("Uploading image...", "info");
-        const response = await uploadBookImage(file);
-
-        // console.log("Upload response:", response);
-        // console.log("Response data:", response.data);
-
-        if (response.data && response.data.data && response.data.data.url) {
-          this.editedItem.cover_url = response.data.data.url;
-          // console.log(
-          //   "✅ Image uploaded successfully:",
-          //   this.editedItem.cover_url
-          // );
-          this.showSnackbar("Image uploaded successfully!", "success");
-        } else {
-          throw new Error("No URL returned from server");
-        }
-      } catch (error) {
-        console.error("Upload error:", error);
-        console.error("Error response:", error.response);
-        this.showSnackbar(
-          "Failed to upload image: " +
-            (error.response?.data?.message || error.message || "Unknown error"),
-          "error"
-        );
-      }
-    },
-
-    async handleEbookFileUpload(file) {
-      if (!file) return;
-
-      if (file.type !== "application/pdf") {
-        this.showSnackbar("Please select a PDF file", "error");
-        return;
-      }
-
-      if (file.size > 10 * 1024 * 1024) {
-        this.showSnackbar("Ebook file size must be less than 10MB", "error");
-        return;
-      }
-
-      try {
-        this.showSnackbar("Uploading ebook file...", "info");
-        const response = await uploadBookEbookFile(file);
-
-        if (response.data && response.data.data && response.data.data.url) {
-          this.editedItem.pdf_url = response.data.data.url;
-          this.showSnackbar("Ebook file uploaded successfully!", "success");
-        } else {
-          throw new Error("No URL returned from server");
-        }
-      } catch (error) {
-        console.error("Ebook upload error:", error);
-        this.showSnackbar(
-          "Failed to upload ebook file: " +
-            (error.response?.data?.message || error.message || "Unknown error"),
-          "error"
-        );
-      }
-    },
-
-    async saveBook() {
-      if (!this.validateForm()) return;
-
-      // Check if cover_url is provided
-      if (!this.editedItem.cover_url) {
-        this.errors.cover_url = ["Please upload a cover image"];
-        return;
-      }
-
-      this.saving = true;
-      try {
-        if (this.isEditing) {
-          await this.updateBook({
-            id: this.editedItem._id,
-            bookData: this.editedItem,
-          });
-          this.showSnackbar("Book updated successfully");
-        } else {
-          await this.createBook(this.editedItem);
-          this.showSnackbar("Book added successfully");
-        }
-        this.closeDialog();
-        await this.refreshBooks();
-      } catch (error) {
-        console.error("Save book error:", error);
-        this.showSnackbar(
-          "Failed to save book: " +
-            (error.response?.data?.message || error.message || "Unknown error"),
-          "error"
-        );
-      } finally {
-        this.saving = false;
-      }
-    },
-
-    viewBook(book) {
-      this.viewedBook = book;
-      this.viewDialog = true;
-    },
-
-    editBook(book) {
-      this.openDialog("edit", book);
-    },
-
-    confirmDelete(item) {
-      this.bookToDelete = item;
-      this.deleteDialog = true;
-    },
-
-    async deleteBookConfirmed() {
-      if (!this.bookToDelete) return;
-
-      this.deleting = true;
-      try {
-        await this.deleteBookById({ id: this.bookToDelete._id });
-        this.showSnackbar("Book deleted successfully");
-        this.deleteDialog = false;
-        this.bookToDelete = null;
-      } catch (error) {
-        this.showSnackbar("Failed to delete book", "error");
-      } finally {
-        this.deleting = false;
-      }
-    },
-
-    toggleAdvancedFilter() {
-      console.log("Toggle advanced filter");
-    },
-
-    showSnackbar(text, color = "success") {
-      this.snackbar = {
-        show: true,
-        text,
-        color,
-      };
-    },
-  },
-
-  watch: {
-    dialog(val) {
-      val || this.closeDialog();
-    },
-  },
-  async mounted() {
-    await this.refreshBooks();
-    this.subjects = this.getSubjectsFromBook;
-    console.log("Available subjects:", this.subjects);
-  },
-};
+onMounted(async () => {
+  await refreshBooks();
+  subjects.value = getSubjectsFromBook.value;
+  console.log("Available subjects:", subjects.value);
+});
 </script>
-
-<style scoped>
-.admin-card {
-  border-radius: var(--admin-radius-md, 16px);
-  box-shadow: var(--admin-shadow-sm, 0 2px 10px -2px rgba(25, 27, 36, 0.08));
-}
-
-.admin-heading {
-  color: var(--admin-ink, #191b24);
-}
-
-.admin-btn-accent {
-  color: var(--admin-ink, #191b24) !important;
-  transition: transform var(--admin-transition, 200ms ease);
-}
-
-.admin-btn-accent:hover {
-  transform: translateY(-1px);
-}
-
-.description-cell {
-  max-width: 200px;
-}
-
-.font-mono {
-  font-family: "Courier New", monospace;
-}
-
-/* Table hover effects */
-.v-data-table >>> .v-data-table__tr:hover {
-  background-color: rgba(25, 27, 36, 0.04);
-}
-
-/* Custom chip styles */
-.v-chip.v-chip--size-small {
-  font-size: 0.75rem;
-}
-
-.v-chip.v-chip--size-x-small {
-  font-size: 0.625rem;
-}
-
-.book-header {
-  background: var(--admin-ink, #191b24);
-  overflow: hidden;
-}
-
-.book-header-overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(220, 247, 99, 0.18),
-    transparent 70%
-  );
-}
-</style>
