@@ -243,8 +243,8 @@ watch(
 onMounted(async () => {
   // Xử lý Google Auth callback
   await handleGoogleAuthCallback();
-  await getFavoritesForEachUser();
-  // Fetch all books for home page in a single request
+  // Favorites are loaded by BaseNavigation in the default layout, which needs
+  // them for its badge on every page — fetching again here would duplicate it.
   await bookStore.getHomeBooks();
 });
 
@@ -267,8 +267,11 @@ async function handleGoogleAuthCallback() {
         accessToken: token,
       });
 
-      // Fetch cart
-      await cartStore.fetchCart();
+      // Signing in swaps the account, so both lists belong to someone new.
+      await Promise.all([
+        cartStore.fetchCart(),
+        getFavoritesForEachUser({ force: true }),
+      ]);
 
       // Show success message
       snackbarText.value = `Welcome back, ${user.username}!`;

@@ -11,45 +11,61 @@
           </div>
 
           <div class="pb-2">
-            <template v-for="(category, index) in bookSubjects" :key="index">
+            <template v-for="(category, index) in categories" :key="category.slug">
               <!-- Categories with subcategories -->
-              <div v-if="category.subcategories" class="mb-2">
+              <div v-if="category.subcategories.length" class="mb-2">
                 <button
                   type="button"
                   class="mx-2 flex w-[calc(100%-1rem)] items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors hover:bg-muted"
-                  @click="toggleCategory(index)"
+                  :class="{ 'text-primary': isActiveSubject(category) }"
+                  @click="toggleCategory(category.slug)"
                 >
                   <BookIcon class="h-5 w-5 shrink-0 text-muted-foreground" />
                   <span class="grow text-base font-medium">{{
-                    category.category
+                    category.name
+                  }}</span>
+                  <span class="shrink-0 text-xs text-muted-foreground">{{
+                    category.count
                   }}</span>
                   <ChevronDown
                     class="h-4 w-4 shrink-0 text-muted-foreground transition-transform"
-                    :class="{ 'rotate-180': openedCategories[index] }"
+                    :class="{ 'rotate-180': isOpen(category) }"
                   />
                 </button>
 
-                <template v-if="openedCategories[index]">
+                <template v-if="isOpen(category)">
+                  <!-- Whole category: matches every subcategory below it -->
+                  <button
+                    type="button"
+                    class="mx-2 flex w-[calc(100%-1rem)] items-center justify-between rounded-lg px-3 py-2 pl-11 text-left text-sm font-medium transition-all hover:translate-x-1 hover:bg-primary/10"
+                    :class="{
+                      'bg-primary/10 text-primary': activeSlug === category.slug,
+                    }"
+                    @click="selectCategory(category)"
+                  >
+                    <span>All {{ category.name }}</span>
+                    <span class="text-xs text-muted-foreground">{{
+                      category.count
+                    }}</span>
+                  </button>
+
                   <template
                     v-for="(subcategory, subIndex) in category.subcategories"
-                    :key="subIndex"
+                    :key="subcategory.slug"
                   >
                     <button
                       type="button"
-                      class="mx-2 flex w-[calc(100%-1rem)] items-center rounded-lg px-3 py-2 pl-11 text-left text-sm font-medium transition-all hover:translate-x-1 hover:bg-primary/10"
+                      class="mx-2 flex w-[calc(100%-1rem)] items-center justify-between rounded-lg px-3 py-2 pl-11 text-left text-sm font-medium transition-all hover:translate-x-1 hover:bg-primary/10"
                       :class="{
                         'bg-primary/10 text-primary':
-                          route.params.subject === subcategory.toLowerCase(),
+                          activeSlug === subcategory.slug,
                       }"
-                      @click="
-                        router.push(
-                          `/subjects/${encodeURIComponent(
-                            subcategory.toLowerCase()
-                          )}`
-                        )
-                      "
+                      @click="selectCategory(subcategory)"
                     >
-                      {{ subcategory }}
+                      <span>{{ subcategory.name }}</span>
+                      <span class="text-xs text-muted-foreground">{{
+                        subcategory.count
+                      }}</span>
                     </button>
 
                     <div
@@ -66,25 +82,21 @@
                 type="button"
                 class="mx-2 mb-2 flex w-[calc(100%-1rem)] items-center gap-3 rounded-lg px-3 py-2 text-left transition-all hover:translate-x-1 hover:bg-primary/10"
                 :class="{
-                  'bg-primary/10 text-primary':
-                    route.params.subject === category.category.toLowerCase(),
+                  'bg-primary/10 text-primary': activeSlug === category.slug,
                 }"
-                @click="
-                  router.push(
-                    `/subjects/${encodeURIComponent(
-                      category.category.toLowerCase()
-                    )}`
-                  )
-                "
+                @click="selectCategory(category)"
               >
                 <BookIcon class="h-5 w-5 shrink-0 text-muted-foreground" />
-                <span class="text-base font-medium">{{
-                  category.category
+                <span class="grow text-base font-medium">{{
+                  category.name
+                }}</span>
+                <span class="text-xs text-muted-foreground">{{
+                  category.count
                 }}</span>
               </button>
 
               <div
-                v-if="index < bookSubjects.length - 1"
+                v-if="index < categories.length - 1"
                 class="mx-4 my-2 h-px bg-border opacity-25"
               />
             </template>
@@ -100,12 +112,14 @@
 
           <div class="p-6 pt-0">
             <UiCheckbox
-              v-for="(price, i) in prices"
-              :key="i"
-              :label="price"
+              v-for="range in priceRanges"
+              :key="range.label"
+              :label="range.label"
               class="mb-3"
-              :model-value="selectedPrice === price"
-              @update:model-value="selectedPrice = $event ? price : ''"
+              :model-value="selectedPrice === range.label"
+              @update:model-value="
+                selectedPrice = $event ? range.label : ''
+              "
             />
           </div>
         </div>
@@ -120,24 +134,31 @@
               <div class="flex items-center">
                 <Library class="mr-3 h-7 w-7 text-primary" />
                 <span class="text-2xl font-bold">Our Collection</span>
-                <UiBadge
-                  v-if="route.params.subject"
-                  class="ml-4 text-sm font-medium"
-                >
-                  {{ formattedSubject }}
+                <UiBadge v-if="activeSlug" class="ml-4 text-sm font-medium">
+                  {{ activeLabel }}
                 </UiBadge>
+                <span
+                  v-if="pagination.total"
+                  class="ml-3 text-sm text-muted-foreground"
+                >
+                  {{ pagination.total }} books
+                </span>
               </div>
 
               <!-- Enhanced Sort Dropdown -->
               <div class="flex items-center">
                 <span class="mr-3 text-base font-medium">Sort by</span>
                 <UiSelect v-model="sortBy">
-                  <UiSelectTrigger class="min-w-[150px] text-sm font-medium">
+                  <UiSelectTrigger class="min-w-[170px] text-sm font-medium">
                     <UiSelectValue placeholder="Sort by" />
                   </UiSelectTrigger>
                   <UiSelectContent>
-                    <UiSelectItem v-for="item in items" :key="item" :value="item">
-                      {{ item }}
+                    <UiSelectItem
+                      v-for="option in sortOptions"
+                      :key="option.value"
+                      :value="option.value"
+                    >
+                      {{ option.label }}
                     </UiSelectItem>
                   </UiSelectContent>
                 </UiSelect>
@@ -147,10 +168,7 @@
 
           <div class="p-6 pt-0">
             <!-- Enhanced Loading Indicator -->
-            <div
-              v-if="isLoading && paginatedBooks.length === 0"
-              class="flex justify-center py-16"
-            >
+            <div v-if="loading" class="flex justify-center py-16">
               <div class="text-center">
                 <UiSpinner size="xl" class="mx-auto mb-6 text-primary" />
                 <div class="text-lg font-medium text-muted-foreground">
@@ -165,8 +183,8 @@
             <!-- Enhanced Books Grid -->
             <div v-else class="grid grid-cols-12 gap-4">
               <div
-                v-for="(book, i) in paginatedBooks"
-                :key="i"
+                v-for="book in books"
+                :key="book._id"
                 class="col-span-12 mb-6 sm:col-span-6 md:col-span-4 lg:col-span-3"
               >
                 <div
@@ -261,17 +279,14 @@
             </div>
 
             <!-- No Books Message -->
-            <div
-              v-if="!isLoading && paginatedBooks.length === 0"
-              class="py-16 text-center"
-            >
+            <div v-if="!loading && books.length === 0" class="py-16 text-center">
               <BookOpen
                 class="mx-auto mb-6 h-20 w-20 text-muted-foreground/40"
               />
               <h3 class="mb-3 text-2xl font-bold">No books found</h3>
               <p class="mb-6 text-base text-muted-foreground">
-                We couldn't find any books in this category. Try selecting a
-                different category or check back later.
+                We couldn't find any books matching these filters. Try another
+                category or widen the price range.
               </p>
               <NuxtLink to="/">
                 <UiButton size="lg" class="rounded-lg">
@@ -285,12 +300,15 @@
     </div>
 
     <!-- Enhanced Pagination -->
-    <div class="mt-8 flex items-center justify-center">
+    <div
+      v-if="pagination.totalPages > 1"
+      class="mt-8 flex items-center justify-center"
+    >
       <UiPagination
         v-slot="{ page: currentPage }"
         v-model:page="page"
-        :total="filteredSubject.length"
-        :items-per-page="itemsPerPage"
+        :total="pagination.total"
+        :items-per-page="pagination.limit"
         :sibling-count="1"
         show-edges
       >
@@ -333,7 +351,7 @@ import {
   List,
   ShoppingCart,
 } from "lucide-vue-next";
-import { bookSubjects } from "@/constants/bookSubjects";
+import type { BookSort, CategoryNode } from "@/types";
 
 const route = useRoute();
 const router = useRouter();
@@ -341,91 +359,90 @@ const router = useRouter();
 const bookStore = useBookStore();
 const favoriteStore = useFavoriteStore();
 
-const { books } = storeToRefs(bookStore);
+const { books, pagination, categories, loading } = storeToRefs(bookStore);
 const { favorites } = storeToRefs(favoriteStore);
 
-const isLoading = ref(false);
-const items = ["Newest", "From A to Z", "From Z to A"];
-const prices = ["Under $10", "$10 - $20", "$20 - $30", "Above $50"];
-const selectedPrice = ref("");
-const page = ref(1);
-const itemsPerPage = 12;
-const sortBy = ref("Newest");
-const openedCategories = ref<Record<number, boolean>>({});
+const ITEMS_PER_PAGE = 12;
 
-function toggleCategory(index: number) {
-  openedCategories.value[index] = !openedCategories.value[index];
+const sortOptions: { label: string; value: BookSort }[] = [
+  { label: "Newest", value: "newest" },
+  { label: "From A to Z", value: "title_asc" },
+  { label: "From Z to A", value: "title_desc" },
+  { label: "Price: low to high", value: "price_asc" },
+  { label: "Price: high to low", value: "price_desc" },
+  { label: "Top rated", value: "rating" },
+  { label: "Best selling", value: "bestselling" },
+];
+
+/** Each range maps straight onto the API's minPrice / maxPrice filters. */
+const priceRanges: { label: string; minPrice?: number; maxPrice?: number }[] = [
+  { label: "Under $10", maxPrice: 10 },
+  { label: "$10 - $20", minPrice: 10, maxPrice: 20 },
+  { label: "$20 - $30", minPrice: 20, maxPrice: 30 },
+  { label: "Above $50", minPrice: 50 },
+];
+
+const page = ref(1);
+const sortBy = ref<BookSort>("newest");
+const selectedPrice = ref("");
+const openedCategories = ref<Record<string, boolean>>({});
+
+const activeSlug = computed(() => (route.params.subject as string) || "");
+
+/** Flat lookup so the active slug can be labelled without re-walking the tree. */
+const nodesBySlug = computed(() => {
+  const map = new Map<string, CategoryNode>();
+  for (const category of categories.value) {
+    map.set(category.slug, category);
+    for (const sub of category.subcategories) map.set(sub.slug, sub);
+  }
+  return map;
+});
+
+const activeLabel = computed(() => {
+  const node = nodesBySlug.value.get(activeSlug.value);
+  if (node) return node.name;
+  return activeSlug.value
+    .replace(/-/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+});
+
+function isActiveSubject(category: CategoryNode) {
+  return (
+    activeSlug.value === category.slug ||
+    category.subcategories.some((sub) => sub.slug === activeSlug.value)
+  );
 }
 
-const filteredSubject = computed(() => {
-  let filtered = [...books.value];
+/** A category is expanded when toggled, or automatically when it holds the active slug. */
+function isOpen(category: CategoryNode) {
+  return openedCategories.value[category.slug] ?? isActiveSubject(category);
+}
 
-  if (sortBy.value === "Newest") {
-    filtered.sort(
-      (a, b) =>
-        new Date((b as any).publishedDate).getTime() -
-        new Date((a as any).publishedDate).getTime()
-    );
-  } else if (sortBy.value === "From A to Z") {
-    filtered.sort((a, b) => a.title.localeCompare(b.title));
-  } else if (sortBy.value === "From Z to A") {
-    filtered.sort((a, b) => b.title.localeCompare(a.title));
-  }
+function toggleCategory(slug: string) {
+  const category = nodesBySlug.value.get(slug);
+  const current = category ? isOpen(category) : false;
+  openedCategories.value[slug] = !current;
+}
 
-  if (selectedPrice.value) {
-    filtered = filtered.filter((book) => {
-      const price = book.price;
-      switch (selectedPrice.value) {
-        case "Under $10":
-          return price < 10;
-        case "$10 - $20":
-          return price >= 10 && price <= 20;
-        case "$20 - $30":
-          return price >= 20 && price <= 30;
-        case "Above $50":
-          return price > 50;
-        default:
-          return true;
-      }
-    });
-  }
-  return filtered;
-});
+function selectCategory(node: CategoryNode) {
+  router.push(`/subjects/${node.slug}`);
+}
 
-const paginatedBooks = computed(() => {
-  const start = (page.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return filteredSubject.value.slice(start, end);
-});
-
-const formattedSubject = computed(() => {
-  const subject = route.params.subject as string | undefined;
-  if (!subject) return "";
-  return subject.replace(/-/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
-});
-
+/** Single source of truth for the request; every filter change flows through here. */
 async function fetchBooks() {
-  isLoading.value = true;
+  const range = priceRanges.find((item) => item.label === selectedPrice.value);
   try {
-    const subject = route.params.subject as string;
-    if (subject) {
-      await bookStore.getAllBooks({ subject });
-    }
+    await bookStore.fetchBooks({
+      subject: activeSlug.value || undefined,
+      page: page.value,
+      limit: ITEMS_PER_PAGE,
+      sort: sortBy.value,
+      minPrice: range?.minPrice,
+      maxPrice: range?.maxPrice,
+    });
   } catch (error) {
     console.error("Error fetching books:", error);
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-async function fetchFavorites() {
-  try {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      await favoriteStore.getFavoritesForEachUser();
-    }
-  } catch (error) {
-    console.error("Error fetching favorites:", error);
   }
 }
 
@@ -439,23 +456,38 @@ async function toggleFavoriteBook(bookId: string) {
 
 function isFavorite(bookId: string) {
   return favorites.value.some((favorite: any) => {
-    // Handle case where bookId is populated (contains full book object)
     const favoriteBookId = favorite.bookId?._id || favorite.bookId;
     return favoriteBookId === bookId;
   });
 }
 
-onMounted(async () => {
-  await fetchBooks();
-  await fetchFavorites();
+// Changing the page only refetches; the sidebar and filters stay put.
+watch(page, fetchBooks);
+
+// Any filter change resets to page 1 and refetches.
+watch([activeSlug, sortBy, selectedPrice], () => {
+  if (page.value === 1) {
+    fetchBooks();
+  } else {
+    page.value = 1; // the `page` watcher issues the request
+  }
 });
 
-watch(
-  () => route.params.subject,
-  () => {
-    page.value = 1;
-    fetchBooks();
-  },
-  { immediate: true }
-);
+onMounted(async () => {
+  await Promise.all([
+    bookStore.fetchCategories(),
+    fetchBooks(),
+    fetchFavorites(),
+  ]);
+});
+
+async function fetchFavorites() {
+  try {
+    if (localStorage.getItem("accessToken")) {
+      await favoriteStore.getFavoritesForEachUser();
+    }
+  } catch (error) {
+    console.error("Error fetching favorites:", error);
+  }
+}
 </script>

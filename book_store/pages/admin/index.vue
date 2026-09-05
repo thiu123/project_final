@@ -45,8 +45,6 @@ import { LayoutDashboard } from "lucide-vue-next";
 
 definePageMeta({
   layout: "admin",
-  // Named middleware from middleware/admin.ts. The #imports typing only exposes
-  // NavigationGuard, so the registered name is cast; the cast erases at build.
   middleware: "admin" as unknown as NavigationGuard,
 });
 

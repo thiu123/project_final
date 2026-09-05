@@ -44,3 +44,24 @@ export class Book {
 
 export type BookDocument = HydratedDocument<Book>;
 export const BookSchema = SchemaFactory.createForClass(Book);
+
+/**
+ * Indexes backing the list endpoint's sort options.
+ *
+ * The collection already carries these hand-built indexes, so they are
+ * deliberately NOT redeclared here (Mongoose would try to recreate them under
+ * a different auto-generated name and MongoDB rejects that):
+ *   subject_price_index      { subjects: 1, price: 1 }
+ *   price_index              { price: 1 }
+ *   rating_index             { rating: -1 }
+ *   publication_year_index   { first_publish_year: -1 }
+ *   created_at_index         { createdAt: -1 }
+ *   text_search_index        text on title (weight 10) + authors (weight 5)
+ */
+
+// Category browsing sorted by newest is the single most common query.
+BookSchema.index({ subjects: 1, createdAt: -1 });
+// Backs sort=bestselling and the best-seller home groups.
+BookSchema.index({ sold: -1 });
+// Backs sort=title_asc / title_desc.
+BookSchema.index({ title: 1 });

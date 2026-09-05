@@ -69,18 +69,18 @@
                 class="absolute left-0 top-full z-50 mt-2 max-h-[70vh] w-[280px] overflow-y-auto overflow-x-hidden rounded-lg border border-border bg-card py-1 shadow-lg"
               >
                 <template
-                  v-for="(category, index) in bookSubjects"
+                  v-for="(category, index) in categories"
                   :key="index"
                 >
                   <!-- Categories with subcategories -->
-                  <template v-if="category.subcategories">
+                  <template v-if="category.subcategories.length">
                     <button
                       type="button"
                       class="flex w-full items-center justify-between px-4 py-3 text-left transition-all duration-200 hover:translate-x-1 hover:bg-customyellow/15"
                       @click="toggleCategoryGroup(index)"
                     >
                       <span class="text-base font-bold text-foreground">
-                        {{ category.category }}
+                        {{ category.name }}
                       </span>
                       <ChevronDown
                         class="h-4 w-4 text-muted-foreground transition-transform duration-200"
@@ -96,10 +96,10 @@
                         <button
                           type="button"
                           class="flex w-full items-center py-2 pl-8 pr-4 text-left text-sm font-medium text-foreground/90 transition-all duration-200 hover:translate-x-1 hover:bg-customyellow/10"
-                          @click="goToSubject(subcategory)"
+                          @click="goToSubject(subcategory.slug)"
                         >
                           <ChevronRight class="mr-2 h-4 w-4" />
-                          {{ subcategory }}
+                          {{ subcategory.name }}
                         </button>
                         <div
                           v-if="subIndex < category.subcategories.length - 1"
@@ -114,13 +114,13 @@
                     v-else
                     type="button"
                     class="flex w-full items-center px-4 py-3 text-left text-base font-bold text-foreground transition-all duration-200 hover:translate-x-1 hover:bg-customyellow/15"
-                    @click="goToSubject(category.category)"
+                    @click="goToSubject(category.slug)"
                   >
-                    {{ category.category }}
+                    {{ category.name }}
                   </button>
 
                   <div
-                    v-if="index < bookSubjects.length - 1"
+                    v-if="index < categories.length - 1"
                     class="mx-4 h-px bg-border/60"
                   />
                 </template>
@@ -404,14 +404,14 @@
           </button>
 
           <template v-if="mobileCategoryOpen">
-            <template v-for="(category, index) in bookSubjects" :key="index">
-              <template v-if="category.subcategories">
+            <template v-for="(category, index) in categories" :key="index">
+              <template v-if="category.subcategories.length">
                 <button
                   type="button"
                   class="flex w-full items-center rounded-lg py-2 pl-8 pr-3 text-sm transition-colors hover:bg-muted"
                   @click="toggleMobileGroup(index)"
                 >
-                  {{ category.category }}
+                  {{ category.name }}
                   <ChevronDown
                     class="ml-auto h-4 w-4 transition-transform duration-200"
                     :class="mobileOpenGroups.includes(index) ? 'rotate-180' : ''"
@@ -424,15 +424,9 @@
                     :key="subIndex"
                     type="button"
                     class="flex w-full items-center rounded-lg py-2 pl-12 pr-3 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-                    @click="
-                      navigateAndClose(
-                        `/subjects/${encodeURIComponent(
-                          subcategory.toLowerCase()
-                        )}`
-                      )
-                    "
+                    @click="navigateAndClose(`/subjects/${subcategory.slug}`)"
                   >
-                    {{ subcategory }}
+                    {{ subcategory.name }}
                   </button>
                 </template>
               </template>
@@ -441,15 +435,9 @@
                 v-else
                 type="button"
                 class="flex w-full items-center rounded-lg py-2 pl-8 pr-3 text-sm transition-colors hover:bg-muted"
-                @click="
-                  navigateAndClose(
-                    `/subjects/${encodeURIComponent(
-                      category.category.toLowerCase()
-                    )}`
-                  )
-                "
+                @click="navigateAndClose(`/subjects/${category.slug}`)"
               >
-                {{ category.category }}
+                {{ category.name }}
               </button>
             </template>
           </template>
@@ -596,7 +584,7 @@ import {
   UserPlus,
   X,
 } from "lucide-vue-next";
-import { bookSubjects } from "@/constants/bookSubjects";
+import { useBookStore } from "@/stores/book";
 
 const router = useRouter();
 const route = useRoute();
@@ -604,10 +592,13 @@ const route = useRoute();
 const authStore = useAuthStore();
 const favoriteStore = useFavoriteStore();
 const cartStore = useCartStore();
+const bookStore = useBookStore();
 
 const { currentUser } = storeToRefs(authStore);
 const { favorites } = storeToRefs(favoriteStore);
 const { cart } = storeToRefs(cartStore);
+// Category menu is driven by the API, so new categories appear without a redeploy.
+const { categories } = storeToRefs(bookStore);
 
 const dialogSignUp = ref(false);
 const dialogSignIn = ref(false);
@@ -669,9 +660,9 @@ function toggleMobileGroup(index: number) {
   }
 }
 
-function goToSubject(name: string) {
+function goToSubject(slug: string) {
   categoryMenuOpen.value = false;
-  router.push(`/subjects/${encodeURIComponent(name.toLowerCase())}`);
+  router.push(`/subjects/${slug}`);
 }
 
 function openDialog(type?: string) {
@@ -748,6 +739,7 @@ function onDocumentClick(event: MouseEvent) {
 
 onMounted(async () => {
   document.addEventListener("click", onDocumentClick);
+  bookStore.fetchCategories();
   await favoriteStore.getFavoritesForEachUser();
   await cartStore.fetchCart();
   await authStore.restoreSession();
