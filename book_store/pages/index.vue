@@ -3,177 +3,156 @@
   <div>
     <!-- Hero Section -->
     <HomeHeroSection :book="books[0]" @add-to-cart="handleAddToCart" />
+
     <!-- Search Section -->
-    <v-container class="search-section py-16">
-      <v-row justify="center">
-        <v-col cols="12" lg="10" xl="8">
-          <v-card class="search-card pa-8" elevation="24" rounded="xl">
-            <!-- Search Header -->
-            <div class="text-center mb-8">
-              <div class="d-flex justify-center mb-4">
-                <v-avatar color="customyellow" size="64" class="mr-4">
-                  <v-icon color="darkgreen" size="32">mdi-magnify</v-icon>
-                </v-avatar>
-              </div>
-              <h2 class="text-h3 font-weight-bold text-customblack mb-3">
-                Discover Your Next Great Read
-              </h2>
-              <p class="text-h6 text-medium-emphasis">
-                Search through thousands of books to find your perfect match
-              </p>
-            </div>
-
-            <!-- Search Bar -->
-            <v-row class="mb-6">
-              <v-col cols="12" md="10">
-                <v-text-field
-                  v-model="searchQuery"
-                  variant="outlined"
-                  label="Search for books, authors, or genres..."
-                  prepend-inner-icon="mdi-magnify"
-                  class="search-input"
-                  hide-details
-                  @focus="showSearchResults = true"
-                  @input="handleSearchInput"
-                  rounded="xl"
-                >
-                  <template v-slot:append-inner>
-                    <v-btn
-                      icon="mdi-microphone"
-                      variant="text"
-                      size="small"
-                      color="waterblue"
-                    ></v-btn>
-                  </template>
-                </v-text-field>
-              </v-col>
-              <v-col cols="12" md="2">
-                <v-btn
-                  block
-                  size="large"
-                  color="waterblue"
-                  variant="elevated"
-                  class="search-btn font-weight-bold"
-                  rounded="xl"
-                  @click="performSearch"
-                >
-                  Search
-                </v-btn>
-              </v-col>
-            </v-row>
-
-            <!-- Search Results -->
-            <v-expand-transition>
-              <v-card
-                v-if="searchQuery && searchResults.length > 0"
-                class="search-results mb-6"
-                variant="outlined"
-                rounded="xl"
-                elevation="8"
+    <div class="container mx-auto px-4 py-16">
+      <div class="mx-auto w-full lg:max-w-5xl xl:max-w-4xl">
+        <div
+          class="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/60 p-8 shadow-2xl"
+        >
+          <!-- Search Header -->
+          <div class="mb-8 text-center">
+            <div class="mb-4 flex justify-center">
+              <div
+                class="flex h-16 w-16 items-center justify-center rounded-full bg-customyellow shadow-md"
               >
-                <v-list
-                  class="py-0"
-                  style="max-height: 400px; overflow-y: auto"
-                >
-                  <v-list-item
-                    v-for="(book, index) in searchResults"
-                    :key="index"
-                    class="search-result-item"
-                    @click="$router.push(`/details/${book._id}`)"
+                <Search class="h-8 w-8 text-darkgreen" />
+              </div>
+            </div>
+            <h2 class="mb-3 text-3xl font-bold text-foreground md:text-4xl">
+              Discover Your Next Great Read
+            </h2>
+            <p class="text-lg text-muted-foreground">
+              Search through thousands of books to find your perfect match
+            </p>
+          </div>
+
+          <!-- Search Bar -->
+          <div class="mb-6 grid grid-cols-12 gap-4">
+            <div class="col-span-12 md:col-span-10">
+              <UiInput
+                v-model="searchQuery"
+                placeholder="Search for books, authors, or genres..."
+                class="h-12 rounded-xl"
+                @focus="showSearchResults = true"
+                @input="handleSearchInput"
+              >
+                <template #prepend>
+                  <Search class="h-5 w-5" />
+                </template>
+                <template #append>
+                  <UiButton
+                    variant="ghost"
+                    size="iconSm"
+                    class="text-primary"
+                    aria-label="Voice search"
                   >
-                    <template v-slot:prepend>
-                      <v-avatar size="60" rounded="lg" class="me-4">
-                        <v-img
-                          :src="book?.cover_url"
-                          :alt="book.title"
-                          cover
-                        ></v-img>
-                      </v-avatar>
-                    </template>
+                    <Mic class="h-4 w-4" />
+                  </UiButton>
+                </template>
+              </UiInput>
+            </div>
+            <div class="col-span-12 md:col-span-2">
+              <UiButton
+                block
+                size="lg"
+                class="h-12 rounded-xl font-bold shadow-md"
+                @click="performSearch"
+              >
+                Search
+              </UiButton>
+            </div>
+          </div>
 
-                    <v-list-item-title
-                      class="font-weight-bold mb-1 text-customblack"
-                    >
+          <!-- Search Results -->
+          <Transition
+            enter-active-class="transition duration-200 ease-out"
+            enter-from-class="-translate-y-2 opacity-0"
+            enter-to-class="translate-y-0 opacity-100"
+            leave-active-class="transition duration-150 ease-in"
+            leave-from-class="translate-y-0 opacity-100"
+            leave-to-class="-translate-y-2 opacity-0"
+          >
+            <div
+              v-if="searchQuery && searchResults.length > 0"
+              class="mb-6 overflow-hidden rounded-xl border border-border bg-card shadow-lg"
+            >
+              <ul class="max-h-[400px] divide-y divide-border overflow-y-auto">
+                <li
+                  v-for="(book, index) in searchResults"
+                  :key="index"
+                  class="flex cursor-pointer items-center gap-4 px-4 py-3 transition-colors hover:bg-muted"
+                  @click="router.push(`/details/${book._id}`)"
+                >
+                  <img
+                    :src="book?.cover_url"
+                    :alt="book.title"
+                    class="h-[60px] w-[60px] shrink-0 rounded-lg bg-muted object-cover"
+                  />
+
+                  <div class="min-w-0 flex-1">
+                    <div class="mb-1 truncate font-bold text-foreground">
                       {{ book.title }}
-                    </v-list-item-title>
-
-                    <v-list-item-subtitle class="mb-2">
+                    </div>
+                    <div class="truncate text-sm text-muted-foreground">
                       {{ book.authors?.join(", ") || "Unknown Author" }} •
                       {{ book.first_publish_year }}
-                    </v-list-item-subtitle>
+                    </div>
+                  </div>
 
-                    <template v-slot:append>
-                      <div class="d-flex align-center">
-                        <v-icon color="amber" size="small" class="me-1"
-                          >mdi-star</v-icon
-                        >
-                        <span class="text-caption">{{
-                          book.rating || "4.5"
-                        }}</span>
-                      </div>
-                    </template>
-                  </v-list-item>
-                </v-list>
-              </v-card>
-            </v-expand-transition>
-
-            <!-- Featured Books -->
-            <div class="text-center">
-              <h3 class="text-h5 font-weight-bold mb-6 text-customblack">
-                Trending This Week
-              </h3>
-
-              <div class="d-flex justify-center flex-wrap ga-4">
-                <template v-if="books && books.length">
-                  <v-card
-                    v-for="(book, i) in books.slice(0, 3)"
-                    :key="i"
-                    hover
-                    class="trending-book-card"
-                    @click="$router.push(`details/${book._id}`)"
-                  >
-                    <v-img
-                      v-if="book?.cover_url"
-                      :src="book?.cover_url"
-                      width="80"
-                      height="110"
-                      cover
-                      class=""
-                    >
-                      <template v-slot:placeholder>
-                        <div
-                          class="d-flex align-center justify-center fill-height"
-                        >
-                          <v-progress-circular
-                            color="waterblue"
-                            indeterminate
-                          ></v-progress-circular>
-                        </div>
-                      </template>
-                    </v-img>
-                  </v-card>
-                </template>
-                <template v-else>
-                  <v-card
-                    v-for="n in 6"
-                    :key="n"
-                    elevation="4"
-                    rounded="xl"
-                    width="80"
-                    height="110"
-                  >
-                    <v-skeleton-loader
-                      type="image"
-                      height="100%"
-                    ></v-skeleton-loader>
-                  </v-card>
-                </template>
-              </div>
+                  <div class="flex shrink-0 items-center">
+                    <Star
+                      class="mr-1 h-4 w-4 fill-amber-400 text-amber-400"
+                    />
+                    <span class="text-xs text-foreground">{{
+                      book.rating || "4.5"
+                    }}</span>
+                  </div>
+                </li>
+              </ul>
             </div>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
+          </Transition>
+
+          <!-- Featured Books -->
+          <div class="text-center">
+            <h3 class="mb-6 text-2xl font-semibold text-foreground">
+              Trending This Week
+            </h3>
+
+            <div class="flex flex-wrap justify-center gap-4">
+              <template v-if="books && books.length">
+                <div
+                  v-for="(book, i) in books.slice(0, 3)"
+                  :key="i"
+                  class="cursor-pointer overflow-hidden rounded-lg bg-muted shadow transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  @click="router.push(`details/${book._id}`)"
+                >
+                  <img
+                    v-if="book?.cover_url"
+                    :src="book?.cover_url"
+                    :alt="book.title"
+                    class="h-[110px] w-20 object-cover"
+                  />
+                  <div
+                    v-else
+                    class="flex h-[110px] w-20 items-center justify-center"
+                  >
+                    <UiSpinner class="text-primary" />
+                  </div>
+                </div>
+              </template>
+              <template v-else>
+                <UiSkeleton
+                  v-for="n in 6"
+                  :key="n"
+                  class="h-[110px] w-20 rounded-xl shadow-md"
+                />
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- Dynamic Book Components -->
     <component
@@ -183,6 +162,7 @@
       :toggle-favorites="toggleFavorites"
       :favorites="favorites"
       @add-to-cart="handleAddToCart"
+      @show-snackbar="handleSnackbarEvent"
     ></component>
 
     <!-- Why Shop With Us -->
@@ -196,223 +176,150 @@
   </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
+import { useBookStore } from "@/stores/book";
+import { useCartStore } from "@/stores/cart";
+import { useFavoriteStore } from "@/stores/favorite";
+import debounce from "lodash/debounce";
+import { Mic, Search, Star } from "lucide-vue-next";
+import { searchBooksByTitle } from "@/api/bookApi";
+import type { Book, User } from "@/types";
 import HomeCategoryShowcase from "~/components/home/CategoryShowcase.vue";
 import BestSellerTabs from "~/components/home/BestSellerTabs.vue";
-import BookManga from "../components/home/BookManga.vue";
-import BookFiction from "../components/home/BookFiction.vue";
-import BookRomance from "../components/home/BookRomance.vue";
-import BestSellingBooks from "../components/home/BestSellingBooks.vue";
-import { mapState, mapActions, mapGetters } from "vuex";
-import { searchBooksByTitle } from "@/api/bookApi";
-import debounce from "lodash/debounce";
-import SnackbarAlert from "../components/SnackbarAlert.vue";
+import BookManga from "~/components/home/BookManga.vue";
+import BookFiction from "~/components/home/BookFiction.vue";
+import BookRomance from "~/components/home/BookRomance.vue";
+import BestSellingBooks from "~/components/home/BestSellingBooks.vue";
 
-export default {
-  name: "Home",
-  components: {
-    HomeCategoryShowcase,
-    BestSellerTabs,
-    BookFiction,
-    BookManga,
-    BookRomance,
-    BestSellingBooks,
-    SnackbarAlert,
-  },
-  data() {
-    return {
-      bookComponents: [
-        "BestSellingBooks",
-        "BestSellerTabs",
-        "HomeCategoryShowcase",
-        "BookFiction",
-        "BookManga",
-        "BookRomance",
-      ],
-      newsletterEmail: "",
-      searchQuery: "",
-      searchResults: [],
-      showSnackbar: false,
-      snackbarText: "",
-      snackbarColor: "success",
-    };
-  },
-  watch: {
-    searchQuery: debounce(async function (newQuery) {
-      if (!newQuery.trim()) {
-        this.searchResults = [];
-        return;
-      }
+const router = useRouter();
 
-      try {
-        const response = await searchBooksByTitle(newQuery);
+const bookStore = useBookStore();
+const { books } = storeToRefs(bookStore);
 
-        this.searchResults = response.data || [];
+const favoriteStore = useFavoriteStore();
+const { favorites } = storeToRefs(favoriteStore);
+const { toggleFavorites, getFavoritesForEachUser } = favoriteStore;
 
-        // console.log("Search Results:", this.searchResults);
-      } catch (error) {
-        console.error("Error when searching", error);
-      }
-    }, 300),
-  },
-  computed: {
-    ...mapGetters("book", ["getTitleBooks"]),
-    ...mapState("book", ["books"]),
-    ...mapState("favorite", ["favorites"]),
-  },
-  async mounted() {
-    // Xử lý Google Auth callback
-    await this.handleGoogleAuthCallback();
-    await this.getFavoritesForEachUser();
-    // Fetch all books for home page in a single request
-    await this.getHomeBooks();
-  },
-  methods: {
-    ...mapActions("book", ["getAllBooks", "getHomeBooks"]),
-    ...mapActions("cart", ["addToCart", "fetchCart"]),
-    ...mapActions("favorite", ["toggleFavorites", "getFavoritesForEachUser"]),
+const cartStore = useCartStore();
+const authStore = useAuthStore();
 
-    async handleGoogleAuthCallback() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const googleAuth = urlParams.get("googleAuth");
-      const token = urlParams.get("token");
-      const userStr = urlParams.get("user");
+// Rendered in order, exactly as the original page listed them
+const bookComponents = [
+  BestSellingBooks,
+  BestSellerTabs,
+  HomeCategoryShowcase,
+  BookFiction,
+  BookManga,
+  BookRomance,
+];
 
-      if (googleAuth === "success" && token && userStr) {
-        try {
-          const user = JSON.parse(decodeURIComponent(userStr));
+const searchQuery = ref("");
+const searchResults = ref<Book[]>([]);
+const showSearchResults = ref(false);
+const showSnackbar = ref(false);
+const snackbarText = ref("");
+const snackbarColor = ref("success");
 
-          // Save to localStorage and Vuex
-          localStorage.setItem("accessToken", token);
-          localStorage.setItem("currentUser", JSON.stringify(user));
+watch(
+  searchQuery,
+  debounce(async (newQuery: string) => {
+    if (!newQuery.trim()) {
+      searchResults.value = [];
+      return;
+    }
 
-          this.$store.commit("auth/loginSuccess", {
-            ...user,
-            accessToken: token,
-          });
+    try {
+      const response = await searchBooksByTitle(newQuery);
 
-          // Fetch cart
-          await this.fetchCart();
+      searchResults.value = response.data || [];
+    } catch (error) {
+      console.error("Error when searching", error);
+    }
+  }, 300)
+);
 
-          // Show success message
-          this.snackbarText = `Welcome back, ${user.username}!`;
-          this.snackbarColor = "success";
-          this.showSnackbar = true;
+onMounted(async () => {
+  // Xử lý Google Auth callback
+  await handleGoogleAuthCallback();
+  await getFavoritesForEachUser();
+  // Fetch all books for home page in a single request
+  await bookStore.getHomeBooks();
+});
 
-          // Remove URL params
-          const url = new URL(window.location);
-          url.searchParams.delete("googleAuth");
-          url.searchParams.delete("token");
-          url.searchParams.delete("user");
-          window.history.replaceState({}, document.title, url.pathname);
-        } catch (error) {
-          console.error("Google auth callback error:", error);
-          this.snackbarText = "Login failed. Please try again.";
-          this.snackbarColor = "error";
-          this.showSnackbar = true;
-        }
-      }
-    },
+async function handleGoogleAuthCallback() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const googleAuth = urlParams.get("googleAuth");
+  const token = urlParams.get("token");
+  const userStr = urlParams.get("user");
 
-    async handleAddToCart(bookId, quantity) {
-      try {
-        await this.addToCart({
-          bookId,
-          quantity,
-        });
-        this.snackbarText = "Add to cart successfully!";
-        this.showSnackbar = true;
-        this.snackbarColor = "success";
-      } catch (error) {
-        console.error("Error adding to cart:", error);
-        this.snackbarText = "Failed to add to cart.";
-        this.showSnackbar = true;
-        this.snackbarColor = "error";
-      }
-    },
+  if (googleAuth === "success" && token && userStr) {
+    try {
+      const user = JSON.parse(decodeURIComponent(userStr)) as User;
 
-    async handleToggleFavorites(bookId) {
-      try {
-        await this.toggleFavorites(bookId);
-      } catch (error) {
-        console.error("Error toggling favorites:", error);
-      }
-    },
+      // Save to localStorage and the auth store
+      localStorage.setItem("accessToken", token);
+      localStorage.setItem("currentUser", JSON.stringify(user));
 
-    isFavorite(bookId) {
-      return this.favorites.some((favorite) => {
-        const favoriteBookId = favorite.bookId?._id || favorite.bookId;
-        return favoriteBookId === bookId;
+      authStore.loginSuccess({
+        ...user,
+        accessToken: token,
       });
-    },
 
-    subscribeNewsletter() {
-      if (this.newsletterEmail) {
-        this.snackbarText = "Thank you for subscribing to our newsletter!";
-        this.showSnackbar = true;
-        this.snackbarColor = "success";
-        this.newsletterEmail = "";
-      }
-    },
+      // Fetch cart
+      await cartStore.fetchCart();
 
-    performSearch() {
-      // Trigger search functionality
-      console.log("Performing search for:", this.searchQuery);
-    },
+      // Show success message
+      snackbarText.value = `Welcome back, ${user.username}!`;
+      snackbarColor.value = "success";
+      showSnackbar.value = true;
 
-    handleSearchInput() {
-      // Handle search input changes
-    },
+      // Remove URL params
+      const url = new URL(window.location.href);
+      url.searchParams.delete("googleAuth");
+      url.searchParams.delete("token");
+      url.searchParams.delete("user");
+      window.history.replaceState({}, document.title, url.pathname);
+    } catch (error) {
+      console.error("Google auth callback error:", error);
+      snackbarText.value = "Login failed. Please try again.";
+      snackbarColor.value = "error";
+      showSnackbar.value = true;
+    }
+  }
+}
 
-    getPlaceholderImage(width, height) {
-      return `https://via.placeholder.com/${width}x${height}`;
-    },
+async function handleAddToCart(bookId: string, quantity: number) {
+  try {
+    await cartStore.addToCart({
+      bookId,
+      quantity,
+      productType: "hardbook",
+    });
+    snackbarText.value = "Add to cart successfully!";
+    showSnackbar.value = true;
+    snackbarColor.value = "success";
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    snackbarText.value = "Failed to add to cart.";
+    showSnackbar.value = true;
+    snackbarColor.value = "error";
+  }
+}
 
-    handleSnackbarEvent(data) {
-      this.snackbarText = data.text;
-      this.snackbarColor = data.color;
-      this.showSnackbar = true;
-    },
-  },
-};
+function performSearch() {
+  // Trigger search functionality
+  console.log("Performing search for:", searchQuery.value);
+}
+
+function handleSearchInput() {
+  // Handle search input changes
+}
+
+function handleSnackbarEvent(data: { text: string; color: string }) {
+  snackbarText.value = data.text;
+  snackbarColor.value = data.color;
+  showSnackbar.value = true;
+}
 </script>
-
-<style scoped>
-.position-relative {
-  position: relative;
-}
-
-.position-absolute {
-  position: absolute;
-}
-
-.search-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 1px solid #dee2e6;
-}
-
-.search-input {
-  border-radius: 12px;
-}
-
-.search-btn {
-  border-radius: 12px;
-}
-
-.search-results {
-  border: 1px solid #e9ecef;
-}
-
-.search-result-item {
-  transition: background-color 0.2s ease;
-}
-
-.search-result-item:hover {
-  background-color: #f8f9fa;
-}
-
-.newsletter-card {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 1px solid #dee2e6;
-}
-</style>

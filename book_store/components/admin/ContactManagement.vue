@@ -1,168 +1,232 @@
 <template>
-  <div class="contact-management">
-    <v-card class="pa-4 admin-card" elevation="0">
-      <v-card-title class="d-flex justify-space-between align-center">
+  <div class="p-4">
+    <UiCard class="rounded-2xl p-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 p-2">
         <div>
-          <h2 class="text-h4 font-weight-bold admin-heading">
+          <h2 class="text-3xl font-bold text-foreground">
             User Feedback Management
           </h2>
-          <p class="text-subtitle-2 text-medium-emphasis">
+          <p class="text-sm font-medium text-muted-foreground">
             View and manage customer feedback
           </p>
         </div>
-        <v-chip color="customyellow" variant="elevated">
-          <span style="color: #191b24">{{ contacts.length }} Total</span>
-        </v-chip>
-      </v-card-title>
+        <span
+          class="inline-flex items-center rounded-full bg-customyellow px-3 py-1 text-xs font-semibold text-customblack shadow-sm"
+        >
+          {{ contacts.length }} Total
+        </span>
+      </div>
 
       <!-- Filters -->
-      <v-card-text>
-        <v-row class="mb-4">
-          <v-col cols="12">
-            <v-text-field
-              v-model="search"
-              prepend-inner-icon="mdi-magnify"
-              label="Search by username or message"
-              variant="outlined"
-              density="compact"
-              clearable
-              hide-details
-            ></v-text-field>
-          </v-col>
-        </v-row>
+      <div class="p-2 pt-4">
+        <div class="mb-4">
+          <UiInput
+            v-model="search"
+            placeholder="Search by username or message"
+          >
+            <template #prepend>
+              <Search class="h-4 w-4" />
+            </template>
+            <template #append>
+              <button
+                v-if="search"
+                type="button"
+                class="pointer-events-auto rounded-full p-0.5 hover:text-foreground"
+                aria-label="Clear search"
+                @click="search = ''"
+              >
+                <X class="h-4 w-4" />
+              </button>
+            </template>
+          </UiInput>
+        </div>
 
         <!-- Contacts Table -->
-        <v-data-table
-          :headers="headers"
-          :items="contacts"
-          :loading="loading"
-          :search="search"
-          class="elevation-1"
-        >
-          <!-- Message Preview -->
-          <template v-slot:item.username="{ item }">
-            <div class="text-truncate" style="max-width: 400px">
-              {{ item.username }}
-            </div>
-          </template>
-          <template v-slot:item.message="{ item }">
-            <div class="text-truncate" style="max-width: 400px">
-              {{ item.message }}
-            </div>
-          </template>
-
-          <!-- Created Date -->
-          <template v-slot:item.createdAt="{ item }">
-            {{ formatDate(item.createdAt) }}
-          </template>
-
-          <!-- Actions -->
-          <template v-slot:item.actions="{ item }">
-            <v-btn
-              icon
-              size="small"
-              color="waterblue"
-              variant="text"
-              @click="viewContact(item)"
-            >
-              <v-icon>mdi-eye</v-icon>
-            </v-btn>
-            <v-btn
-              icon
-              size="small"
-              color="error"
-              variant="text"
-              @click="confirmDelete(item)"
-            >
-              <v-icon>mdi-delete</v-icon>
-            </v-btn>
-          </template>
-        </v-data-table>
-      </v-card-text>
-    </v-card>
+        <div class="overflow-x-auto rounded-lg border border-border">
+          <table class="w-full text-sm">
+            <thead class="bg-muted/60 text-left">
+              <tr>
+                <th class="px-4 py-3 font-medium text-muted-foreground">
+                  Username
+                </th>
+                <th class="px-4 py-3 font-medium text-muted-foreground">
+                  Message
+                </th>
+                <th class="px-4 py-3 font-medium text-muted-foreground">
+                  Date
+                </th>
+                <th class="px-4 py-3 text-center font-medium text-muted-foreground">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              <tr v-if="loading">
+                <td colspan="4" class="px-4 py-8 text-center">
+                  <UiSpinner size="lg" class="mx-auto text-waterblue" />
+                </td>
+              </tr>
+              <template v-else>
+                <tr
+                  v-for="contact in paginatedContacts"
+                  :key="contact._id"
+                  class="hover:bg-muted/40"
+                >
+                  <td class="px-4 py-3">
+                    <div class="max-w-[400px] truncate">
+                      {{ contactUsername(contact) }}
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="max-w-[400px] truncate">
+                      {{ contact.message }}
+                    </div>
+                  </td>
+                  <td class="px-4 py-3">
+                    {{ formatDate(contact.createdAt) }}
+                  </td>
+                  <td class="px-4 py-3">
+                    <div class="flex items-center justify-center gap-1">
+                      <UiButton
+                        variant="ghost"
+                        size="iconSm"
+                        class="text-waterblue hover:text-waterblue"
+                        aria-label="View feedback"
+                        @click="viewContact(contact)"
+                      >
+                        <Eye class="h-5 w-5" />
+                      </UiButton>
+                      <UiButton
+                        variant="ghost"
+                        size="iconSm"
+                        class="text-destructive hover:text-destructive"
+                        aria-label="Delete feedback"
+                        @click="confirmDelete(contact)"
+                      >
+                        <Trash2 class="h-5 w-5" />
+                      </UiButton>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-if="!paginatedContacts.length">
+                  <td
+                    colspan="4"
+                    class="px-4 py-8 text-center text-muted-foreground"
+                  >
+                    No feedback found
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
+        <div v-if="pageCount > 1" class="flex justify-center pt-3">
+          <UiPagination
+            v-slot="{ page: currentPage }"
+            v-model:page="page"
+            :total="filteredContacts.length"
+            :items-per-page="itemsPerPage"
+            :sibling-count="1"
+            show-edges
+          >
+            <UiPaginationContent v-slot="{ items }">
+              <UiPaginationPrevious />
+              <template v-for="(item, index) in items">
+                <UiPaginationItem
+                  v-if="item.type === 'page'"
+                  :key="index"
+                  :value="item.value"
+                  :is-active="item.value === currentPage"
+                >
+                  {{ item.value }}
+                </UiPaginationItem>
+                <UiPaginationEllipsis v-else :key="item.type" :index="index" />
+              </template>
+              <UiPaginationNext />
+            </UiPaginationContent>
+          </UiPagination>
+        </div>
+      </div>
+    </UiCard>
 
     <!-- View Dialog -->
-    <v-dialog v-model="dialog" max-width="600px">
-      <v-card>
-        <v-card-title class="d-flex justify-space-between align-center">
-          <span class="text-h5">Feedback Details</span>
-          <v-btn icon variant="text" @click="dialog = false">
-            <v-icon>mdi-close</v-icon>
-          </v-btn>
-        </v-card-title>
+    <UiDialog v-model:open="dialog">
+      <UiDialogContent class="sm:max-w-xl">
+        <UiDialogHeader>
+          <UiDialogTitle>Feedback Details</UiDialogTitle>
+        </UiDialogHeader>
 
-        <v-card-text v-if="selectedContact">
-          <v-list>
-            <v-list-item>
-              <v-list-item-title class="font-weight-bold">
-                Username
-              </v-list-item-title>
-              <v-list-item-subtitle>
-                {{ selectedContact?.user?.username }}
-              </v-list-item-subtitle>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-title class="font-weight-bold">
-                Email
-              </v-list-item-title>
-              <v-list-item-subtitle>
-                {{ selectedContact.user?.email || "N/A" }}
-              </v-list-item-subtitle>
-            </v-list-item>
-
-            <v-list-item>
-              <v-list-item-title class="font-weight-bold">
-                Date
-              </v-list-item-title>
-              <v-list-item-subtitle>
+        <div v-if="selectedContact">
+          <div class="space-y-3">
+            <div>
+              <p class="text-sm font-bold">Username</p>
+              <p class="text-sm text-muted-foreground">
+                {{ contactUser(selectedContact)?.username }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-bold">Email</p>
+              <p class="text-sm text-muted-foreground">
+                {{ contactUser(selectedContact)?.email || "N/A" }}
+              </p>
+            </div>
+            <div>
+              <p class="text-sm font-bold">Date</p>
+              <p class="text-sm text-muted-foreground">
                 {{ formatDate(selectedContact.createdAt) }}
-              </v-list-item-subtitle>
-            </v-list-item>
-          </v-list>
+              </p>
+            </div>
+          </div>
 
-          <v-divider class="my-4"></v-divider>
+          <UiSeparator class="my-4" />
 
           <div class="mb-4">
-            <h4 class="text-subtitle-1 font-weight-bold mb-2">
-              Feedback Message:
-            </h4>
-            <p class="text-body-2">{{ selectedContact.message }}</p>
+            <h4 class="mb-2 text-base font-bold">Feedback Message:</h4>
+            <p class="text-sm">{{ selectedContact.message }}</p>
           </div>
-        </v-card-text>
+        </div>
 
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="dialog = false">
+        <UiDialogFooter>
+          <UiButton
+            variant="ghost"
+            class="text-muted-foreground"
+            @click="dialog = false"
+          >
             Close
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+          </UiButton>
+        </UiDialogFooter>
+      </UiDialogContent>
+    </UiDialog>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="deleteDialog" max-width="400px">
-      <v-card>
-        <v-card-title class="text-h6">Confirm Delete</v-card-title>
-        <v-card-text>
+    <UiDialog v-model:open="deleteDialog">
+      <UiDialogContent class="sm:max-w-sm">
+        <UiDialogHeader>
+          <UiDialogTitle>Confirm Delete</UiDialogTitle>
+        </UiDialogHeader>
+
+        <p class="text-sm text-muted-foreground">
           Are you sure you want to delete this feedback?
-        </v-card-text>
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn color="grey" variant="text" @click="deleteDialog = false">
+        </p>
+
+        <UiDialogFooter>
+          <UiButton
+            variant="ghost"
+            class="text-muted-foreground"
+            @click="deleteDialog = false"
+          >
             Cancel
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="elevated"
-            @click="deleteContactMessenger"
+          </UiButton>
+          <UiButton
+            variant="destructive"
             :loading="deleting"
+            @click="deleteContactMessenger"
           >
             Delete
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+          </UiButton>
+        </UiDialogFooter>
+      </UiDialogContent>
+    </UiDialog>
 
     <!-- Snackbar -->
     <SnackbarAlert
@@ -173,102 +237,112 @@
   </div>
 </template>
 
-<script>
-import { mapState, mapActions } from "vuex";
-import SnackbarAlert from "../SnackbarAlert.vue";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useContactStore } from "@/stores/contact";
+import type { Contact, User } from "@/types";
+import { Eye, Search, Trash2, X } from "lucide-vue-next";
 
-export default {
-  name: "ContactManagement",
-  components: {
-    SnackbarAlert,
-  },
-  data() {
-    return {
-      search: "",
-      dialog: false,
-      deleteDialog: false,
-      selectedContact: null,
-      deleting: false,
-      headers: [
-        { title: "Username", key: "user.username", sortable: true },
-        { title: "Message", key: "message", sortable: false },
-        { title: "Date", key: "createdAt", sortable: true },
-        { title: "Actions", key: "actions", sortable: false, align: "center" },
-      ],
-      snackbar: {
-        show: false,
-        message: "",
-        color: "success",
-      },
-    };
-  },
-  computed: {
-    ...mapState("contact", ["contacts", "loading"]),
-  },
-  methods: {
-    ...mapActions("contact", [
-      "fetchAllContacts",
-      "deleteContact",
-    ]),
-    async loadContacts() {
-      try {
-        await this.fetchAllContacts();
-      } catch (error) {
-        this.showSnackbar("Failed to load feedbacks", "error");
-      }
-    },
-    viewContact(contact) {
-      this.selectedContact = { ...contact };
-      this.dialog = true;
-    },
-    confirmDelete(contact) {
-      this.selectedContact = contact;
-      this.deleteDialog = true;
-    },
-    async deleteContactMessenger() {
-      try {
-        this.deleting = true;
-        await this.deleteContact(this.selectedContact._id);
-        this.showSnackbar("Feedback deleted successfully", "success");
-        this.deleteDialog = false;
-      } catch (error) {
-        this.showSnackbar("Failed to delete feedback", "error");
-      } finally {
-        this.deleting = false;
-      }
-    },
-    formatDate(date) {
-      return new Date(date).toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    },
-    showSnackbar(message, color = "success") {
-      this.snackbar.message = message;
-      this.snackbar.color = color;
-      this.snackbar.show = true;
-    },
-  },
-  async mounted() {
-    await this.loadContacts();
-  },
-};
+const contactStore = useContactStore();
+const { contacts, loading } = storeToRefs(contactStore);
+
+const search = ref("");
+const dialog = ref(false);
+const deleteDialog = ref(false);
+const selectedContact = ref<Contact | null>(null);
+const deleting = ref(false);
+
+const page = ref(1);
+const itemsPerPage = 10;
+
+const snackbar = reactive({
+  show: false,
+  message: "",
+  color: "success",
+});
+
+function contactUser(contact: Contact): User | null {
+  return typeof contact.user === "object" && contact.user !== null
+    ? contact.user
+    : null;
+}
+
+function contactUsername(contact: Contact): string {
+  return contactUser(contact)?.username || contact.username || "N/A";
+}
+
+const filteredContacts = computed<Contact[]>(() => {
+  if (!search.value) return contacts.value;
+  const searchLower = search.value.toLowerCase();
+  return contacts.value.filter(
+    (contact) =>
+      contactUsername(contact).toLowerCase().includes(searchLower) ||
+      contact.message?.toLowerCase().includes(searchLower)
+  );
+});
+
+const pageCount = computed(() =>
+  Math.ceil(filteredContacts.value.length / itemsPerPage)
+);
+
+const paginatedContacts = computed<Contact[]>(() => {
+  const start = (page.value - 1) * itemsPerPage;
+  return filteredContacts.value.slice(start, start + itemsPerPage);
+});
+
+watch(search, () => {
+  page.value = 1;
+});
+
+async function loadContacts() {
+  try {
+    await contactStore.fetchAllContacts();
+  } catch (error: any) {
+    showSnackbar("Failed to load feedbacks", "error");
+  }
+}
+
+function viewContact(contact: Contact) {
+  selectedContact.value = { ...contact };
+  dialog.value = true;
+}
+
+function confirmDelete(contact: Contact) {
+  selectedContact.value = contact;
+  deleteDialog.value = true;
+}
+
+async function deleteContactMessenger() {
+  try {
+    deleting.value = true;
+    await contactStore.deleteContact(selectedContact.value!._id);
+    showSnackbar("Feedback deleted successfully", "success");
+    deleteDialog.value = false;
+  } catch (error: any) {
+    showSnackbar("Failed to delete feedback", "error");
+  } finally {
+    deleting.value = false;
+  }
+}
+
+function formatDate(date?: string): string {
+  if (!date) return "";
+  return new Date(date).toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function showSnackbar(message: string, color = "success") {
+  snackbar.message = message;
+  snackbar.color = color;
+  snackbar.show = true;
+}
+
+onMounted(async () => {
+  await loadContacts();
+});
 </script>
-
-<style scoped>
-.contact-management {
-  padding: 16px;
-}
-
-.admin-card {
-  border-radius: var(--admin-radius-md, 16px);
-  box-shadow: var(--admin-shadow-sm, 0 2px 10px -2px rgba(25, 27, 36, 0.08));
-}
-
-.admin-heading {
-  color: var(--admin-ink, #191b24);
-}
-</style>

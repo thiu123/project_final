@@ -1,277 +1,210 @@
 <template>
-  <v-footer class="footer-main">
-    <v-container>
+  <footer class="border-t border-border bg-muted/40">
+    <div class="container mx-auto px-4">
       <!-- Main Footer Content -->
-      <v-row class="py-8">
+      <div class="grid grid-cols-12 gap-4 py-8">
         <!-- Company Info Section -->
-        <v-col cols="12" md="4" class="mb-6">
-          <div class="d-flex align-center mb-4">
-            <v-avatar size="48" class="mr-3 bg-customyellow">
-              <v-icon color="darkgreen" size="28"
-                >mdi-book-open-page-variant</v-icon
-              >
-            </v-avatar>
-            <span class="text-h5 font-weight-bold text-customblack"
-              >THBookStore</span
+        <div class="col-span-12 mb-6 md:col-span-4">
+          <div class="mb-4 flex items-center">
+            <div
+              class="mr-3 flex h-12 w-12 items-center justify-center rounded-full bg-customyellow"
             >
+              <BookOpen class="h-7 w-7 text-darkgreen" />
+            </div>
+            <span class="text-2xl font-semibold text-foreground">
+              THBookStore
+            </span>
           </div>
-          <p class="text-body-1 text-medium-emphasis mb-4">
+          <p class="mb-4 text-base text-muted-foreground">
             Your trusted destination for discovering and collecting the world's
             finest books. From timeless classics to contemporary bestsellers.
           </p>
 
           <!-- Contact Info -->
-          <div class="contact-info">
-            <div class="d-flex align-center mb-2">
-              <v-icon color="waterblue" size="18" class="mr-3"
-                >mdi-map-marker</v-icon
-              >
-              <span class="text-body-2">1234 Bookstore Drive & 4th Ave</span>
+          <div
+            class="rounded-lg border-l-[3px] border-waterblue bg-waterblue/5 p-4"
+          >
+            <div class="mb-2 flex items-center">
+              <MapPin class="mr-3 h-[18px] w-[18px] shrink-0 text-waterblue" />
+              <span class="text-sm text-foreground">
+                1234 Bookstore Drive & 4th Ave
+              </span>
             </div>
-            <div class="d-flex align-center mb-2">
-              <v-icon color="waterblue" size="18" class="mr-3"
-                >mdi-phone</v-icon
-              >
-              <span class="text-body-2">0971450800</span>
+            <div class="mb-2 flex items-center">
+              <Phone class="mr-3 h-[18px] w-[18px] shrink-0 text-waterblue" />
+              <span class="text-sm text-foreground">0971450800</span>
             </div>
-            <div class="d-flex align-center mb-4">
-              <v-icon color="waterblue" size="18" class="mr-3"
-                >mdi-email</v-icon
-              >
-              <span class="text-body-2">nhokhieukute2004@gmail.com</span>
+            <div class="flex items-center">
+              <Mail class="mr-3 h-[18px] w-[18px] shrink-0 text-waterblue" />
+              <span class="text-sm text-foreground">
+                nhokhieukute2004@gmail.com
+              </span>
             </div>
           </div>
 
           <!-- Social Media -->
-          <div class="social-links">
-            <span
-              class="text-subtitle-2 font-weight-bold text-customblack mb-3 d-block"
-              >Follow Us</span
-            >
-            <div class="d-flex ga-2">
-              <v-btn
-                icon
-                variant="outlined"
-                color="waterblue"
-                size="small"
-                class="social-btn"
+          <div class="mt-4">
+            <span class="mb-3 block text-sm font-bold text-foreground">
+              Follow Us
+            </span>
+            <div class="flex gap-2">
+              <button
+                type="button"
+                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-waterblue text-waterblue transition-all duration-300 hover:-translate-y-0.5 hover:bg-waterblue hover:text-white"
+                aria-label="Facebook"
               >
-                <v-icon>mdi-facebook</v-icon>
-              </v-btn>
-              <v-btn
-                icon
-                variant="outlined"
-                color="waterblue"
-                size="small"
-                class="social-btn"
+                <Facebook class="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-waterblue text-waterblue transition-all duration-300 hover:-translate-y-0.5 hover:bg-waterblue hover:text-white"
+                aria-label="Twitter"
               >
-                <v-icon>mdi-twitter</v-icon>
-              </v-btn>
-              <v-btn
-                icon
-                variant="outlined"
-                color="waterblue"
-                size="small"
-                class="social-btn"
+                <Twitter class="h-4 w-4" />
+              </button>
+              <button
+                type="button"
+                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-waterblue text-waterblue transition-all duration-300 hover:-translate-y-0.5 hover:bg-waterblue hover:text-white"
+                aria-label="Instagram"
               >
-                <v-icon>mdi-instagram</v-icon>
-              </v-btn>
+                <Instagram class="h-4 w-4" />
+              </button>
             </div>
           </div>
-        </v-col>
+        </div>
 
         <!-- Shopping Section -->
-        <v-col cols="12" md="2" class="mb-6">
-          <h3 class="text-h6 font-weight-bold text-customblack mb-4">
-            Shopping
-          </h3>
-          <v-list density="compact" class="pa-0 bg-transparent">
-            <v-list-item
-              v-for="(item, i) in shoppingLinks"
-              :key="i"
-              :value="item"
-              class="px-0 py-1"
-              density="compact"
-              @click="navigateTo(item.route)"
-            >
-              <v-list-item-title class="text-body-2 footer-link">
+        <div class="col-span-12 mb-6 sm:col-span-6 md:col-span-2">
+          <h3 class="mb-4 text-lg font-semibold text-foreground">Shopping</h3>
+          <ul class="space-y-1">
+            <li v-for="(item, i) in shoppingLinks" :key="i">
+              <button
+                type="button"
+                class="py-1 text-sm text-muted-foreground transition-colors duration-300 hover:text-waterblue"
+                @click="goTo(item.route)"
+              >
                 {{ item.name }}
-              </v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-col>
+              </button>
+            </li>
+          </ul>
+        </div>
 
         <!-- Account Section -->
-        <v-col cols="12" md="2" class="mb-6">
-          <h3 class="text-h6 font-weight-bold text-customblack mb-4">
-            My Account
-          </h3>
-          <v-list density="compact" class="pa-0 bg-transparent">
-            <v-list-item
-              v-for="(item, i) in accountLinks"
-              :key="i"
-              :value="item"
-              class="px-0 py-1"
-              density="compact"
-              @click="navigateTo(item.route)"
-            >
-              <v-list-item-title class="text-body-2 footer-link">
+        <div class="col-span-12 mb-6 sm:col-span-6 md:col-span-2">
+          <h3 class="mb-4 text-lg font-semibold text-foreground">My Account</h3>
+          <ul class="space-y-1">
+            <li v-for="(item, i) in accountLinks" :key="i">
+              <button
+                type="button"
+                class="py-1 text-sm text-muted-foreground transition-colors duration-300 hover:text-waterblue"
+                @click="goTo(item.route)"
+              >
                 {{ item.name }}
-              </v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-col>
+              </button>
+            </li>
+          </ul>
+        </div>
 
         <!-- Categories Section -->
-        <v-col cols="12" md="2" class="mb-6">
-          <h3 class="text-h6 font-weight-bold text-customblack mb-4">
-            Categories
-          </h3>
-          <v-list density="compact" class="pa-0 bg-transparent">
-            <v-list-item
-              v-for="(item, i) in categoryLinks"
-              :key="i"
-              :value="item"
-              class="px-0 py-1"
-              density="compact"
-              @click="navigateTo(item.route)"
-            >
-              <v-list-item-title class="text-body-2 footer-link">
+        <div class="col-span-12 mb-6 sm:col-span-6 md:col-span-2">
+          <h3 class="mb-4 text-lg font-semibold text-foreground">Categories</h3>
+          <ul class="space-y-1">
+            <li v-for="(item, i) in categoryLinks" :key="i">
+              <button
+                type="button"
+                class="py-1 text-sm text-muted-foreground transition-colors duration-300 hover:text-waterblue"
+                @click="goTo(item.route)"
+              >
                 {{ item.name }}
-              </v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-col>
+              </button>
+            </li>
+          </ul>
+        </div>
 
         <!-- Quick Actions Section -->
-        <v-col cols="12" md="2" class="mb-6">
-          <h3 class="text-h6 font-weight-bold text-customblack mb-4">
+        <div class="col-span-12 mb-6 sm:col-span-6 md:col-span-2">
+          <h3 class="mb-4 text-lg font-semibold text-foreground">
             Quick Actions
           </h3>
-          <v-list density="compact" class="pa-0 bg-transparent">
-            <v-list-item
-              v-for="(item, i) in quickActions"
-              :key="i"
-              :value="item"
-              class="px-0 py-1"
-              density="compact"
-              @click="navigateTo(item.route)"
-            >
-              <v-list-item-title class="text-body-2 footer-link">
+          <ul class="space-y-1">
+            <li v-for="(item, i) in quickActions" :key="i">
+              <button
+                type="button"
+                class="py-1 text-sm text-muted-foreground transition-colors duration-300 hover:text-waterblue"
+                @click="goTo(item.route)"
+              >
                 {{ item.name }}
-              </v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-col>
-      </v-row>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
 
       <!-- Footer Divider -->
-      <v-divider class="footer-divider mb-4"></v-divider>
+      <div class="mb-4 h-px bg-border/50" />
 
       <!-- Bottom Footer -->
       <div
-        class="d-flex flex-column flex-md-row justify-space-between align-center py-4"
+        class="flex flex-col items-center justify-between py-4 md:flex-row"
       >
-        <div class="text-center text-md-left mb-2 mb-md-0">
-          <span class="text-body-2 text-medium-emphasis">
+        <div class="mb-2 text-center md:mb-0 md:text-left">
+          <span class="text-sm text-muted-foreground">
             © 2025 THBookStore. All Rights Reserved.
           </span>
         </div>
-        <div class="d-flex ga-4">
-          <span class="text-body-2 text-medium-emphasis">Privacy Policy</span>
-          <span class="text-body-2 text-medium-emphasis">Terms of Service</span>
+        <div class="flex gap-4">
+          <span class="text-sm text-muted-foreground">Privacy Policy</span>
+          <span class="text-sm text-muted-foreground">Terms of Service</span>
         </div>
       </div>
-    </v-container>
-  </v-footer>
+    </div>
+  </footer>
 </template>
 
-<script>
-export default {
-  name: "Footer",
-  data() {
-    return {
-      shoppingLinks: [
-        { name: "Shopping Cart", route: "/cart" },
-        { name: "My Orders", route: "/order" },
-        { name: "My Favorites", route: "/favorites" },
-      ],
-      accountLinks: [
-        { name: "My Profile", route: "/profiles" },
-        { name: "Login", route: "/login" },
-        { name: "Sign Up", route: "/signup" },
-      ],
-      categoryLinks: [
-        { name: "Literary Fiction", route: "/subjects/literary fiction" },
-        { name: "Romance", route: "/subjects/romance" },
-        { name: "Manga", route: "/subjects/manga" },
-        { name: "All Categories", route: "/" },
-      ],
-      quickActions: [
-        { name: "Home", route: "/" },
-        { name: "Browse Books", route: "/" },
-        { name: "Contact Us", route: "/contact" },
-      ],
-    };
-  },
-  methods: {
-    navigateTo(route) { 
-      this.$router.push(route);
-    },
-  },
-};
+<script setup lang="ts">
+import {
+  BookOpen,
+  Facebook,
+  Instagram,
+  Mail,
+  MapPin,
+  Phone,
+  Twitter,
+} from "lucide-vue-next";
+
+interface FooterLink {
+  name: string;
+  route: string;
+}
+
+const router = useRouter();
+
+const shoppingLinks: FooterLink[] = [
+  { name: "Shopping Cart", route: "/cart" },
+  { name: "My Orders", route: "/order" },
+  { name: "My Favorites", route: "/favorites" },
+];
+
+const accountLinks: FooterLink[] = [
+  { name: "My Profile", route: "/profiles" },
+  { name: "Login", route: "/login" },
+  { name: "Sign Up", route: "/signup" },
+];
+
+const categoryLinks: FooterLink[] = [
+  { name: "Literary Fiction", route: "/subjects/literary fiction" },
+  { name: "Romance", route: "/subjects/romance" },
+  { name: "Manga", route: "/subjects/manga" },
+  { name: "All Categories", route: "/" },
+];
+
+const quickActions: FooterLink[] = [
+  { name: "Home", route: "/" },
+  { name: "Browse Books", route: "/" },
+  { name: "Contact Us", route: "/contact" },
+];
+
+function goTo(route: string) {
+  router.push(route);
+}
 </script>
-
-<style scoped>
-.footer-main {
-  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-  border-top: 1px solid #dee2e6;
-}
-
-.contact-info {
-  background: rgba(82, 149, 208, 0.05);
-  padding: 16px;
-  border-radius: 8px;
-  border-left: 3px solid #5295d0;
-}
-
-.social-links {
-  margin-top: 16px;
-}
-
-.social-btn {
-  transition: all 0.3s ease;
-}
-
-.social-btn:hover {
-  background-color: #5295d0 !important;
-  color: white !important;
-  transform: translateY(-2px);
-}
-
-.footer-link {
-  color: #6c757d;
-  transition: color 0.3s ease;
-  cursor: pointer;
-}
-
-.footer-link:hover {
-  color: #5295d0;
-}
-
-.footer-divider {
-  border-color: #dee2e6;
-  opacity: 0.5;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .footer-main {
-    text-align: center;
-  }
-
-  .contact-info {
-    text-align: left;
-  }
-}
-</style>

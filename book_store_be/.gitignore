@@ -16,3 +16,7 @@ dist
 # Local env files
 .env
 .env.*
+!.env.example
+# Multer temp uploads
+tmp/*
+!tmp/.gitkeep

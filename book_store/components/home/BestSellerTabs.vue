@@ -1,587 +1,332 @@
 <template>
-  <v-container max-width="1500" class="py-12">
-    <v-row>
-      <v-col cols="12">
-        <!-- Header -->
-        <div class="mb-8">
-          <h2 class="text-h4 font-weight-bold text-customblack mb-2">
-            Weekly Best Sellers
-          </h2>
+  <div class="container mx-auto max-w-[1500px] px-4 py-12">
+    <!-- Header -->
+    <div class="mb-8">
+      <h2 class="mb-2 text-3xl font-bold text-foreground">
+        Weekly Best Sellers
+      </h2>
+    </div>
+
+    <!-- Tabs -->
+    <div
+      class="mb-6 flex overflow-x-auto border-b border-border"
+      role="tablist"
+    >
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === 'marketing'"
+        class="-mb-px inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-3 font-medium transition-colors"
+        :class="
+          activeTab === 'marketing'
+            ? 'border-primary text-primary'
+            : 'border-transparent text-muted-foreground hover:text-foreground'
+        "
+        @click="activeTab = 'marketing'"
+      >
+        <BookOpen class="h-5 w-5" />
+        Marketing
+      </button>
+      <button
+        type="button"
+        role="tab"
+        :aria-selected="activeTab === 'kids'"
+        class="-mb-px inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-3 font-medium transition-colors"
+        :class="
+          activeTab === 'kids'
+            ? 'border-primary text-primary'
+            : 'border-transparent text-muted-foreground hover:text-foreground'
+        "
+        @click="activeTab = 'kids'"
+      >
+        <GraduationCap class="h-5 w-5" />
+        Kids Education
+      </button>
+    </div>
+
+    <!-- Tab Content -->
+    <div class="grid grid-cols-12 gap-6">
+      <!-- Left Column - List of Books -->
+      <div class="col-span-12 md:col-span-6">
+        <div
+          v-for="(book, index) in currentBooks"
+          :key="book._id"
+          class="mb-4 cursor-pointer rounded-xl border-2 bg-card p-4 shadow transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md"
+          :class="
+            selectedBook?._id === book._id
+              ? 'border-primary bg-primary/5'
+              : 'border-transparent'
+          "
+          @click="selectBook(book)"
+        >
+          <div class="flex">
+            <!-- Ranking Number -->
+            <div class="mr-4 flex min-w-[60px] flex-col items-center">
+              <UiBadge
+                :variant="getRankingVariant(index)"
+                class="px-3 py-1 text-sm font-bold"
+              >
+                {{ String(index + 1).padStart(2, "0") }}
+              </UiBadge>
+              <ArrowUp
+                v-if="index < 3"
+                class="mt-1 h-4 w-4"
+                :class="getRankingIconClass(index)"
+              />
+            </div>
+
+            <!-- Book Cover -->
+            <div
+              class="mr-4 h-[120px] w-20 shrink-0 overflow-hidden rounded bg-muted shadow"
+            >
+              <img
+                :src="
+                  book.cover_url ||
+                  'https://via.placeholder.com/80x120/e0e0e0/757575?text=No+Image'
+                "
+                :alt="book.title"
+                class="block h-full w-full object-cover"
+                @error="onSmallCoverError"
+              />
+            </div>
+
+            <!-- Book Info -->
+            <div class="grow">
+              <h3 class="mb-1 line-clamp-2 text-lg font-bold text-foreground">
+                {{ book.title }}
+              </h3>
+              <p class="mb-2 text-sm text-muted-foreground">
+                {{ book.authors?.join(", ") || "Unknown Author" }}
+              </p>
+              <div class="mb-2 flex items-center">
+                <UiRating
+                  :model-value="book.rating || 4.5"
+                  :size="16"
+                  readonly
+                />
+                <span class="ml-2 text-xs text-muted-foreground">
+                  {{ book.rating || "4.5" }}
+                </span>
+              </div>
+              <p class="mb-2 text-xs text-muted-foreground">
+                {{ book.sold }} sold
+              </p>
+            </div>
+          </div>
         </div>
 
-        <!-- Tabs -->
-        <v-tabs
-          v-model="activeTab"
-          color="primary"
-          class="mb-6"
-          slider-color="primary"
-          show-arrows
+        <!-- View More Button -->
+        <UiButton
+          block
+          variant="outline"
+          size="lg"
+          class="mt-4 border-primary text-primary hover:bg-primary/10 hover:text-primary"
+          @click="loadMore(activeTab === 'marketing' ? 'marketing' : 'education')"
         >
-          <v-tab value="marketing">
-            <v-icon start>mdi-book-open-variant</v-icon>
-            Marketing
-          </v-tab>
-          <v-tab value="kids">
-            <v-icon start>mdi-school</v-icon>
-            Kids Education
-          </v-tab>
-        </v-tabs>
+          View More
+        </UiButton>
+      </div>
 
-        <!-- Tab Content -->
-        <v-window v-model="activeTab">
-          <!-- Marketing Tab -->
-          <v-window-item value="marketing">
-            <v-row>
-              <!-- Left Column - List of Books -->
-              <v-col cols="12" md="6">
-                <v-card
-                  v-for="(book, index) in marketingBooks"
-                  :key="book._id"
-                  class="mb-4 book-item-card"
-                  :class="{ 'selected-book': selectedBook?._id === book._id }"
-                  elevation="2"
-                  @click="selectBook(book)"
-                  hover
-                >
-                  <v-card-text class="pa-4">
-                    <div class="d-flex">
-                      <!-- Ranking Number -->
-                      <div class="ranking-number mr-4">
-                        <v-chip
-                          :color="getRankingColor(index)"
-                          size="large"
-                          class="font-weight-bold"
-                        >
-                          {{ String(index + 1).padStart(2, "0") }}
-                        </v-chip>
-                        <v-icon
-                          v-if="index < 3"
-                          :color="getRankingColor(index)"
-                          size="small"
-                          class="mt-1"
-                        >
-                          mdi-arrow-up
-                        </v-icon>
-                      </div>
+      <!-- Right Column - Selected Book Details -->
+      <div class="col-span-12 md:col-span-6">
+        <div
+          v-if="selectedBook"
+          class="sticky top-5 flex h-full flex-col rounded-xl border border-border bg-card shadow-md"
+        >
+          <!-- Book Cover with proper aspect ratio -->
+          <div class="flex justify-center p-5">
+            <img
+              :src="
+                selectedBook.cover_url ||
+                'https://via.placeholder.com/300x450/e0e0e0/757575?text=No+Image'
+              "
+              :alt="selectedBook.title"
+              class="h-auto w-full max-w-[250px] rounded-lg bg-muted object-cover shadow-lg"
+              @error="onLargeCoverError"
+            />
+          </div>
 
-                      <!-- Book Cover -->
-                      <div class="book-cover-small">
-                        <img
-                          :src="
-                            book.cover_url ||
-                            'https://via.placeholder.com/80x120/e0e0e0/757575?text=No+Image'
-                          "
-                          :alt="book.title"
-                          class="book-cover-image-small"
-                          @error="
-                            (e) =>
-                              (e.target.src =
-                                'https://via.placeholder.com/80x120/e0e0e0/757575?text=No+Image')
-                          "
-                        />
-                      </div>
+          <h3 class="mt-3 px-4 text-lg font-bold text-foreground">
+            {{ selectedBook.title }}
+          </h3>
 
-                      <!-- Book Info -->
-                      <div class="flex-grow-1">
-                        <h3 class="text-h6 font-weight-bold mb-1 line-clamp-2">
-                          {{ book.title }}
-                        </h3>
-                        <p class="text-body-2 text-grey-darken-1 mb-2">
-                          {{ book.authors?.join(", ") || "Unknown Author" }}
-                        </p>
-                        <div class="d-flex align-center mb-2">
-                          <v-rating
-                            :model-value="book.rating || 4.5"
-                            color="amber"
-                            density="compact"
-                            size="small"
-                            readonly
-                            half-increments
-                          ></v-rating>
-                          <span class="text-caption ml-2">
-                            {{ book.rating || "4.5" }}
-                          </span>
-                        </div>
-                        <p class="text-caption text-grey mb-2">
-                          {{ book.sold }} sold
-                        </p>
-                      </div>
-                    </div>
-                  </v-card-text>
-                </v-card>
+          <p class="mb-2 px-4 text-sm text-muted-foreground">
+            Author:
+            {{ selectedBook.authors?.join(", ") || "Unknown Author" }}
+            <br />
+            Publisher:
+            {{ selectedBookPublisher }}
+          </p>
 
-                <!-- View More Button -->
-                <v-btn
-                  block
-                  variant="outlined"
-                  color="primary"
-                  size="large"
-                  class="mt-4"
-                  @click="loadMore('marketing')"
-                >
-                  View More
-                </v-btn>
-              </v-col>
+          <div class="flex flex-1 flex-col p-4">
+            <!-- Price -->
+            <div class="mb-3">
+              <div class="mb-2 flex items-center">
+                <span class="mr-3 text-2xl font-bold text-destructive">
+                  ${{ selectedBook.price?.toFixed(2) || "0.00" }}
+                </span>
+                <UiBadge variant="destructive" class="font-bold">
+                  -10%
+                </UiBadge>
+              </div>
+            </div>
 
-              <!-- Right Column - Selected Book Details -->
-              <v-col cols="12" md="6">
-                <v-card v-if="selectedBook" class="sticky-card" elevation="4">
-                  <!-- Book Cover with proper aspect ratio -->
-                  <div class="book-cover-large-container">
-                    <img
-                      :src="
-                        selectedBook.cover_url ||
-                        'https://via.placeholder.com/300x450/e0e0e0/757575?text=No+Image'
-                      "
-                      :alt="selectedBook.title"
-                      class="book-cover-large"
-                      @error="
-                        (e) =>
-                          (e.target.src =
-                            'https://via.placeholder.com/300x450/e0e0e0/757575?text=No+Image')
-                      "
-                    />
-                  </div>
+            <!-- Description Title (kids tab only, as in the original) -->
+            <h4
+              v-if="activeTab === 'kids'"
+              class="mb-2 text-base font-bold text-foreground"
+            >
+              {{ selectedBook.title }}
+            </h4>
 
-                  <v-card-title class="text-h6 font-weight-bold mt-3">
-                    {{ selectedBook.title }}
-                  </v-card-title>
+            <!-- Description -->
+            <p
+              class="mb-3 line-clamp-6 text-muted-foreground"
+              :class="activeTab === 'marketing' ? 'text-base' : 'text-sm'"
+            >
+              {{ selectedBook.description || "No description available" }}
+            </p>
 
-                  <v-card-subtitle class="text-body-2 mb-2">
-                    Author:
-                    {{ selectedBook.authors?.join(", ") || "Unknown Author" }}
-                    <br />
-                    Publisher:
-                    {{
-                      selectedBook.publisher || "People's Army Publishing House"
-                    }}
-                  </v-card-subtitle>
+            <!-- Action Buttons -->
+            <div class="mt-auto flex gap-3">
+              <UiButton
+                block
+                size="lg"
+                class="font-bold"
+                @click="addToCart(selectedBook._id)"
+              >
+                <ShoppingCart class="mr-1 h-5 w-5" />
+                Add to Cart
+              </UiButton>
+            </div>
+          </div>
+        </div>
 
-                  <v-card-text>
-                    <!-- Price -->
-                    <div class="mb-3">
-                      <div class="d-flex align-center mb-2">
-                        <span class="text-h5 font-weight-bold text-error mr-3">
-                          ${{ selectedBook.price?.toFixed(2) || "0.00" }}
-                        </span>
-                        <v-chip
-                          color="error"
-                          size="small"
-                          class="font-weight-bold"
-                        >
-                          -10%
-                        </v-chip>
-                      </div>
-                    </div>
-
-                    <!-- Description -->
-                    <p class="text-body-1 text-grey-darken-2 line-clamp-6 mb-3">
-                      {{
-                        selectedBook.description || "No description available"
-                      }}
-                    </p>
-
-                    <!-- Action Buttons -->
-                    <div class="ga-3">
-                      <v-btn
-                        color="primary"
-                        variant="flat"
-                        size="large"
-                        prepend-icon="mdi-cart-plus"
-                        @click="addToCart(selectedBook._id)"
-                        block
-                      >
-                        Add to Cart
-                      </v-btn>
-                    </div>
-                  </v-card-text>
-                </v-card>
-
-                <!-- Placeholder when no book selected -->
-                <v-card v-else class="sticky-card" elevation="4">
-                  <v-card-text class="text-center py-12">
-                    <v-icon size="80" color="grey-lighten-2"
-                      >mdi-book-open-page-variant</v-icon
-                    >
-                    <p class="text-h6 text-grey mt-4">
-                      Select a book to view details
-                    </p>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-window-item>
-
-          <!-- Kids Education Tab -->
-          <v-window-item value="kids">
-            <v-row>
-              <!-- Left Column - List of Books -->
-              <v-col cols="12" md="6">
-                <v-card
-                  v-for="(book, index) in kidsBooks"
-                  :key="book._id"
-                  class="mb-4 book-item-card"
-                  :class="{ 'selected-book': selectedBook?._id === book._id }"
-                  elevation="2"
-                  @click="selectBook(book)"
-                  hover
-                >
-                  <v-card-text class="pa-4">
-                    <div class="d-flex">
-                      <!-- Ranking Number -->
-                      <div class="ranking-number mr-4">
-                        <v-chip
-                          :color="getRankingColor(index)"
-                          size="large"
-                          class="font-weight-bold"
-                        >
-                          {{ String(index + 1).padStart(2, "0") }}
-                        </v-chip>
-                        <v-icon
-                          v-if="index < 3"
-                          :color="getRankingColor(index)"
-                          size="small"
-                          class="mt-1"
-                        >
-                          mdi-arrow-up
-                        </v-icon>
-                      </div>
-
-                      <!-- Book Cover -->
-                      <div class="book-cover-small">
-                        <img
-                          :src="
-                            book.cover_url ||
-                            'https://via.placeholder.com/80x120/e0e0e0/757575?text=No+Image'
-                          "
-                          :alt="book.title"
-                          class="book-cover-image-small"
-                          @error="
-                            (e) =>
-                              (e.target.src =
-                                'https://via.placeholder.com/80x120/e0e0e0/757575?text=No+Image')
-                          "
-                        />
-                      </div>
-
-                      <!-- Book Info -->
-                      <div class="flex-grow-1">
-                        <h3 class="text-h6 font-weight-bold mb-1 line-clamp-2">
-                          {{ book.title }}
-                        </h3>
-                        <p class="text-body-2 text-grey-darken-1 mb-2">
-                          {{ book.authors?.join(", ") || "Unknown Author" }}
-                        </p>
-                        <div class="d-flex align-center mb-2">
-                          <v-rating
-                            :model-value="book.rating || 4.5"
-                            color="amber"
-                            density="compact"
-                            size="small"
-                            readonly
-                            half-increments
-                          ></v-rating>
-                          <span class="text-caption ml-2">
-                            {{ book.rating || "4.5" }}
-                          </span>
-                        </div>
-                        <p class="text-caption text-grey mb-2">
-                          {{ book.sold }} sold
-                        </p>
-                      </div>
-                    </div>
-                  </v-card-text>
-                </v-card>
-
-                <!-- View More Button -->
-                <v-btn
-                  block
-                  variant="outlined"
-                  color="primary"
-                  size="large"
-                  class="mt-4"
-                  @click="loadMore('education')"
-                >
-                  View More
-                </v-btn>
-              </v-col>
-
-              <!-- Right Column - Selected Book Details -->
-              <v-col cols="12" md="6">
-                <v-card v-if="selectedBook" class="sticky-card" elevation="4">
-                  <!-- Book Cover with proper aspect ratio -->
-                  <div class="book-cover-large-container">
-                    <img
-                      :src="
-                        selectedBook.cover_url ||
-                        'https://via.placeholder.com/300x450/e0e0e0/757575?text=No+Image'
-                      "
-                      :alt="selectedBook.title"
-                      class="book-cover-large"
-                      @error="
-                        (e) =>
-                          (e.target.src =
-                            'https://via.placeholder.com/300x450/e0e0e0/757575?text=No+Image')
-                      "
-                    />
-                  </div>
-
-                  <v-card-title class="text-h6 font-weight-bold mt-3">
-                    {{ selectedBook.title }}
-                  </v-card-title>
-
-                  <v-card-subtitle class="text-body-2 mb-2">
-                    Author:
-                    {{ selectedBook.authors?.join(", ") || "Unknown Author" }}
-                    <br />
-                    Publisher:
-                    {{
-                      selectedBook.publisher || "People's Army Publishing House"
-                    }}
-                  </v-card-subtitle>
-
-                  <v-card-text>
-                    <!-- Price -->
-                    <div class="mb-3">
-                      <div class="d-flex align-center mb-2">
-                        <span class="text-h5 font-weight-bold text-error mr-3">
-                          ${{ selectedBook.price?.toFixed(2) || "0.00" }}
-                        </span>
-                        <v-chip
-                          color="error"
-                          size="small"
-                          class="font-weight-bold"
-                        >
-                          -10%
-                        </v-chip>
-                      </div>
-                    </div>
-
-                    <!-- Description Title -->
-                    <h4 class="text-subtitle-1 font-weight-bold mb-2">
-                      {{ selectedBook.title }}
-                    </h4>
-
-                    <!-- Description -->
-                    <p class="text-body-2 text-grey-darken-2 line-clamp-6 mb-3">
-                      {{
-                        selectedBook.description || "No description available"
-                      }}
-                    </p>
-
-                    <!-- Action Buttons -->
-                    <div class="d-flex ga-3">
-                      <v-btn
-                        color="primary"
-                        variant="flat"
-                        size="large"
-                        prepend-icon="mdi-cart-plus"
-                        @click="addToCart(selectedBook._id)"
-                        block
-                      >
-                        Add to Cart
-                      </v-btn>
-                    </div>
-                  </v-card-text>
-                </v-card>
-
-                <!-- Placeholder when no book selected -->
-                <v-card v-else class="sticky-card" elevation="4">
-                  <v-card-text class="text-center py-12">
-                    <v-icon size="80" color="grey-lighten-2"
-                      >mdi-book-open-page-variant</v-icon
-                    >
-                    <p class="text-h6 text-grey mt-4">
-                      Select a book to view details
-                    </p>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-window-item>
-        </v-window>
-      </v-col>
-    </v-row>
-  </v-container>
+        <!-- Placeholder when no book selected -->
+        <div
+          v-else
+          class="sticky top-5 h-full rounded-xl border border-border bg-card shadow-md"
+        >
+          <div class="px-4 py-12 text-center">
+            <BookOpen class="mx-auto h-20 w-20 text-muted-foreground/40" />
+            <p class="mt-4 text-lg text-muted-foreground">
+              Select a book to view details
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
-<script>
-import { mapState, mapActions } from "vuex";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useBookStore } from "@/stores/book";
+import { useCartStore } from "@/stores/cart";
+import {
+  ArrowUp,
+  BookOpen,
+  GraduationCap,
+  ShoppingCart,
+} from "lucide-vue-next";
+import type { Book } from "@/types";
 
-export default {
-  name: "BestSellerTabs",
-  data() {
-    return {
-      activeTab: "marketing",
-      selectedBook: null,
-      marketingBooksData: [],
-      kidsBooksData: [],
-    };
-  },
-  computed: {
-    ...mapState("book", ["homeSubjects"]),
-    marketingBooks() {
-      return (this.homeSubjects["marketing"] || []).slice(0, 5);
-    },
-    kidsBooks() {
-      return (this.homeSubjects["kids education"] || []).slice(0, 5);
-    },
-  },
-  watch: {
-    marketingBooks(books) {
-      if (!this.selectedBook && books.length) this.selectedBook = books[0];
-    },
-    activeTab(newTab) {
-      this.selectedBook =
-        newTab === "marketing" ? this.marketingBooks[0] : this.kidsBooks[0];
-    },
-  },
-  methods: {
-    ...mapActions("favorite", ["toggleFavorites"]),
+const emit = defineEmits<{
+  "show-snackbar": [payload: { text: string; color: string }];
+}>();
 
-    selectBook(book) {
-      this.selectedBook = book;
-      console.log("Manually selected book:", book?.title);
-    },
+const router = useRouter();
 
-    getRankingColor(index) {
-      if (index === 0) return "error";
-      if (index === 1) return "warning";
-      if (index === 2) return "success";
-      return "grey";
-    },
+const bookStore = useBookStore();
+const { homeSubjects } = storeToRefs(bookStore);
+const cartStore = useCartStore();
 
-    async addToCart(bookId) {
-      try {
-        await this.$store.dispatch("cart/addToCart", {
-          bookId,
-          quantity: 1,
-          productType: "hardbook", // default to hardbook
-        });
-        this.$emit("show-snackbar", {
-          text: "Added to cart!",
-          color: "success",
-        });
-      } catch (error) {
-        console.error("Error adding to cart:", error);
-        this.$emit("show-snackbar", {
-          text: "Failed to add to cart",
-          color: "error",
-        });
-      }
-    },
+const activeTab = ref<"marketing" | "kids">("marketing");
+const selectedBook = ref<Book | null>(null);
 
-    async toggleFavorite(bookId) {
-      try {
-        await this.toggleFavorites(bookId);
-      } catch (error) {
-        console.error("Error toggling favorite:", error);
-      }
-    },
+const marketingBooks = computed<Book[]>(() =>
+  (homeSubjects.value["marketing"] || []).slice(0, 5)
+);
 
-    loadMore(subject) {
-      // Navigate to full list page based on subject
-      this.$router.push(`/subjects/${subject}`);
-    },
-  },
-};
+const kidsBooks = computed<Book[]>(() =>
+  (homeSubjects.value["kids education"] || []).slice(0, 5)
+);
+
+const currentBooks = computed<Book[]>(() =>
+  activeTab.value === "marketing" ? marketingBooks.value : kidsBooks.value
+);
+
+// `publisher` is not part of the Book model; the original template read it anyway,
+// falling back to a default label when absent.
+const selectedBookPublisher = computed<string>(
+  () =>
+    (selectedBook.value as (Book & { publisher?: string }) | null)?.publisher ||
+    "People's Army Publishing House"
+);
+
+watch(marketingBooks, (books) => {
+  if (!selectedBook.value && books.length) selectedBook.value = books[0];
+});
+
+watch(activeTab, (newTab) => {
+  selectedBook.value =
+    (newTab === "marketing" ? marketingBooks.value[0] : kidsBooks.value[0]) ??
+    null;
+});
+
+function selectBook(book: Book) {
+  selectedBook.value = book;
+  console.log("Manually selected book:", book?.title);
+}
+
+type RankingVariant = "destructive" | "warning" | "success" | "muted";
+
+function getRankingVariant(index: number): RankingVariant {
+  if (index === 0) return "destructive";
+  if (index === 1) return "warning";
+  if (index === 2) return "success";
+  return "muted";
+}
+
+function getRankingIconClass(index: number): string {
+  if (index === 0) return "text-destructive";
+  if (index === 1) return "text-warning";
+  if (index === 2) return "text-success";
+  return "text-muted-foreground";
+}
+
+async function addToCart(bookId: string) {
+  try {
+    await cartStore.addToCart({
+      bookId,
+      quantity: 1,
+      productType: "hardbook", // default to hardbook
+    });
+    emit("show-snackbar", {
+      text: "Added to cart!",
+      color: "success",
+    });
+  } catch (error) {
+    console.error("Error adding to cart:", error);
+    emit("show-snackbar", {
+      text: "Failed to add to cart",
+      color: "error",
+    });
+  }
+}
+
+function loadMore(subject: string) {
+  // Navigate to full list page based on subject
+  router.push(`/subjects/${subject}`);
+}
+
+function onSmallCoverError(e: Event) {
+  (e.target as HTMLImageElement).src =
+    "https://via.placeholder.com/80x120/e0e0e0/757575?text=No+Image";
+}
+
+function onLargeCoverError(e: Event) {
+  (e.target as HTMLImageElement).src =
+    "https://via.placeholder.com/300x450/e0e0e0/757575?text=No+Image";
+}
 </script>
-
-<style scoped>
-.book-item-card {
-  cursor: pointer;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
-}
-
-.book-item-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.selected-book {
-  border-color: rgb(var(--v-theme-primary));
-  background-color: rgba(var(--v-theme-primary), 0.05);
-}
-
-.ranking-number {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 60px;
-}
-
-.sticky-card {
-  position: sticky;
-  height: 100%;
-  top: 20px;
-  display: flex;
-  flex-direction: column;
-  overflow: visible !important;
-}
-
-.sticky-card .v-card-text {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.sticky-card .v-card-text > div:last-child {
-  margin-top: auto;
-}
-
-.book-cover-large-container {
-  display: flex;
-  justify-content: center;
-  padding: 20px;
-}
-
-.book-cover-large {
-  width: 100%;
-  max-width: 250px;
-  height: auto;
-  object-fit: cover;
-  border-radius: 8px;
-}
-
-.book-cover-small {
-  width: 80px;
-  height: 120px;
-  margin-right: 16px;
-  overflow: hidden;
-  border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-}
-
-.book-cover-image-small {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.line-clamp-6 {
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  line-clamp: 6;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-:deep(.v-tab) {
-  text-transform: none;
-  font-weight: 500;
-}
-
-:deep(.v-tab--disabled) {
-  opacity: 0.5;
-}
-</style>

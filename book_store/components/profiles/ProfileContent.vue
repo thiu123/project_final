@@ -1,256 +1,215 @@
 <template>
-  <div class="profile-content">
+  <div
+    class="min-h-screen bg-gradient-to-br from-white to-[#d4dfed] pt-16 dark:from-background dark:to-card md:pt-0"
+  >
     <!-- Mobile Header -->
-    <v-app-bar
-      v-if="$vuetify.display.smAndDown"
-      color="white"
-      elevation="1"
-      density="compact"
-      class="border-b border-grey-lighten-3"
+    <header
+      class="flex items-center gap-2 border-b border-border bg-card px-4 py-2 shadow-sm md:hidden"
     >
-      <v-app-bar-nav-icon @click="$emit('toggle-drawer')"></v-app-bar-nav-icon>
-      <v-toolbar-title class="text-h6 font-weight-bold text-customblack"
-        >My Profile</v-toolbar-title
+      <UiButton
+        variant="ghost"
+        size="icon"
+        aria-label="Toggle navigation"
+        @click="$emit('toggle-drawer')"
       >
-    </v-app-bar>
+        <Menu class="h-5 w-5" />
+      </UiButton>
+      <h1 class="text-lg font-bold text-foreground">My Profile</h1>
+    </header>
 
-    <v-container class="pa-6">
+    <div class="container mx-auto p-6">
       <!-- Personal Info Section -->
-      <div v-if="activeTab === 'personal'" class="content-section">
-        <div class="d-flex align-center mb-6">
-          <v-icon
-            icon="mdi-account-circle"
-            size="32"
-            color="waterblue"
-            class="mr-3"
-          ></v-icon>
-          <h2 class="text-h4 font-weight-bold text-customblack">
+      <div v-if="activeTab === 'personal'" class="min-h-[80vh]">
+        <div class="mb-6 flex items-center">
+          <CircleUser class="mr-3 h-8 w-8 text-waterblue" />
+          <h2 class="text-3xl font-bold text-foreground">
             Personal Information
           </h2>
         </div>
 
-        <v-card
-          elevation="4"
-          class="rounded-xl overflow-hidden"
-          style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
+        <div
+          class="overflow-hidden rounded-xl bg-gradient-to-br from-white to-[#f8f9fa] shadow-md dark:from-card dark:to-card"
         >
-          <v-card-text class="pa-8">
+          <div class="p-8">
             <!-- Avatar Upload Section -->
-            <div class="d-flex align-center mb-8">
-              <v-avatar size="120" class="mr-6 elevation-4">
-                <v-img
-                  :src="
-                    currentUser?.avatar_url ||
-                    'https://cdn.vuetifyjs.com/images/john.jpg'
-                  "
-                  cover
-                >
-                  <template v-slot:placeholder>
-                    <div
-                      class="d-flex align-center justify-center fill-height bg-grey-lighten-3"
-                    >
-                      <v-icon size="40" color="grey">mdi-account</v-icon>
-                    </div>
-                  </template>
-                </v-img>
-              </v-avatar>
+            <div class="mb-8 flex items-center">
+              <UiAvatar class="mr-6 h-[120px] w-[120px] text-4xl shadow-md">
+                <UiAvatarImage
+                  :src="currentUser?.avatar_url || ''"
+                  alt="User Avatar"
+                />
+                <UiAvatarFallback>
+                  <User class="h-10 w-10 text-muted-foreground" />
+                </UiAvatarFallback>
+              </UiAvatar>
 
               <div>
-                <h3 class="text-h5 mb-2">
+                <h3 class="mb-2 text-2xl font-semibold">
                   {{ currentUser?.username || "User" }}
                 </h3>
-                <p class="text-body-2 text-grey-darken-1 mb-4">
+                <p class="mb-4 text-sm text-muted-foreground">
                   {{ currentUser?.email || "" }}
                 </p>
 
-                <v-btn
-                  color="waterblue"
+                <UiButton
+                  class="mr-3 bg-waterblue text-white hover:bg-waterblue/90"
                   :loading="uploadingAvatar"
-                  @click="$refs.avatarInput.click()"
-                  prepend-icon="mdi-camera"
-                  class="mr-3"
+                  @click="avatarInput?.click()"
                 >
+                  <Camera class="mr-1 h-4 w-4" />
                   Change Avatar
-                </v-btn>
+                </UiButton>
 
-                <v-btn
+                <UiButton
                   v-if="currentUser?.avatar_url"
-                  variant="outlined"
-                  color="error"
+                  variant="outline"
+                  class="border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive"
                   @click="removeAvatar"
-                  prepend-icon="mdi-delete"
                 >
+                  <Trash2 class="mr-1 h-4 w-4" />
                   Remove
-                </v-btn>
+                </UiButton>
 
                 <!-- Hidden file input -->
                 <input
                   ref="avatarInput"
                   type="file"
                   accept="image/*"
-                  style="display: none"
+                  class="hidden"
                   @change="handleAvatarUpload"
                 />
               </div>
             </div>
 
-            <v-divider class="mb-8"></v-divider>
+            <UiSeparator class="mb-8" />
 
-            <v-form>
-              <v-row>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    :model-value="currentUser?.username || ''"
-                    label="Username"
-                    variant="outlined"
-                    density="comfortable"
-                    rounded="lg"
-                    color="waterblue"
-                    class="mb-4"
-                    readonly
-                    prepend-inner-icon="mdi-account"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    :model-value="currentUser?.email || ''"
-                    label="Email"
-                    type="email"
-                    variant="outlined"
-                    density="comfortable"
-                    rounded="lg"
-                    color="waterblue"
-                    class="mb-4"
-                    readonly
-                    prepend-inner-icon="mdi-email"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" md="6">
-                  <v-text-field
-                    :model-value="
-                      currentUser?.isAdmin ? 'Administrator' : 'Standard User'
-                    "
-                    label="Role"
-                    variant="outlined"
-                    density="comfortable"
-                    rounded="lg"
-                    color="waterblue"
-                    class="mb-4"
-                    readonly
-                    prepend-inner-icon="mdi-shield-account"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
-            </v-form>
-          </v-card-text>
-        </v-card>
+            <form class="grid grid-cols-12 gap-x-4" @submit.prevent>
+              <div class="col-span-12 md:col-span-6">
+                <UiInput
+                  :model-value="currentUser?.username || ''"
+                  label="Username"
+                  readonly
+                  wrapper-class="mb-4"
+                >
+                  <template #prepend>
+                    <User class="h-4 w-4" />
+                  </template>
+                </UiInput>
+              </div>
+              <div class="col-span-12 md:col-span-6">
+                <UiInput
+                  :model-value="currentUser?.email || ''"
+                  label="Email"
+                  type="email"
+                  readonly
+                  wrapper-class="mb-4"
+                >
+                  <template #prepend>
+                    <Mail class="h-4 w-4" />
+                  </template>
+                </UiInput>
+              </div>
+              <div class="col-span-12 md:col-span-6">
+                <UiInput
+                  :model-value="roleLabel"
+                  label="Role"
+                  readonly
+                  wrapper-class="mb-4"
+                >
+                  <template #prepend>
+                    <ShieldCheck class="h-4 w-4" />
+                  </template>
+                </UiInput>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
 
       <!-- Orders Section -->
-      <div v-if="activeTab === 'orders'" class="content-section">
-        <div class="d-flex align-center mb-6">
-          <v-icon
-            icon="mdi-package-variant"
-            size="32"
-            color="waterblue"
-            class="mr-3"
-          ></v-icon>
-          <h2 class="text-h4 font-weight-bold text-customblack">
-            Order History
-          </h2>
+      <div v-if="activeTab === 'orders'" class="min-h-[80vh]">
+        <div class="mb-6 flex items-center">
+          <Package class="mr-3 h-8 w-8 text-waterblue" />
+          <h2 class="text-3xl font-bold text-foreground">Order History</h2>
         </div>
 
         <!-- Loading State -->
-        <div v-if="loadingOrders" class="text-center pa-12">
-          <v-progress-circular
-            indeterminate
-            color="waterblue"
-            size="64"
-          ></v-progress-circular>
-          <p class="mt-6 text-body-1 text-grey-darken-1">Loading orders...</p>
+        <div v-if="loadingOrders" class="p-12 text-center">
+          <UiSpinner size="xl" class="mx-auto text-waterblue" />
+          <p class="mt-6 text-base text-muted-foreground">Loading orders...</p>
         </div>
 
         <!-- Orders List -->
         <div v-else-if="userOrdersPaid && userOrdersPaid.length > 0">
-          <v-card
+          <div
             v-for="order in userOrdersPaid"
             :key="order._id"
-            elevation="3"
-            class="mb-6 rounded-xl overflow-hidden transition-all duration-300 hover:elevation-6"
-            style="
-              background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            "
+            class="mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-white to-[#f8f9fa] shadow transition-all duration-300 hover:shadow-lg dark:from-card dark:to-card"
           >
-            <v-card-text class="pa-8">
-              <div class="d-flex justify-space-between align-center mb-6">
+            <div class="p-8">
+              <div class="mb-6 flex items-center justify-between">
                 <div>
-                  <h3 class="text-h5 font-weight-bold text-customblack mb-2">
+                  <h3 class="mb-2 text-2xl font-bold text-foreground">
                     Order #{{ order.orderId }}
                   </h3>
-                  <p class="text-body-2 text-grey-darken-1">
-                    <v-icon icon="mdi-calendar" size="16" class="mr-1"></v-icon>
-                    {{ new Date(order.createdAt).toLocaleDateString() }}
+                  <p class="flex items-center text-sm text-muted-foreground">
+                    <Calendar class="mr-1 h-4 w-4" />
+                    {{ new Date(order.createdAt as string).toLocaleDateString() }}
                   </p>
                 </div>
-                <v-chip
-                  :color="getStatusColor(order.status)"
-                  variant="flat"
-                  size="large"
-                  class="font-weight-bold"
+                <UiBadge
+                  :variant="getStatusVariant(order.status)"
+                  class="px-3 py-1 text-sm font-bold"
+                  :class="getStatusClass(order.status)"
                 >
-                  <v-icon start size="16" class="mr-1">{{
-                    getStatusIcon(order.status)
-                  }}</v-icon>
+                  <component
+                    :is="getStatusIcon(order.status)"
+                    class="mr-1 h-4 w-4"
+                  />
                   {{ order.status || "Pending" }}
-                </v-chip>
+                </UiBadge>
               </div>
 
-              <v-divider class="mb-6"></v-divider>
+              <UiSeparator class="mb-6" />
 
               <div
                 v-for="item in order.items"
                 :key="item._id"
-                class="d-flex align-center mb-4 p-4 rounded-lg"
-                style="background: rgba(82, 149, 208, 0.05)"
+                class="mb-4 flex items-center rounded-lg bg-waterblue/5 p-4"
               >
-                <div class="book-image-container mr-4">
-                  <v-img
+                <div class="mr-4 flex min-w-[60px] items-center">
+                  <img
                     :src="
                       item.bookId?.cover_url ||
                       'https://via.placeholder.com/60x80'
                     "
-                    width="60"
-                    height="80"
-                    class="rounded-lg elevation-2"
-                    cover
-                    :aspect-ratio="3 / 4"
-                  ></v-img>
+                    :alt="item.bookId?.title || 'Book cover'"
+                    class="h-20 w-[60px] rounded-lg bg-muted object-cover shadow"
+                  />
                 </div>
-                <div class="flex-grow-1">
-                  <h4
-                    class="text-subtitle-1 font-weight-bold text-customblack mb-1"
-                  >
+                <div class="grow">
+                  <h4 class="mb-1 text-base font-bold text-foreground">
                     {{ item.bookId?.title || "Unknown Book" }}
                   </h4>
-                  <p class="text-body-2 text-grey-darken-1">
+                  <p class="text-sm text-muted-foreground">
                     Quantity: {{ item.quantity }}
                   </p>
                 </div>
                 <div class="text-right">
-                  <p class="text-h6 font-weight-bold text-waterblue">
+                  <p class="text-lg font-bold text-waterblue">
                     ${{ calculateItemPrice(item).toFixed(2) }}
                   </p>
                 </div>
               </div>
 
-              <v-divider class="my-6"></v-divider>
+              <UiSeparator class="my-6" />
 
               <!-- Order Summary Section -->
-              <div class="order-summary-section mb-4">
+              <div class="mb-4">
                 <!-- Subtotal -->
-                <div class="d-flex justify-space-between mb-2">
-                  <span class="text-body-2 text-grey-darken-1">Subtotal</span>
-                  <span class="text-body-1 font-weight-medium">
+                <div class="mb-2 flex justify-between">
+                  <span class="text-sm text-muted-foreground">Subtotal</span>
+                  <span class="text-base font-medium">
                     ${{ calculateOrderSubtotal(order).toFixed(2) }}
                   </span>
                 </div>
@@ -258,787 +217,685 @@
                 <!-- Voucher Discount (if applied) -->
                 <div v-if="order.voucher && order.voucher.code" class="mb-2">
                   <div
-                    class="d-flex justify-space-between align-center p-2 rounded"
-                    style="background: rgba(76, 175, 80, 0.08)"
+                    class="flex items-center justify-between rounded bg-success/10 p-2"
                   >
-                    <div class="d-flex align-center">
-                      <v-icon
-                        icon="mdi-ticket-percent"
-                        color="success"
-                        size="small"
-                        class="mr-2"
-                      ></v-icon>
+                    <div class="flex items-center">
+                      <TicketPercent class="mr-2 h-4 w-4 shrink-0 text-success" />
                       <div>
-                        <span class="text-body-2 text-grey-darken-2"
-                          >Discount</span
-                        >
-                        <v-chip
-                          size="x-small"
-                          color="success"
-                          variant="flat"
-                          class="ml-2"
-                        >
+                        <span class="text-sm text-muted-foreground">Discount</span>
+                        <UiBadge variant="success" class="ml-2 px-1.5 py-0 text-[10px]">
                           {{ order.voucher.code }}
-                        </v-chip>
+                        </UiBadge>
                       </div>
                     </div>
-                    <span class="text-body-1 font-weight-bold text-success">
+                    <span class="text-base font-bold text-success">
                       -${{ (order.voucher.discountAmount / 24000).toFixed(2) }}
                     </span>
                   </div>
                 </div>
 
                 <!-- Total -->
-                <v-divider class="my-2"></v-divider>
-                <div class="d-flex justify-space-between align-center">
-                  <span class="text-h6 font-weight-bold text-customblack"
-                    >Total</span
-                  >
-                  <span class="text-h5 font-weight-bold text-waterblue">
+                <UiSeparator class="my-2" />
+                <div class="flex items-center justify-between">
+                  <span class="text-lg font-bold text-foreground">Total</span>
+                  <span class="text-2xl font-bold text-waterblue">
                     ${{ (order.total / 24000).toFixed(2) }}
                   </span>
                 </div>
               </div>
 
-              <div class="d-flex justify-space-between align-center">
-                <v-btn
-                  variant="outlined"
-                  color="waterblue"
-                  size="large"
-                  rounded="lg"
+              <div class="flex items-center justify-between">
+                <UiButton
+                  tag="NuxtLink"
                   :to="`/order/status/${order.orderId}`"
-                  class="font-weight-bold"
+                  variant="outline"
+                  size="lg"
+                  class="rounded-lg border-waterblue font-bold text-waterblue hover:bg-waterblue/10 hover:text-waterblue"
                 >
-                  <v-icon start class="mr-2">mdi-eye</v-icon>
+                  <Eye class="mr-2 h-5 w-5" />
                   View Details
-                </v-btn>
+                </UiButton>
               </div>
-            </v-card-text>
-          </v-card>
+            </div>
+          </div>
         </div>
 
         <!-- No Orders Message -->
-        <div v-else class="text-center pa-12">
-          <v-icon size="80" color="grey-lighten-2" class="mb-6"
-            >mdi-package-variant</v-icon
-          >
-          <h3 class="text-h5 font-weight-bold text-customblack mb-3">
-            No orders yet
-          </h3>
-          <p class="text-body-1 text-grey-darken-1 mb-6 max-width-400 mx-auto">
+        <div v-else class="p-12 text-center">
+          <Package class="mx-auto mb-6 h-20 w-20 text-muted-foreground/40" />
+          <h3 class="mb-3 text-2xl font-bold text-foreground">No orders yet</h3>
+          <p class="mx-auto mb-6 max-w-[400px] text-base text-muted-foreground">
             You haven't placed any orders yet. Start shopping to see your order
             history here.
           </p>
-          <v-btn
-            color="waterblue"
-            variant="elevated"
-            size="large"
-            rounded="lg"
+          <UiButton
+            tag="NuxtLink"
             to="/"
-            class="font-weight-bold text-white"
+            size="lg"
+            class="rounded-lg bg-waterblue font-bold text-white shadow hover:bg-waterblue/90"
           >
-            <v-icon start class="mr-2">mdi-shopping</v-icon>
+            <ShoppingBag class="mr-2 h-5 w-5" />
             Start Shopping
-          </v-btn>
+          </UiButton>
         </div>
       </div>
 
       <!-- Wishlist Section -->
-      <div v-if="activeTab === 'favorites'" class="content-section">
-        <div class="d-flex align-center mb-6">
-          <v-icon
-            icon="mdi-heart"
-            size="32"
-            color="waterblue"
-            class="mr-3"
-          ></v-icon>
-          <h2 class="text-h4 font-weight-bold text-customblack">My Favorites</h2>
+      <div v-if="activeTab === 'favorites'" class="min-h-[80vh]">
+        <div class="mb-6 flex items-center">
+          <Heart class="mr-3 h-8 w-8 text-waterblue" />
+          <h2 class="text-3xl font-bold text-foreground">My Favorites</h2>
         </div>
 
         <!-- Loading State -->
-        <div v-if="loadingFavorites" class="text-center pa-12">
-          <v-progress-circular
-            indeterminate
-            color="waterblue"
-            size="64"
-          ></v-progress-circular>
-          <p class="mt-6 text-body-1 text-grey-darken-1">
+        <div v-if="loadingFavorites" class="p-12 text-center">
+          <UiSpinner size="xl" class="mx-auto text-waterblue" />
+          <p class="mt-6 text-base text-muted-foreground">
             Loading favorites...
           </p>
         </div>
 
         <!-- Favorites List -->
         <div v-else-if="validFavorites.length > 0">
-          <v-row>
-            <v-col
+          <div class="grid grid-cols-12 gap-4">
+            <div
               v-for="favorite in validFavorites"
               :key="favorite._id"
-              cols="12"
-              sm="6"
-              md="4"
-              lg="3"
+              class="col-span-12 sm:col-span-6 md:col-span-4 lg:col-span-3"
             >
-              <v-card
-                elevation="3"
-                class="h-100 rounded-xl overflow-hidden transition-all duration-300 hover:elevation-6"
-                style="
-                  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-                "
+              <div
+                class="group flex h-full flex-col overflow-hidden rounded-xl bg-gradient-to-br from-white to-[#f8f9fa] shadow transition-all duration-300 hover:shadow-lg dark:from-card dark:to-card"
               >
-                <div class="position-relative book-cover-container">
-                  <div class="book-cover-wrapper">
+                <div class="relative flex min-h-[280px] items-center justify-center p-5">
+                  <div
+                    class="relative aspect-[2/3] w-[70%] max-w-[180px] overflow-hidden shadow-lg transition-all duration-[400ms] group-hover:-translate-y-2 group-hover:scale-105 group-hover:shadow-2xl"
+                  >
                     <img
                       :src="
                         favorite.bookId?.cover_url ||
                         'https://via.placeholder.com/200x300'
                       "
                       :alt="favorite.bookId?.title"
-                      class="book-cover-image"
+                      class="block h-full w-full bg-muted object-cover transition-transform duration-300"
                     />
                   </div>
                 </div>
-                <v-card-text class="pa-6">
-                  <h4
-                    class="text-subtitle-1 font-weight-bold text-customblack mb-2 text-truncate"
-                  >
+                <div class="p-6">
+                  <h4 class="mb-2 truncate text-base font-bold text-foreground">
                     {{ favorite.bookId?.title }}
                   </h4>
-                  <p class="text-body-2 text-grey-darken-1 mb-3">
+                  <p class="mb-3 text-sm text-muted-foreground">
                     by {{ favorite.bookId?.author }}
                   </p>
-                  <p class="text-h6 font-weight-bold text-waterblue mb-4">
+                  <p class="mb-4 text-lg font-bold text-waterblue">
                     ${{ favorite.bookId?.price?.toFixed(2) }}
                   </p>
-                </v-card-text>
-                <v-card-actions class="pa-6 pt-0">
-                  <v-btn
-                    color="waterblue"
-                    variant="flat"
-                    size="large"
-                    block
-                    rounded="lg"
+                </div>
+                <div class="mt-auto flex flex-col items-center p-6 pt-0">
+                  <UiButton
+                    tag="NuxtLink"
                     :to="`/details/${favorite.bookId?._id}`"
-                    class="font-weight-bold text-white mb-3"
+                    block
+                    size="lg"
+                    class="mb-3 rounded-lg bg-waterblue font-bold text-white hover:bg-waterblue/90"
                   >
-                    <v-icon start class="mr-2">mdi-eye</v-icon>
+                    <Eye class="mr-2 h-5 w-5" />
                     View Details
-                  </v-btn>
-                  <v-btn
-                    icon="mdi-heart"
-                    color="red"
-                    variant="text"
-                    size="large"
+                  </UiButton>
+                  <UiButton
+                    variant="ghost"
+                    size="icon"
+                    class="text-destructive transition-all duration-300 hover:scale-110 hover:text-destructive"
+                    aria-label="Remove from favorites"
                     @click="removeFromFavorites(favorite.bookId?._id)"
-                    class="transition-all duration-300 hover:scale-110"
-                  ></v-btn>
-                </v-card-actions>
-              </v-card>
-            </v-col>
-          </v-row>
+                  >
+                    <Heart class="h-5 w-5 fill-current" />
+                  </UiButton>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- No Favorites Message -->
-        <div v-else class="text-center pa-12">
-          <v-icon size="80" color="grey-lighten-2" class="mb-6"
-            >mdi-heart</v-icon
-          >
-          <h3 class="text-h5 font-weight-bold text-customblack mb-3">
+        <div v-else class="p-12 text-center">
+          <Heart class="mx-auto mb-6 h-20 w-20 text-muted-foreground/40" />
+          <h3 class="mb-3 text-2xl font-bold text-foreground">
             No favorites yet
           </h3>
-          <p class="text-body-1 text-grey-darken-1 mb-6 max-width-400 mx-auto">
+          <p class="mx-auto mb-6 max-w-[400px] text-base text-muted-foreground">
             You haven't added any books to your favorite yet. Start exploring to
             find your favorite books!
           </p>
-          <v-btn
-            color="waterblue"
-            variant="elevated"
-            size="large"
-            rounded="lg"
+          <UiButton
+            tag="NuxtLink"
             to="/"
-            class="font-weight-bold text-white"
+            size="lg"
+            class="rounded-lg bg-waterblue font-bold text-white shadow hover:bg-waterblue/90"
           >
-            <v-icon start class="mr-2">mdi-magnify</v-icon>
+            <Search class="mr-2 h-5 w-5" />
             Browse Books
-          </v-btn>
+          </UiButton>
         </div>
       </div>
 
       <!-- Reviews Section -->
-      <div v-if="activeTab === 'reviews'" class="content-section">
-        <div class="d-flex align-center mb-6">
-          <v-icon
-            icon="mdi-star"
-            size="32"
-            color="waterblue"
-            class="mr-3"
-          ></v-icon>
-          <h2 class="text-h4 font-weight-bold text-customblack">My Reviews</h2>
+      <div v-if="activeTab === 'reviews'" class="min-h-[80vh]">
+        <div class="mb-6 flex items-center">
+          <Star class="mr-3 h-8 w-8 text-waterblue" />
+          <h2 class="text-3xl font-bold text-foreground">My Reviews</h2>
         </div>
 
         <!-- Loading State -->
-        <div v-if="loadingReviews" class="text-center pa-12">
-          <v-progress-circular
-            indeterminate
-            color="waterblue"
-            size="64"
-          ></v-progress-circular>
-          <p class="mt-6 text-body-1 text-grey-darken-1">Loading reviews...</p>
+        <div v-if="loadingReviews" class="p-12 text-center">
+          <UiSpinner size="xl" class="mx-auto text-waterblue" />
+          <p class="mt-6 text-base text-muted-foreground">Loading reviews...</p>
         </div>
 
         <!-- Reviews List -->
-        <div v-else-if="userReviews && userReviews.length > 0">
-          <v-card
-            v-for="review in userReviews"
+        <div v-else-if="populatedUserReviews && populatedUserReviews.length > 0">
+          <div
+            v-for="review in populatedUserReviews"
             :key="review._id"
-            elevation="3"
-            class="mb-6 rounded-xl overflow-hidden transition-all duration-300 hover:elevation-6"
-            style="
-              background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            "
+            class="mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-white to-[#f8f9fa] shadow transition-all duration-300 hover:shadow-lg dark:from-card dark:to-card"
           >
-            <v-card-text class="pa-8">
-              <div class="d-flex align-start mb-6">
-                <div class="flex-shrink-0 mr-6">
-                  <v-img
+            <div class="p-8">
+              <div class="mb-6 flex items-start">
+                <div class="mr-6 shrink-0">
+                  <img
                     :src="
                       review?.bookId?.cover_url ||
                       'https://via.placeholder.com/80x120'
                     "
-                    width="80"
-                    height="120"
-                    class="rounded-lg elevation-3 transition-transform hover:scale-105"
-                    cover
-                    :aspect-ratio="2 / 3"
-                  >
-                    <template v-slot:placeholder>
-                      <div
-                        class="d-flex align-center justify-center fill-height bg-grey-lighten-3"
-                      >
-                        <v-icon color="grey-lighten-1" size="24"
-                          >mdi-book-open-variant</v-icon
-                        >
-                      </div>
-                    </template>
-                  </v-img>
+                    :alt="review.bookId?.title || 'Book cover'"
+                    class="h-[120px] w-20 rounded-lg bg-muted object-cover shadow-md transition-transform duration-300 hover:scale-105"
+                  />
                 </div>
-                <div class="flex-grow-1">
-                  <div class="d-flex justify-space-between align-start mb-3">
+                <div class="grow">
+                  <div class="mb-3 flex items-start justify-between">
                     <div>
-                      <h3
-                        class="text-h5 font-weight-bold text-customblack mb-2"
-                      >
+                      <h3 class="mb-2 text-2xl font-bold text-foreground">
                         {{ review.bookId?.title || "Unknown Book" }}
                       </h3>
-                      <p class="text-body-2 text-grey-darken-1 mb-3">
+                      <p class="mb-3 text-sm text-muted-foreground">
                         by
                         {{
                           review.bookId?.authors?.join(", ") || "Unknown Author"
                         }}
                       </p>
                     </div>
-                    <v-btn
-                      icon
-                      variant="text"
-                      color="error"
-                      size="large"
-                      @click="
-                        confirmDeleteReview(review._id, review.bookId?.title)
-                      "
-                      class="transition-all duration-300 hover:scale-110"
-                    >
-                      <v-icon>mdi-delete</v-icon>
-                      <v-tooltip activator="parent" location="top">
-                        Delete Review
-                      </v-tooltip>
-                    </v-btn>
+                    <UiTooltipProvider :delay-duration="200">
+                      <UiTooltip>
+                        <UiTooltipTrigger as-child>
+                          <UiButton
+                            variant="ghost"
+                            size="icon"
+                            class="text-destructive transition-all duration-300 hover:scale-110 hover:text-destructive"
+                            aria-label="Delete Review"
+                            @click="
+                              confirmDeleteReview(
+                                review._id,
+                                review.bookId?.title
+                              )
+                            "
+                          >
+                            <Trash2 class="h-5 w-5" />
+                          </UiButton>
+                        </UiTooltipTrigger>
+                        <UiTooltipContent>Delete Review</UiTooltipContent>
+                      </UiTooltip>
+                    </UiTooltipProvider>
                   </div>
 
-                  <div class="d-flex align-center mb-4">
-                    <v-rating
-                      :model-value="review.rating"
-                      readonly
-                      size="small"
-                      color="amber"
-                      density="compact"
-                    ></v-rating>
-                    <span class="text-caption text-grey-darken-1 ml-3">
-                      <v-icon
-                        icon="mdi-calendar"
-                        size="14"
-                        class="mr-1"
-                      ></v-icon>
-                      {{ new Date(review.createdAt).toLocaleDateString() }}
+                  <div class="mb-4 flex items-center">
+                    <UiRating :model-value="review.rating" readonly :size="16" />
+                    <span
+                      class="ml-3 flex items-center text-xs text-muted-foreground"
+                    >
+                      <Calendar class="mr-1 h-3.5 w-3.5" />
+                      {{ new Date(review.createdAt as string).toLocaleDateString() }}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <v-divider class="mb-6"></v-divider>
+              <UiSeparator class="mb-6" />
 
-              <div
-                class="bg-grey-lighten-5 pa-6 rounded-xl border-l-4 border-waterblue"
-              >
-                <p class="text-body-1 mb-0 text-customblack">
+              <div class="rounded-xl border-l-4 border-waterblue bg-muted/50 p-6">
+                <p class="mb-0 text-base text-foreground">
                   {{ review.comment }}
                 </p>
               </div>
-            </v-card-text>
-          </v-card>
+            </div>
+          </div>
         </div>
 
         <!-- No Reviews Message -->
-        <div v-else class="text-center pa-12">
-          <v-icon size="80" color="grey-lighten-2" class="mb-6"
-            >mdi-star-outline</v-icon
-          >
-          <h3 class="text-h5 font-weight-bold text-customblack mb-3">
+        <div v-else class="p-12 text-center">
+          <Star class="mx-auto mb-6 h-20 w-20 text-muted-foreground/40" />
+          <h3 class="mb-3 text-2xl font-bold text-foreground">
             No reviews yet
           </h3>
-          <p class="text-body-1 text-grey-darken-1 mb-6 max-width-400 mx-auto">
+          <p class="mx-auto mb-6 max-w-[400px] text-base text-muted-foreground">
             You haven't written any reviews yet. Start reading and share your
             thoughts!
           </p>
-          <v-btn
-            color="waterblue"
-            variant="elevated"
-            size="large"
-            rounded="lg"
+          <UiButton
+            tag="NuxtLink"
             to="/"
-            class="font-weight-bold text-white"
+            size="lg"
+            class="rounded-lg bg-waterblue font-bold text-white shadow hover:bg-waterblue/90"
           >
-            <v-icon start class="mr-2">mdi-magnify</v-icon>
+            <Search class="mr-2 h-5 w-5" />
             Browse Books
-          </v-btn>
+          </UiButton>
         </div>
       </div>
 
       <!-- Change Password Section -->
-      <div v-if="activeTab === 'password'" class="content-section">
-        <div class="d-flex align-center mb-6">
-          <v-icon
-            icon="mdi-lock"
-            size="32"
-            color="waterblue"
-            class="mr-3"
-          ></v-icon>
-          <h2 class="text-h4 font-weight-bold text-customblack">
-            Change Password
-          </h2>
+      <div v-if="activeTab === 'password'" class="min-h-[80vh]">
+        <div class="mb-6 flex items-center">
+          <Lock class="mr-3 h-8 w-8 text-waterblue" />
+          <h2 class="text-3xl font-bold text-foreground">Change Password</h2>
         </div>
 
-        <v-card
-          elevation="4"
-          class="rounded-xl overflow-hidden"
-          style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
+        <div
+          class="overflow-hidden rounded-xl bg-gradient-to-br from-white to-[#f8f9fa] shadow-md dark:from-card dark:to-card"
         >
-          <v-card-text class="pa-8">
-            <v-form ref="passwordForm" v-model="passwordFormValid">
-              <v-text-field
+          <div class="p-8">
+            <form @submit.prevent="updatePassword">
+              <UiInput
                 v-model="passwordForm.current"
                 label="Current Password"
                 type="password"
-                variant="outlined"
-                density="comfortable"
-                rounded="lg"
-                color="waterblue"
-                class="mb-6"
-                :rules="[(v) => !!v || 'Current password is required']"
                 required
-              ></v-text-field>
+                :error-message="passwordErrors.current"
+                wrapper-class="mb-6"
+                @focus="passwordErrors.current = ''"
+              />
 
-              <v-text-field
+              <UiInput
                 v-model="passwordForm.new"
                 label="New Password"
                 type="password"
-                variant="outlined"
-                density="comfortable"
-                rounded="lg"
-                color="waterblue"
-                class="mb-6"
-                :rules="[
-                  (v) => !!v || 'New password is required',
-                  (v) =>
-                    v.length >= 6 || 'Password must be at least 6 characters',
-                ]"
                 required
-              ></v-text-field>
+                :error-message="passwordErrors.new"
+                wrapper-class="mb-6"
+                @focus="passwordErrors.new = ''"
+              />
 
-              <v-text-field
+              <UiInput
                 v-model="passwordForm.confirm"
                 label="Confirm New Password"
                 type="password"
-                variant="outlined"
-                density="comfortable"
-                rounded="lg"
-                color="waterblue"
-                class="mb-6"
-                :rules="[
-                  (v) => !!v || 'Please confirm your password',
-                  (v) => v === passwordForm.new || 'Passwords do not match',
-                ]"
                 required
-              ></v-text-field>
+                :error-message="passwordErrors.confirm"
+                wrapper-class="mb-6"
+                @focus="passwordErrors.confirm = ''"
+              />
 
-              <v-btn
-                color="waterblue"
-                size="large"
-                rounded="lg"
-                class="font-weight-bold text-white"
-                elevation="2"
+              <UiButton
+                type="submit"
+                size="lg"
                 :loading="changingPassword"
-                :disabled="!passwordFormValid"
-                @click="updatePassword"
+                class="rounded-lg bg-waterblue font-bold text-white shadow hover:bg-waterblue/90"
               >
-                <v-icon start class="mr-2">mdi-lock-reset</v-icon>
+                <KeyRound class="mr-2 h-5 w-5" />
                 Update Password
-              </v-btn>
-            </v-form>
-          </v-card-text>
-        </v-card>
+              </UiButton>
+            </form>
+          </div>
+        </div>
       </div>
-    </v-container>
+    </div>
   </div>
 </template>
 
-<script>
-import { mapState, mapActions } from "vuex";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
+import { useFavoriteStore } from "@/stores/favorite";
+import { useOrderStore } from "@/stores/order";
+import { useReviewStore } from "@/stores/review";
+import type { Component } from "vue";
+import {
+  Ban,
+  Calendar,
+  Camera,
+  CheckCircle2,
+  CircleUser,
+  Clock,
+  DollarSign,
+  Eye,
+  Heart,
+  HelpCircle,
+  KeyRound,
+  Lock,
+  Mail,
+  Menu,
+  Package,
+  Search,
+  ShieldCheck,
+  ShoppingBag,
+  Star,
+  TicketPercent,
+  Trash2,
+  Truck,
+  User,
+  XCircle,
+} from "lucide-vue-next";
 import { uploadAvatar } from "@/api/userApi";
+import type { Book, Order, OrderItem, Review, SnackbarPayload, User as UserType } from "@/types";
 
-export default {
-  name: "ProfileContent",
-  props: {
-    activeTab: {
-      type: String,
-      default: "personal",
-    },
-    loadingOrders: {
-      type: Boolean,
-      default: false,
-    },
-    loadingFavorites: {
-      type: Boolean,
-      default: false,
-    },
-    loadingReviews: {
-      type: Boolean,
-      default: false,
-    },
-  },
-  emits: ["toggle-drawer", "show-snackbar"],
-  data() {
-    return {
-      passwordForm: {
-        current: "",
-        new: "",
-        confirm: "",
-      },
-      passwordFormValid: false,
-      changingPassword: false,
-      uploadingAvatar: false,
-    };
-  },
-  computed: {
-    ...mapState("auth", ["currentUser"]),
-    ...mapState("order", ["userOrders"]),
-    ...mapState("favorite", ["favorites"]),
-    ...mapState("review", ["userReviews"]),
-    userOrdersPaid() {
-      return this.userOrders
-        .map((order) => {
-          if (order.status.toLowerCase() !== "pending") {
-            return order;
-          }
-        })
-        .filter((order) => order !== undefined);
-    },
-    validFavorites() {
-      return this.favorites.filter(
-        (favorite) => favorite && favorite.bookId && favorite.bookId._id
-      );
-    },
-  },
-  methods: {
-    ...mapActions("favorite", ["toggleFavorites"]),
-    ...mapActions("review", ["deleteReview"]),
-    ...mapActions("auth", ["changePassword"]),
+withDefaults(
+  defineProps<{
+    activeTab?: string;
+    loadingOrders?: boolean;
+    loadingFavorites?: boolean;
+    loadingReviews?: boolean;
+  }>(),
+  {
+    activeTab: "personal",
+    loadingOrders: false,
+    loadingFavorites: false,
+    loadingReviews: false,
+  }
+);
 
-    calculateItemPrice(item) {
-      const basePrice = item.bookId?.price || 0;
-      const quantity = item.quantity || 0;
+const emit = defineEmits<{
+  (e: "toggle-drawer"): void;
+  (e: "show-snackbar", payload: SnackbarPayload): void;
+}>();
 
-      if (item.productType === "ebook") {
-        return basePrice * 0.7 * quantity;
+const authStore = useAuthStore();
+const orderStore = useOrderStore();
+const favoriteStore = useFavoriteStore();
+const reviewStore = useReviewStore();
+
+const { currentUser } = storeToRefs(authStore);
+const { userOrders } = storeToRefs(orderStore);
+const { favorites } = storeToRefs(favoriteStore);
+const { userReviews } = storeToRefs(reviewStore);
+
+const passwordForm = reactive({
+  current: "",
+  new: "",
+  confirm: "",
+});
+const passwordErrors = reactive({
+  current: "",
+  new: "",
+  confirm: "",
+});
+const changingPassword = ref(false);
+const uploadingAvatar = ref(false);
+const avatarInput = ref<HTMLInputElement | null>(null);
+
+// The original template read `currentUser?.isAdmin`, which does not exist on
+// the User model (the real field is `admin`) — behavior preserved as-is.
+const roleLabel = computed(() =>
+  (currentUser.value as any)?.isAdmin ? "Administrator" : "Standard User"
+);
+
+const userOrdersPaid = computed(() =>
+  userOrders.value
+    .map((order) => {
+      if (order.status.toLowerCase() !== "pending") {
+        return order;
       }
+      return undefined;
+    })
+    .filter((order): order is Order => order !== undefined)
+);
 
-      return basePrice * quantity;
-    },
-
-    calculateOrderSubtotal(order) {
-      // Calculate subtotal by adding back discount to total
-      if (order.voucher && order.voucher.discountAmount) {
-        return (order.total + order.voucher.discountAmount) / 24000;
-      }
-      return order.total / 24000;
-    },
-
-    getStatusColor(status) {
-      switch (status?.toLowerCase()) {
-        case "pending":
-          return "warning";
-        case "paid":
-          return "success";
-        case "confirmed":
-          return "info";
-        case "in delivery":
-          return "purple";
-        case "delivered":
-          return "teal";
-        case "cancelled":
-          return "grey";
-        case "failed":
-          return "error";
-        default:
-          return "grey";
-      }
-    },
-    getStatusIcon(status) {
-      switch (status?.toLowerCase()) {
-        case "pending":
-          return "mdi-clock-outline";
-        case "paid":
-          return "mdi-cash-check";
-        case "confirmed":
-          return "mdi-check-circle";
-        case "in delivery":
-          return "mdi-truck-delivery";
-        case "delivered":
-          return "mdi-package-variant-closed";
-        case "cancelled":
-          return "mdi-cancel";
-        case "failed":
-          return "mdi-close-circle";
-        default:
-          return "mdi-help-circle";
-      }
-    },
-    removeFromFavorites(bookId) {
-      this.toggleFavorites(bookId);
-    },
-    confirmDeleteReview(reviewId, bookTitle) {
-      if (
-        confirm(
-          `Are you sure you want to delete your review for "${bookTitle}"? This action cannot be undone.`
-        )
-      ) {
-        this.deleteReview(reviewId);
-      }
-    },
-    async updatePassword() {
-      console.log("updatePassword called");
-      try {
-        // Validate form
-        const { valid } = await this.$refs.passwordForm.validate();
-        console.log("Form validation result:", valid);
-        if (!valid) return;
-
-        this.changingPassword = true;
-        console.log("Starting password change...");
-
-        const result = await this.changePassword({
-          currentPassword: this.passwordForm.current,
-          newPassword: this.passwordForm.new,
-        });
-        console.log("Password change result:", result);
-
-        // Show success message
-        console.log("Emitting success snackbar");
-        this.$emit("show-snackbar", {
-          message: "Password updated successfully!",
-          color: "success",
-        });
-
-        // Reset form
-        this.passwordForm = {
-          current: "",
-          new: "",
-          confirm: "",
-        };
-        this.$refs.passwordForm.reset();
-      } catch (error) {
-        console.error("Error changing password:", error);
-
-        // Show error message
-        console.log("Emitting error snackbar");
-        this.$emit("show-snackbar", {
-          message:
-            error.message ||
-            error.msg ||
-            "Failed to update password. Please try again.",
-          color: "error",
-        });
-      } finally {
-        this.changingPassword = false;
-      }
-    },
-    async handleAvatarUpload(event) {
-      const file = event.target.files[0];
-      console.log(file, "Selected file for avatar upload");
-      if (!file) return;
-
-      // Validate file type
-      if (!file.type.startsWith("image/")) {
-        this.$emit("show-snackbar", {
-          message: "Please select a valid image file",
-          color: "error",
-        });
-        return;
-      }
-
-      // Validate file size (5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        this.$emit("show-snackbar", {
-          message: "File size must be less than 5MB",
-          color: "error",
-        });
-        return;
-      }
-
-      try {
-        this.uploadingAvatar = true;
-
-        // Gửi file lên API với type='avatar'
-        const response = await uploadAvatar(file);
-
-        // Vì BE trả về 1 object user sau khi update avatar
-        const updatedUser = response.data.data;
-
-        if (updatedUser && updatedUser.avatar_url) {
-          // Cập nhật store
-          this.$store.commit("auth/loginSuccess", {
-            ...this.currentUser,
-            avatar_url: updatedUser.avatar_url,
-          });
-
-          this.$emit("show-snackbar", {
-            message: "Avatar updated successfully!",
-            color: "success",
-          });
-        }
-      } catch (error) {
-        console.error("Avatar upload error:", error);
-        this.$emit("show-snackbar", {
-          message: error.response?.data?.msg || "Failed to upload avatar",
-          color: "error",
-        });
-      } finally {
-        this.uploadingAvatar = false;
-        // Reset file input
-        this.$refs.avatarInput.value = "";
-      }
-    },
-
-    removeAvatar() {
-      if (confirm("Are you sure you want to remove your avatar?")) {
-        // Update current user in store to remove avatar
-        this.$store.commit("auth/loginSuccess", {
-          ...this.currentUser,
-          avatar_url: null,
-        });
-
-        this.$emit("show-snackbar", {
-          message: "Avatar removed successfully!",
-          color: "success",
-        });
-      }
-    },
-  },
+// Favorites come back from the API with a populated `bookId` document, even
+// though the store types them as Book[] — cast to the actual runtime shape.
+// (`author` mirrors the original template; the Book model only has `authors`.)
+type PopulatedFavorite = {
+  _id: string;
+  bookId: (Book & { author?: string }) | null;
 };
-</script>
 
-<style scoped>
-.content-section {
-  min-height: 80vh;
+const validFavorites = computed(() =>
+  (favorites.value as unknown as PopulatedFavorite[]).filter(
+    (favorite) => favorite && favorite.bookId && favorite.bookId._id
+  )
+);
+
+// User reviews come back with a populated `bookId` document.
+type PopulatedReview = Omit<Review, "bookId"> & { bookId?: Book | null };
+
+const populatedUserReviews = computed(
+  () => userReviews.value as unknown as PopulatedReview[]
+);
+
+function calculateItemPrice(item: OrderItem): number {
+  const basePrice = item.bookId?.price || 0;
+  const quantity = item.quantity || 0;
+
+  if (item.productType === "ebook") {
+    return basePrice * 0.7 * quantity;
+  }
+
+  return basePrice * quantity;
 }
 
-.profile-content {
-  background: linear-gradient(115deg, #ffffff, #d4dfed);
-  min-height: 100vh;
+function calculateOrderSubtotal(order: Order): number {
+  // Calculate subtotal by adding back discount to total
+  if (order.voucher && order.voucher.discountAmount) {
+    return (order.total + order.voucher.discountAmount) / 24000;
+  }
+  return order.total / 24000;
 }
 
-.book-cover-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  min-height: 280px;
-  position: relative;
-}
+type BadgeVariant =
+  | "default"
+  | "secondary"
+  | "destructive"
+  | "success"
+  | "warning"
+  | "info"
+  | "outline"
+  | "muted";
 
-.book-cover-wrapper {
-  width: 70%;
-  max-width: 180px;
-  aspect-ratio: 2/3;
-  position: relative;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.book-cover-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.3s ease;
-}
-
-.v-card:hover .book-cover-wrapper {
-  transform: translateY(-8px) scale(1.05);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
-}
-
-@media (max-width: 960px) {
-  .profile-content {
-    padding-top: 64px;
+function getStatusVariant(status?: string): BadgeVariant {
+  switch (status?.toLowerCase()) {
+    case "pending":
+      return "warning";
+    case "paid":
+      return "success";
+    case "confirmed":
+      return "info";
+    case "in delivery":
+    case "delivered":
+      return "default"; // colored via getStatusClass (purple / teal)
+    case "cancelled":
+      return "muted";
+    case "failed":
+      return "destructive";
+    default:
+      return "muted";
   }
 }
 
-.transition-all {
-  transition: all 0.3s ease;
+function getStatusClass(status?: string): string {
+  switch (status?.toLowerCase()) {
+    case "in delivery":
+      return "bg-purple-600 text-white";
+    case "delivered":
+      return "bg-teal-600 text-white";
+    default:
+      return "";
+  }
 }
 
-.duration-300 {
-  transition-duration: 300ms;
+function getStatusIcon(status?: string): Component {
+  switch (status?.toLowerCase()) {
+    case "pending":
+      return Clock;
+    case "paid":
+      return DollarSign;
+    case "confirmed":
+      return CheckCircle2;
+    case "in delivery":
+      return Truck;
+    case "delivered":
+      return Package;
+    case "cancelled":
+      return Ban;
+    case "failed":
+      return XCircle;
+    default:
+      return HelpCircle;
+  }
 }
 
-.hover\:elevation-6:hover {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+function removeFromFavorites(bookId?: string) {
+  if (!bookId) return;
+  favoriteStore.toggleFavorites(bookId);
 }
 
-.hover\:scale-105:hover {
-  transform: scale(1.05);
+function confirmDeleteReview(reviewId: string, bookTitle?: string) {
+  if (
+    confirm(
+      `Are you sure you want to delete your review for "${bookTitle}"? This action cannot be undone.`
+    )
+  ) {
+    reviewStore.deleteReview(reviewId);
+  }
 }
 
-.hover\:scale-110:hover {
-  transform: scale(1.1);
+function validatePasswordForm(): boolean {
+  passwordErrors.current = passwordForm.current
+    ? ""
+    : "Current password is required";
+  passwordErrors.new = !passwordForm.new
+    ? "New password is required"
+    : passwordForm.new.length < 6
+      ? "Password must be at least 6 characters"
+      : "";
+  passwordErrors.confirm = !passwordForm.confirm
+    ? "Please confirm your password"
+    : passwordForm.confirm !== passwordForm.new
+      ? "Passwords do not match"
+      : "";
+
+  return (
+    !passwordErrors.current && !passwordErrors.new && !passwordErrors.confirm
+  );
 }
 
-.book-image-container {
-  min-width: 60px;
-  display: flex;
-  align-items: center;
+async function updatePassword() {
+  try {
+    // Validate form
+    if (!validatePasswordForm()) return;
+
+    changingPassword.value = true;
+
+    await authStore.changePassword({
+      currentPassword: passwordForm.current,
+      newPassword: passwordForm.new,
+    });
+
+    // Show success message
+    emit("show-snackbar", {
+      message: "Password updated successfully!",
+      color: "success",
+    });
+
+    // Reset form
+    passwordForm.current = "";
+    passwordForm.new = "";
+    passwordForm.confirm = "";
+    passwordErrors.current = "";
+    passwordErrors.new = "";
+    passwordErrors.confirm = "";
+  } catch (error: any) {
+    console.error("Error changing password:", error);
+
+    // Show error message
+    emit("show-snackbar", {
+      message:
+        error.message ||
+        error.msg ||
+        "Failed to update password. Please try again.",
+      color: "error",
+    });
+  } finally {
+    changingPassword.value = false;
+  }
 }
 
-.book-image-container .v-img {
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+async function handleAvatarUpload(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+
+  // Validate file type
+  if (!file.type.startsWith("image/")) {
+    emit("show-snackbar", {
+      message: "Please select a valid image file",
+      color: "error",
+    });
+    return;
+  }
+
+  // Validate file size (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    emit("show-snackbar", {
+      message: "File size must be less than 5MB",
+      color: "error",
+    });
+    return;
+  }
+
+  try {
+    uploadingAvatar.value = true;
+
+    // Gửi file lên API với type='avatar'
+    const response = await uploadAvatar(file);
+
+    // Vì BE trả về 1 object user sau khi update avatar
+    const updatedUser = response.data.data;
+
+    if (updatedUser && updatedUser.avatar_url) {
+      // Cập nhật store
+      authStore.loginSuccess({
+        ...(currentUser.value as UserType),
+        avatar_url: updatedUser.avatar_url,
+      });
+
+      emit("show-snackbar", {
+        message: "Avatar updated successfully!",
+        color: "success",
+      });
+    }
+  } catch (error: any) {
+    console.error("Avatar upload error:", error);
+    emit("show-snackbar", {
+      message: error.response?.data?.msg || "Failed to upload avatar",
+      color: "error",
+    });
+  } finally {
+    uploadingAvatar.value = false;
+    // Reset file input
+    if (avatarInput.value) {
+      avatarInput.value.value = "";
+    }
+  }
 }
 
-.max-width-400 {
-  max-width: 400px;
-}
+function removeAvatar() {
+  if (confirm("Are you sure you want to remove your avatar?")) {
+    // Update current user in store to remove avatar
+    authStore.loginSuccess({
+      ...(currentUser.value as UserType),
+      avatar_url: null,
+    });
 
-.transition-transform {
-  transition: transform 0.3s ease;
+    emit("show-snackbar", {
+      message: "Avatar removed successfully!",
+      color: "success",
+    });
+  }
 }
-</style>
+</script>

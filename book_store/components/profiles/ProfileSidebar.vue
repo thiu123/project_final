@@ -1,194 +1,172 @@
 <template>
-  <v-navigation-drawer
-    :model-value="drawer"
-    @update:model-value="$emit('update:drawer', $event)"
-    :permanent="$vuetify.display.mdAndUp"
-    :temporary="$vuetify.display.smAndDown"
-    class="profile-sidebar"
-    style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)"
-  >
-    <!-- User Profile Header -->
-    <div class="pa-6 text-center border-b border-grey-lighten-3">
-      <div class="mb-4">
-        <v-avatar size="100" class="elevation-4 border-4 border-white">
-          <v-img
-            :src="
-              currentUser?.avatar_url ||
-              'https://cdn.vuetifyjs.com/images/john.jpg'
-            "
-            alt="User Avatar"
-            cover
-          />
-        </v-avatar>
+  <div>
+    <!-- Mobile scrim (temporary drawer behavior on small screens) -->
+    <div
+      v-if="drawer"
+      class="fixed inset-0 z-40 bg-black/50 md:hidden"
+      aria-hidden="true"
+      @click="$emit('update:drawer', false)"
+    ></div>
+
+    <aside
+      class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto border-r border-waterblue/10 bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] transition-transform duration-300 dark:from-card dark:to-background md:sticky md:top-0 md:z-auto md:h-screen md:w-64 md:shrink-0 md:translate-x-0"
+      :class="drawer ? 'translate-x-0' : '-translate-x-full'"
+    >
+      <!-- User Profile Header -->
+      <div class="border-b border-border p-6 text-center">
+        <div class="mb-4 flex justify-center">
+          <UiAvatar
+            class="h-[100px] w-[100px] border-4 border-white text-3xl shadow-md dark:border-muted"
+          >
+            <UiAvatarImage
+              :src="currentUser?.avatar_url || ''"
+              alt="User Avatar"
+            />
+            <UiAvatarFallback>
+              <CircleUser class="h-10 w-10 text-muted-foreground" />
+            </UiAvatarFallback>
+          </UiAvatar>
+        </div>
+        <h3 class="mb-2 text-2xl font-bold text-foreground">
+          {{ currentUser?.username || "User" }}
+        </h3>
+        <p class="mb-3 text-sm text-muted-foreground">
+          {{ currentUser?.email || "No email" }}
+        </p>
       </div>
-      <h3 class="text-h5 font-weight-bold text-customblack mb-2">
-        {{ currentUser?.username || "User" }}
-      </h3>
-      <p class="text-body-2 text-grey-darken-1 mb-3">
-        {{ currentUser?.email || "No email" }}
-      </p>
-    </div>
 
-    <!-- Navigation Menu -->
-    <v-list nav density="comfortable" class="pa-4">
-      <v-list-item
-        v-for="item in menuItems"
-        :key="item.value"
-        :value="item.value"
-        :active="activeTab === item.value"
-        @click="$emit('update:activeTab', item.value)"
-        rounded="xl"
-        class="mb-2 transition-all duration-300"
-        :class="
-          activeTab === item.value
-            ? 'bg-waterblue text-white elevation-2'
-            : 'hover:bg-grey-lighten-4'
-        "
-      >
-        <template v-slot:prepend>
-          <v-icon
-            :icon="item.icon"
-            size="20"
+      <!-- Navigation Menu -->
+      <nav class="p-4">
+        <button
+          v-for="item in menuItems"
+          :key="item.value"
+          type="button"
+          class="mb-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all duration-300"
+          :class="
+            activeTab === item.value
+              ? 'bg-waterblue text-white shadow'
+              : 'text-foreground hover:bg-muted'
+          "
+          @click="$emit('update:activeTab', item.value)"
+        >
+          <component
+            :is="item.icon"
+            class="h-5 w-5 shrink-0"
             :class="
-              activeTab === item.value ? 'text-white' : 'text-grey-darken-1'
+              activeTab === item.value ? 'text-white' : 'text-muted-foreground'
             "
-          ></v-icon>
-        </template>
-        <v-list-item-title class="text-body-1 font-weight-medium">
-          {{ item.title }}
-        </v-list-item-title>
-        <template v-slot:append>
-          <v-icon
+          />
+          <span class="flex-1 text-base font-medium">{{ item.title }}</span>
+          <ChevronRight
             v-if="activeTab === item.value"
-            icon="mdi-chevron-right"
-            size="16"
-            class="text-white"
-          ></v-icon>
-        </template>
-      </v-list-item>
-    </v-list>
+            class="h-4 w-4 shrink-0 text-white"
+          />
+        </button>
+      </nav>
 
-    <!-- Quick Stats Section -->
-    <div class="pa-4 mt-auto">
-      <v-card
-        elevation="2"
-        rounded="xl"
-        class="pa-4"
-        style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)"
-      >
-        <h4 class="text-subtitle-1 font-weight-bold text-customblack mb-3">
-          Quick Stats
-        </h4>
-        <div class="d-flex justify-space-between align-center mb-3">
-          <div class="text-center">
-            <div class="text-h6 font-weight-bold text-waterblue">
-              {{ ordersCount }}
+      <!-- Quick Stats Section -->
+      <div class="mt-auto p-4">
+        <div
+          class="rounded-xl bg-gradient-to-br from-white to-[#f8f9fa] p-4 shadow dark:from-card dark:to-card"
+        >
+          <h4 class="mb-3 text-base font-bold text-foreground">Quick Stats</h4>
+          <div class="mb-3 flex items-center justify-between">
+            <div class="text-center">
+              <div class="text-lg font-bold text-waterblue">
+                {{ ordersCount }}
+              </div>
+              <div class="text-xs text-muted-foreground">Orders</div>
             </div>
-            <div class="text-caption text-grey-darken-1">Orders</div>
-          </div>
-          <div class="text-center">
-            <div class="text-h6 font-weight-bold text-customyellow">
-              {{ favoritesCount }}
+            <div class="text-center">
+              <div class="text-lg font-bold text-customyellow">
+                {{ favoritesCount }}
+              </div>
+              <div class="text-xs text-muted-foreground">Favorites</div>
             </div>
-            <div class="text-caption text-grey-darken-1">Favorites</div>
-          </div>
-          <div class="text-center">
-            <div class="text-h6 font-weight-bold text-lightgreen">
-              {{ reviewsCount }}
+            <div class="text-center">
+              <div class="text-lg font-bold text-lightgreen">
+                {{ reviewsCount }}
+              </div>
+              <div class="text-xs text-muted-foreground">Reviews</div>
             </div>
-            <div class="text-caption text-grey-darken-1">Reviews</div>
           </div>
         </div>
-      </v-card>
-    </div>
-  </v-navigation-drawer>
+      </div>
+    </aside>
+  </div>
 </template>
 
-<script>
-import { mapState, mapActions } from "vuex";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
+import { useFavoriteStore } from "@/stores/favorite";
+import { useOrderStore } from "@/stores/order";
+import { useReviewStore } from "@/stores/review";
+import type { Component } from "vue";
+import {
+  ChevronRight,
+  CircleUser,
+  Heart,
+  Lock,
+  Package,
+  Star,
+} from "lucide-vue-next";
 
-export default {
-  name: "ProfileSidebar",
-  props: {
-    drawer: {
-      type: Boolean,
-      default: true,
-    },
-    activeTab: {
-      type: String,
-      default: "personal",
-    },
-  },
-  emits: ["update:drawer", "update:activeTab"],
-  data() {
-    return {
-      menuItems: [
-        {
-          title: "Personal Info",
-          value: "personal",
-          icon: "mdi-account-circle",
-        },
-        { title: "Orders", value: "orders", icon: "mdi-package-variant" },
-        { title: "Favorites", value: "favorites", icon: "mdi-heart" },
-        { title: "My Reviews", value: "reviews", icon: "mdi-star" },
-        { title: "Change Password", value: "password", icon: "mdi-lock" },
-      ],
-    };
-  },
-  computed: {
-    ...mapState("auth", ["currentUser"]),
-    ...mapState("order", ["userOrders"]),
-    ...mapState("favorite", ["favorites"]),
-    ...mapState("review", ["userReviews"]),
-    ordersCount() {
-      return (
-        this.userOrders?.filter((order) => order.status === "Paid").length || 0
-      );
-    },
-    favoritesCount() {
-      return this.favorites?.length || 0;
-    },
-    reviewsCount() {
-      return this.userReviews?.length || 0;
-    },
-  },
-  methods: {
-    ...mapActions("order", ["fetchUserOrders"]),
-    ...mapActions("favorite", ["getFavoritesForEachUser"]),
-    ...mapActions("review", ["loadUserReviewsAction"]),
-    async loadAllData() {
-      try {
-        await Promise.all([
-          this.fetchUserOrders(),
-          this.getFavoritesForEachUser(),
-          this.loadUserReviewsAction(),
-        ]);
-      } catch (error) {
-        console.error("Error loading profile data:", error);
-      }
-    },
-  },
-  async mounted() {
-    // Fetch data ngay khi component mounted
-    await this.loadAllData();
-  },
-};
+withDefaults(
+  defineProps<{
+    drawer?: boolean;
+    activeTab?: string;
+  }>(),
+  {
+    drawer: true,
+    activeTab: "personal",
+  }
+);
+
+defineEmits<{
+  (e: "update:drawer", value: boolean): void;
+  (e: "update:activeTab", value: string): void;
+}>();
+
+const authStore = useAuthStore();
+const orderStore = useOrderStore();
+const favoriteStore = useFavoriteStore();
+const reviewStore = useReviewStore();
+
+const { currentUser } = storeToRefs(authStore);
+const { userOrders } = storeToRefs(orderStore);
+const { favorites } = storeToRefs(favoriteStore);
+const { userReviews } = storeToRefs(reviewStore);
+
+const menuItems: { title: string; value: string; icon: Component }[] = [
+  { title: "Personal Info", value: "personal", icon: CircleUser },
+  { title: "Orders", value: "orders", icon: Package },
+  { title: "Favorites", value: "favorites", icon: Heart },
+  { title: "My Reviews", value: "reviews", icon: Star },
+  { title: "Change Password", value: "password", icon: Lock },
+];
+
+const ordersCount = computed(
+  () =>
+    userOrders.value?.filter((order) => order.status === "Paid").length || 0
+);
+const favoritesCount = computed(() => favorites.value?.length || 0);
+const reviewsCount = computed(() => userReviews.value?.length || 0);
+
+async function loadAllData() {
+  try {
+    await Promise.all([
+      orderStore.fetchUserOrders(),
+      favoriteStore.getFavoritesForEachUser(),
+      reviewStore.loadUserReviewsAction(),
+    ]);
+  } catch (error) {
+    console.error("Error loading profile data:", error);
+  }
+}
+
+onMounted(async () => {
+  // Fetch data ngay khi component mounted
+  await loadAllData();
+});
 </script>
-
-<style scoped>
-.profile-sidebar {
-  border-right: 1px solid rgba(82, 149, 208, 0.1);
-}
-
-.transition-all {
-  transition: all 0.3s ease;
-}
-
-.duration-300 {
-  transition-duration: 300ms;
-}
-
-.hover\:bg-grey-lighten-4:hover {
-  background-color: rgb(245, 245, 245) !important;
-}
-</style>

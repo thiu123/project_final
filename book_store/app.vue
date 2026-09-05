@@ -4,14 +4,11 @@
   </NuxtLayout>
 </template>
 
-<script>
-import { mapActions } from "vuex";
-export default {
-  methods: {
-    ...mapActions("auth", ["restoreSession"]),
-  },
-  mounted() {
-    this.restoreSession();
-  },
-};
+<script setup lang="ts">
+import { useAuthStore } from "@/stores/auth";
+const authStore = useAuthStore();
+
+onMounted(() => {
+  authStore.restoreSession();
+});
 </script>

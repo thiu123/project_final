@@ -1,701 +1,565 @@
 <template>
   <div>
-    <v-app-bar
-      class="bg-waterblue elevation-2"
-      :height="$vuetify.display.mobile ? '64' : '100'"
+    <header
+      class="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur"
     >
-      <v-container
-        class="d-flex align-center justify-space-between py-0 px-3 px-md-4"
-        :style="{
-          width: $vuetify.display.mobile ? '100%' : '65%',
-          height: '100%',
-        }"
+      <div
+        class="mx-auto flex h-16 w-full max-w-7xl items-center justify-between px-3 md:px-4 lg:h-[72px]"
       >
-        <!-- Logo Section with Enhanced Animation -->
-        <div
-          class="d-flex align-center cursor-pointer logo-container"
-          style="text-decoration: none"
+        <!-- Logo Section -->
+        <NuxtLink
           to="/"
+          class="group flex shrink-0 items-center no-underline transition-transform duration-300 hover:scale-105"
         >
-          <nuxt-link to="/" class="d-flex align-center text-decoration-none">
-            <v-avatar
-              :size="$vuetify.display.mobile ? '36' : '48'"
-              class="mr-2 mr-md-3 bg-customyellow logo-avatar elevation-4"
-            >
-              <v-icon
-                color="darkgreen"
-                :size="$vuetify.display.mobile ? '20' : '28'"
-                >mdi-book-open-page-variant</v-icon
-              >
-            </v-avatar>
-            <span
-              :class="[
-                'font-weight-bold text-white letter-spacing logo-text',
-                $vuetify.display.mobile ? 'text-subtitle-1' : 'text-h5',
-              ]"
-              >THBookStore</span
-            >
-          </nuxt-link>
-        </div>
+          <div
+            class="mr-2 flex h-9 w-9 items-center justify-center rounded-full bg-customyellow shadow-md transition-transform duration-300 group-hover:rotate-[10deg] md:mr-3 lg:h-12 lg:w-12"
+          >
+            <BookOpen class="h-5 w-5 text-darkgreen lg:h-7 lg:w-7" />
+          </div>
+          <span
+            class="text-base font-bold tracking-wide text-foreground transition-all duration-300 group-hover:tracking-wider lg:text-2xl"
+          >
+            THBookStore
+          </span>
+        </NuxtLink>
 
         <!-- Desktop Navigation -->
-        <div class="d-none d-lg-flex align-center justify-space-between ga-2">
-          <v-btn
-            rounded="pill"
-            variant="flat"
-            flat
-            class="nav-btn px-6 font-weight-bold text-subtitle-1"
-            :style="
-              $route.path === '/'
-                ? 'backgroundColor: #DCF763; transform: translateY(-2px)'
-                : 'backgroundColor:transparent'
-            "
-            :class="
-              $route.path === '/' ? 'text-darkgreen active-nav' : 'text-white'
-            "
+        <nav class="hidden items-center gap-2 lg:flex">
+          <NuxtLink
             to="/"
-            elevation="0"
+            class="rounded-full px-6 py-2 text-base font-bold transition-all duration-300"
+            :class="
+              route.path === '/'
+                ? 'bg-customyellow text-darkgreen -translate-y-0.5 shadow-[0_4px_12px_rgba(220,247,99,0.4)]'
+                : 'text-foreground/80 hover:bg-muted hover:text-foreground hover:-translate-y-0.5'
+            "
           >
             Home
-          </v-btn>
+          </NuxtLink>
 
-          <v-menu offset-y transition="slide-y-transition">
-            <template v-slot:activator="{ props }">
-              <v-btn
-                rounded="pill"
-                :style="
-                  $route.path.startsWith('/subjects')
-                    ? 'backgroundColor: #DCF763; transform: translateY(-2px)'
-                    : 'backgroundColor: transparent'
-                "
-                :class="
-                  $route.path.startsWith('/subjects')
-                    ? 'text-darkgreen active-nav'
-                    : 'text-white'
-                "
-                variant="text"
-                class="nav-btn px-6 font-weight-bold text-subtitle-1"
-                v-bind="props"
-              >
-                Category
-                <v-icon
-                  icon="mdi-chevron-down"
-                  class="ml-1 chevron-icon"
-                ></v-icon>
-              </v-btn>
-            </template>
-
-            <v-list
-              class="category-menu elevation-8 rounded-lg mt-2 overflow-x-hidden"
-              style="min-width: 280px"
+          <!-- Category dropdown (supports expandable subcategory groups) -->
+          <div ref="categoryMenuRef" class="relative">
+            <button
+              type="button"
+              class="flex items-center rounded-full px-6 py-2 text-base font-bold transition-all duration-300"
+              :class="
+                route.path.startsWith('/subjects')
+                  ? 'bg-customyellow text-darkgreen -translate-y-0.5 shadow-[0_4px_12px_rgba(220,247,99,0.4)]'
+                  : 'text-foreground/80 hover:bg-muted hover:text-foreground hover:-translate-y-0.5'
+              "
+              @click="categoryMenuOpen = !categoryMenuOpen"
             >
-              <template v-for="(category, index) in bookSubjects" :key="index">
-                <!-- Categories with subcategories -->
-                <v-list-group
-                  v-if="category.subcategories"
-                  class="category-group"
-                >
-                  <template v-slot:activator="{ props }">
-                    <v-list-item v-bind="props" class="category-item py-3">
-                      <v-list-item-title class="font-weight-bold text-body-1">{{
-                        category.category
-                      }}</v-list-item-title>
-                    </v-list-item>
-                  </template>
+              Category
+              <ChevronDown
+                class="ml-1 h-4 w-4 transition-transform duration-200"
+                :class="categoryMenuOpen ? 'rotate-180' : ''"
+              />
+            </button>
 
-                  <template
-                    v-for="(subcategory, subIndex) in category.subcategories"
-                    :key="subIndex"
-                  >
-                    <v-list-item
-                      class="subcategory-item pl-8 py-2"
-                      @click="
-                        $router.push(
-                          `/subjects/${encodeURIComponent(
-                            subcategory.toLowerCase()
-                          )}`
-                        )
-                      "
+            <Transition
+              enter-active-class="transition duration-200 ease-out"
+              enter-from-class="-translate-y-2 opacity-0"
+              enter-to-class="translate-y-0 opacity-100"
+              leave-active-class="transition duration-150 ease-in"
+              leave-from-class="translate-y-0 opacity-100"
+              leave-to-class="-translate-y-2 opacity-0"
+            >
+              <div
+                v-if="categoryMenuOpen"
+                class="absolute left-0 top-full z-50 mt-2 max-h-[70vh] w-[280px] overflow-y-auto overflow-x-hidden rounded-lg border border-border bg-card py-1 shadow-lg"
+              >
+                <template
+                  v-for="(category, index) in bookSubjects"
+                  :key="index"
+                >
+                  <!-- Categories with subcategories -->
+                  <template v-if="category.subcategories">
+                    <button
+                      type="button"
+                      class="flex w-full items-center justify-between px-4 py-3 text-left transition-all duration-200 hover:translate-x-1 hover:bg-customyellow/15"
+                      @click="toggleCategoryGroup(index)"
                     >
-                      <v-list-item-title class="text-subtitle-2">
-                        <v-icon size="16" class="mr-2"
-                          >mdi-chevron-right</v-icon
+                      <span class="text-base font-bold text-foreground">
+                        {{ category.category }}
+                      </span>
+                      <ChevronDown
+                        class="h-4 w-4 text-muted-foreground transition-transform duration-200"
+                        :class="openGroups.includes(index) ? 'rotate-180' : ''"
+                      />
+                    </button>
+
+                    <template v-if="openGroups.includes(index)">
+                      <template
+                        v-for="(subcategory, subIndex) in category.subcategories"
+                        :key="subIndex"
+                      >
+                        <button
+                          type="button"
+                          class="flex w-full items-center py-2 pl-8 pr-4 text-left text-sm font-medium text-foreground/90 transition-all duration-200 hover:translate-x-1 hover:bg-customyellow/10"
+                          @click="goToSubject(subcategory)"
                         >
-                        {{ subcategory }}
-                      </v-list-item-title>
-                    </v-list-item>
-
-                    <v-divider
-                      v-if="subIndex < category.subcategories.length - 1"
-                      class="opacity-25 mx-4"
-                    ></v-divider>
+                          <ChevronRight class="mr-2 h-4 w-4" />
+                          {{ subcategory }}
+                        </button>
+                        <div
+                          v-if="subIndex < category.subcategories.length - 1"
+                          class="mx-4 h-px bg-border/60"
+                        />
+                      </template>
+                    </template>
                   </template>
-                </v-list-group>
 
-                <!-- Categories without subcategories -->
-                <v-list-item
-                  v-else
-                  class="category-item py-3"
-                  @click="
-                    $router.push(
-                      `/subjects/${encodeURIComponent(
-                        category.category.toLowerCase()
-                      )}`
-                    )
-                  "
-                >
-                  <v-list-item-title class="font-weight-bold text-body-1">{{
-                    category.category
-                  }}</v-list-item-title>
-                </v-list-item>
+                  <!-- Categories without subcategories -->
+                  <button
+                    v-else
+                    type="button"
+                    class="flex w-full items-center px-4 py-3 text-left text-base font-bold text-foreground transition-all duration-200 hover:translate-x-1 hover:bg-customyellow/15"
+                    @click="goToSubject(category.category)"
+                  >
+                    {{ category.category }}
+                  </button>
 
-                <v-divider
-                  v-if="index < bookSubjects.length - 1"
-                  class="opacity-25 mx-4"
-                ></v-divider>
-              </template>
-            </v-list>
-          </v-menu>
+                  <div
+                    v-if="index < bookSubjects.length - 1"
+                    class="mx-4 h-px bg-border/60"
+                  />
+                </template>
+              </div>
+            </Transition>
+          </div>
 
-          <v-btn
-            rounded="pill"
-            :style="
-              $route.path === '/contact'
-                ? 'backgroundColor: #DCF763; transform: translateY(-2px)'
-                : 'backgroundColor:transparent'
-            "
-            :class="
-              $route.path === '/contact'
-                ? 'text-darkgreen active-nav'
-                : 'text-white'
-            "
-            class="nav-btn px-6 font-weight-bold text-subtitle-1"
-            variant="text"
+          <NuxtLink
             to="/contact"
+            class="rounded-full px-6 py-2 text-base font-bold transition-all duration-300"
+            :class="
+              route.path === '/contact'
+                ? 'bg-customyellow text-darkgreen -translate-y-0.5 shadow-[0_4px_12px_rgba(220,247,99,0.4)]'
+                : 'text-foreground/80 hover:bg-muted hover:text-foreground hover:-translate-y-0.5'
+            "
           >
             Contact & Feedback
-          </v-btn>
-        </div>
+          </NuxtLink>
+        </nav>
 
-        <!-- Action Buttons with Enhanced Icons -->
-        <div class="d-flex align-center ga-1">
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-1">
           <!-- Mobile Menu Button -->
-          <v-btn
-            icon
-            class="d-lg-none action-icon-btn"
-            :size="$vuetify.display.mobile ? 'default' : 'large'"
+          <button
+            type="button"
+            class="inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-muted hover:text-foreground lg:hidden"
+            aria-label="Open menu"
             @click="mobileMenuDrawer = true"
           >
-            <v-icon :size="$vuetify.display.mobile ? '22' : '26'"
-              >mdi-menu</v-icon
-            >
-          </v-btn>
+            <Menu class="h-6 w-6" />
+          </button>
 
-          <v-btn
-            icon
-            class="action-icon-btn"
-            :size="$vuetify.display.mobile ? 'default' : 'large'"
-            @click="$router.push('/cart')"
+          <!-- Cart -->
+          <button
+            type="button"
+            class="relative inline-flex h-10 w-10 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-muted hover:text-foreground"
+            aria-label="Shopping cart"
+            @click="router.push('/cart')"
           >
-            <v-badge
-              location="top right"
-              color="primary"
-              :content="cartItemCount"
+            <ShoppingCart class="h-6 w-6" />
+            <span
+              class="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground"
             >
-              <v-icon :size="$vuetify.display.mobile ? '22' : '26'"
-                >mdi-cart-outline</v-icon
-              >
-            </v-badge>
-          </v-btn>
+              {{ cartItemCount }}
+            </span>
+          </button>
 
-          <v-btn
-            icon
-            class="action-icon-btn d-none d-sm-flex"
-            :size="$vuetify.display.mobile ? 'default' : 'large'"
-            @click="$router.push('/favorites')"
+          <!-- Favorites -->
+          <button
+            type="button"
+            class="relative hidden h-10 w-10 items-center justify-center rounded-full text-foreground/80 transition-colors hover:bg-muted hover:text-foreground sm:inline-flex"
+            aria-label="Favorites"
+            @click="router.push('/favorites')"
           >
-            <v-badge
-              location="top right"
-              color="primary"
-              :content="userFavoritesCount"
+            <Heart class="h-6 w-6" />
+            <span
+              class="absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground"
             >
-              <v-icon :size="$vuetify.display.mobile ? '22' : '26'"
-                >mdi-heart-outline</v-icon
-              >
-            </v-badge>
-          </v-btn>
+              {{ userFavoritesCount }}
+            </span>
+          </button>
 
-          <v-menu
-            v-model="accountMenu"
-            :close-on-content-click="false"
-            location="bottom"
-            transition="slide-y-transition"
-            offset="8"
-          >
-            <template v-if="isSessionRestored" v-slot:activator="{ props }">
-              <template v-if="!currentUser">
-                <v-btn
-                  color="customyellow"
-                  variant="flat"
-                  class="ml-1 ml-md-2 font-weight-bold text-darkgreen account-btn d-none d-sm-flex"
-                  :class="
-                    $vuetify.display.mobile
-                      ? 'text-caption px-3'
-                      : 'text-subtitle-1 px-4'
-                  "
-                  rounded="pill"
-                  v-bind="props"
-                  :size="$vuetify.display.mobile ? 'small' : 'default'"
-                  elevation="2"
-                >
-                  <span class="d-none d-md-inline">Account</span>
-                  <v-icon
-                    class="ml-0 ml-md-1"
-                    :size="$vuetify.display.mobile ? '18' : '22'"
-                    >mdi-account-circle</v-icon
-                  >
-                </v-btn>
-              </template>
+          <!-- Theme toggle -->
+          <ThemeToggle />
 
-              <template v-else>
-                <v-btn
-                  v-bind="props"
-                  class="ml-1 ml-md-2 user-profile-btn d-none d-sm-flex"
-                  variant="text"
-                  :style="{
-                    '--v-theme-overlay-multiplier': '0',
-                  }"
-                  :size="$vuetify.display.mobile ? 'small' : 'large'"
-                  rounded="pill"
+          <!-- Account / User Menu -->
+          <template v-if="isSessionRestored">
+            <UiDropdownMenu v-if="!currentUser">
+              <UiDropdownMenuTrigger as-child>
+                <button
+                  type="button"
+                  class="ml-1 hidden items-center rounded-full bg-customyellow px-4 py-2 text-sm font-bold text-darkgreen shadow transition-all hover:-translate-y-0.5 hover:shadow-md sm:flex md:ml-2 md:text-base"
                 >
-                  <div class="d-flex align-center">
-                    <v-avatar
-                      color="info"
-                      :size="$vuetify.display.mobile ? '28' : '36'"
-                      class="elevation-2"
-                    >
-                      <v-img
-                        :src="
-                          currentUser.avatar_url ||
-                          'https://cdn.vuetifyjs.com/images/john.jpg'
-                        "
-                        cover
-                        :alt="currentUser.name + ' avatar'"
-                      >
-                      </v-img>
-                    </v-avatar>
-                    <span
-                      class="ml-2 font-weight-bold text-white d-none d-md-inline"
-                      :class="
-                        $vuetify.display.mobile
-                          ? 'text-caption'
-                          : 'text-subtitle-1'
-                      "
-                    >
-                      {{ currentUser.name }}
-                    </span>
-                    <v-icon
-                      :size="$vuetify.display.mobile ? '16' : '20'"
-                      class="ml-1 d-none d-md-inline"
-                      >mdi-chevron-down</v-icon
-                    >
-                  </div>
-                </v-btn>
-              </template>
-            </template>
-
-            <v-card
-              v-if="!currentUser"
-              min-width="240"
-              elevation="8"
-              rounded="xl"
-              class="pa-4 mt-3 auth-card"
-            >
-              <div class="d-flex flex-column" style="gap: 12px">
-                <v-btn
-                  color="darkgreen"
-                  block
-                  rounded="pill"
-                  size="large"
-                  class="text-white text-body-1 font-weight-bold"
-                  elevation="0"
-                  @click="openDialog('sign-in')"
-                >
+                  <span class="hidden md:inline">Account</span>
+                  <CircleUser class="h-5 w-5 md:ml-1" />
+                </button>
+              </UiDropdownMenuTrigger>
+              <UiDropdownMenuContent align="end">
+                <UiDropdownMenuItem @select="openDialog('sign-in')">
+                  <LogIn class="mr-2 size-4" />
                   Sign In
-                </v-btn>
-
-                <v-btn
-                  variant="outlined"
-                  color="darkgreen"
-                  block
-                  size="large"
-                  class="text-body-1 font-weight-bold"
-                  rounded="pill"
-                  @click="openDialog('sign-up')"
-                >
+                </UiDropdownMenuItem>
+                <UiDropdownMenuItem @select="openDialog('sign-up')">
+                  <UserPlus class="mr-2 size-4" />
                   Sign Up
-                </v-btn>
-              </div>
-            </v-card>
+                </UiDropdownMenuItem>
+              </UiDropdownMenuContent>
+            </UiDropdownMenu>
 
-            <v-card
-              v-else
-              min-width="260"
-              elevation="8"
-              rounded="xl"
-              class="pa-2 mt-3 user-menu-card"
+            <UiDropdownMenu v-else>
+              <UiDropdownMenuTrigger as-child>
+                <button
+                  type="button"
+                  class="ml-1 hidden items-center rounded-full py-1 pl-1 pr-3 transition-all hover:-translate-y-0.5 hover:bg-muted sm:flex md:ml-2"
+                >
+                  <UiAvatar class="h-9 w-9 shadow">
+                    <UiAvatarImage
+                      :src="
+                        currentUser.avatar_url ||
+                        'https://cdn.vuetifyjs.com/images/john.jpg'
+                      "
+                      :alt="currentUser.username + ' avatar'"
+                    />
+                    <UiAvatarFallback>
+                      {{ (currentUser.username || "U").charAt(0).toUpperCase() }}
+                    </UiAvatarFallback>
+                  </UiAvatar>
+                  <span
+                    class="ml-2 hidden text-sm font-bold text-foreground md:inline lg:text-base"
+                  >
+                    {{ currentUser.username }}
+                  </span>
+                  <ChevronDown
+                    class="ml-1 hidden h-4 w-4 text-muted-foreground md:inline"
+                  />
+                </button>
+              </UiDropdownMenuTrigger>
+              <UiDropdownMenuContent align="end" class="w-56">
+                <UiDropdownMenuLabel class="font-normal">
+                  <div class="flex flex-col space-y-1">
+                    <span class="truncate text-sm font-semibold text-foreground">
+                      {{ currentUser.username }}
+                    </span>
+                    <span class="truncate text-xs text-muted-foreground">
+                      {{ currentUser.email }}
+                    </span>
+                  </div>
+                </UiDropdownMenuLabel>
+                <UiDropdownMenuSeparator />
+                <UiDropdownMenuItem @select="goToProfile('personal')">
+                  <User class="mr-2 size-4" />
+                  Personal Info
+                </UiDropdownMenuItem>
+                <UiDropdownMenuItem @select="goToProfile('orders')">
+                  <Package class="mr-2 size-4" />
+                  Orders
+                </UiDropdownMenuItem>
+                <UiDropdownMenuItem @select="goToProfile('favorites')">
+                  <Heart class="mr-2 size-4" />
+                  Favorites
+                </UiDropdownMenuItem>
+                <UiDropdownMenuItem @select="goToProfile('reviews')">
+                  <Star class="mr-2 size-4" />
+                  My Reviews
+                </UiDropdownMenuItem>
+                <UiDropdownMenuItem @select="goToProfile('password')">
+                  <Lock class="mr-2 size-4" />
+                  Change Password
+                </UiDropdownMenuItem>
+                <UiDropdownMenuSeparator />
+                <UiDropdownMenuItem
+                  class="text-destructive focus:text-destructive"
+                  @select="handleLogout"
+                >
+                  <LogOut class="mr-2 size-4" />
+                  Logout
+                </UiDropdownMenuItem>
+              </UiDropdownMenuContent>
+            </UiDropdownMenu>
+          </template>
+        </div>
+      </div>
+    </header>
+
+    <!-- Auth Dialogs -->
+    <UiDialog v-model:open="dialogSignIn">
+      <UiDialogContent class="overflow-hidden p-0 sm:max-w-5xl">
+        <UiDialogTitle class="sr-only">Sign In</UiDialogTitle>
+        <UiDialogDescription class="sr-only">
+          Sign in to your THBookStore account
+        </UiDialogDescription>
+
+        <Login
+          @toggleLinkSignUp="openDialog"
+          @toggleLinkForgotPassword="openDialog('forgot-password')"
+          @show-snackbar="showSnackbar"
+        />
+      </UiDialogContent>
+    </UiDialog>
+
+    <UiDialog v-model:open="dialogSignUp">
+      <UiDialogContent class="overflow-hidden p-0 sm:max-w-5xl">
+        <UiDialogTitle class="sr-only">Sign Up</UiDialogTitle>
+        <UiDialogDescription class="sr-only">
+          Create a new THBookStore account
+        </UiDialogDescription>
+
+        <SignUp
+          @checkIsSignUp="handleCheckIsSignUp"
+          @toggleLinkSignIn="openDialog"
+        />
+      </UiDialogContent>
+    </UiDialog>
+
+    <UiDialog v-model:open="dialogForgotPassword">
+      <UiDialogContent class="p-0 sm:max-w-lg">
+        <UiDialogTitle class="sr-only">Forgot Password</UiDialogTitle>
+        <UiDialogDescription class="sr-only">
+          Reset your THBookStore account password
+        </UiDialogDescription>
+
+        <ForgotPassword @back-to-login="openDialog('sign-in')" />
+      </UiDialogContent>
+    </UiDialog>
+
+    <!-- Mobile Navigation Drawer -->
+    <Transition
+      enter-active-class="transition-opacity duration-200"
+      enter-from-class="opacity-0"
+      enter-to-class="opacity-100"
+      leave-active-class="transition-opacity duration-150"
+      leave-from-class="opacity-100"
+      leave-to-class="opacity-0"
+    >
+      <div
+        v-if="mobileMenuDrawer"
+        class="fixed inset-0 z-[60] bg-black/60"
+        aria-hidden="true"
+        @click="mobileMenuDrawer = false"
+      />
+    </Transition>
+
+    <Transition
+      enter-active-class="transition-transform duration-300 ease-out"
+      enter-from-class="-translate-x-full"
+      enter-to-class="translate-x-0"
+      leave-active-class="transition-transform duration-200 ease-in"
+      leave-from-class="translate-x-0"
+      leave-to-class="-translate-x-full"
+    >
+      <aside
+        v-if="mobileMenuDrawer"
+        class="fixed inset-y-0 left-0 z-[70] w-[280px] overflow-y-auto border-r border-border bg-background py-2"
+      >
+        <!-- Brand -->
+        <div class="mb-4 flex items-center px-4 pt-2">
+          <div
+            class="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-customyellow shadow"
+          >
+            <BookOpen class="h-6 w-6 text-darkgreen" />
+          </div>
+          <span class="text-lg font-bold text-foreground">THBookStore</span>
+          <div class="ml-auto flex items-center gap-1">
+            <ThemeToggle />
+            <button
+              type="button"
+              class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label="Close menu"
+              @click="mobileMenuDrawer = false"
             >
-              <v-list class="py-2">
-                <v-list-item class="mb-2 user-info-item rounded-lg">
-                  <v-list-item-title class="font-weight-bold text-body-1">{{
-                    currentUser.username
-                  }}</v-list-item-title>
-                  <v-list-item-subtitle class="text-caption">{{
-                    currentUser.email
-                  }}</v-list-item-subtitle>
-                </v-list-item>
-
-                <v-divider class="my-2"></v-divider>
-
-                <v-list-item
-                  class="menu-list-item rounded-lg my-1"
-                  @click="goToProfile('personal')"
-                >
-                  <template v-slot:prepend>
-                    <v-icon icon="mdi-account" size="22" class="mr-2"></v-icon>
-                  </template>
-                  <v-list-item-title class="font-weight-medium"
-                    >Personal Info</v-list-item-title
-                  >
-                </v-list-item>
-
-                <v-list-item
-                  class="menu-list-item rounded-lg my-1"
-                  @click="goToProfile('orders')"
-                >
-                  <template v-slot:prepend>
-                    <v-icon
-                      icon="mdi-package-variant"
-                      size="22"
-                      class="mr-2"
-                    ></v-icon>
-                  </template>
-                  <v-list-item-title class="font-weight-medium"
-                    >Orders</v-list-item-title
-                  >
-                </v-list-item>
-
-                <v-list-item
-                  class="menu-list-item rounded-lg my-1"
-                  @click="goToProfile('favorites')"
-                >
-                  <template v-slot:prepend>
-                    <v-icon icon="mdi-heart" size="22" class="mr-2"></v-icon>
-                  </template>
-                  <v-list-item-title class="font-weight-medium"
-                    >Favorites</v-list-item-title
-                  >
-                </v-list-item>
-
-                <v-list-item
-                  class="menu-list-item rounded-lg my-1"
-                  @click="goToProfile('reviews')"
-                >
-                  <template v-slot:prepend>
-                    <v-icon icon="mdi-star" size="22" class="mr-2"></v-icon>
-                  </template>
-                  <v-list-item-title class="font-weight-medium"
-                    >My Reviews</v-list-item-title
-                  >
-                </v-list-item>
-
-                <v-list-item
-                  class="menu-list-item rounded-lg my-1"
-                  @click="goToProfile('password')"
-                >
-                  <template v-slot:prepend>
-                    <v-icon icon="mdi-lock" size="22" class="mr-2"></v-icon>
-                  </template>
-                  <v-list-item-title class="font-weight-medium"
-                    >Change Password</v-list-item-title
-                  >
-                </v-list-item>
-
-                <v-divider class="my-2"></v-divider>
-
-                <v-list-item
-                  class="menu-list-item rounded-lg my-1 logout-item"
-                  @click="handleLogout"
-                >
-                  <template v-slot:prepend>
-                    <v-icon
-                      icon="mdi-logout"
-                      size="22"
-                      color="error"
-                      class="mr-2"
-                    ></v-icon>
-                  </template>
-                  <v-list-item-title class="text-error font-weight-medium"
-                    >Logout</v-list-item-title
-                  >
-                </v-list-item>
-              </v-list>
-            </v-card>
-          </v-menu>
+              <X class="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
-        <v-dialog
-          v-model="dialogSignIn"
-          min-width="1300"
-          transition="dialog-transition"
-        >
-          <div class="position-relative">
-            <Login
-              @toggleLinkSignUp="openDialog"
-              @toggleLinkForgotPassword="openDialog('forgot-password')"
-              @show-snackbar="showSnackbar"
+        <div class="mb-2 h-px bg-border" />
+
+        <nav class="px-2">
+          <button
+            type="button"
+            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+            :class="route.path === '/' ? 'bg-customyellow/20 font-bold' : ''"
+            @click="navigateAndClose('/')"
+          >
+            <Home class="h-5 w-5" />
+            Home
+          </button>
+
+          <!-- Category group -->
+          <button
+            type="button"
+            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+            @click="mobileCategoryOpen = !mobileCategoryOpen"
+          >
+            <Shapes class="h-5 w-5" />
+            Category
+            <ChevronDown
+              class="ml-auto h-4 w-4 transition-transform duration-200"
+              :class="mobileCategoryOpen ? 'rotate-180' : ''"
             />
-            <v-btn
-              icon
-              @click="dialogSignIn = false"
-              class="dialog-close-btn"
-              size="large"
-              variant="flat"
-              color="rgba(255,255,255,0.2)"
-            >
-              <v-icon color="white">mdi-close</v-icon>
-            </v-btn>
-          </div>
-        </v-dialog>
+          </button>
 
-        <v-dialog
-          v-model="dialogSignUp"
-          min-width="1300"
-          transition="dialog-transition"
-        >
-          <div class="position-relative">
-            <SignUp
-              @checkIsSignUp="handleCheckIsSignUp"
-              @toggleLinkSignIn="openDialog"
-            />
-            <v-btn
-              icon
-              @click="dialogSignUp = false"
-              class="dialog-close-btn"
-              size="large"
-              variant="flat"
-              color="rgba(255,255,255,0.2)"
-            >
-              <v-icon color="white">mdi-close</v-icon>
-            </v-btn>
-          </div>
-        </v-dialog>
+          <template v-if="mobileCategoryOpen">
+            <template v-for="(category, index) in bookSubjects" :key="index">
+              <template v-if="category.subcategories">
+                <button
+                  type="button"
+                  class="flex w-full items-center rounded-lg py-2 pl-8 pr-3 text-sm transition-colors hover:bg-muted"
+                  @click="toggleMobileGroup(index)"
+                >
+                  {{ category.category }}
+                  <ChevronDown
+                    class="ml-auto h-4 w-4 transition-transform duration-200"
+                    :class="mobileOpenGroups.includes(index) ? 'rotate-180' : ''"
+                  />
+                </button>
 
-        <v-dialog
-          v-model="dialogForgotPassword"
-          max-width="500"
-          transition="dialog-transition"
-          scrollable
-        >
-          <ForgotPassword @back-to-login="openDialog('sign-in')" />
-        </v-dialog>
-      </v-container>
-    </v-app-bar>
-
-    <!-- Mobile Navigation Drawer (Outside app-bar for proper z-index) -->
-    <v-navigation-drawer
-      v-model="mobileMenuDrawer"
-      location="left"
-      temporary
-      width="280"
-      class="mobile-drawer"
-    >
-      <v-list class="py-2">
-        <v-list-item class="mb-4">
-          <div class="d-flex align-center">
-            <v-avatar size="40" class="mr-3 bg-customyellow elevation-2">
-              <v-icon color="darkgreen" size="24"
-                >mdi-book-open-page-variant</v-icon
-              >
-            </v-avatar>
-            <span class="font-weight-bold text-h6 text-customblack"
-              >THBookStore</span
-            >
-          </div>
-        </v-list-item>
-
-        <v-divider class="mb-2"></v-divider>
-
-        <v-list-item
-          class="mobile-nav-item"
-          @click="navigateAndClose('/')"
-          :class="$route.path === '/' ? 'active-mobile-nav' : ''"
-        >
-          <template v-slot:prepend>
-            <v-icon>mdi-home</v-icon>
-          </template>
-          <v-list-item-title>Home</v-list-item-title>
-        </v-list-item>
-
-        <v-list-group>
-          <template v-slot:activator="{ props }">
-            <v-list-item v-bind="props" class="mobile-nav-item">
-              <template v-slot:prepend>
-                <v-icon>mdi-shape</v-icon>
-              </template>
-              <v-list-item-title>Category</v-list-item-title>
-            </v-list-item>
-          </template>
-
-          <template v-for="(category, index) in bookSubjects" :key="index">
-            <v-list-group v-if="category.subcategories" sub-group>
-              <template v-slot:activator="{ props }">
-                <v-list-item v-bind="props" class="pl-8">
-                  <v-list-item-title class="text-body-2">{{
-                    category.category
-                  }}</v-list-item-title>
-                </v-list-item>
+                <template v-if="mobileOpenGroups.includes(index)">
+                  <button
+                    v-for="(subcategory, subIndex) in category.subcategories"
+                    :key="subIndex"
+                    type="button"
+                    class="flex w-full items-center rounded-lg py-2 pl-12 pr-3 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                    @click="
+                      navigateAndClose(
+                        `/subjects/${encodeURIComponent(
+                          subcategory.toLowerCase()
+                        )}`
+                      )
+                    "
+                  >
+                    {{ subcategory }}
+                  </button>
+                </template>
               </template>
 
-              <v-list-item
-                v-for="(subcategory, subIndex) in category.subcategories"
-                :key="subIndex"
-                class="pl-12"
+              <button
+                v-else
+                type="button"
+                class="flex w-full items-center rounded-lg py-2 pl-8 pr-3 text-sm transition-colors hover:bg-muted"
                 @click="
                   navigateAndClose(
-                    `/subjects/${encodeURIComponent(subcategory.toLowerCase())}`
+                    `/subjects/${encodeURIComponent(
+                      category.category.toLowerCase()
+                    )}`
                   )
                 "
               >
-                <v-list-item-title class="text-caption">{{
-                  subcategory
-                }}</v-list-item-title>
-              </v-list-item>
-            </v-list-group>
-
-            <v-list-item
-              v-else
-              class="pl-8"
-              @click="
-                navigateAndClose(
-                  `/subjects/${encodeURIComponent(
-                    category.category.toLowerCase()
-                  )}`
-                )
-              "
-            >
-              <v-list-item-title class="text-body-2">{{
-                category.category
-              }}</v-list-item-title>
-            </v-list-item>
+                {{ category.category }}
+              </button>
+            </template>
           </template>
-        </v-list-group>
 
-        <v-list-item
-          class="mobile-nav-item"
-          @click="navigateAndClose('/favorites')"
-          :class="$route.path === '/favorites' ? 'active-mobile-nav' : ''"
-        >
-          <template v-slot:prepend>
-            <v-icon>mdi-heart</v-icon>
-          </template>
-          <v-list-item-title>Favorites</v-list-item-title>
-          <template v-slot:append v-if="userFavoritesCount > 0">
-            <v-chip size="x-small" color="primary">{{
-              userFavoritesCount
-            }}</v-chip>
-          </template>
-        </v-list-item>
+          <button
+            type="button"
+            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+            :class="
+              route.path === '/favorites' ? 'bg-customyellow/20 font-bold' : ''
+            "
+            @click="navigateAndClose('/favorites')"
+          >
+            <Heart class="h-5 w-5" />
+            Favorites
+            <UiBadge v-if="userFavoritesCount > 0" class="ml-auto">
+              {{ userFavoritesCount }}
+            </UiBadge>
+          </button>
 
-        <v-list-item
-          class="mobile-nav-item"
-          @click="navigateAndClose('/contact')"
-          :class="$route.path === '/contact' ? 'active-mobile-nav' : ''"
-        >
-          <template v-slot:prepend>
-            <v-icon>mdi-email</v-icon>
-          </template>
-          <v-list-item-title>Contact Us</v-list-item-title>
-        </v-list-item>
+          <button
+            type="button"
+            class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+            :class="
+              route.path === '/contact' ? 'bg-customyellow/20 font-bold' : ''
+            "
+            @click="navigateAndClose('/contact')"
+          >
+            <Mail class="h-5 w-5" />
+            Contact Us
+          </button>
 
-        <v-divider class="my-2"></v-divider>
+          <div class="my-2 h-px bg-border" />
 
-        <template v-if="currentUser">
-          <v-list-item class="mb-2 pa-3 bg-grey-lighten-4 rounded">
-            <div class="d-flex align-center">
-              <v-avatar color="info" size="36" class="mr-3">
-                <v-img
+          <template v-if="currentUser">
+            <div class="mb-2 flex items-center rounded-lg bg-muted p-3">
+              <UiAvatar class="mr-3 h-9 w-9">
+                <UiAvatarImage
                   :src="
                     currentUser.avatar_url ||
                     'https://cdn.vuetifyjs.com/images/john.jpg'
                   "
-                  cover
-                ></v-img>
-              </v-avatar>
-              <div>
-                <div class="text-body-2 font-weight-bold">
+                  :alt="currentUser.username + ' avatar'"
+                />
+                <UiAvatarFallback>
+                  {{ (currentUser.username || "U").charAt(0).toUpperCase() }}
+                </UiAvatarFallback>
+              </UiAvatar>
+              <div class="min-w-0">
+                <div class="truncate text-sm font-bold text-foreground">
                   {{ currentUser.username }}
                 </div>
-                <div class="text-caption text-grey">
+                <div class="truncate text-xs text-muted-foreground">
                   {{ currentUser.email }}
                 </div>
               </div>
             </div>
-          </v-list-item>
 
-          <v-list-item
-            class="mobile-nav-item"
-            @click="navigateAndClose('/profiles?tab=personal')"
-          >
-            <template v-slot:prepend>
-              <v-icon>mdi-account</v-icon>
-            </template>
-            <v-list-item-title>Profile</v-list-item-title>
-          </v-list-item>
-
-          <v-list-item
-            class="mobile-nav-item"
-            @click="navigateAndClose('/profiles?tab=orders')"
-          >
-            <template v-slot:prepend>
-              <v-icon>mdi-package-variant</v-icon>
-            </template>
-            <v-list-item-title>Orders</v-list-item-title>
-          </v-list-item>
-
-          <v-list-item class="mobile-nav-item text-error" @click="handleLogout">
-            <template v-slot:prepend>
-              <v-icon color="error">mdi-logout</v-icon>
-            </template>
-            <v-list-item-title>Logout</v-list-item-title>
-          </v-list-item>
-        </template>
-
-        <template v-else>
-          <v-list-item class="pa-3">
-            <v-btn
-              block
-              color="darkgreen"
-              rounded="pill"
-              @click="openDialogAndCloseMobile('sign-in')"
+            <button
+              type="button"
+              class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+              @click="navigateAndClose('/profiles?tab=personal')"
             >
-              Sign In
-            </v-btn>
-          </v-list-item>
-          <v-list-item class="pa-3">
-            <v-btn
-              block
-              variant="outlined"
-              color="darkgreen"
-              rounded="pill"
-              @click="openDialogAndCloseMobile('sign-up')"
+              <User class="h-5 w-5" />
+              Profile
+            </button>
+
+            <button
+              type="button"
+              class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted"
+              @click="navigateAndClose('/profiles?tab=orders')"
             >
-              Sign Up
-            </v-btn>
-          </v-list-item>
-        </template>
-      </v-list>
-    </v-navigation-drawer>
+              <Package class="h-5 w-5" />
+              Orders
+            </button>
+
+            <button
+              type="button"
+              class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+              @click="handleLogout"
+            >
+              <LogOut class="h-5 w-5" />
+              Logout
+            </button>
+          </template>
+
+          <template v-else>
+            <div class="p-3">
+              <UiButton
+                block
+                variant="secondary"
+                class="rounded-full"
+                @click="openDialogAndCloseMobile('sign-in')"
+              >
+                Sign In
+              </UiButton>
+            </div>
+            <div class="p-3 pt-0">
+              <UiButton
+                block
+                variant="outline"
+                class="rounded-full border-darkgreen text-darkgreen dark:border-border dark:text-foreground"
+                @click="openDialogAndCloseMobile('sign-up')"
+              >
+                Sign Up
+              </UiButton>
+            </div>
+          </template>
+        </nav>
+      </aside>
+    </Transition>
 
     <!-- Snackbar Alert -->
     <SnackbarAlert
@@ -707,368 +571,190 @@
   </div>
 </template>
 
-<script>
-definePageMeta({
-  layout: "default",
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useAuthStore } from "@/stores/auth";
+import { useCartStore } from "@/stores/cart";
+import { useFavoriteStore } from "@/stores/favorite";
+import {
+  BookOpen,
+  ChevronDown,
+  ChevronRight,
+  CircleUser,
+  Heart,
+  Home,
+  Lock,
+  LogIn,
+  LogOut,
+  Mail,
+  Menu,
+  Package,
+  Shapes,
+  ShoppingCart,
+  Star,
+  User,
+  UserPlus,
+  X,
+} from "lucide-vue-next";
+import { bookSubjects } from "@/constants/bookSubjects";
+
+const router = useRouter();
+const route = useRoute();
+
+const authStore = useAuthStore();
+const favoriteStore = useFavoriteStore();
+const cartStore = useCartStore();
+
+const { currentUser } = storeToRefs(authStore);
+const { favorites } = storeToRefs(favoriteStore);
+const { cart } = storeToRefs(cartStore);
+
+const dialogSignUp = ref(false);
+const dialogSignIn = ref(false);
+const dialogForgotPassword = ref(false);
+const isSessionRestored = ref(false);
+const mobileMenuDrawer = ref(false);
+
+const snackbar = reactive({
+  show: false,
+  message: "",
+  color: "success",
+  timeout: 3000,
 });
-import { mapState } from "vuex";
-import { mapActions } from "vuex";
-import { bookSubjects } from "@/constants/bookSubjects.js";
-import SnackbarAlert from "~/components/SnackbarAlert.vue";
-import ForgotPassword from "~/components/ForgotPassword.vue";
 
-export default {
-  components: {
-    SnackbarAlert,
-    ForgotPassword,
-  },
-  data() {
-    return {
-      dialogSignUp: false,
-      dialogSignIn: false,
-      dialogForgotPassword: false,
-      menu: false,
-      accountMenu: false,
-      isSessionRestored: false,
-      mobileMenuDrawer: false,
-      snackbar: {
-        show: false,
-        message: "",
-        color: "success",
-        timeout: 3000,
-      },
-      bookSubjects,
-    };
-  },
-  watch: {
-    currentUser: {
-      handler(newValue) {
-        if (newValue) {
-          this.dialogSignIn = false;
-          this.dialogSignUp = false;
-          this.dialogForgotPassword = false;
-        }
-      },
-      immediate: true,
-    },
-  },
+// Desktop category dropdown state
+const categoryMenuOpen = ref(false);
+const openGroups = ref<number[]>([]);
+const categoryMenuRef = ref<HTMLElement | null>(null);
 
-  methods: {
-    ...mapActions("auth", ["logout", "restoreSession"]),
-    ...mapActions("favorite", ["getFavoritesForEachUser"]),
-    ...mapActions("cart", ["fetchCart"]),
-    openDialog(type) {
-      if (this.currentUser && type !== "forgot-password") {
-        this.dialogSignIn = false;
-        this.dialogSignUp = false;
-        this.dialogForgotPassword = false;
-        return;
-      }
+// Mobile drawer category state
+const mobileCategoryOpen = ref(false);
+const mobileOpenGroups = ref<number[]>([]);
 
-      this.dialogSignIn = false;
-      this.dialogSignUp = false;
-      this.dialogForgotPassword = false;
+const userFavoritesCount = computed(() =>
+  Array.isArray(favorites.value)
+    ? favorites.value.filter((f: any) => f?.bookId != null).length
+    : 0
+);
 
-      this.$nextTick(() => {
-        if (type === "sign-in") {
-          this.dialogSignIn = true;
-        } else if (type === "sign-up") {
-          this.dialogSignUp = true;
-        } else if (type === "forgot-password") {
-          this.dialogForgotPassword = true;
-        }
-      });
-    },
-    handleCheckIsSignUp(data) {
-      this.dialogSignUp = false;
-      this.dialogSignIn = data;
-    },
-    handleLogout() {
-      this.accountMenu = false;
-      this.logout();
-      this.$router.push("/");
-    },
-    goToProfile(tab) {
-      this.accountMenu = false;
-      this.$nextTick(() => {
-        this.$router.push(`/profiles?tab=${tab}`);
-      });
-    },
-    showSnackbar(data) {
-      this.snackbar.message = data.message;
-      this.snackbar.color = data.color;
-      this.snackbar.show = true;
+const cartItemCount = computed(() =>
+  cart.value.items ? cart.value.items.length : 0
+);
 
-      if (data.color === "success") {
-        this.dialogSignIn = false;
-      }
-    },
-    navigateAndClose(route) {
-      this.mobileMenuDrawer = false;
-      this.$router.push(route);
-    },
-    openDialogAndCloseMobile(type) {
-      this.mobileMenuDrawer = false;
-      this.$nextTick(() => {
-        this.openDialog(type);
-      });
-    },
+watch(
+  currentUser,
+  (newValue) => {
+    if (newValue) {
+      dialogSignIn.value = false;
+      dialogSignUp.value = false;
+      dialogForgotPassword.value = false;
+    }
   },
-  computed: {
-    ...mapState("auth", ["currentUser"]),
-    ...mapState("favorite", ["favorites"]),
-    ...mapState("cart", ["cart"]),
-    userFavoritesCount() {
-      return Array.isArray(this.favorites)
-        ? this.favorites.filter((f) => f?.bookId != null).length
-        : 0;
-    },
-    cartItemCount() {
-      return this.cart.items ? this.cart.items.length : 0;
-    },
-  },
-  async mounted() {
-    await this.getFavoritesForEachUser();
-    await this.fetchCart();
-    await this.restoreSession();
-    this.isSessionRestored = true;
-  },
-};
+  { immediate: true }
+);
+
+function toggleCategoryGroup(index: number) {
+  if (openGroups.value.includes(index)) {
+    openGroups.value = openGroups.value.filter((i) => i !== index);
+  } else {
+    openGroups.value = [...openGroups.value, index];
+  }
+}
+
+function toggleMobileGroup(index: number) {
+  if (mobileOpenGroups.value.includes(index)) {
+    mobileOpenGroups.value = mobileOpenGroups.value.filter((i) => i !== index);
+  } else {
+    mobileOpenGroups.value = [...mobileOpenGroups.value, index];
+  }
+}
+
+function goToSubject(name: string) {
+  categoryMenuOpen.value = false;
+  router.push(`/subjects/${encodeURIComponent(name.toLowerCase())}`);
+}
+
+function openDialog(type?: string) {
+  if (currentUser.value && type !== "forgot-password") {
+    dialogSignIn.value = false;
+    dialogSignUp.value = false;
+    dialogForgotPassword.value = false;
+    return;
+  }
+
+  dialogSignIn.value = false;
+  dialogSignUp.value = false;
+  dialogForgotPassword.value = false;
+
+  nextTick(() => {
+    if (type === "sign-in") {
+      dialogSignIn.value = true;
+    } else if (type === "sign-up") {
+      dialogSignUp.value = true;
+    } else if (type === "forgot-password") {
+      dialogForgotPassword.value = true;
+    }
+  });
+}
+
+function handleCheckIsSignUp(data: boolean) {
+  dialogSignUp.value = false;
+  dialogSignIn.value = data;
+}
+
+function handleLogout() {
+  mobileMenuDrawer.value = false;
+  authStore.logout();
+  router.push("/");
+}
+
+function goToProfile(tab: string) {
+  nextTick(() => {
+    router.push(`/profiles?tab=${tab}`);
+  });
+}
+
+function showSnackbar(data: { message: string; color?: string }) {
+  snackbar.message = data.message;
+  snackbar.color = data.color ?? "success";
+  snackbar.show = true;
+
+  if (data.color === "success") {
+    dialogSignIn.value = false;
+  }
+}
+
+function navigateAndClose(targetRoute: string) {
+  mobileMenuDrawer.value = false;
+  router.push(targetRoute);
+}
+
+function openDialogAndCloseMobile(type: string) {
+  mobileMenuDrawer.value = false;
+  nextTick(() => {
+    openDialog(type);
+  });
+}
+
+function onDocumentClick(event: MouseEvent) {
+  if (
+    categoryMenuOpen.value &&
+    categoryMenuRef.value &&
+    !categoryMenuRef.value.contains(event.target as Node)
+  ) {
+    categoryMenuOpen.value = false;
+  }
+}
+
+onMounted(async () => {
+  document.addEventListener("click", onDocumentClick);
+  await favoriteStore.getFavoritesForEachUser();
+  await cartStore.fetchCart();
+  await authStore.restoreSession();
+  isSessionRestored.value = true;
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", onDocumentClick);
+});
 </script>
-
-<style scoped>
-/* Logo Animation */
-.logo-container {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.logo-container:hover {
-  transform: scale(1.05);
-}
-
-.logo-avatar {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.logo-container:hover .logo-avatar {
-  transform: rotate(10deg);
-}
-
-.logo-text {
-  transition: all 0.3s ease;
-}
-
-.logo-container:hover .logo-text {
-  letter-spacing: 0.05em;
-}
-
-/* Navigation Buttons */
-.nav-btn {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-}
-
-.nav-btn::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(220, 247, 99, 0.2);
-  transform: translate(-50%, -50%);
-  transition: width 0.4s, height 0.4s;
-}
-
-.nav-btn:hover::before {
-  width: 300px;
-  height: 300px;
-}
-
-.nav-btn:hover {
-  transform: translateY(-2px);
-}
-
-.active-nav {
-  box-shadow: 0 4px 12px rgba(220, 247, 99, 0.4);
-}
-
-/* Category Menu */
-.category-menu {
-  border: 1px solid rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-}
-
-.category-item,
-.subcategory-item {
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.category-item:hover {
-  background: rgba(220, 247, 99, 0.15);
-  transform: translateX(4px);
-}
-
-.subcategory-item:hover {
-  background: rgba(220, 247, 99, 0.1);
-  transform: translateX(4px);
-}
-
-.user-profile-btn {
-  transition: all 0.3s ease;
-  border-radius: 50px;
-  padding: 4px 16px 4px 4px;
-}
-
-.user-profile-btn:hover {
-  background: rgba(255, 255, 255, 0.15);
-  transform: translateY(-2px);
-}
-
-/* Auth Card */
-.auth-card {
-  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* User Menu Card */
-/* User Menu Card - FIX HORIZONTAL SCROLL */
-.user-menu-card {
-  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden !important;
-  max-width: 320px;
-  width: 280px;
-}
-
-.user-menu-card .v-list {
-  overflow-x: hidden !important;
-}
-
-.user-menu-card .v-list-item {
-  overflow: hidden !important;
-  max-width: 100%;
-}
-
-.user-menu-card .v-list-item__content {
-  overflow: hidden;
-  min-width: 0;
-}
-
-.user-info-item {
-  background: rgba(0, 0, 0, 0.03);
-  overflow: hidden !important;
-}
-
-.user-info-item .v-list-item-title,
-.user-info-item .v-list-item-subtitle {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-
-.menu-list-item {
-  transition: all 0.2s ease;
-  cursor: pointer;
-  overflow: hidden !important;
-}
-
-.menu-list-item .v-list-item-title {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.menu-list-item:hover {
-  background: rgba(0, 0, 0, 0.05);
-  transform: translateX(4px);
-}
-
-.logout-item:hover {
-  background: rgba(244, 67, 54, 0.08);
-}
-
-/* Dialog Close Button */
-.dialog-close-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 10;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(10px);
-}
-
-.dialog-close-btn:hover {
-  background: rgba(255, 255, 255, 0.3) !important;
-}
-
-/* Badge customization */
-:deep(.v-badge__badge) {
-  font-size: 10px;
-  font-weight: bold;
-  min-width: 18px;
-  height: 18px;
-}
-
-/* Mobile Drawer Styles */
-.mobile-drawer {
-  z-index: 9999 !important;
-}
-
-:deep(.mobile-drawer .v-navigation-drawer__scrim) {
-  z-index: 9998 !important;
-}
-
-:deep(.v-navigation-drawer) {
-  z-index: 9999 !important;
-}
-
-.mobile-nav-item {
-  transition: all 0.2s ease;
-  cursor: pointer;
-  margin: 2px 8px;
-  border-radius: 8px;
-}
-
-.mobile-nav-item:hover {
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.active-mobile-nav {
-  background: rgba(220, 247, 99, 0.2);
-  font-weight: bold;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 599px) {
-  .action-icon-btn {
-    min-width: 36px !important;
-    padding: 0 !important;
-  }
-
-  :deep(.v-badge__badge) {
-    font-size: 9px;
-    min-width: 16px;
-    height: 16px;
-  }
-}
-
-@media (max-width: 959px) {
-  .logo-text {
-    font-size: 1.1rem !important;
-  }
-}
-</style>

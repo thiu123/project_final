@@ -1,261 +1,296 @@
 <template>
-  <v-card elevation="0" class="forgot-password-card">
-    <v-card-text class="pa-8">
+  <div class="min-h-[500px] rounded-lg bg-card text-card-foreground">
+    <div class="p-8">
       <!-- Header -->
-      <div class="text-center mb-6">
-        <v-avatar color="primary" size="64" class="mb-4">
-          <v-icon size="32" color="white">mdi-lock-reset</v-icon>
-        </v-avatar>
-        <h2 class="text-h5 font-weight-bold mb-2">Forgot Password</h2>
-        <p class="text-body-2 text-grey">
-          {{ getCurrentStepDescription() }}
+      <div class="mb-6 text-center">
+        <div
+          class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary"
+        >
+          <KeyRound class="h-8 w-8 text-white" />
+        </div>
+        <h2 class="mb-2 text-2xl font-bold">Forgot Password</h2>
+        <p class="text-sm text-muted-foreground">
+          {{ currentStepDescription }}
         </p>
       </div>
 
       <!-- Step 1: Enter Email -->
       <div v-if="step === 1">
-        <v-form ref="emailForm" @submit.prevent="handleSendResetToken">
-          <v-text-field
+        <form @submit.prevent="handleSendResetToken">
+          <UiInput
             v-model="email"
             label="Email"
             type="email"
-            variant="outlined"
-            prepend-inner-icon="mdi-email"
-            :rules="emailRules"
             required
-            density="comfortable"
-            class="mb-4"
-          ></v-text-field>
-
-          <v-btn
-            type="submit"
-            color="primary"
-            block
-            size="large"
-            :loading="loading"
-            elevation="2"
+            :error-message="emailError"
+            wrapper-class="mb-4"
+            @focus="emailError = ''"
           >
+            <template #prepend>
+              <Mail class="h-4 w-4" />
+            </template>
+          </UiInput>
+
+          <UiButton type="submit" block size="lg" :loading="loading" class="shadow">
             Send Reset Token
-          </v-btn>
-        </v-form>
+          </UiButton>
+        </form>
       </div>
 
       <!-- Step 2: Show Reset Token -->
       <div v-if="step === 2">
-        <v-alert type="success" variant="tonal" class="mb-4">
-          <div class="text-subtitle-2 font-weight-bold mb-1">
-            Reset Token Generated!
-          </div>
-          <div class="text-caption">
-            Copy the token below to reset your password
-          </div>
-        </v-alert>
+        <UiAlert variant="success" title="Reset Token Generated!" class="mb-4">
+          <div class="text-xs">Copy the token below to reset your password</div>
+        </UiAlert>
 
-        <v-text-field
+        <UiInput
           v-model="resetToken"
           label="Reset Token"
-          variant="outlined"
           readonly
-          density="comfortable"
-          append-inner-icon="mdi-content-copy"
-          @click:append-inner="copyToken"
-          class="mb-4"
-        ></v-text-field>
-
-        <v-btn
-          color="primary"
-          block
-          size="large"
-          elevation="2"
-          @click="step = 3"
+          wrapper-class="mb-4"
         >
+          <template #append>
+            <button
+              type="button"
+              class="text-muted-foreground transition-colors hover:text-foreground"
+              aria-label="Copy token"
+              @click="copyToken"
+            >
+              <Copy class="h-4 w-4" />
+            </button>
+          </template>
+        </UiInput>
+
+        <UiButton block size="lg" class="shadow" @click="step = 3">
           Continue to Reset Password
-        </v-btn>
+        </UiButton>
       </div>
 
       <!-- Step 3: Enter Token & New Password -->
       <div v-if="step === 3">
-        <v-form ref="resetForm" @submit.prevent="handleResetPassword">
-          <v-text-field
+        <form @submit.prevent="handleResetPassword">
+          <UiInput
             v-model="enteredToken"
             label="Reset Token"
-            variant="outlined"
-            prepend-inner-icon="mdi-key"
-            :rules="[(v) => !!v || 'Token is required']"
             required
-            density="comfortable"
-            class="mb-3"
-          ></v-text-field>
+            :error-message="tokenError"
+            wrapper-class="mb-3"
+            @focus="tokenError = ''"
+          >
+            <template #prepend>
+              <Key class="h-4 w-4" />
+            </template>
+          </UiInput>
 
-          <v-text-field
+          <UiInput
             v-model="newPassword"
             label="New Password"
             :type="showPassword ? 'text' : 'password'"
-            variant="outlined"
-            prepend-inner-icon="mdi-lock"
-            :append-inner-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
-            @click:append-inner="showPassword = !showPassword"
-            :rules="passwordRules"
             required
-            density="comfortable"
-            class="mb-3"
-          ></v-text-field>
+            :error-message="newPasswordError"
+            wrapper-class="mb-3"
+            @focus="newPasswordError = ''"
+          >
+            <template #prepend>
+              <Lock class="h-4 w-4" />
+            </template>
+            <template #append>
+              <button
+                type="button"
+                class="text-muted-foreground transition-colors hover:text-foreground"
+                :aria-label="showPassword ? 'Hide password' : 'Show password'"
+                @click="showPassword = !showPassword"
+              >
+                <EyeOff v-if="showPassword" class="h-4 w-4" />
+                <Eye v-else class="h-4 w-4" />
+              </button>
+            </template>
+          </UiInput>
 
-          <v-text-field
+          <UiInput
             v-model="confirmPassword"
             label="Confirm Password"
             :type="showConfirmPassword ? 'text' : 'password'"
-            variant="outlined"
-            prepend-inner-icon="mdi-lock-check"
-            :append-inner-icon="showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
-            @click:append-inner="showConfirmPassword = !showConfirmPassword"
-            :rules="confirmPasswordRules"
             required
-            density="comfortable"
-            class="mb-4"
-          ></v-text-field>
+            :error-message="confirmPasswordError"
+            wrapper-class="mb-4"
+            @focus="confirmPasswordError = ''"
+          >
+            <template #prepend>
+              <LockKeyhole class="h-4 w-4" />
+            </template>
+            <template #append>
+              <button
+                type="button"
+                class="text-muted-foreground transition-colors hover:text-foreground"
+                :aria-label="showConfirmPassword ? 'Hide password' : 'Show password'"
+                @click="showConfirmPassword = !showConfirmPassword"
+              >
+                <EyeOff v-if="showConfirmPassword" class="h-4 w-4" />
+                <Eye v-else class="h-4 w-4" />
+              </button>
+            </template>
+          </UiInput>
 
-          <v-btn
+          <UiButton
             type="submit"
-            color="success"
+            variant="success"
             block
-            size="large"
+            size="lg"
             :loading="loading"
-            elevation="2"
+            class="shadow"
           >
             Reset Password
-          </v-btn>
-        </v-form>
+          </UiButton>
+        </form>
       </div>
 
       <!-- Back to Login -->
-      <div class="text-center mt-6">
-        <v-btn
-          variant="text"
-          color="primary"
-          @click="$emit('back-to-login')"
-          prepend-icon="mdi-arrow-left"
-        >
+      <div class="mt-6 text-center">
+        <UiButton type="button" variant="link" @click="$emit('back-to-login')">
+          <ArrowLeft class="mr-1 h-4 w-4" />
           Back to Login
-        </v-btn>
+        </UiButton>
       </div>
-    </v-card-text>
+    </div>
 
     <!-- Snackbar -->
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" location="top">
-      {{ snackbar.message }}
-    </v-snackbar>
-  </v-card>
+    <SnackbarAlert
+      v-model="snackbar.show"
+      :text="snackbar.message"
+      :color="snackbar.color"
+    />
+  </div>
 </template>
 
-<script>
+<script setup lang="ts">
+import {
+  ArrowLeft,
+  Copy,
+  Eye,
+  EyeOff,
+  Key,
+  KeyRound,
+  Lock,
+  LockKeyhole,
+  Mail,
+} from "lucide-vue-next";
 import { forgotPassword, resetPassword } from "~/api/authApi";
 
-export default {
-  name: "ForgotPassword",
-  emits: ["back-to-login"],
-  data() {
-    return {
-      step: 1,
-      email: "",
-      resetToken: "",
-      enteredToken: "",
-      newPassword: "",
-      confirmPassword: "",
-      showPassword: false,
-      showConfirmPassword: false,
-      loading: false,
-      snackbar: {
-        show: false,
-        message: "",
-        color: "success",
-      },
-      emailRules: [
-        (v) => !!v || "Email is required",
-        (v) => /.+@.+\..+/.test(v) || "Email must be valid",
-      ],
-      passwordRules: [
-        (v) => !!v || "Password is required",
-        (v) => v.length >= 6 || "Password must be at least 6 characters",
-      ],
-      confirmPasswordRules: [
-        (v) => !!v || "Please confirm your password",
-        (v) => v === this.newPassword || "Passwords do not match",
-      ],
-    };
-  },
-  methods: {
-    getCurrentStepDescription() {
-      switch (this.step) {
-        case 1:
-          return "Enter your email to receive a reset token";
-        case 2:
-          return "Copy your reset token";
-        case 3:
-          return "Enter token and new password";
-        default:
-          return "";
-      }
-    },
+const emit = defineEmits<{
+  (e: "back-to-login"): void;
+}>();
 
-    async handleSendResetToken() {
-      const { valid } = await this.$refs.emailForm.validate();
-      if (!valid) return;
+const step = ref(1);
+const email = ref("");
+const resetToken = ref("");
+const enteredToken = ref("");
+const newPassword = ref("");
+const confirmPassword = ref("");
+const showPassword = ref(false);
+const showConfirmPassword = ref(false);
+const loading = ref(false);
 
-      this.loading = true;
-      try {
-        const response = await forgotPassword(this.email);
-        this.resetToken = response.data.resetToken;
-        this.step = 2;
-        this.showSnackbar("Reset token generated successfully!", "success");
-      } catch (error) {
-        this.showSnackbar(
-          error.response?.data?.msg || "Failed to generate reset token",
-          "error"
-        );
-      } finally {
-        this.loading = false;
-      }
-    },
+const emailError = ref("");
+const tokenError = ref("");
+const newPasswordError = ref("");
+const confirmPasswordError = ref("");
 
-    async handleResetPassword() {
-      const { valid } = await this.$refs.resetForm.validate();
-      if (!valid) return;
+const snackbar = reactive({
+  show: false,
+  message: "",
+  color: "success",
+});
 
-      this.loading = true;
-      try {
-        await resetPassword(this.enteredToken, this.newPassword);
-        this.showSnackbar("Password reset successfully!", "success");
-        setTimeout(() => {
-          this.$emit("back-to-login");
-        }, 1500);
-      } catch (error) {
-        this.showSnackbar(
-          error.response?.data?.msg || "Failed to reset password",
-          "error"
-        );
-      } finally {
-        this.loading = false;
-      }
-    },
+type Rule = (v: string) => true | string;
 
-    copyToken() {
-      navigator.clipboard.writeText(this.resetToken);
-      this.showSnackbar("Token copied to clipboard!", "info");
-    },
+const emailRules: Rule[] = [
+  (v) => !!v || "Email is required",
+  (v) => /.+@.+\..+/.test(v) || "Email must be valid",
+];
+const passwordRules: Rule[] = [
+  (v) => !!v || "Password is required",
+  (v) => v.length >= 6 || "Password must be at least 6 characters",
+];
+const confirmPasswordRules: Rule[] = [
+  (v) => !!v || "Please confirm your password",
+  (v) => v === newPassword.value || "Passwords do not match",
+];
 
-    showSnackbar(message, color) {
-      this.snackbar.message = message;
-      this.snackbar.color = color;
-      this.snackbar.show = true;
-    },
-  },
-};
-</script>
-
-<style scoped>
-.forgot-password-card {
-  background: white;
-  min-height: 500px;
+function runRules(rules: Rule[], value: string): string {
+  for (const rule of rules) {
+    const result = rule(value);
+    if (result !== true) return result;
+  }
+  return "";
 }
-</style>
+
+const currentStepDescription = computed(() => {
+  switch (step.value) {
+    case 1:
+      return "Enter your email to receive a reset token";
+    case 2:
+      return "Copy your reset token";
+    case 3:
+      return "Enter token and new password";
+    default:
+      return "";
+  }
+});
+
+async function handleSendResetToken() {
+  emailError.value = runRules(emailRules, email.value);
+  if (emailError.value) return;
+
+  loading.value = true;
+  try {
+    const response = await forgotPassword(email.value);
+    resetToken.value = response.data.resetToken;
+    step.value = 2;
+    showSnackbar("Reset token generated successfully!", "success");
+  } catch (error: any) {
+    showSnackbar(
+      error.response?.data?.msg || "Failed to generate reset token",
+      "error"
+    );
+  } finally {
+    loading.value = false;
+  }
+}
+
+async function handleResetPassword() {
+  tokenError.value = enteredToken.value ? "" : "Token is required";
+  newPasswordError.value = runRules(passwordRules, newPassword.value);
+  confirmPasswordError.value = runRules(
+    confirmPasswordRules,
+    confirmPassword.value
+  );
+  if (tokenError.value || newPasswordError.value || confirmPasswordError.value) {
+    return;
+  }
+
+  loading.value = true;
+  try {
+    await resetPassword(enteredToken.value, newPassword.value);
+    showSnackbar("Password reset successfully!", "success");
+    setTimeout(() => {
+      emit("back-to-login");
+    }, 1500);
+  } catch (error: any) {
+    showSnackbar(error.response?.data?.msg || "Failed to reset password", "error");
+  } finally {
+    loading.value = false;
+  }
+}
+
+function copyToken() {
+  navigator.clipboard.writeText(resetToken.value);
+  showSnackbar("Token copied to clipboard!", "info");
+}
+
+function showSnackbar(message: string, color: string) {
+  snackbar.message = message;
+  snackbar.color = color;
+  snackbar.show = true;
+}
+</script>

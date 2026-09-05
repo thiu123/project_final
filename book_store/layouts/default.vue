@@ -1,14 +1,13 @@
 <template>
-  <v-app
-    min-height="100vh"
-    style="background: linear-gradient(to bottom right, #f8fafc, #eff6ff)"
-  >
-    <v-main min-height="100vh">
-      <base-navigation class="w-100" style="z-index: 9" />
+  <div class="flex min-h-screen flex-col bg-background">
+    <BaseNavigation />
+    <main class="flex-1">
       <slot />
-      <Footer />
-      <!-- Chatbot Widget -->
-      <ChatbotWidget />
-    </v-main>
-  </v-app>
+    </main>
+    <Footer />
+    <!-- Chatbot Widget -->
+    <ChatbotWidget />
+  </div>
 </template>
+
+<script setup lang="ts"></script>

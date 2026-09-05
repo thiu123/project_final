@@ -1,703 +1,604 @@
 <template>
-  <div class="bg-gradient-to-br from-white to-blue-50 min-h-screen">
-    <v-container class="pa-4 pa-md-6">
-      <v-row>
+  <div
+    class="min-h-screen bg-gradient-to-br from-white to-blue-50 dark:from-background dark:to-background"
+  >
+    <div class="container mx-auto p-4 md:p-6">
+      <div class="grid grid-cols-12 gap-4">
         <!-- Cart Items Section -->
-        <v-col cols="12" lg="8" xl="8">
-          <v-card class="mb-4" elevation="3" rounded="xl">
-            <v-card-title
-              class="d-flex align-center py-4 px-4 bg-waterblue text-white"
-            >
-              <v-icon
-                icon="mdi-cart-outline"
-                color="white"
-                class="mr-3"
-                size="large"
-              ></v-icon>
-              <span class="text-h5 font-weight-bold"
+        <div class="col-span-12 lg:col-span-8">
+          <UiCard class="mb-4 overflow-hidden rounded-xl border-0 shadow-md">
+            <div class="flex items-center bg-waterblue px-4 py-4 text-white">
+              <ShoppingCart class="mr-3 h-7 w-7" />
+              <span class="text-2xl font-bold"
                 >Cart ({{ cartItems.length }} items)</span
               >
-            </v-card-title>
+            </div>
 
-            <v-divider></v-divider>
+            <UiSeparator />
 
-            <v-card-text class="pa-0">
+            <div class="p-0">
               <!-- Desktop Header -->
-              <!-- Desktop Header -->
-              <v-row
-                class="ma-0 pa-4 text-subtitle-1 font-weight-medium d-none d-md-flex"
+              <div
+                class="hidden grid-cols-12 items-center p-4 text-base font-medium md:grid"
               >
-                <v-col cols="6" class="d-flex align-center">
-                  <v-checkbox
+                <div class="col-span-6 flex items-center">
+                  <UiCheckbox
                     v-model="selectAll"
                     :label="`Select all ${cartItems.length} items`"
-                    hide-details
-                    density="compact"
-                    color="waterblue"
-                  ></v-checkbox>
-                </v-col>
-                <v-col cols="2" class="text-center">Quantity</v-col>
-                <v-col cols="2" class="text-end">Price</v-col>
-                <v-col cols="2" class="d-flex justify-end">
-                  <v-btn
+                  />
+                </div>
+                <div class="col-span-2 text-center">Quantity</div>
+                <div class="col-span-2 text-right">Price</div>
+                <div class="col-span-2 flex justify-end">
+                  <UiButton
                     v-if="selectAll && selectedItems.length > 0"
-                    variant="text"
-                    color="error"
-                    size="small"
-                    @click="confirmDeleteSelected"
-                    class="font-weight-bold"
+                    variant="ghost"
+                    size="sm"
+                    class="font-bold text-destructive hover:text-destructive"
+                    @click="deleteSelectedItems"
                   >
-                    <v-icon start size="small">mdi-delete-sweep</v-icon>
+                    <Trash2 class="mr-1 h-4 w-4" />
                     Delete All
-                  </v-btn>
+                  </UiButton>
                   <span v-else>Delete</span>
-                </v-col>
-              </v-row>
+                </div>
+              </div>
 
               <!-- Mobile Header -->
               <div
-                class="d-flex d-md-none align-center justify-space-between pa-4 bg-grey-lighten-5"
+                class="flex items-center justify-between bg-muted p-4 md:hidden"
               >
-                <v-checkbox
+                <UiCheckbox
                   v-model="selectAll"
                   :label="`Select all ${cartItems.length} items`"
-                  hide-details
-                  density="compact"
-                  color="waterblue"
-                ></v-checkbox>
-                <v-btn
-                  variant="text"
-                  color="waterblue"
-                  size="small"
-                  @click="deleteSelectedItems"
+                />
+                <UiButton
+                  variant="ghost"
+                  size="sm"
+                  class="text-waterblue hover:text-waterblue"
                   :disabled="selectedItems.length === 0"
+                  @click="deleteSelectedItems"
                 >
-                  <v-icon start>mdi-delete</v-icon>
+                  <Trash2 class="mr-1 h-4 w-4" />
                   Delete Selected
-                </v-btn>
+                </UiButton>
               </div>
 
-              <v-card
-                v-if="isLoaded && !cartItems.length"
-                class="pa-8 text-center"
-              >
-                <v-icon
-                  icon="mdi-cart-outline"
-                  size="80"
-                  color="grey-lighten-2"
-                  class="mb-4"
-                ></v-icon>
-                <h3 class="text-h5 font-weight-bold text-customblack mb-3">
+              <!-- Empty Cart -->
+              <div v-if="isLoaded && !cartItems.length" class="p-8 text-center">
+                <ShoppingCart
+                  class="mx-auto mb-4 h-20 w-20 text-muted-foreground/40"
+                />
+                <h3 class="mb-3 text-2xl font-bold text-foreground">
                   Your cart is empty
                 </h3>
                 <p
-                  class="text-body-1 text-grey-darken-1 mb-6 mx-auto"
-                  style="max-width: 400px"
+                  class="mx-auto mb-6 max-w-[400px] text-base text-muted-foreground"
                 >
                   Add items to cart to continue shopping
                 </p>
-                <v-btn
-                  color="waterblue"
-                  prepend-icon="mdi-shopping"
-                  variant="elevated"
-                  size="large"
-                  rounded="lg"
-                  to="/"
-                  class="font-weight-bold text-white"
-                >
-                  Continue Shopping
-                </v-btn>
-              </v-card>
+                <NuxtLink to="/" class="inline-block">
+                  <UiButton
+                    size="lg"
+                    class="rounded-lg bg-waterblue font-bold text-white shadow hover:bg-waterblue/90"
+                  >
+                    <ShoppingBag class="mr-2 h-5 w-5" />
+                    Continue Shopping
+                  </UiButton>
+                </NuxtLink>
+              </div>
 
               <!-- Cart Items -->
-              <v-slide-y-transition group v-if="cartItems.length > 0">
+              <template v-if="cartItems.length > 0">
                 <div
                   v-for="(item, index) in cartItems"
                   :key="index"
-                  class="mb-3 mx-3 transition-all duration-300 bg-transparent"
-                  rounded="lg"
+                  class="mx-3 mb-3 bg-transparent transition-all duration-300"
                 >
-                  <v-row class="ma-0 pa-4 align-center">
+                  <div class="grid grid-cols-12 items-center gap-2 p-4">
                     <!-- Checkbox and Image -->
-                    <v-col
-                      cols="12"
-                      sm="6"
-                      md="6"
-                      lg="6"
-                      class="d-flex align-center"
-                    >
-                      <v-checkbox
-                        v-model="selectedItems"
-                        :value="item?.bookId?._id"
-                        hide-details
-                        density="compact"
-                        color="waterblue"
-                        class="mr-3 d-none d-md-flex"
-                      ></v-checkbox>
-                      <div
-                        class="mr-4 d-flex align-center"
-                        style="min-width: 80px"
-                      >
-                        <v-img
+                    <div class="col-span-12 flex items-center sm:col-span-6">
+                      <UiCheckbox
+                        class="mr-3 hidden md:flex"
+                        :model-value="isItemSelected(item)"
+                        @update:model-value="
+                          (checked) => toggleItemSelected(item, checked === true)
+                        "
+                      />
+                      <div class="mr-4 flex min-w-[80px] items-center">
+                        <img
                           :src="item?.bookId?.cover_url"
-                          width="80"
-                          height="120"
-                          class="elevation-2"
-                          cover
-                        >
-                          <template v-slot:placeholder>
-                            <v-row
-                              class="fill-height ma-0"
-                              align="center"
-                              justify="center"
-                            >
-                              <v-progress-circular
-                                indeterminate
-                                color="waterblue"
-                              ></v-progress-circular>
-                            </v-row>
-                          </template>
-                        </v-img>
+                          :alt="item?.bookId?.title || 'Book cover'"
+                          class="h-[120px] w-[80px] bg-muted object-cover shadow"
+                        />
                       </div>
 
-                      <div class="flex-grow-1 min-width-0">
+                      <div class="min-w-0 grow">
                         <div
-                          class="text-subtitle-1 font-weight-bold text-customblack mb-2 text-truncate"
+                          class="mb-2 truncate text-base font-bold text-foreground"
                         >
                           {{ item?.bookId?.title || "Product name" }}
                         </div>
                         <div
-                          class="text-body-2 text-grey-darken-1 mb-2 d-md-none"
+                          class="mb-2 text-sm text-muted-foreground md:hidden"
                         >
-                          by {{ item?.bookId?.author || "Unknown Author" }}
+                          by {{ (item?.bookId as any)?.author || "Unknown Author" }}
                         </div>
                         <div
-                          class="text-h6 font-weight-bold text-waterblue mb-2 d-md-none"
+                          class="mb-2 text-lg font-bold text-waterblue md:hidden"
                         >
                           ${{ getItemPrice(item) }}
                         </div>
-                        <div class="d-flex ga-2 mb-2 flex-wrap">
-                          <v-chip
-                            size="small"
-                            :color="
+                        <div class="mb-2 flex flex-wrap gap-2">
+                          <UiBadge
+                            :variant="
                               item.productType === 'ebook'
                                 ? 'success'
-                                : 'primary'
+                                : 'default'
                             "
-                            variant="tonal"
-                            class="text-caption"
+                            class="text-xs"
                           >
                             {{
                               item.productType === "ebook"
                                 ? "📱 Ebook"
                                 : "📚 Hardbook"
                             }}
-                          </v-chip>
+                          </UiBadge>
 
                           <!-- Stock display for hardbooks -->
-                          <v-chip
+                          <UiBadge
                             v-if="item.productType === 'hardbook'"
-                            size="small"
-                            :color="getStockColor(item.bookId.stock)"
-                            variant="outlined"
-                            class="text-caption"
+                            :variant="getStockColor(item.bookId?.stock ?? 0)"
+                            class="text-xs"
                           >
-                            {{ getStockText(item.bookId.stock) }}
-                          </v-chip>
+                            {{ getStockText(item.bookId?.stock ?? 0) }}
+                          </UiBadge>
                         </div>
-                        <v-chip
-                          size="small"
-                          color="waterblue"
-                          variant="outlined"
-                          class="text-caption text-capitalize"
+                        <UiBadge
                           v-if="
                             item?.bookId?.subjects &&
                             item?.bookId?.subjects.length > 0
                           "
+                          variant="outline"
+                          class="border-waterblue/50 text-xs capitalize text-waterblue"
                         >
                           {{ item?.bookId?.subjects[0] }}
-                        </v-chip>
+                        </UiBadge>
                       </div>
-                    </v-col>
+                    </div>
 
-                    <!-- Quantity - Much Smaller -->
-                    <v-col
-                      cols="4"
-                      sm="2"
-                      class="d-flex justify-center align-center"
+                    <!-- Quantity -->
+                    <div
+                      class="col-span-4 flex items-center justify-center sm:col-span-2"
                     >
                       <div
-                        class="d-flex align-center justify-center pa-1 rounded-lg"
-                        style="
-                          background: rgba(82, 149, 208, 0.05);
-                          min-width: 80px;
-                        "
+                        class="flex min-w-[80px] items-center justify-center rounded-lg bg-waterblue/5 p-1"
                       >
-                        <v-btn
-                          icon="mdi-minus"
-                          variant="tonal"
-                          size="x-small"
-                          color="grey-darken-1"
-                          density="comfortable"
-                          @click="decreaseQuantity(item)"
+                        <button
+                          type="button"
+                          class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-200 hover:bg-muted/70 disabled:pointer-events-none disabled:opacity-50"
                           :disabled="item.quantity <= 1"
-                          class="transition-all duration-200"
-                        ></v-btn>
-                        <v-text-field
+                          aria-label="Decrease quantity"
+                          @click="decreaseQuantity(item)"
+                        >
+                          <Minus class="h-3.5 w-3.5" />
+                        </button>
+                        <input
                           v-model="item.quantity"
                           type="number"
-                          variant="outlined"
-                          density="compact"
-                          hide-details
-                          class="mx-1"
-                          :hide-spin-buttons="true"
-                          style="min-width: 35px; max-width: 45px"
-                          rounded="lg"
-                          color="waterblue"
-                        ></v-text-field>
-
-                        <v-btn
-                          icon="mdi-plus"
-                          variant="tonal"
-                          size="x-small"
-                          color="waterblue"
-                          density="comfortable"
-                          @click="increaseQuantity(item)"
+                          class="mx-1 h-8 w-[45px] min-w-[35px] rounded-lg border border-input bg-background px-1 text-center text-sm text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        />
+                        <button
+                          type="button"
+                          class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-waterblue/15 text-waterblue transition-all duration-200 hover:bg-waterblue/25 disabled:pointer-events-none disabled:opacity-50"
                           :disabled="
                             item.productType === 'hardbook' &&
-                            item.quantity >= item.bookId.stock
+                            item.quantity >= (item.bookId?.stock ?? 0)
                           "
-                          class="transition-all duration-200"
-                        ></v-btn>
+                          aria-label="Increase quantity"
+                          @click="increaseQuantity(item)"
+                        >
+                          <Plus class="h-3.5 w-3.5" />
+                        </button>
                       </div>
-                    </v-col>
+                    </div>
 
                     <!-- Price -->
-                    <v-col cols="4" sm="2" class="text-end d-none d-md-block">
-                      <div class="text-end">
-                        <div
-                          class="text-subtitle-1 font-weight-bold text-waterblue"
-                        >
+                    <div class="hidden text-right md:col-span-2 md:block">
+                      <div class="text-right">
+                        <div class="text-base font-bold text-waterblue">
                           ${{ getItemPrice(item) }}
                         </div>
                         <div
                           v-if="item.productType === 'ebook'"
-                          class="text-caption text-grey-darken-1 text-decoration-line-through"
+                          class="text-xs text-muted-foreground line-through"
                         >
                           ${{ item?.bookId?.price || "0" }}
                         </div>
                       </div>
-                    </v-col>
+                    </div>
 
                     <!-- Delete Button -->
-                    <v-col cols="4" sm="2" class="text-end">
-                      <v-btn
-                        variant="text"
-                        icon
-                        size="small"
-                        color="error"
-                        @click="confirmDeleteItem(item.bookId._id)"
-                        class="transition-all duration-200"
+                    <div class="col-span-4 text-right sm:col-span-2">
+                      <UiButton
+                        variant="ghost"
+                        size="iconSm"
+                        class="text-destructive transition-all duration-200 hover:text-destructive"
+                        aria-label="Remove item"
+                        @click="confirmDeleteItem(item.bookId?._id)"
                       >
-                        <v-icon>mdi-trash-can-outline</v-icon>
-                      </v-btn>
-                    </v-col>
-                  </v-row>
-                  <v-divider v-if="index < cartItems.length - 1"></v-divider>
+                        <Trash2 class="h-5 w-5" />
+                      </UiButton>
+                    </div>
+                  </div>
+                  <UiSeparator v-if="index < cartItems.length - 1" />
                 </div>
-              </v-slide-y-transition>
+              </template>
 
-              <v-divider></v-divider>
-            </v-card-text>
-          </v-card>
-        </v-col>
+              <UiSeparator />
+            </div>
+          </UiCard>
+        </div>
 
         <!-- Order Summary Section -->
-        <v-col cols="12" lg="4" xl="4">
-          <!-- Order Summary Card -->
-          <v-card
-            elevation="3"
-            rounded="xl"
-            class="position-sticky"
-            style="top: 24px"
+        <div class="col-span-12 lg:col-span-4">
+          <UiCard
+            class="overflow-hidden rounded-xl border-0 shadow-md lg:sticky lg:top-6"
           >
-            <v-card-title
-              class="py-4 px-4 bg-waterblue text-white d-flex align-center"
-            >
-              <v-icon icon="mdi-receipt" color="white" class="mr-2"></v-icon>
-              <span class="font-weight-bold">PAYMENT SUMMARY</span>
-            </v-card-title>
+            <div class="flex items-center bg-waterblue px-4 py-4 text-white">
+              <Receipt class="mr-2 h-6 w-6" />
+              <span class="font-bold">PAYMENT SUMMARY</span>
+            </div>
 
-            <v-card-text class="pa-6">
-              <v-alert
+            <div class="p-6">
+              <UiAlert
                 v-if="selectedItems.length === 0"
-                type="info"
-                variant="tonal"
-                density="compact"
+                variant="info"
                 class="mb-4"
               >
                 No items selected
-              </v-alert>
+              </UiAlert>
 
               <div v-else class="mb-4">
-                <div class="d-flex align-center justify-space-between mb-2">
-                  <span class="text-caption text-grey-darken-1"
+                <div class="mb-2 flex items-center justify-between">
+                  <span class="text-xs text-muted-foreground"
                     >Selected items</span
                   >
-                  <span class="text-caption font-weight-bold text-waterblue">
+                  <span class="text-xs font-bold text-waterblue">
                     {{ selectedItems.length }} / {{ cartItems.length }}
                   </span>
                 </div>
               </div>
 
-              <v-list density="compact" class="pa-0 bg-transparent">
-                <v-list-item class="px-0">
-                  <template v-slot:prepend>
-                    <span class="text-body-1 text-customblack">Subtotal</span>
-                  </template>
-                  <template v-slot:append>
-                    <span class="text-body-1 font-weight-bold text-customblack"
-                      >${{ totalPrice.toFixed(2) }}</span
-                    >
-                  </template>
-                </v-list-item>
+              <div>
+                <div class="flex items-center justify-between py-1.5">
+                  <span class="text-base text-foreground">Subtotal</span>
+                  <span class="text-base font-bold text-foreground"
+                    >${{ totalPrice.toFixed(2) }}</span
+                  >
+                </div>
 
-                <v-list-item class="px-0">
-                  <template v-slot:prepend>
-                    <span class="text-body-1 text-customblack"
-                      >Shipping fee</span
-                    >
-                  </template>
-                  <template v-slot:append>
-                    <span class="text-body-1 font-weight-bold text-customblack"
-                      >$0.00</span
-                    >
-                  </template>
-                </v-list-item>
+                <div class="flex items-center justify-between py-1.5">
+                  <span class="text-base text-foreground">Shipping fee</span>
+                  <span class="text-base font-bold text-foreground">$0.00</span>
+                </div>
 
-                <v-divider class="my-3"></v-divider>
+                <UiSeparator class="my-3" />
 
-                <v-list-item class="px-0">
-                  <template v-slot:prepend>
-                    <span class="text-h6 font-weight-bold text-customblack"
-                      >Total</span
-                    >
-                  </template>
-                  <template v-slot:append>
-                    <span class="text-h6 font-weight-bold text-waterblue"
-                      >${{ totalPrice.toFixed(2) }}</span
-                    >
-                  </template>
-                </v-list-item>
+                <div class="flex items-center justify-between py-1.5">
+                  <span class="text-lg font-bold text-foreground">Total</span>
+                  <span class="text-lg font-bold text-waterblue"
+                    >${{ totalPrice.toFixed(2) }}</span
+                  >
+                </div>
 
-                <v-list-item class="px-0">
-                  <template v-slot:prepend>
-                    <span class="text-caption text-grey-darken-1"
-                      >(VAT included)</span
-                    >
-                  </template>
-                </v-list-item>
-              </v-list>
+                <div class="py-1.5">
+                  <span class="text-xs text-muted-foreground"
+                    >(VAT included)</span
+                  >
+                </div>
+              </div>
 
-              <v-btn
-                color="waterblue"
-                size="large"
+              <UiButton
+                size="lg"
                 block
-                elevation="2"
-                class="text-h6 font-weight-bold mt-6 text-white"
-                prepend-icon="mdi-cash-register"
-                rounded="lg"
-                @click="handleCheckout"
+                class="mt-6 rounded-lg bg-waterblue text-lg font-bold text-white shadow hover:bg-waterblue/90"
                 :disabled="selectedItems.length === 0"
+                @click="handleCheckout"
               >
+                <CreditCard class="mr-2 h-5 w-5" />
                 CHECKOUT ({{ selectedItems.length }})
-              </v-btn>
+              </UiButton>
 
-              <v-alert
+              <UiAlert
                 v-if="selectedItems.length === 0"
-                type="warning"
-                variant="tonal"
-                density="compact"
-                class="mt-3 text-caption"
+                variant="warning"
+                class="mt-3 text-xs"
               >
                 Please select at least one item to checkout
-              </v-alert>
+              </UiAlert>
 
-              <div class="d-flex align-center justify-center gap-2 mt-4">
-                <v-icon
-                  icon="mdi-shield-check"
-                  color="lightgreen"
-                  size="small"
-                ></v-icon>
-                <span class="text-caption text-grey-darken-1"
+              <div class="mt-4 flex items-center justify-center gap-2">
+                <ShieldCheck class="h-4 w-4 text-lightgreen" />
+                <span class="text-xs text-muted-foreground"
                   >Secure payment</span
                 >
               </div>
-            </v-card-text>
-          </v-card>
-        </v-col>
-      </v-row>
-    </v-container>
+            </div>
+          </UiCard>
+        </div>
+      </div>
+    </div>
 
     <!-- Delete Confirmation Dialog -->
-    <v-dialog v-model="confirmDelete" max-width="400" persistent>
-      <v-card rounded="xl">
-        <v-card-title
-          class="text-h5 font-weight-bold text-customblack pa-6 pb-0"
-        >
-          Delete item
-        </v-card-title>
-        <v-card-text class="pa-6 pt-4">
+    <UiDialog v-model:open="confirmDelete">
+      <UiDialogContent
+        class="sm:max-w-sm"
+        @pointer-down-outside.prevent
+        @escape-key-down.prevent
+      >
+        <UiDialogHeader>
+          <UiDialogTitle>Delete item</UiDialogTitle>
+        </UiDialogHeader>
+
+        <p class="text-sm text-foreground">
           Are you sure you want to remove this item from your cart?
-        </v-card-text>
-        <v-card-actions class="pa-6 pt-0">
-          <v-spacer></v-spacer>
-          <v-btn
-            color="grey-darken-1"
-            variant="text"
+        </p>
+
+        <UiDialogFooter>
+          <UiButton
+            variant="ghost"
+            class="rounded-lg text-muted-foreground"
             @click="confirmDelete = false"
-            rounded="lg"
           >
             Cancel
-          </v-btn>
-          <v-btn
-            color="error"
-            variant="elevated"
+          </UiButton>
+          <UiButton
+            variant="destructive"
+            class="rounded-lg font-bold"
             @click="deleteItem"
-            rounded="lg"
-            class="font-weight-bold"
           >
             Delete
-          </v-btn>
-        </v-card-actions>
-      </v-card>
-    </v-dialog>
+          </UiButton>
+        </UiDialogFooter>
+      </UiDialogContent>
+    </UiDialog>
   </div>
 </template>
 
-<script>
-import { mapState, mapActions } from "vuex";
+<script setup lang="ts">
+import { storeToRefs } from "pinia";
+import { useCartStore } from "@/stores/cart";
+import {
+  CreditCard,
+  Minus,
+  Plus,
+  Receipt,
+  ShieldCheck,
+  ShoppingBag,
+  ShoppingCart,
+  Trash2,
+} from "lucide-vue-next";
+import type { CartItem } from "@/types";
 
-export default {
-  data() {
-    return {
-      drawer: false,
-      selectAll: false,
-      selectedItems: [],
-      confirmDelete: false,
-      itemToDelete: null,
-      isLoaded: false,
-      loading: false,
-    };
+const cartStore = useCartStore();
+const { cart } = storeToRefs(cartStore);
+const router = useRouter();
+
+const selectAll = ref(false);
+const selectedItems = ref<string[]>([]);
+const confirmDelete = ref(false);
+const itemToDelete = ref<string | null>(null);
+const isLoaded = ref(false);
+const loading = ref(false);
+
+const cartItems = computed<CartItem[]>(() => cart.value?.items || []);
+
+// Get only selected items
+const selectedCartItems = computed(() =>
+  cartItems.value.filter((item) =>
+    selectedItems.value.includes(item.bookId?._id || "")
+  )
+);
+
+// Calculate total only for selected items
+const totalPrice = computed(() =>
+  selectedCartItems.value.reduce((total, item) => {
+    const price =
+      item.productType === "ebook"
+        ? (item.bookId?.price || 0) * 0.7
+        : item.bookId?.price || 0;
+    return total + price * item.quantity;
+  }, 0)
+);
+
+watch(selectAll, (val) => {
+  if (val) {
+    console.log("Selecting all items", val);
+    selectedItems.value = cartItems.value.map(
+      (item) => item.bookId?._id || ""
+    );
+  } else {
+    if (selectedItems.value.length === cartItems.value.length) {
+      selectedItems.value = [];
+    }
+  }
+});
+
+watch(
+  selectedItems,
+  (val) => {
+    console.log("Selected items changed:", val);
+    // Update selectAll checkbox based on selection
+    selectAll.value =
+      val.length === cartItems.value.length && cartItems.value.length > 0;
   },
-  computed: {
-    ...mapState("cart", ["cart"]),
-    cartItems() {
-      return this.cart?.items || [];
-    },
-    selectedCartItems() {
-      // Get only selected items
-      return this.cartItems.filter((item) =>
-        this.selectedItems.includes(item.bookId._id)
+  { deep: true }
+);
+
+watch(
+  cartItems,
+  (newItems, oldItems) => {
+    // When cart items change (e.g., item deleted), update selected items
+    if (newItems.length !== oldItems?.length) {
+      const validBookIds = newItems.map((item) => item.bookId?._id);
+      selectedItems.value = selectedItems.value.filter((id) =>
+        validBookIds.includes(id)
       );
-    },
-    totalPrice() {
-      // Calculate total only for selected items
-      return this.selectedCartItems.reduce((total, item) => {
-        const price =
-          item.productType === "ebook"
-            ? item.bookId.price * 0.7
-            : item.bookId.price;
-        return total + price * item.quantity;
-      }, 0);
-    },
-  },
-  watch: {
-    selectAll(val) {
-      if (val) {
-        console.log("Selecting all items", val);
-        this.selectedItems = this.cartItems.map((item) => item.bookId._id);
-      } else {
-        if (this.selectedItems.length === this.cartItems.length) {
-          this.selectedItems = [];
-        }
-      }
-    },
-    selectedItems: {
-      handler(val) {
-        console.log("Selected items changed:", val);
-        // Update selectAll checkbox based on selection
-        this.selectAll =
-          val.length === this.cartItems.length && this.cartItems.length > 0;
-      },
-      deep: true,
-    },
-    cartItems: {
-      handler(newItems, oldItems) {
-        // When cart items change (e.g., item deleted), update selected items
-        if (newItems.length !== oldItems?.length) {
-          const validBookIds = newItems.map((item) => item.bookId._id);
-          this.selectedItems = this.selectedItems.filter((id) =>
-            validBookIds.includes(id)
-          );
-        }
-      },
-      deep: true,
-    },
-  },
-  methods: {
-    ...mapActions("cart", ["fetchCart", "removeCartItem"]),
-
-    handleCheckout() {
-      if (this.selectedItems.length === 0) {
-        return;
-      }
-
-      // Get selected items data
-      const selectedItemsData = this.selectedCartItems.map((item) => ({
-        bookId: item.bookId._id,
-        title: item.bookId.title,
-        authors: item.bookId.authors[0],
-        cover_url: item.bookId.cover_url,
-        price: item.bookId.price,
-        quantity: item.quantity,
-        productType: item.productType,
-        subjects: item.bookId.subjects,
-        stock: item.bookId.stock,
-      }));
-
-      // Store in localStorage for order page (only on client side)
-      if (import.meta.client) {
-        localStorage.setItem(
-          "checkoutItems",
-          JSON.stringify(selectedItemsData)
-        );
-      }
-
-      console.log("Checkout with items:", selectedItemsData);
-
-      // Navigate to order page
-      this.$router.push("/order");
-    },
-
-    getItemPrice(item) {
-      const basePrice = item?.bookId?.price || 0;
-      if (item.productType === "ebook") {
-        return (basePrice * 0.7).toFixed(2);
-      }
-      return basePrice.toFixed(2);
-    },
-
-    getStockColor(stock) {
-      if (stock > 20) return "success";
-      if (stock > 0) return "warning";
-      return "error";
-    },
-
-    getStockText(stock) {
-      if (stock > 20) return `${stock} in stock`;
-      if (stock > 0) return `Only ${stock} left!`;
-      return "Out of stock";
-    },
-
-    increaseQuantity(item) {
-      // For hardbooks, check stock limit
-      if (item.productType === "hardbook") {
-        const maxAllowed = item.bookId.stock || 0;
-        if (item.quantity < maxAllowed) {
-          item.quantity++;
-        }
-      } else {
-        // Ebook has no stock limit
-        item.quantity++;
-      }
-    },
-    decreaseQuantity(item) {
-      if (item.quantity > 1) {
-        item.quantity--;
-      }
-    },
-    confirmDeleteItem(bookId) {
-      if(!bookId) return;
-      this.itemToDelete = bookId;
-      this.confirmDelete = true;
-    },
-    async deleteItem() {
-      try {
-        if(!this.itemToDelete) return;
-        
-        await this.removeCartItem(this.itemToDelete);
-        
-        // Remove from selected items if it was selected
-        const index = this.selectedItems.indexOf(this.itemToDelete);
-        if (index > -1) {
-          this.selectedItems.splice(index, 1);
-        }
-        
-        this.confirmDelete = false;
-        this.itemToDelete = null;
-      } catch (error) {
-        console.error("Error deleting item:", error);
-      }
-    },
-    async deleteSelectedItems() {
-      try {
-        if (this.selectedItems.length === 0) {
-          return;
-        }
-
-        // Create a copy of selected items to delete
-        const itemsToDelete = [...this.selectedItems];
-        
-        for (const bookId of itemsToDelete) {
-          await this.removeCartItem(bookId);
-        }
-        
-        // Clear selected items after deletion
-        this.selectedItems = [];
-        this.selectAll = false;
-      } catch (error) {
-        console.error("Error deleting selected items:", error);
-      }
-    },
-  },
-  async mounted() {
-    this.loading = true;
-    this.isLoaded = false;
-
-    try {
-      await this.fetchCart();
-
-      // Auto-select all items when cart loads
-      if (this.cartItems.length > 0) {
-        this.selectedItems = this.cartItems.map((item) => item.bookId._id);
-        this.selectAll = true;
-      }
-    } catch (err) {
-      console.error("Error fetching cart:", err);
-    } finally {
-      this.loading = false;
-      this.isLoaded = true;
     }
   },
-};
+  { deep: true }
+);
+
+function isItemSelected(item: CartItem) {
+  return selectedItems.value.includes(item.bookId?._id || "");
+}
+
+function toggleItemSelected(item: CartItem, checked: boolean) {
+  const bookId = item.bookId?._id;
+  if (!bookId) return;
+  if (checked) {
+    if (!selectedItems.value.includes(bookId)) {
+      selectedItems.value.push(bookId);
+    }
+  } else {
+    selectedItems.value = selectedItems.value.filter((id) => id !== bookId);
+  }
+}
+
+function handleCheckout() {
+  if (selectedItems.value.length === 0) {
+    return;
+  }
+
+  // Get selected items data
+  const selectedItemsData = selectedCartItems.value.map((item) => ({
+    bookId: item.bookId?._id,
+    title: item.bookId?.title,
+    authors: item.bookId?.authors?.[0],
+    cover_url: item.bookId?.cover_url,
+    price: item.bookId?.price,
+    quantity: item.quantity,
+    productType: item.productType,
+    subjects: item.bookId?.subjects,
+    stock: item.bookId?.stock,
+  }));
+
+  // Store in localStorage for order page (only on client side)
+  if (import.meta.client) {
+    localStorage.setItem("checkoutItems", JSON.stringify(selectedItemsData));
+  }
+
+  console.log("Checkout with items:", selectedItemsData);
+
+  // Navigate to order page
+  router.push("/order");
+}
+
+function getItemPrice(item: CartItem) {
+  const basePrice = item?.bookId?.price || 0;
+  if (item.productType === "ebook") {
+    return (basePrice * 0.7).toFixed(2);
+  }
+  return basePrice.toFixed(2);
+}
+
+function getStockColor(stock: number): "success" | "warning" | "destructive" {
+  if (stock > 20) return "success";
+  if (stock > 0) return "warning";
+  return "destructive";
+}
+
+function getStockText(stock: number) {
+  if (stock > 20) return `${stock} in stock`;
+  if (stock > 0) return `Only ${stock} left!`;
+  return "Out of stock";
+}
+
+function increaseQuantity(item: CartItem) {
+  // For hardbooks, check stock limit
+  if (item.productType === "hardbook") {
+    const maxAllowed = item.bookId?.stock || 0;
+    if (item.quantity < maxAllowed) {
+      item.quantity++;
+    }
+  } else {
+    // Ebook has no stock limit
+    item.quantity++;
+  }
+}
+
+function decreaseQuantity(item: CartItem) {
+  if (item.quantity > 1) {
+    item.quantity--;
+  }
+}
+
+function confirmDeleteItem(bookId?: string) {
+  if (!bookId) return;
+  itemToDelete.value = bookId;
+  confirmDelete.value = true;
+}
+
+async function deleteItem() {
+  try {
+    if (!itemToDelete.value) return;
+
+    await cartStore.removeCartItem(itemToDelete.value);
+
+    // Remove from selected items if it was selected
+    const index = selectedItems.value.indexOf(itemToDelete.value);
+    if (index > -1) {
+      selectedItems.value.splice(index, 1);
+    }
+
+    confirmDelete.value = false;
+    itemToDelete.value = null;
+  } catch (error) {
+    console.error("Error deleting item:", error);
+  }
+}
+
+async function deleteSelectedItems() {
+  try {
+    if (selectedItems.value.length === 0) {
+      return;
+    }
+
+    // Create a copy of selected items to delete
+    const itemsToDelete = [...selectedItems.value];
+
+    for (const bookId of itemsToDelete) {
+      await cartStore.removeCartItem(bookId);
+    }
+
+    // Clear selected items after deletion
+    selectedItems.value = [];
+    selectAll.value = false;
+  } catch (error) {
+    console.error("Error deleting selected items:", error);
+  }
+}
+
+onMounted(async () => {
+  loading.value = true;
+  isLoaded.value = false;
+
+  try {
+    await cartStore.fetchCart();
+
+    // Auto-select all items when cart loads
+    if (cartItems.value.length > 0) {
+      selectedItems.value = cartItems.value.map(
+        (item) => item.bookId?._id || ""
+      );
+      selectAll.value = true;
+    }
+  } catch (err) {
+    console.error("Error fetching cart:", err);
+  } finally {
+    loading.value = false;
+    isLoaded.value = true;
+  }
+});
 </script>
-
-<style scoped>
-/* Responsive adjustments using Vuetify utility classes */
-@media (max-width: 960px) {
-  .position-sticky {
-    position: static !important;
-  }
-}
-
-@media (max-width: 600px) {
-  .d-flex.justify-center.align-center > div {
-    min-width: 70px !important;
-  }
-
-  .mr-4.d-flex.align-center {
-    min-width: 60px !important;
-  }
-}
-</style>
