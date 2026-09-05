@@ -198,6 +198,7 @@
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
+import { useFavoriteStore } from "@/stores/favorite";
 import { BookOpen, Eye, EyeOff, Lock, LogIn, User } from "lucide-vue-next";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 import type { SnackbarPayload } from "@/types";
@@ -213,6 +214,7 @@ const runtimeConfig = useRuntimeConfig();
 
 const authStore = useAuthStore();
 const cartStore = useCartStore();
+const favoriteStore = useFavoriteStore();
 const { currentUser, isFetching } = storeToRefs(authStore);
 
 const username = ref("");
@@ -239,7 +241,12 @@ async function onSubmit() {
       password: password.value,
     });
 
-    await cartStore.fetchCart();
+    // Both lists belong to the account that just signed in, so force a refresh
+    // rather than reusing whatever the previous session left cached.
+    await Promise.all([
+      cartStore.fetchCart(),
+      favoriteStore.getFavoritesForEachUser({ force: true }),
+    ]);
     errorMessage.value = "";
 
     emit("show-snackbar", {

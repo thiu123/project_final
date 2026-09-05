@@ -88,7 +88,7 @@
           <div class="col-span-12 md:col-span-2">
             <UiSelect
               :model-value="sortBy"
-              @update:model-value="sortBy = $event as string"
+              @update:model-value="sortBy = $event as BookSort"
             >
               <UiSelectTrigger class="w-full">
                 <UiSelectValue placeholder="Sort by" />
@@ -146,7 +146,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-border">
-            <tr v-for="item in paginatedBooks" :key="item._id" class="hover:bg-muted/40">
+            <tr v-for="item in books" :key="item._id" class="hover:bg-muted/40">
               <!-- Book ID -->
               <td class="px-4 py-3">
                 <UiBadge class="border-transparent bg-waterblue/15 font-mono text-waterblue">
@@ -273,7 +273,7 @@
               </td>
             </tr>
 
-            <tr v-if="!paginatedBooks.length">
+            <tr v-if="!books.length">
               <td colspan="9" class="px-4 py-8 text-center text-muted-foreground">
                 {{ loading ? "Loading books..." : "No data available" }}
               </td>
@@ -285,14 +285,14 @@
       <!-- Bottom -->
       <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4">
         <div class="text-sm text-muted-foreground">
-          Showing {{ paginatedBooks.length }} of {{ books.length }} books
+          Showing {{ books.length }} of {{ pagination.total }} books
         </div>
 
         <UiPagination
           v-slot="{ page: currentPage }"
           v-model:page="page"
-          :total="filteredBooks.length"
-          :items-per-page="itemsPerPage"
+          :total="pagination.total"
+          :items-per-page="pagination.limit"
           :sibling-count="1"
           show-edges
           class="mx-0 w-auto justify-end"
@@ -859,7 +859,8 @@ import {
 } from "lucide-vue-next";
 import { v4 as uuidv4 } from "uuid";
 import { uploadBookImage, uploadBookEbookFile } from "~/api/userApi";
-import type { Book } from "@/types";
+import type { Book, BookSort } from "@/types";
+import debounce from "lodash/debounce";
 
 interface BookFormData {
   _id?: string;
@@ -882,14 +883,14 @@ type ViewedBook = Book & { language?: string; page_count?: number };
 type BadgeVariant = "success" | "warning" | "info" | "destructive" | "muted";
 
 const bookStore = useBookStore();
-const { books } = storeToRefs(bookStore);
+const { books, pagination, categories } = storeToRefs(bookStore);
 
 // NOTE: the original component declared a local `loading` in data() which
 // shadowed the store's `book/loading` state — kept local here on purpose.
 const loading = ref(false);
 const search = ref("");
 const filterSubject = ref<string | undefined>(undefined);
-const sortBy = ref("newest");
+const sortBy = ref<BookSort>("newest");
 const showThemSach = ref(true);
 const page = ref(1);
 const itemsPerPage = 10;
@@ -920,13 +921,15 @@ const deleting = ref(false);
 
 const subjects = ref<string[]>([]);
 
-const sortOptions = [
-  { label: "Newest", value: "newest" },
-  { label: "Oldest", value: "oldest" },
-  { label: "Name A-Z", value: "name-asc" },
-  { label: "Name Z-A", value: "name-desc" },
-  { label: "Price Low to High", value: "price-asc" },
-  { label: "Price High to Low", value: "price-desc" },
+// Values map straight onto the API's `sort` parameter.
+const sortOptions: { label: string; value: BookSort }[] = [
+  { label: "Recently added", value: "newest" },
+  { label: "Oldest first", value: "oldest" },
+  { label: "Name A-Z", value: "title_asc" },
+  { label: "Name Z-A", value: "title_desc" },
+  { label: "Price Low to High", value: "price_asc" },
+  { label: "Price High to Low", value: "price_desc" },
+  { label: "Best selling", value: "bestselling" },
 ];
 
 // Notification
@@ -936,10 +939,13 @@ const snackbar = reactive({
   color: "success",
 });
 
-const getSubjectsFromBook = computed(() => {
-  const allSubjects = books.value.map((book) => book.subjects || []);
-  return [...new Set(allSubjects.flat())];
-});
+// Filter options come from the API category tree, not from the current page.
+const getSubjectsFromBook = computed(() =>
+  categories.value.flatMap((category) => [
+    category.subject,
+    ...category.subcategories.map((sub) => sub.subject),
+  ])
+);
 
 const dialogTitle = computed(() =>
   editedIndex.value === -1 ? "Add New Book" : "Edit Book"
@@ -947,77 +953,8 @@ const dialogTitle = computed(() =>
 
 const isEditing = computed(() => editedIndex.value !== -1);
 
-const filteredBooks = computed<Book[]>(() => {
-  let filtered = [...books.value];
-
-  // Text search (previously handled internally by v-data-table's :search)
-  if (search.value) {
-    const query = search.value.toLowerCase();
-    filtered = filtered.filter((book) =>
-      [
-        book._id,
-        book.title,
-        book.authors?.join(", "),
-        book.subjects?.join(", "),
-        book.description,
-        book.first_publish_year,
-        book.price,
-        book.stock,
-        book.sold,
-      ].some(
-        (value) =>
-          value !== undefined &&
-          value !== null &&
-          String(value).toLowerCase().includes(query)
-      )
-    );
-  }
-
-  // Filter by subject
-  if (filterSubject.value) {
-    filtered = filtered.filter((book) =>
-      book.subjects?.includes(filterSubject.value as string)
-    );
-  }
-
-  // Sort
-  switch (sortBy.value) {
-    case "newest":
-      filtered.sort(
-        (a, b) => (b.first_publish_year || 0) - (a.first_publish_year || 0)
-      );
-      break;
-    case "oldest":
-      filtered.sort(
-        (a, b) => (a.first_publish_year || 0) - (b.first_publish_year || 0)
-      );
-      break;
-    case "name-asc":
-      filtered.sort((a, b) => a.title.localeCompare(b.title));
-      break;
-    case "name-desc":
-      filtered.sort((a, b) => b.title.localeCompare(a.title));
-      break;
-    case "price-asc":
-      filtered.sort((a, b) => (a.price || 0) - (b.price || 0));
-      break;
-    case "price-desc":
-      filtered.sort((a, b) => (b.price || 0) - (a.price || 0));
-      break;
-  }
-
-  return filtered;
-});
-
-const paginatedBooks = computed(() => {
-  const start = (page.value - 1) * itemsPerPage;
-  const end = start + itemsPerPage;
-  return filteredBooks.value.slice(start, end);
-});
-
-const totalPages = computed(() =>
-  Math.ceil(filteredBooks.value.length / itemsPerPage)
-);
+// Search, category filter, sorting and paging are all resolved by the API,
+// so `books` already holds exactly the rows this page renders.
 
 function getDefaultItem(): BookFormData {
   return {
@@ -1034,12 +971,21 @@ function getDefaultItem(): BookFormData {
   };
 }
 
+/**
+ * Loads the current page from the API. `withDescription` is set because the
+ * edit dialog prefills from the row, and descriptions are stripped by default.
+ */
 async function refreshBooks() {
   loading.value = true;
   try {
-    // Force reload by adding timestamp to bypass cache
-    await bookStore.getAllBooks({ subject: undefined });
-    console.log("Books loaded:", books.value.length);
+    await bookStore.fetchBooks({
+      page: page.value,
+      limit: itemsPerPage,
+      search: search.value || undefined,
+      subject: filterSubject.value || undefined,
+      sort: sortBy.value,
+      withDescription: true,
+    });
   } catch (error) {
     console.error("Error fetching books:", error);
     showSnackbar("Failed to load books", "error");
@@ -1293,6 +1239,8 @@ async function deleteBookConfirmed() {
     showSnackbar("Book deleted successfully");
     deleteDialog.value = false;
     bookToDelete.value = null;
+    // Pull the next page's first row up into the gap the deletion left.
+    await refreshBooks();
   } catch (error) {
     showSnackbar("Failed to delete book", "error");
   } finally {
@@ -1314,18 +1262,28 @@ watch(dialog, (val) => {
   if (!val) closeDialog();
 });
 
-// Keep the pagination consistent with the (re-implemented) filtering
-watch([search, filterSubject, sortBy], () => {
-  page.value = 1;
-});
+// Paging refetches directly; the watcher below resets to page 1 on filter changes.
+watch(page, refreshBooks);
 
-watch(totalPages, (val) => {
-  if (page.value > val) page.value = Math.max(1, val);
-});
+/** Typing shouldn't fire a request per keystroke. */
+const debouncedRefresh = debounce(() => {
+  if (page.value === 1) {
+    refreshBooks();
+  } else {
+    page.value = 1; // the `page` watcher issues the request
+  }
+}, 300);
+
+watch([search, filterSubject, sortBy], debouncedRefresh);
+
+onBeforeUnmount(() => debouncedRefresh.cancel());
 
 onMounted(async () => {
-  await refreshBooks();
+  const [categoryList] = await Promise.all([
+    bookStore.fetchCategories(),
+    refreshBooks(),
+  ]);
+  void categoryList;
   subjects.value = getSubjectsFromBook.value;
-  console.log("Available subjects:", subjects.value);
 });
 </script>

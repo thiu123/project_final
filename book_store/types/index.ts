@@ -145,3 +145,68 @@ export interface SnackbarPayload {
   message: string;
   color?: "success" | "error" | "warning" | "info";
 }
+
+// ---------------------------------------------------------------------------
+// Catalogue querying — pagination, filtering and sorting all happen server-side
+// ---------------------------------------------------------------------------
+
+export interface PaginationMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasPrev: boolean;
+  hasNext: boolean;
+}
+
+export interface Paginated<T> {
+  items: T[];
+  meta: PaginationMeta;
+}
+
+export type BookSort =
+  | "newest"
+  | "oldest"
+  | "title_asc"
+  | "title_desc"
+  | "price_asc"
+  | "price_desc"
+  | "rating"
+  | "bestselling";
+
+/** Query accepted by `GET /api/books`. Every field is optional. */
+export interface BookQuery {
+  page?: number;
+  limit?: number;
+  /** Category or subcategory; a category also matches its subcategories. */
+  subject?: string;
+  /** Substring match on title and authors. */
+  search?: string;
+  sort?: BookSort;
+  minPrice?: number;
+  maxPrice?: number;
+  inStock?: boolean;
+  /** Descriptions are stripped by default; the admin editor opts back in. */
+  withDescription?: boolean;
+}
+
+/** A node of the category tree served by `GET /api/books/categories`. */
+export interface CategoryNode {
+  name: string;
+  slug: string;
+  /** Value to pass as `?subject=`. */
+  subject: string;
+  /** Includes every subcategory below this node. */
+  count: number;
+  cover_url: string | null;
+  subcategories: CategoryNode[];
+}
+
+/** Payload of `GET /api/books/home`. */
+export interface HomePayload {
+  latest: Book[];
+  /** Newest books per home carousel, keyed by subject. */
+  groups: Record<string, Book[]>;
+  bestSellers: Book[];
+  categories: CategoryNode[];
+}

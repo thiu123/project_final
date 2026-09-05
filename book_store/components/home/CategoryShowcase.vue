@@ -92,7 +92,6 @@ import { Swiper, SwiperSlide } from "swiper/vue";
 import { Pagination } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper/types";
 import { ChevronLeft, ChevronRight } from "lucide-vue-next";
-import { bookSubjects } from "@/constants/bookSubjects";
 import "swiper/css";
 import "swiper/css/pagination";
 
@@ -107,7 +106,8 @@ const modules = [Pagination];
 
 const router = useRouter();
 const bookStore = useBookStore();
-const { homeSubjects } = storeToRefs(bookStore);
+// Categories, their covers and their counts all come from the API.
+const { categories } = storeToRefs(bookStore);
 
 const swiperInstance = shallowRef<SwiperType | null>(null);
 
@@ -115,31 +115,25 @@ function onSwiper(swiper: SwiperType) {
   swiperInstance.value = swiper;
 }
 
-const displayCategories = computed<CategoryItem[]>(() => {
-  const allCategories: CategoryItem[] = [];
-  bookSubjects.forEach((subject) => {
-    if (subject.subcategories) {
-      subject.subcategories.forEach((subcat) => {
-        const key = subcat.toLowerCase();
-        allCategories.push({
-          name: subcat,
-          route: key,
-          subject: key,
-          cover_url: homeSubjects.value[key]?.[0]?.cover_url || null,
-        });
-      });
-    } else {
-      const key = subject.category.toLowerCase();
-      allCategories.push({
-        name: subject.category,
-        route: key,
-        subject: key,
-        cover_url: homeSubjects.value[key]?.[0]?.cover_url || null,
-      });
-    }
-  });
-  return allCategories.slice(0, 8);
-});
+/**
+ * Leaf categories, most stocked first. Subcategories stand in for their parent
+ * when one exists, so the strip shows browsable shelves rather than groupings.
+ */
+const displayCategories = computed<CategoryItem[]>(() =>
+  categories.value
+    .flatMap((category) =>
+      category.subcategories.length ? category.subcategories : [category]
+    )
+    .filter((node) => node.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8)
+    .map((node) => ({
+      name: node.name,
+      route: node.slug,
+      subject: node.subject,
+      cover_url: node.cover_url,
+    }))
+);
 
 function navigateToCategory(category: CategoryItem) {
   router.push(`/subjects/${category.route}`);

@@ -53,7 +53,7 @@ Each module follows `*.module.ts` / `*.controller.ts` / `*.service.ts` / `schema
 | --------------- | ------------------------------------------------------- |
 | `/api/auth`     | `/google` and `/google/callback` use passport-google    |
 | `/api/users`    | `POST /upload-images?type=avatar\|book\|ebook_file`     |
-| `/api/books`    | static routes (`/home`, `/search`) declared before `/:id` |
+| `/api/books`    | see **Catalogue API** below; static routes precede `/:id` |
 | `/api/carts`    | all routes require a token                              |
 | `/api/reviews`  | admin replies under `/:reviewId/reply[/:replyId]`       |
 | `/api/order`    | `/vnpay_return`, `/momo_return` redirect to the frontend |
@@ -61,6 +61,59 @@ Each module follows `*.module.ts` / `*.controller.ts` / `*.service.ts` / `schema
 | `/api/chatbot`  | `/suggestions`, `/review/generate`                      |
 | `/api/contact`  | user + admin routes                                     |
 | `/api/voucher`  | `GET /all?activeOnly=true` for storefront               |
+
+## Catalogue API
+
+Pagination, filtering, sorting and the category list are all resolved in
+MongoDB. The client sends a query and renders exactly what comes back.
+
+### `GET /api/books`
+
+| Param | Default | Notes |
+| --- | --- | --- |
+| `page` | `1` | |
+| `limit` | `12` | max `100` |
+| `subject` | — | category, subcategory or slug; a category also matches its subcategories |
+| `search` | — | case-insensitive substring on title and authors |
+| `sort` | `newest` | `newest` `oldest` `title_asc` `title_desc` `price_asc` `price_desc` `rating` `bestselling` |
+| `minPrice` / `maxPrice` | — | inclusive bounds |
+| `inStock` | — | `true` keeps only books with stock left |
+| `withDescription` | `false` | descriptions are stripped by default; the admin editor opts in |
+
+```jsonc
+{
+  "items": [ /* … */ ],
+  "meta": { "page": 1, "limit": 12, "total": 568,
+            "totalPages": 48, "hasPrev": false, "hasNext": true }
+}
+```
+
+Invalid values return `400` with the failing constraint.
+
+### Other routes
+
+- `GET /api/books/categories` — curated taxonomy joined with live counts and a
+  cover per category. A category's count rolls up its subcategories, matching
+  what `?subject=<category>` returns.
+- `GET /api/books/home` — one `$facet` aggregation returning `latest` (10
+  newest), `bestSellers`, `groups` (one carousel per subject in
+  `src/constants/home-sections.ts`) and `categories`.
+- `GET /api/books/search?title=&limit=` — capped typeahead suggestions. Use
+  `GET /api/books?search=` when the full paginated result set is needed.
+
+### Subject normalization
+
+Subjects are stored lower-cased and stripped of punctuation, so
+`"Biology & Life Sciences"` lives in the database as `biology life sciences`.
+`subject.util.ts` bridges the taxonomy label, the URL slug
+(`biology-life-sciences`) and the stored value, and books written through the
+API are normalized on save so the filter keeps matching.
+
+### Caching
+
+All list, category and home responses are cached in Redis for 30 minutes under
+the `books:` prefix and dropped wholesale whenever a book is created, updated
+or deleted. Individual books are cached separately as `book:<id>`.
 
 ## Environment variables
 
