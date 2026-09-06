@@ -1,11 +1,19 @@
 import axiosInstance from "@/utils/axiosInstance";
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
-import type { Order, OrderStatus } from "@/types";
+import type { Order, OrderStatus, ShippingAddress } from "@/types";
 
 const API_URL = API_ENDPOINTS.ORDER;
 
 export interface CheckoutResponse {
   paymentUrl: string;
+}
+
+/** COD has no gateway to redirect to, so the order itself comes back. */
+export interface CodCheckoutResponse {
+  orderId: string;
+  totalAmount: number;
+  paymentMethod: "COD";
+  status: "Pending";
 }
 
 export interface EbookPurchaseResponse {
@@ -48,6 +56,18 @@ const orderApi = {
     const res = await axiosInstance.post<CheckoutResponse>(
       `${API_URL}/checkout_momo`,
       voucherCode ? { voucherCode } : {}
+    );
+    return res.data;
+  },
+
+  // Cash on delivery: places the order immediately, no redirect
+  createCodOrderFromCart: async (
+    shipping: ShippingAddress,
+    voucherCode: string | null = null
+  ): Promise<CodCheckoutResponse> => {
+    const res = await axiosInstance.post<CodCheckoutResponse>(
+      `${API_URL}/checkout_cod`,
+      { shipping, ...(voucherCode ? { voucherCode } : {}) }
     );
     return res.data;
   },

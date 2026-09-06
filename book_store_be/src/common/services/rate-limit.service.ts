@@ -31,17 +31,18 @@ export class RateLimitService {
     const window = Math.floor(Date.now() / 1000 / windowSeconds);
     const redisKey = `ratelimit:${key}:${window}`;
 
-    let used: number;
-    try {
-      used = await this.redis.incr(redisKey);
-      // Only the first caller needs to set the expiry; re-setting it on every
-      // hit would slide the window forward and never let it reset.
-      if (used === 1) await this.redis.expire(redisKey, windowSeconds);
-    } catch (error) {
-      // Redis being down must not take the feature offline with it.
-      this.logger.warn(`Rate limit check skipped: ${(error as Error).message}`);
+    // `incr` returns null when Redis is unreachable. There is no counter to
+    // read, so this fails open: an outage should not take the feature down
+    // with it. The trade-off is that the limit is unenforced while Redis is.
+    const used = await this.redis.incr(redisKey);
+    if (used === null) {
+      this.logger.warn('Rate limit not enforced: Redis unavailable');
       return { allowed: true, remaining: limit, retryAfter: 0 };
     }
+
+    // Only the first caller needs to set the expiry; re-setting it on every
+    // hit would slide the window forward and never let it reset.
+    if (used === 1) await this.redis.expire(redisKey, windowSeconds);
 
     const resetAt = (window + 1) * windowSeconds;
     return {

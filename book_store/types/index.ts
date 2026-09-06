@@ -65,6 +65,17 @@ export interface OrderItem {
   productType: ProductType;
 }
 
+/**
+ * Delivery details captured at checkout. Required for COD; older orders and
+ * prepaid ones may not carry it, hence optional on `Order`.
+ */
+export interface ShippingAddress {
+  fullName: string;
+  phone: string;
+  address: string;
+  note?: string;
+}
+
 export interface Order {
   _id: string;
   orderId: string;
@@ -75,6 +86,7 @@ export interface Order {
     code?: string;
     discountAmount: number;
   };
+  shipping?: ShippingAddress;
   paymentMethod: PaymentMethod;
   status: OrderStatus;
   confirmedByAdmin: boolean;

@@ -270,6 +270,7 @@
                     <div class="flex items-center justify-center gap-2">
                       <UiSelect
                         :model-value="order.status"
+                        :disabled="allowedTransitions(order.paymentMethod, order.status).length === 0"
                         @update:model-value="
                           (newStatus) =>
                             quickUpdateStatus(order, newStatus as string)
@@ -279,8 +280,17 @@
                           <UiSelectValue />
                         </UiSelectTrigger>
                         <UiSelectContent>
+                          <!-- The current status is listed so the trigger has a
+                               label; everything else is what this order may
+                               legally become next. -->
+                          <UiSelectItem :value="order.status" disabled>
+                            {{ order.status }}
+                          </UiSelectItem>
                           <UiSelectItem
-                            v-for="opt in statusOptions"
+                            v-for="opt in allowedTransitions(
+                              order.paymentMethod,
+                              order.status
+                            )"
                             :key="opt"
                             :value="opt"
                           >
@@ -444,6 +454,48 @@
             </div>
           </div>
 
+          <!-- Delivery details: what the courier needs. COD orders always
+               carry this; prepaid ones predate the form. -->
+          <div v-if="selectedOrder.shipping" class="col-span-12">
+            <div class="rounded-lg border border-primary/50 bg-primary/5">
+              <div
+                class="flex items-center gap-2 px-4 pt-4 text-base font-bold"
+              >
+                <Truck class="h-5 w-5 text-primary" />
+                Delivery Details
+              </div>
+              <div class="grid gap-3 p-4 sm:grid-cols-2">
+                <div>
+                  <p class="text-sm font-medium">Recipient</p>
+                  <p class="text-sm text-muted-foreground">
+                    {{ selectedOrder.shipping.fullName }}
+                  </p>
+                </div>
+                <div>
+                  <p class="text-sm font-medium">Phone</p>
+                  <a
+                    :href="`tel:${selectedOrder.shipping.phone}`"
+                    class="text-sm font-semibold text-primary hover:underline"
+                  >
+                    {{ selectedOrder.shipping.phone }}
+                  </a>
+                </div>
+                <div class="sm:col-span-2">
+                  <p class="text-sm font-medium">Address</p>
+                  <p class="text-sm text-muted-foreground">
+                    {{ selectedOrder.shipping.address }}
+                  </p>
+                </div>
+                <div v-if="selectedOrder.shipping.note" class="sm:col-span-2">
+                  <p class="text-sm font-medium">Note</p>
+                  <p class="text-sm italic text-muted-foreground">
+                    {{ selectedOrder.shipping.note }}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Voucher Information (if exists) -->
           <div v-if="selectedOrder.voucher" class="col-span-12">
             <div class="rounded-lg border border-success/50 bg-success/5">
@@ -600,6 +652,7 @@
 import type { Component } from "vue";
 import orderApi from "~/api/orderApi";
 import type { Order, OrderItem, OrderStatus, PaymentMethod, User } from "@/types";
+import { allowedTransitions, isPaidFor } from "@/utils/orderStatus";
 import {
   Ban,
   Banknote,
@@ -650,7 +703,7 @@ const statusOptions: OrderStatus[] = [
   "Cancelled",
   "Failed",
 ];
-const paymentOptions = ["Vnpay", "Momo"];
+const paymentOptions: PaymentMethod[] = ["Vnpay", "Momo", "COD"];
 
 const statusFilterItems = [
   { label: "All Statuses", value: "all" },
@@ -700,15 +753,16 @@ watch([search, statusFilter, paymentFilter], () => {
 });
 
 const totalOrders = computed(() => orders.value.length);
-const paidOrders = computed(
-  () => orders.value.filter((order) => order.status === "Paid").length
-);
+// "Paid" here means the money is in, not the literal status: a prepaid order
+// stays settled once it moves on to Confirmed or Delivered. Counting only the
+// literal status made these cards disagree with the dashboard totals.
+const paidOrders = computed(() => orders.value.filter(isPaidFor).length);
 const pendingOrders = computed(
   () => orders.value.filter((order) => order.status === "Pending").length
 );
 const totalRevenue = computed(() => {
   const revenue = orders.value
-    .filter((order) => order.status === "Paid")
+    .filter(isPaidFor)
     .reduce((sum, order) => sum + order.total, 0);
   return (revenue / 24000).toFixed(2); // Convert VND to USD
 });
@@ -742,17 +796,20 @@ async function quickUpdateStatus(order: Order, newStatus?: string) {
   }
 
   try {
-    await orderApi.updateOrderStatus(order._id, newStatus as OrderStatus);
+    const updated = await orderApi.updateOrderStatus(
+      order._id,
+      newStatus as OrderStatus
+    );
 
-    // Update local order
+    // Take the server's version rather than patching fields locally: the
+    // confirmation bookkeeping is written server-side, and guessing at it here
+    // made the row claim things a refresh would undo.
     const index = orders.value.findIndex((o) => o._id === order._id);
     if (index !== -1) {
-      orders.value[index].status = newStatus as OrderStatus;
-      // If changing to Confirmed, also update confirmedByAdmin
-      if (newStatus === "Confirmed") {
-        orders.value[index].confirmedByAdmin = true;
-        orders.value[index].confirmedAt = new Date().toISOString();
-      }
+      orders.value[index] = updated;
+    }
+    if (selectedOrder.value?._id === order._id) {
+      selectedOrder.value = updated;
     }
 
     showSnackbar(`Order status updated to ${newStatus}`, "success");
@@ -794,13 +851,22 @@ function getStatusIcon(status: OrderStatus): Component {
 }
 
 function getPaymentClass(method: PaymentMethod): string {
-  return method === "Vnpay"
-    ? "border-primary/40 text-primary"
-    : "border-success/40 text-success";
+  const classes: Record<PaymentMethod, string> = {
+    Vnpay: "border-primary/40 text-primary",
+    Momo: "border-success/40 text-success",
+    // COD is the one that still owes money, so it reads as a warning.
+    COD: "border-warning/40 text-warning",
+  };
+  return classes[method] ?? "border-border text-muted-foreground";
 }
 
 function getPaymentIcon(method: PaymentMethod): Component {
-  return method === "Vnpay" ? CreditCard : Wallet;
+  const icons: Record<PaymentMethod, Component> = {
+    Vnpay: CreditCard,
+    Momo: Wallet,
+    COD: Banknote,
+  };
+  return icons[method] ?? Wallet;
 }
 
 function formatDate(date?: string): string {

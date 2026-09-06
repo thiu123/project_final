@@ -98,7 +98,125 @@
                 <span class="text-base font-medium">Momo Wallet</span>
               </div>
             </button>
+
+            <button
+              type="button"
+              role="radio"
+              :aria-checked="selectedPayment === 'cod'"
+              :disabled="hasEbook"
+              class="rounded-lg border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60"
+              :class="
+                selectedPayment === 'cod'
+                  ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                  : 'border-border bg-card'
+              "
+              @click="selectedPayment = 'cod'"
+            >
+              <div class="flex items-center">
+                <span
+                  class="mr-3 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border"
+                  :class="
+                    selectedPayment === 'cod'
+                      ? 'border-primary'
+                      : 'border-input'
+                  "
+                >
+                  <span
+                    v-if="selectedPayment === 'cod'"
+                    class="h-2 w-2 rounded-full bg-primary"
+                  ></span>
+                </span>
+                <span
+                  class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded bg-success/10"
+                >
+                  <Banknote class="h-6 w-6 text-success" />
+                </span>
+                <span>
+                  <span class="block text-base font-medium">
+                    Cash on Delivery
+                  </span>
+                  <span class="block text-xs text-muted-foreground">
+                    {{
+                      hasEbook
+                        ? "Not available for ebooks — remove them or pay online"
+                        : "Pay the courier when your books arrive"
+                    }}
+                  </span>
+                </span>
+              </div>
+            </button>
           </div>
+        </div>
+      </UiCard>
+
+      <!-- Delivery details: only COD needs them, and only COD collects on site -->
+      <UiCard
+        v-if="selectedPayment === 'cod'"
+        class="mb-4 overflow-hidden rounded-xl shadow md:mb-6"
+      >
+        <div
+          class="flex items-center bg-primary px-4 py-4 text-primary-foreground"
+        >
+          <Truck class="mr-3 h-6 w-6" />
+          <span class="text-lg font-semibold">Delivery Details</span>
+        </div>
+        <div class="grid gap-4 p-4 md:p-6">
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label for="ship-name" class="mb-1 block text-sm font-medium">
+                Recipient name <span class="text-destructive">*</span>
+              </label>
+              <UiInput
+                id="ship-name"
+                v-model="shipping.fullName"
+                placeholder="Nguyễn Văn A"
+                maxlength="100"
+              />
+            </div>
+            <div>
+              <label for="ship-phone" class="mb-1 block text-sm font-medium">
+                Phone <span class="text-destructive">*</span>
+              </label>
+              <UiInput
+                id="ship-phone"
+                v-model="shipping.phone"
+                placeholder="0912345678"
+                inputmode="tel"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label for="ship-address" class="mb-1 block text-sm font-medium">
+              Delivery address <span class="text-destructive">*</span>
+            </label>
+            <UiTextarea
+              id="ship-address"
+              v-model="shipping.address"
+              :rows="2"
+              class="resize-none"
+              placeholder="House number, street, ward, district, city"
+              maxlength="255"
+            />
+          </div>
+
+          <div>
+            <label for="ship-note" class="mb-1 block text-sm font-medium">
+              Note for the courier
+              <span class="text-muted-foreground">(optional)</span>
+            </label>
+            <UiInput
+              id="ship-note"
+              v-model="shipping.note"
+              placeholder="e.g. call before arriving, leave at reception"
+              maxlength="255"
+            />
+          </div>
+
+          <p class="text-xs text-muted-foreground">
+            The courier calls this number before delivering, and you pay them in
+            cash on arrival.
+          </p>
         </div>
       </UiCard>
 
@@ -461,6 +579,16 @@
         </UiButton>
       </div>
 
+      <UiAlert
+        v-if="checkoutError"
+        variant="error"
+        class="mb-4 rounded-lg"
+        closable
+        @close="checkoutError = ''"
+      >
+        {{ checkoutError }}
+      </UiAlert>
+
       <!-- Security Notice -->
       <UiAlert variant="success" class="rounded-lg">
         Your payment information is secured with 256-bit SSL encryption
@@ -472,8 +600,10 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { useOrderStore } from "@/stores/order";
+import { useCartStore } from "@/stores/cart";
 import {
   ArrowLeft,
+  Banknote,
   ChevronRight,
   CircleArrowRight,
   CreditCard,
@@ -484,10 +614,11 @@ import {
   Tag,
   Ticket,
   TicketPercent,
+  Truck,
   User,
 } from "lucide-vue-next";
 import { validateVoucher, getAllVouchers } from "@/api/voucherApi";
-import type { Voucher } from "@/types";
+import type { ShippingAddress, Voucher } from "@/types";
 import vnpayLogo from "~/assets/vnpay-logo-inkythuatso.svg";
 import momoLogo from "~/assets/Logo-MoMo-Square-300x300.png";
 
@@ -504,6 +635,7 @@ type CheckoutDisplayItem = Record<string, any> & {
 };
 
 const orderStore = useOrderStore();
+const cartStore = useCartStore();
 const { cartItems } = storeToRefs(orderStore);
 const router = useRouter();
 
@@ -515,6 +647,53 @@ const appliedVoucher = ref<CheckoutVoucher | null>(null);
 const voucherDiscount = ref(0);
 const voucherLoading = ref(false);
 const voucherError = ref("");
+const checkoutError = ref("");
+
+/**
+ * Delivery details for COD. Remembered locally so a returning buyer does not
+ * retype their address — the account itself stores no address or phone.
+ */
+const SHIPPING_STORAGE_KEY = "shippingDetails";
+const shipping = reactive<ShippingAddress>({
+  fullName: "",
+  phone: "",
+  address: "",
+  note: "",
+});
+
+function loadSavedShipping() {
+  if (!import.meta.client) return;
+  try {
+    const saved = localStorage.getItem(SHIPPING_STORAGE_KEY);
+    if (saved) Object.assign(shipping, JSON.parse(saved));
+  } catch {
+    // A corrupt entry just means the buyer types it again.
+  }
+}
+
+function rememberShipping() {
+  if (!import.meta.client) return;
+  try {
+    localStorage.setItem(SHIPPING_STORAGE_KEY, JSON.stringify(shipping));
+  } catch {
+    // Private browsing and full storage are both survivable here.
+  }
+}
+
+/**
+ * Mirrors the backend rules so the buyer is told what is wrong before a round
+ * trip. The server still validates: this is convenience, not the guard.
+ */
+function validateShipping(): string | null {
+  if (!shipping.fullName.trim()) return "Please enter the recipient's name.";
+  if (!/^(0|\+84)\d{9}$/.test(shipping.phone.replace(/[\s.-]/g, ""))) {
+    return "Please enter a valid Vietnamese phone number, e.g. 0912345678.";
+  }
+  if (shipping.address.trim().length < 10) {
+    return "Please enter a full delivery address.";
+  }
+  return null;
+}
 const showAvailableVouchers = ref(false);
 const availableVouchers = ref<CheckoutVoucher[]>([]);
 const loadingVouchers = ref(false);
@@ -534,6 +713,19 @@ const orderItems = computed<CheckoutDisplayItem[]>(() => {
     }
   }
   return (cartItems.value as CheckoutDisplayItem[]) || [];
+});
+
+// Ebooks have nothing to hand over on the doorstep, and the backend rejects
+// them for COD, so the option is disabled rather than failing after a click.
+const hasEbook = computed(() =>
+  orderItems.value.some((item) => item.productType === "ebook")
+);
+
+// Keep the selection valid if an ebook is in the basket.
+watch(hasEbook, (ebookPresent) => {
+  if (ebookPresent && selectedPayment.value === "cod") {
+    selectedPayment.value = "vnpay";
+  }
 });
 
 const subtotal = computed(() => {
@@ -644,6 +836,7 @@ async function handleConfirmPayment() {
 
   try {
     isProcessingPayment.value = true;
+    checkoutError.value = "";
 
     // Get voucher code if applied
     const code = appliedVoucher.value ? appliedVoucher.value.code : null;
@@ -657,7 +850,7 @@ async function handleConfirmPayment() {
         window.location.href = paymentUrl;
       } else {
         console.error("Failed to get VNPay payment URL");
-        alert("Payment processing failed. Please try again.");
+        checkoutError.value = "Payment processing failed. Please try again.";
         isProcessingPayment.value = false;
       }
     } else if (selectedPayment.value === "momo") {
@@ -669,26 +862,42 @@ async function handleConfirmPayment() {
         window.location.href = paymentUrl;
       } else {
         console.error("Failed to get MoMo payment URL");
-        alert("Payment processing failed. Please try again.");
+        checkoutError.value = "Payment processing failed. Please try again.";
         isProcessingPayment.value = false;
       }
-    } else {
-      // Handle other payment methods
-      console.log(
-        "Processing order with payment method:",
-        selectedPayment.value
-      );
-      isProcessingPayment.value = false;
-      // Implement other payment methods here
+    } else if (selectedPayment.value === "cod") {
+      const invalid = validateShipping();
+      if (invalid) {
+        checkoutError.value = invalid;
+        isProcessingPayment.value = false;
+        return;
+      }
+
+      // No gateway to bounce through: the order is placed here and the buyer
+      // goes straight to the status page it returns.
+      const { orderId } = await orderStore.createCodOrder({ ...shipping }, code);
+      rememberShipping();
+      localStorage.removeItem("checkoutItems");
+      // Placing a COD order commits the goods immediately, so the server has
+      // already deleted the cart. The gateway flows reload the whole app on the
+      // way back and pick that up for free; this one is a client-side route, so
+      // without this the nav badge keeps counting items that no longer exist.
+      cartStore.clearCart();
+      await router.push(`/order/status/${orderId}`);
     }
-  } catch (error) {
+  } catch (error: any) {
+    // The backend explains real rejections (ebook in cart, expired voucher);
+    // show that instead of a generic failure.
     console.error("Error processing payment:", error);
-    alert("An error occurred while processing your payment. Please try again.");
+    checkoutError.value =
+      error?.response?.data?.msg ??
+      "An error occurred while processing your payment. Please try again.";
     isProcessingPayment.value = false;
   }
 }
 
 onMounted(async () => {
+  loadSavedShipping();
   await loadAvailableVouchers();
 });
 </script>

@@ -20,3 +20,6 @@ dist
 # Multer temp uploads
 tmp/*
 !tmp/.gitkeep
+
+# Migration backups: real user documents, never commit these
+scripts/objectid-backup-*.json

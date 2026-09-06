@@ -98,6 +98,30 @@
               </div>
             </div>
 
+            <div v-if="order?.shipping" class="col-span-12">
+              <div class="h-full rounded-lg bg-sky-50 p-4 dark:bg-sky-950/40">
+                <div
+                  class="mb-2 text-xs font-medium text-sky-700 dark:text-sky-300"
+                >
+                  Delivering To
+                </div>
+                <div
+                  class="text-base font-bold text-sky-900 dark:text-sky-100"
+                >
+                  {{ order.shipping.fullName }} · {{ order.shipping.phone }}
+                </div>
+                <div class="mt-1 text-sm text-sky-900/80 dark:text-sky-100/80">
+                  {{ order.shipping.address }}
+                </div>
+                <div
+                  v-if="order.shipping.note"
+                  class="mt-1 text-sm italic text-sky-900/70 dark:text-sky-100/70"
+                >
+                  Note: {{ order.shipping.note }}
+                </div>
+              </div>
+            </div>
+
             <div
               v-if="order?.confirmedByAdmin"
               class="col-span-12 sm:col-span-6 md:col-span-4"

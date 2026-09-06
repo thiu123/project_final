@@ -4,13 +4,24 @@ import { FilterQuery, Model, PipelineStage } from 'mongoose';
 import { Paginated, paginate } from '../../common/dto/pagination.dto';
 import { BOOK_CACHE_TTL_SECONDS } from '../../constants/app.constants';
 import { BOOK_SUBJECTS } from '../../constants/book-subjects';
-import { HOME_SECTION_SIZE, HOME_SECTION_SUBJECTS } from '../../constants/home-sections';
+import {
+  HOME_SECTION_SIZE,
+  HOME_SECTION_SUBJECTS,
+} from '../../constants/home-sections';
 import { RedisService } from '../../config/redis/redis.service';
 import { CreateBookDto, UpdateBookDto } from './dto/book.dto';
-import { BOOK_SORT_SPEC, MAX_PAGE_SIZE, QueryBooksDto } from './dto/query-books.dto';
+import {
+  BOOK_SORT_SPEC,
+  MAX_PAGE_SIZE,
+  QueryBooksDto,
+} from './dto/query-books.dto';
 import { Book, BookDocument } from './schemas/book.schema';
 import { CategoryNode, HomePayload, LeanBook } from './books.types';
-import { expandSubject, normalizeSubject, slugifySubject } from './subject.util';
+import {
+  expandSubject,
+  normalizeSubject,
+  slugifySubject,
+} from './subject.util';
 
 /** Every derived cache lives under this prefix so one wildcard clears them all. */
 const LIST_CACHE_PREFIX = 'books:';
@@ -44,7 +55,8 @@ const SUBJECT_STATS_PIPELINE: PipelineStage.FacetPipelineStage[] = [
   },
 ];
 
-const escapeRegex = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegex = (value: string): string =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 @Injectable()
 export class BooksService {
@@ -112,7 +124,11 @@ export class BooksService {
     return filter;
   }
 
-  private listCacheKey(query: QueryBooksDto, page: number, limit: number): string {
+  private listCacheKey(
+    query: QueryBooksDto,
+    page: number,
+    limit: number,
+  ): string {
     const parts = [
       `p${page}`,
       `l${limit}`,
@@ -136,11 +152,18 @@ export class BooksService {
    * returns for that category.
    */
   async getCategories(): Promise<CategoryNode[]> {
-    const cached = await this.redis.getJson<CategoryNode[]>(CATEGORIES_CACHE_KEY);
+    const cached =
+      await this.redis.getJson<CategoryNode[]>(CATEGORIES_CACHE_KEY);
     if (cached) return cached;
 
-    const categories = this.buildCategoryTree(await this.aggregateSubjectStats());
-    await this.redis.setJson(CATEGORIES_CACHE_KEY, BOOK_CACHE_TTL_SECONDS, categories);
+    const categories = this.buildCategoryTree(
+      await this.aggregateSubjectStats(),
+    );
+    await this.redis.setJson(
+      CATEGORIES_CACHE_KEY,
+      BOOK_CACHE_TTL_SECONDS,
+      categories,
+    );
     return categories;
   }
 
@@ -172,7 +195,10 @@ export class BooksService {
       node.subcategories = (entry.subcategories ?? []).map(toNode);
 
       // Rolled-up count mirrors what ?subject=<category> actually returns.
-      node.count += node.subcategories.reduce((sum, child) => sum + child.count, 0);
+      node.count += node.subcategories.reduce(
+        (sum, child) => sum + child.count,
+        0,
+      );
 
       // Fall back to a subcategory cover when the category itself has no books.
       node.cover_url ??=
@@ -219,16 +245,15 @@ export class BooksService {
               { $limit: HOME_SECTION_SIZE },
               { $project: { description: 0 } },
             ],
-            // Carousels keep their descriptions: the best-seller tabs render one
-            // below the selected book. `latest` and `bestSellers` drop theirs
-            // because those strips only ever show a cover.
             groups: [
               { $match: { subjects: { $in: subjects } } },
               { $sort: { createdAt: -1, _id: -1 } },
               { $unwind: '$subjects' },
               { $match: { subjects: { $in: subjects } } },
               { $group: { _id: '$subjects', books: { $push: '$$ROOT' } } },
-              { $project: { books: { $slice: ['$books', HOME_SECTION_SIZE] } } },
+              {
+                $project: { books: { $slice: ['$books', HOME_SECTION_SIZE] } },
+              },
             ],
             subjectStats: SUBJECT_STATS_PIPELINE,
           },
@@ -245,7 +270,10 @@ export class BooksService {
     }
 
     const stats = new Map(
-      (facet?.subjectStats ?? []).map((stat) => [normalizeSubject(stat._id), stat]),
+      (facet?.subjectStats ?? []).map((stat) => [
+        normalizeSubject(stat._id),
+        stat,
+      ]),
     );
     const categories = this.buildCategoryTree(stats);
 
@@ -259,7 +287,11 @@ export class BooksService {
     // The same aggregation already produced the category tree, so warm its cache too.
     await Promise.all([
       this.redis.setJson(HOME_CACHE_KEY, BOOK_CACHE_TTL_SECONDS, payload),
-      this.redis.setJson(CATEGORIES_CACHE_KEY, BOOK_CACHE_TTL_SECONDS, categories),
+      this.redis.setJson(
+        CATEGORIES_CACHE_KEY,
+        BOOK_CACHE_TTL_SECONDS,
+        categories,
+      ),
     ]);
     return payload;
   }
@@ -273,7 +305,10 @@ export class BooksService {
     const query = title?.trim();
     if (!query) return [];
 
-    const size = Math.min(MAX_SEARCH_SUGGESTIONS, Math.max(1, limit || SEARCH_SUGGESTION_LIMIT));
+    const size = Math.min(
+      MAX_SEARCH_SUGGESTIONS,
+      Math.max(1, limit || SEARCH_SUGGESTION_LIMIT),
+    );
     const pattern = new RegExp(escapeRegex(query), 'i');
 
     return this.bookModel
@@ -303,7 +338,9 @@ export class BooksService {
   }
 
   async addBook(dto: CreateBookDto) {
-    const book = await new this.bookModel(this.withNormalizedSubjects(dto)).save();
+    const book = await new this.bookModel(
+      this.withNormalizedSubjects(dto),
+    ).save();
     await this.clearDerivedCaches();
     return { message: 'Add book successfully', book };
   }
@@ -313,7 +350,10 @@ export class BooksService {
       .findByIdAndUpdate(id, this.withNormalizedSubjects(dto), { new: true })
       .exec();
     if (!book) {
-      throw new HttpException({ message: "Can't find book" }, HttpStatus.NOT_FOUND);
+      throw new HttpException(
+        { message: "Can't find book" },
+        HttpStatus.NOT_FOUND,
+      );
     }
 
     await this.redis.del(this.bookKey(id));
@@ -345,13 +385,35 @@ export class BooksService {
     return `book:${id}`;
   }
 
+  /**
+   * Drops the cached copies of the given books plus every derived list.
+   *
+   * Checkout changes `stock` and `sold` through its own model handle, which
+   * never passes through this service — without this the detail page kept
+   * advertising stock for a book that had just sold out, for up to the full
+   * 30-minute TTL.
+   */
+  async invalidateBooks(ids: string[]): Promise<void> {
+    if (ids.length === 0) return;
+    try {
+      await this.redis.del(...ids.map((id) => this.bookKey(id)));
+    } catch (error) {
+      this.logger.error(
+        `Error clearing book cache: ${(error as Error).message}`,
+      );
+    }
+    await this.clearDerivedCaches();
+  }
+
   /** Drops every list / home / category cache; individual books are keyed separately. */
   private async clearDerivedCaches(): Promise<void> {
     try {
       const keys = await this.redis.keys(`${LIST_CACHE_PREFIX}*`);
       await this.redis.del(...keys);
     } catch (error) {
-      this.logger.error(`Error when deleting cache: ${(error as Error).message}`);
+      this.logger.error(
+        `Error when deleting cache: ${(error as Error).message}`,
+      );
     }
   }
 }
