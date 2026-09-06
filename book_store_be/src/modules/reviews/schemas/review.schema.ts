@@ -1,9 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
+// Reference fields use SchemaTypes.ObjectId, never Types.ObjectId: @nestjs/mongoose
+// recognises only the former. Given the latter it treats it as a plain class, builds
+// an empty definition from it, and the field silently becomes Mixed — which stops
+// casting, so ids get stored as raw strings and no longer match id queries.
 
 @Schema()
 export class ReviewReply {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   adminId: Types.ObjectId;
 
   @Prop({ type: String, required: true })
@@ -17,10 +21,10 @@ export const ReviewReplySchema = SchemaFactory.createForClass(ReviewReply);
 
 @Schema({ timestamps: true })
 export class Review {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
-  @Prop({ type: Types.ObjectId, ref: 'Book', required: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'Book', required: true })
   bookId: Types.ObjectId;
 
   @Prop({ type: Number, required: true, min: 0, max: 5 })

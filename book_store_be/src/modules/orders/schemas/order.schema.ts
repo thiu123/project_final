@@ -1,5 +1,9 @@
 import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Types } from 'mongoose';
+import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
+// Reference fields use SchemaTypes.ObjectId, never Types.ObjectId: @nestjs/mongoose
+// recognises only the former. Given the latter it treats it as a plain class, builds
+// an empty definition from it, and the field silently becomes Mixed — which stops
+// casting, so ids get stored as raw strings and no longer match id queries.
 import {
   ORDER_STATUSES,
   OrderStatus,
@@ -11,7 +15,7 @@ import {
 
 @Schema()
 export class OrderItem {
-  @Prop({ type: Types.ObjectId, ref: 'Book', required: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'Book', required: true })
   bookId: Types.ObjectId;
 
   @Prop({ type: Number, required: true })
@@ -28,13 +32,27 @@ export interface OrderVoucher {
   discountAmount: number;
 }
 
+/**
+ * Where the courier delivers and who they call.
+ *
+ * Captured per order rather than on the user, because the recipient is often
+ * not the account holder — a gift, an office address, a parent ordering for a
+ * child. Required for COD; prepaid orders may still be missing it.
+ */
+export interface ShippingAddress {
+  fullName: string;
+  phone: string;
+  address: string;
+  note?: string;
+}
+
 @Schema({ timestamps: true })
 export class Order {
   /** Human-readable id also used as the payment gateway transaction reference. */
   @Prop({ type: String, required: true, unique: true })
   orderId: string;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', required: true })
   userId: Types.ObjectId;
 
   @Prop({ type: [OrderItemSchema], default: [] })
@@ -52,11 +70,24 @@ export class Order {
   )
   voucher?: OrderVoucher;
 
+  @Prop(
+    raw({
+      fullName: { type: String },
+      phone: { type: String },
+      address: { type: String },
+      note: { type: String },
+    }),
+  )
+  shipping?: ShippingAddress;
+
   @Prop({ type: String, enum: PAYMENT_METHODS, required: true })
   paymentMethod: PaymentMethod;
 
   @Prop({ type: String, enum: ORDER_STATUSES, default: 'Pending' })
   status: OrderStatus;
+
+  @Prop({ type: Boolean, default: false })
+  inventoryCommitted: boolean;
 
   @Prop({ type: Boolean, default: false })
   confirmedByAdmin: boolean;

@@ -9,17 +9,29 @@ import {
   PAID_ORDER_STATUSES,
   PaymentMethod,
 } from '../../constants/app.constants';
+import { BooksService } from '../books/books.service';
 import { Book, BookDocument } from '../books/schemas/book.schema';
 import { Cart, CartDocument, CartItem } from '../carts/schemas/cart.schema';
-import { VoucherRejectReason, VouchersService } from '../vouchers/vouchers.service';
-import { MomoReturnQuery, VnpayReturnQuery } from './dto/order.dto';
+import {
+  VoucherRejectReason,
+  VouchersService,
+} from '../vouchers/vouchers.service';
+import {
+  CodCheckoutDto,
+  MomoReturnQuery,
+  VnpayReturnQuery,
+} from './dto/order.dto';
+import { allowedTransitions, REVENUE_MATCH } from './order-transitions';
 import { MomoService } from './payments/momo.service';
 import { VnpayService } from './payments/vnpay.service';
-import { Order, OrderDocument } from './schemas/order.schema';
+import { Order, OrderDocument, ShippingAddress } from './schemas/order.schema';
 
 type PopulatedCartItem = Omit<CartItem, 'bookId'> & { bookId: BookDocument };
 
-const CHECKOUT_VOUCHER_MESSAGES: Record<Exclude<VoucherRejectReason, 'MIN_AMOUNT'>, string> = {
+const CHECKOUT_VOUCHER_MESSAGES: Record<
+  Exclude<VoucherRejectReason, 'MIN_AMOUNT'>,
+  string
+> = {
   INVALID: 'Invalid voucher code',
   EXPIRED: 'Voucher has expired',
   USAGE_LIMIT: 'Voucher usage limit reached',
@@ -33,6 +45,7 @@ export class OrdersService {
     @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
     @InjectModel(Cart.name) private readonly cartModel: Model<CartDocument>,
     @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
+    private readonly booksService: BooksService,
     private readonly vouchersService: VouchersService,
     private readonly vnpayService: VnpayService,
     private readonly momoService: MomoService,
@@ -43,7 +56,10 @@ export class OrdersService {
   // ---------------------------------------------------------------------
 
   async getUserOrders(userId: string) {
-    return this.orderModel.find({ userId }).populate('items.bookId').sort({ createdAt: -1 });
+    return this.orderModel
+      .find({ userId })
+      .populate('items.bookId')
+      .sort({ createdAt: -1 });
   }
 
   /** Admin: every order. */
@@ -57,7 +73,9 @@ export class OrdersService {
 
   /** Admin: revenue + per-status stats + latest 10 orders. */
   async getDashboardStats() {
-    const paidFilter = { status: { $in: PAID_ORDER_STATUSES } };
+    // A COD order only counts once the cash is actually back, which is why this
+    // is not simply "status is one of the paid ones" — see REVENUE_MATCH.
+    const paidFilter = REVENUE_MATCH;
 
     const revenueResult = await this.orderModel.aggregate<{ total: number }>([
       { $match: paidFilter },
@@ -88,7 +106,9 @@ export class OrdersService {
 
   /** Looks an order up by its public `orderId` (not the Mongo _id). */
   async getOrderById(orderId: string) {
-    const order = await this.orderModel.findOne({ orderId }).populate('items.bookId');
+    const order = await this.orderModel
+      .findOne({ orderId })
+      .populate('items.bookId');
     if (!order) {
       throw new HttpException({ msg: 'Order not found' }, HttpStatus.NOT_FOUND);
     }
@@ -98,7 +118,10 @@ export class OrdersService {
   /** Ebooks are readable as soon as an order containing them is paid. */
   async checkEbookPurchase(userId: string, bookId?: string) {
     if (!bookId) {
-      throw new HttpException({ msg: 'Book ID is required' }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        { msg: 'Book ID is required' },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     const order = await this.orderModel.findOne({
@@ -115,39 +138,70 @@ export class OrdersService {
   // Admin mutations
   // ---------------------------------------------------------------------
 
+  /**
+   * Moves an order along its lifecycle on an admin's instruction.
+   *
+   * This used to be a bare `findByIdAndUpdate`, which let any status be written
+   * over any other. That was wrong in three ways at once: a prepaid order could
+   * be marked `Paid` without a payment, `Confirmed` never recorded who
+   * confirmed it, and `Cancelled` walked away with the stock still deducted.
+   * Every route into a new status now goes through the transition table and
+   * carries the side effects that status implies.
+   */
   async updateOrderStatus(id: string, status: OrderStatus) {
     if (!ORDER_STATUSES.includes(status)) {
-      throw new HttpException({ msg: 'Invalid status' }, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        { msg: 'Invalid status' },
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    const order = await this.orderModel
-      .findByIdAndUpdate(id, { status }, { new: true })
-      .populate('items.bookId');
-    if (!order) {
-      throw new HttpException({ msg: 'Order not found' }, HttpStatus.NOT_FOUND);
+    const order = await this.findOrderOrFail(id);
+    const allowed = allowedTransitions(order.paymentMethod, order.status);
+    if (!allowed.includes(status)) {
+      throw new HttpException(
+        { msg: this.transitionRejection(order, status, allowed) },
+        HttpStatus.BAD_REQUEST,
+      );
     }
-    return order;
+
+    if (status === 'Cancelled') {
+      await this.releaseInventory(order);
+    } else if (status === 'Confirmed') {
+      order.confirmedByAdmin = true;
+      order.confirmedAt = new Date();
+    }
+
+    order.status = status;
+    await order.save();
+    this.logger.log(`Order ${order.orderId} moved to ${status}`);
+
+    return this.populatedOrder(id);
   }
 
+  /** Explains a refused transition in terms of what the admin can actually do. */
+  private transitionRejection(
+    order: OrderDocument,
+    target: OrderStatus,
+    allowed: OrderStatus[],
+  ): string {
+    // Repeating a status is a refusal, not a quiet no-op: an admin clicking
+    // Confirm twice should be told the first one already landed.
+    if (target === order.status) {
+      return `Order is already ${order.status}.`;
+    }
+    if (target === 'Paid' && order.paymentMethod !== 'COD') {
+      return `A ${order.paymentMethod} order is marked Paid by the payment gateway when the money clears, not by hand. Only cash-on-delivery orders are settled manually.`;
+    }
+    if (allowed.length === 0) {
+      return `Order is already ${order.status}, which is final.`;
+    }
+    return `Cannot move a ${order.paymentMethod} order from ${order.status} to ${target}. Allowed next: ${allowed.join(', ')}.`;
+  }
+
+  /** Kept as its own endpoint; the rules live in one place regardless. */
   async confirmOrder(id: string) {
-    const order = await this.findOrderOrFail(id);
-
-    if (order.status !== 'Paid') {
-      throw new HttpException({ msg: 'Can only confirm paid orders' }, HttpStatus.BAD_REQUEST);
-    }
-    if (order.confirmedByAdmin) {
-      throw new HttpException({ msg: 'Order already confirmed' }, HttpStatus.BAD_REQUEST);
-    }
-
-    order.confirmedByAdmin = true;
-    order.confirmedAt = new Date();
-    order.status = 'Confirmed';
-    await order.save();
-
-    return this.orderModel
-      .findById(id)
-      .populate('items.bookId')
-      .populate('userId', 'username email');
+    return this.updateOrderStatus(id, 'Confirmed');
   }
 
   // ---------------------------------------------------------------------
@@ -172,15 +226,14 @@ export class OrdersService {
     // Only Pending or Paid orders (before admin confirmation) can be cancelled
     if (!['Pending', 'Paid'].includes(order.status)) {
       throw new HttpException(
-        { msg: 'Cannot cancel order. Only Pending or Paid orders can be cancelled.' },
+        {
+          msg: 'Cannot cancel order. Only Pending or Paid orders can be cancelled.',
+        },
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    // A paid order already consumed stock and voucher usage: give them back
-    if (order.status === 'Paid') {
-      await this.restoreInventory(order);
-    }
+    await this.releaseInventory(order);
 
     order.status = 'Cancelled';
     await order.save();
@@ -188,20 +241,93 @@ export class OrdersService {
     return this.orderModel.findById(id).populate('items.bookId');
   }
 
+  /**
+   * Gives back whatever a cancelled order took, once.
+   *
+   * COD commits stock while still `Pending`, so the old "restore only when
+   * Paid" rule would have leaked it. Orders written before the flag existed
+   * fall back to that rule.
+   */
+  private async releaseInventory(order: OrderDocument): Promise<void> {
+    const committed = order.inventoryCommitted ?? order.status === 'Paid';
+    if (!committed) return;
+
+    await this.restoreInventory(order);
+    order.inventoryCommitted = false;
+  }
+
   // ---------------------------------------------------------------------
   // Checkout
   // ---------------------------------------------------------------------
 
   async checkoutWithVnpay(userId: string, voucherCode?: string) {
-    const { orderId, totalAmount } = await this.createOrderFromCart(userId, voucherCode, 'Vnpay');
-    const paymentUrl = await this.vnpayService.buildPaymentUrl({ orderId, amount: totalAmount });
+    const { orderId, totalAmount } = await this.createOrderFromCart(
+      userId,
+      voucherCode,
+      'Vnpay',
+    );
+    const paymentUrl = await this.vnpayService.buildPaymentUrl({
+      orderId,
+      amount: totalAmount,
+    });
     return { paymentUrl };
   }
 
   async checkoutWithMomo(userId: string, voucherCode?: string) {
-    const { orderId, totalAmount } = await this.createOrderFromCart(userId, voucherCode, 'Momo');
-    const paymentUrl = await this.momoService.buildPaymentUrl({ orderId, amount: totalAmount });
+    const { orderId, totalAmount } = await this.createOrderFromCart(
+      userId,
+      voucherCode,
+      'Momo',
+    );
+    const paymentUrl = await this.momoService.buildPaymentUrl({
+      orderId,
+      amount: totalAmount,
+    });
     return { paymentUrl };
+  }
+
+  /**
+   * Cash on delivery. There is no gateway and no redirect: the order is placed
+   * immediately and stays `Pending` until the courier collects the money, so
+   * the client goes straight to the status page.
+   */
+  async checkoutWithCod(userId: string, dto: CodCheckoutDto) {
+    await this.rejectEbooksForCod(userId);
+
+    const { orderId, totalAmount } = await this.createOrderFromCart(
+      userId,
+      dto.voucherCode,
+      'COD',
+      dto.shipping,
+    );
+
+    const order = await this.orderModel.findOne({ orderId });
+    if (order) await this.commitInventory(order);
+
+    return {
+      orderId,
+      totalAmount,
+      paymentMethod: 'COD' as const,
+      status: 'Pending' as const,
+    };
+  }
+
+  /**
+   * Ebooks cannot ship, so there is nothing for a courier to collect against —
+   * and access is granted only once an order reaches a paid status, which a COD
+   * order does not until it is delivered. Blocking here beats selling someone a
+   * download they cannot open.
+   */
+  private async rejectEbooksForCod(userId: string): Promise<void> {
+    const cart = await this.cartModel.findOne({ userId });
+    if (cart?.items.some((item) => item.productType === 'ebook')) {
+      throw new HttpException(
+        {
+          msg: 'Cash on delivery is not available for ebooks. Please pay with VNPay or MoMo, or remove the ebooks from your cart.',
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   /**
@@ -212,6 +338,7 @@ export class OrdersService {
     userId: string,
     voucherCode: string | undefined,
     paymentMethod: PaymentMethod,
+    shipping?: ShippingAddress,
   ): Promise<{ orderId: string; totalAmount: number }> {
     const cart = await this.cartModel
       .findOne({ userId })
@@ -223,7 +350,10 @@ export class OrdersService {
 
     // Hardbooks need stock; ebooks don't
     for (const item of cart.items) {
-      if (item.productType === 'hardbook' && item.bookId.stock < item.quantity) {
+      if (
+        item.productType === 'hardbook' &&
+        item.bookId.stock < item.quantity
+      ) {
         throw new HttpException(
           {
             msg: `Insufficient stock for "${item.bookId.title}". Available: ${item.bookId.stock}, Requested: ${item.quantity}`,
@@ -236,13 +366,18 @@ export class OrdersService {
     // Subtotal in USD (ebooks are 30% off the hardbook price)
     const subtotal = cart.items.reduce((sum, item) => {
       const price =
-        item.productType === 'ebook' ? item.bookId.price * EBOOK_PRICE_RATIO : item.bookId.price;
+        item.productType === 'ebook'
+          ? item.bookId.price * EBOOK_PRICE_RATIO
+          : item.bookId.price;
       return sum + price * item.quantity;
     }, 0);
 
     let discountAmount = 0;
     if (voucherCode) {
-      const result = await this.vouchersService.checkVoucher(voucherCode, subtotal);
+      const result = await this.vouchersService.checkVoucher(
+        voucherCode,
+        subtotal,
+      );
       if (!result.ok) {
         const message =
           result.reason === 'MIN_AMOUNT'
@@ -253,7 +388,9 @@ export class OrdersService {
       discountAmount = result.discountAmount;
     }
 
-    const totalAmount = Math.round((subtotal - discountAmount) * EXCHANGE_RATE_USD_TO_VND);
+    const totalAmount = Math.round(
+      (subtotal - discountAmount) * EXCHANGE_RATE_USD_TO_VND,
+    );
     const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
     await new this.orderModel({
@@ -266,10 +403,13 @@ export class OrdersService {
       })),
       total: totalAmount,
       paymentMethod,
+      shipping,
       voucher: voucherCode
         ? {
             code: voucherCode.toUpperCase(),
-            discountAmount: Math.round(discountAmount * EXCHANGE_RATE_USD_TO_VND),
+            discountAmount: Math.round(
+              discountAmount * EXCHANGE_RATE_USD_TO_VND,
+            ),
           }
         : undefined,
     }).save();
@@ -299,13 +439,18 @@ export class OrdersService {
       await this.settlePayment(orderId, Number(resultCode) === 0);
       return this.statusPageUrl(orderId);
     } catch (err) {
-      this.logger.error(`MoMo payment processing error: ${(err as Error).message}`);
+      this.logger.error(
+        `MoMo payment processing error: ${(err as Error).message}`,
+      );
       return this.statusPageUrl('unknown');
     }
   }
 
   /** Marks the order Paid/Failed and, on success, consumes stock, voucher usage and the cart. */
-  private async settlePayment(orderId: string | undefined, success: boolean): Promise<void> {
+  private async settlePayment(
+    orderId: string | undefined,
+    success: boolean,
+  ): Promise<void> {
     const order = await this.orderModel.findOne({ orderId });
     if (!order) {
       this.logger.error(`Order not found: ${orderId}`);
@@ -317,6 +462,18 @@ export class OrdersService {
     this.logger.log(`Order ${orderId} updated to status: ${order.status}`);
 
     if (!success) return;
+    await this.commitInventory(order);
+  }
+
+  /**
+   * Takes the stock, the voucher usage and the cart for an order.
+   *
+   * Shared by the gateway callbacks and by COD, which reaches this point at
+   * `Pending` rather than `Paid`: the goods are committed to the buyer as soon
+   * as the order is placed, and the money only arrives on delivery.
+   */
+  private async commitInventory(order: OrderDocument): Promise<void> {
+    if (order.inventoryCommitted) return;
 
     for (const item of order.items) {
       const book = await this.bookModel.findById(item.bookId);
@@ -332,6 +489,13 @@ export class OrdersService {
     if (order.voucher?.code) {
       await this.vouchersService.adjustUsage(order.voucher.code, 1);
     }
+
+    order.inventoryCommitted = true;
+    await order.save();
+
+    await this.booksService.invalidateBooks(
+      order.items.map((item) => String(item.bookId)),
+    );
 
     await this.cartModel.findOneAndDelete({ userId: order.userId });
     this.logger.log(`Cart cleared for user ${order.userId}`);
@@ -353,11 +517,23 @@ export class OrdersService {
     if (order.voucher?.code) {
       await this.vouchersService.adjustUsage(order.voucher.code, -1);
     }
+
+    await this.booksService.invalidateBooks(
+      order.items.map((item) => String(item.bookId)),
+    );
   }
 
   private statusPageUrl(orderId: string | undefined): string {
     const frontendUrl = process.env.FRONTEND_URL ?? 'http://localhost:3000';
     return `${frontendUrl}/order/status/${orderId ?? 'unknown'}`;
+  }
+
+  /** The shape the admin table expects back after a mutation. */
+  private populatedOrder(id: string) {
+    return this.orderModel
+      .findById(id)
+      .populate('items.bookId')
+      .populate('userId', 'username email');
   }
 
   private async findOrderOrFail(id: string): Promise<OrderDocument> {

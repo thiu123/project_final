@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import orderApi from "@/api/orderApi";
-import type { Order, OrderItem } from "@/types";
+import type { Order, OrderItem, ShippingAddress } from "@/types";
 
 export const useOrderStore = defineStore("order", () => {
   const cartItems = ref<OrderItem[]>([]);
@@ -41,6 +41,18 @@ export const useOrderStore = defineStore("order", () => {
     }
   }
 
+  /**
+   * Cash on delivery. Unlike the gateway actions this rethrows: COD has real
+   * rejections the buyer must see — an ebook in the cart, an expired voucher —
+   * and swallowing them would leave the checkout button silently doing nothing.
+   */
+  async function createCodOrder(
+    shipping: ShippingAddress,
+    voucherCode: string | null = null,
+  ) {
+    return orderApi.createCodOrderFromCart(shipping, voucherCode);
+  }
+
   async function fetchOrderById(id: string) {
     try {
       const fetched = await orderApi.getOrderById(id);
@@ -77,6 +89,7 @@ export const useOrderStore = defineStore("order", () => {
     fetchUserOrders,
     createOrder,
     createMomoOrder,
+    createCodOrder,
     fetchOrderById,
     checkEbookPurchase,
   };
