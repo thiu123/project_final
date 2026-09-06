@@ -1,4 +1,8 @@
+import { Types } from 'mongoose';
 import { Book } from './schemas/book.schema';
+
+/** A `.lean()` row: the schema fields plus the `_id` Mongoose always returns. */
+export type LeanBook = Book & { _id: Types.ObjectId };
 
 /** One node of the category tree returned by `GET /api/books/categories`. */
 export interface CategoryNode {

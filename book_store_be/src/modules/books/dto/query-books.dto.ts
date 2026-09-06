@@ -86,14 +86,4 @@ export class QueryBooksDto {
   @Transform(toBoolean)
   @IsBoolean()
   inStock?: boolean;
-
-  /**
-   * Descriptions are omitted by default because they dominate the payload and
-   * no listing card renders them. The admin panel opts back in so its edit
-   * dialog can prefill the field.
-   */
-  @IsOptional()
-  @Transform(toBoolean)
-  @IsBoolean()
-  withDescription?: boolean;
 }

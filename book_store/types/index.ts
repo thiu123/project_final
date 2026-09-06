@@ -134,11 +134,30 @@ export interface Favorite {
   createdAt?: string;
 }
 
+/** A catalogue book the advisor named, already resolved to a real row. */
+export interface ReferencedBook {
+  bookId: string;
+  title: string;
+  subjects: string[];
+  price: number;
+  rating: number | null;
+  inStock: boolean;
+}
+
 export interface ChatMessage {
   id: number;
   type: "user" | "bot";
   text: string;
   timestamp: Date;
+  /** Books to render as cards under a bot reply. */
+  books?: ReferencedBook[];
+  /** Set when the turn failed, so the bubble can be styled as an error. */
+  failed?: boolean;
+}
+
+export interface ChatReply {
+  reply: string;
+  books: ReferencedBook[];
 }
 
 export interface SnackbarPayload {
@@ -186,8 +205,6 @@ export interface BookQuery {
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
-  /** Descriptions are stripped by default; the admin editor opts back in. */
-  withDescription?: boolean;
 }
 
 /** A node of the category tree served by `GET /api/books/categories`. */

@@ -9,7 +9,7 @@ import { RedisService } from '../../config/redis/redis.service';
 import { CreateBookDto, UpdateBookDto } from './dto/book.dto';
 import { BOOK_SORT_SPEC, MAX_PAGE_SIZE, QueryBooksDto } from './dto/query-books.dto';
 import { Book, BookDocument } from './schemas/book.schema';
-import { CategoryNode, HomePayload } from './books.types';
+import { CategoryNode, HomePayload, LeanBook } from './books.types';
 import { expandSubject, normalizeSubject, slugifySubject } from './subject.util';
 
 /** Every derived cache lives under this prefix so one wildcard clears them all. */
@@ -59,25 +59,24 @@ export class BooksService {
   // Listing: pagination + filtering + sorting, all in MongoDB
   // ---------------------------------------------------------------------
 
-  async findAll(query: QueryBooksDto): Promise<Paginated<Book>> {
+  async findAll(query: QueryBooksDto): Promise<Paginated<LeanBook>> {
     const page = Math.max(1, query.page || 1);
     const limit = Math.min(MAX_PAGE_SIZE, Math.max(1, query.limit || 12));
     const cacheKey = this.listCacheKey(query, page, limit);
 
-    const cached = await this.redis.getJson<Paginated<Book>>(cacheKey);
+    const cached = await this.redis.getJson<Paginated<LeanBook>>(cacheKey);
     if (cached) return cached;
 
     const filter = this.buildFilter(query);
-    const projection = query.withDescription ? {} : { description: 0 };
 
     // countDocuments runs alongside the page fetch instead of after it.
     const [items, total] = await Promise.all([
       this.bookModel
-        .find(filter, projection)
+        .find(filter)
         .sort(BOOK_SORT_SPEC[query.sort])
         .skip((page - 1) * limit)
         .limit(limit)
-        .lean<Book[]>()
+        .lean<LeanBook[]>()
         .exec(),
       this.bookModel.countDocuments(filter).exec(),
     ]);
@@ -123,7 +122,6 @@ export class BooksService {
       query.minPrice !== undefined ? `min:${query.minPrice}` : '',
       query.maxPrice !== undefined ? `max:${query.maxPrice}` : '',
       query.inStock ? 'instock' : '',
-      query.withDescription ? 'desc' : '',
     ].filter(Boolean);
     return `${LIST_CACHE_PREFIX}list:${parts.join('|')}`;
   }
@@ -221,9 +219,11 @@ export class BooksService {
               { $limit: HOME_SECTION_SIZE },
               { $project: { description: 0 } },
             ],
+            // Carousels keep their descriptions: the best-seller tabs render one
+            // below the selected book. `latest` and `bestSellers` drop theirs
+            // because those strips only ever show a cover.
             groups: [
               { $match: { subjects: { $in: subjects } } },
-              { $project: { description: 0 } },
               { $sort: { createdAt: -1, _id: -1 } },
               { $unwind: '$subjects' },
               { $match: { subjects: { $in: subjects } } },

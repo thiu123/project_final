@@ -12,7 +12,6 @@ import { Order, OrderSchema } from './schemas/order.schema';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
-    // Re-exported MongooseModule from these modules provides Cart and Book models
     CartsModule,
     BooksModule,
     VouchersModule,

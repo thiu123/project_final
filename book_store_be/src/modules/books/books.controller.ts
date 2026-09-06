@@ -35,6 +35,8 @@ export class BooksController {
    *
    * `?page=2&limit=12&subject=fiction&search=harry&sort=price_asc
    *  &minPrice=5&maxPrice=30&inStock=true`
+   *
+   * Rows carry the full book document, descriptions included.
    */
   @Get()
   findAll(@Query(queryPipe) query: QueryBooksDto) {
