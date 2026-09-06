@@ -172,7 +172,10 @@ import { useBookStore } from "@/stores/book";
 import { Flame, Plus, ShoppingCart } from "lucide-vue-next";
 import type { Book, Favorite } from "@/types";
 
-const props = withDefaults(
+// This strip has no favourite button, but the home page renders every book
+// component through one `<component :is>` loop and passes `favorites` to all of
+// them. Declaring it keeps the array out of the DOM as a fallthrough attribute.
+withDefaults(
   defineProps<{
     favorites?: Favorite[];
   }>(),
@@ -183,7 +186,6 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   "add-to-cart": [bookId: string, quantity: number];
-  "toggle-favorites": [bookId: string];
 }>();
 
 const router = useRouter();
@@ -203,15 +205,4 @@ function handleAddToCart(bookId: string, quantity: number) {
   emit("add-to-cart", bookId, quantity);
 }
 
-function handleToggleFavorites(bookId: string) {
-  // Emit event to parent component
-  emit("toggle-favorites", bookId);
-}
-
-function isFavorite(bookId: string): boolean {
-  return props.favorites.some((favorite) => {
-    const favoriteBookId = (favorite.bookId as Book)?._id || favorite.bookId;
-    return favoriteBookId === bookId;
-  });
-}
 </script>

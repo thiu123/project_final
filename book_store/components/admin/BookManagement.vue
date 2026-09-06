@@ -971,10 +971,7 @@ function getDefaultItem(): BookFormData {
   };
 }
 
-/**
- * Loads the current page from the API. `withDescription` is set because the
- * edit dialog prefills from the row, and descriptions are stripped by default.
- */
+/** Loads the current page from the API. */
 async function refreshBooks() {
   loading.value = true;
   try {
@@ -984,7 +981,6 @@ async function refreshBooks() {
       search: search.value || undefined,
       subject: filterSubject.value || undefined,
       sort: sortBy.value,
-      withDescription: true,
     });
   } catch (error) {
     console.error("Error fetching books:", error);

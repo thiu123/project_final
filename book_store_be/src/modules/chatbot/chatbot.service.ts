@@ -1,393 +1,210 @@
-import { GenerativeModel, GoogleGenerativeAI } from '@google/generative-ai';
-import { HttpException, HttpStatus, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import { BOOK_SUBJECTS } from '../../constants/book-subjects';
-import { Book, BookDocument } from '../books/schemas/book.schema';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { RateLimitService } from '../../common/services/rate-limit.service';
+import { RedisService } from '../../config/redis/redis.service';
+import { BooksService } from '../books/books.service';
+import { LeanBook } from '../books/books.types';
+import { BookSort, QueryBooksDto } from '../books/dto/query-books.dto';
+import { ChatHistoryService, SessionBook } from './chat-history.service';
+import { CHATBOT_TOOLS, ChatbotToolsService } from './chatbot.tools';
+import {
+  GeminiBusyError,
+  GeminiQuotaError,
+  GeminiService,
+} from './gemini.service';
 
-const MAX_BOOKS = 20;
-const MIN_API_DELAY_MS = 2000; // minimum time between Gemini calls
-const REVIEW_CACHE_TTL_MS = 3_600_000; // generated reviews stay cached 1 hour
-const CACHE_CLEANUP_INTERVAL_MS = 600_000; // sweep expired reviews every 10 min
+/** Messages allowed per user per window. Gemini's free tier is shared by everyone. */
+const RATE_LIMIT = 15;
+const RATE_LIMIT_WINDOW_SECONDS = 60;
+
+const REVIEW_CACHE_PREFIX = 'chatbot:review:';
+const REVIEW_CACHE_TTL_SECONDS = 3600;
+
+/** The languages the storefront serves; part of the review cache key. */
+type ReviewLanguage = 'vi' | 'en';
+
+/**
+ * Filler stripped from "review Harry Potter" before searching the catalogue.
+ *
+ * Split in two because `\b` in JavaScript is ASCII-only: anchoring "đánh giá"
+ * with it never matches, since `đ` is not a word character and a boundary
+ * therefore cannot exist before it.
+ */
+const REVIEW_FILLER_ASCII =
+  /\b(reviews?|books?|please|about|tell me|what do you think of|show me|give me|for me)\b/gi;
+const REVIEW_FILLER_VI =
+  /(đánh giá|nhận xét|giới thiệu|cho tôi|giúp tôi|của tôi|cuốn|quyển|sách|về)/gi;
+
+const SYSTEM_INSTRUCTION = `You are the AI book advisor for an online bookstore that sells both print books and ebooks.
+
+Rules:
+- Only ever recommend books returned by the tools. Never invent a title, author or price; if the catalogue has nothing suitable, say so plainly.
+- Call search_books whenever the user asks about books, genres, prices or availability. Call list_categories when you need to know what the store carries.
+- Do not call a tool when the conversation above already contains the answer. Follow-ups about books you just listed ("which is cheapest?", "tell me more about the second one") must be answered from that earlier result.
+- Always answer in the same language the user wrote in.
+- Be warm and concise: two or three sentences of framing, then the books. Mention each book by its exact title so it can be linked.
+- Prices are in the store's own currency; quote the number the tool gave you and nothing else.`;
+
+/**
+ * Reviews are written in a single call with no tools attached, so they need
+ * their own instruction: the tool rules above told the model it may only speak
+ * about books a tool returned, and with no tools available it answered with
+ * nothing at all.
+ */
+const REVIEW_INSTRUCTION = `You are the AI book advisor for an online bookstore.
+Write about the book you are given as if recommending it to a friend.
+Never mention that you are an AI, and write in the language the prompt asks for.`;
+
+const SUGGESTION_INSTRUCTION = `${SYSTEM_INSTRUCTION}
+- The user wants recommendations. Return between three and five books, each with one short sentence on why it fits.`;
 
 export interface Suggestion {
   title: string;
   subjects?: string[];
   reason: string;
-  bookId?: Types.ObjectId;
+  bookId?: string;
 }
 
-interface BookSearch {
-  books: BookDocument[];
-  isGenericQuery: boolean;
-  extractedKeywords: string;
+/** A book the reply actually names, resolved back to a real catalogue row. */
+export interface ReferencedBook {
+  bookId: string;
+  title: string;
+  subjects: string[];
+  price: number;
+  rating: number | null;
+  inStock: boolean;
 }
-
-const ALL_GENRE_NAMES = BOOK_SUBJECTS.flatMap((subject) =>
-  [subject.category, ...(subject.subcategories || [])].map((name) => name.toLowerCase()),
-);
-
-const GENERIC_REQUEST_PATTERNS = [
-  /best book/i,
-  /good book/i,
-  /recommend.*book/i,
-  /suggest.*book/i,
-  /what.*should.*read/i,
-  /help.*find.*book/i,
-  /any.*book/i,
-  /what.*book/i,
-  /popular book/i,
-  /top book/i,
-];
-
-const RECOMMENDATION_FORMAT = `Format your response EXACTLY like this:
-1. [Book Title] - [Your natural recommendation]
-2. [Book Title] - [Your natural recommendation]
-3. [Book Title] - [Your natural recommendation]
-
-Keep recommendations conversational and enthusiastic.`;
-
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
-/** Escapes regex special characters so user/AI-derived text is safe inside $regex. */
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-const isQuotaError = (error: unknown): boolean => {
-  const message = (error as Error)?.message || '';
-  return (
-    message.includes('429') || message.includes('quota') || message.includes('Too Many Requests')
-  );
-};
 
 @Injectable()
-export class ChatbotService implements OnModuleDestroy {
+export class ChatbotService {
   private readonly logger = new Logger(ChatbotService.name);
-  private readonly model: GenerativeModel;
-
-  private lastApiCall = 0;
-  private readonly reviewCache = new Map<string, { review: string; timestamp: number }>();
-  private readonly cleanupTimer: NodeJS.Timeout;
 
   constructor(
-    @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
-    configService: ConfigService,
-  ) {
-    const genAI = new GoogleGenerativeAI(configService.get<string>('GEMINI_KEY') ?? '');
-    this.model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
-
-    // Periodically purge expired entries so the review cache doesn't grow forever
-    this.cleanupTimer = setInterval(() => this.sweepReviewCache(), CACHE_CLEANUP_INTERVAL_MS);
-    this.cleanupTimer.unref();
-  }
-
-  onModuleDestroy(): void {
-    clearInterval(this.cleanupTimer);
-  }
+    private readonly gemini: GeminiService,
+    private readonly tools: ChatbotToolsService,
+    private readonly history: ChatHistoryService,
+    private readonly rateLimit: RateLimitService,
+    private readonly booksService: BooksService,
+    private readonly redis: RedisService,
+  ) {}
 
   // ---------------------------------------------------------------------
-  // Public API
+  // Chat
   // ---------------------------------------------------------------------
 
-  async suggestBooks(userPreferences?: string) {
-    if (!userPreferences || userPreferences.trim() === '') {
-      throw new HttpException(
-        { success: false, message: 'Please provide your preferences.' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  /**
+   * One conversational turn with memory and catalogue access.
+   *
+   * Costs a single Gemini call when the model can answer from the running
+   * history ("which of those is cheapest?", "thanks") and two when it needs a
+   * catalogue lookup.
+   */
+  async chat(userId: string, message: string) {
+    const text = this.requireText(message, 'Please type a message.');
+    await this.enforceRateLimit(userId);
 
     try {
-      const search = await this.findBooksForRequest(userPreferences);
+      const session = await this.history.get(userId);
 
-      if (search.books.length === 0) {
-        return {
-          success: true,
-          data: {
-            suggestions: [
-              {
-                title: 'No books available',
-                reason:
-                  "I couldn't find any books matching those preferences. Try different genres or themes.",
-              },
-            ],
-          },
-        };
-      }
-
-      const prompt = this.buildSuggestionPrompt(search, userPreferences);
-
-      let suggestions: Suggestion[];
-      let note: string | undefined;
-      try {
-        const aiText = await this.callGemini(prompt);
-        suggestions = this.parseSuggestionsFromText(aiText, search.books);
-        if (suggestions.length === 0) {
-          // AI replied but in an unexpected format: fall back to simple picks
-          suggestions = this.buildFallbackSuggestions(search.books, search.isGenericQuery, 3);
-        }
-      } catch (apiError) {
-        if (!isQuotaError(apiError)) throw apiError;
-        this.logger.warn('Gemini API quota exceeded. Using fallback suggestions.');
-        suggestions = this.buildFallbackSuggestions(search.books, search.isGenericQuery, 5);
-        note = 'AI service temporarily unavailable, showing top recommendations';
-      }
-
-      return {
-        success: true,
-        data: { suggestions },
-        ...(note && { note }),
-      };
-    } catch (error) {
-      throw this.toHttpError(error, 'Error while suggesting books', 'Please try again in a few moments.');
-    }
-  }
-
-  async generateSmartReview(bookQuery?: string) {
-    if (!bookQuery || bookQuery.trim() === '') {
-      throw new HttpException(
-        { success: false, message: 'Please provide the book title or subject.' },
-        HttpStatus.BAD_REQUEST,
+      // Seeded with the books already shown this conversation, so a follow-up
+      // the model answers from context still resolves to linkable rows.
+      const seen = new Map<string, SessionBook>(
+        session.books.map((book) => [book.title.toLowerCase(), book]),
       );
-    }
 
-    try {
-      const { book, extractedTitle } = await this.findBookForReview(bookQuery);
-
-      if (!book) {
-        throw new HttpException(
-          {
-            success: false,
-            message: `I couldn't find a book called "${extractedTitle}" in our store. Could you try a different title?`,
-          },
-          HttpStatus.NOT_FOUND,
-        );
-      }
-
-      const bookId = book._id.toString();
-      const cachedReview = this.getCachedReview(bookId);
-      if (cachedReview) {
-        this.logger.log(`Returning cached review for: ${book.title}`);
-        return {
-          success: true,
-          data: {
-            bookFound: true,
-            generatedReview: cachedReview,
-            cached: true,
-            bookInfo: this.toBookInfo(book),
-          },
-        };
-      }
-
-      let reviewText: string;
-      let usedAI = true;
-      try {
-        reviewText =
-          (await this.callGemini(this.buildReviewPrompt(book))) ||
-          'This book is definitely worth checking out!';
-      } catch (apiError) {
-        if (!isQuotaError(apiError)) throw apiError;
-        this.logger.warn('Gemini API quota exceeded. Using fallback review generation.');
-        reviewText = this.generateFallbackReview(book);
-        usedAI = false;
-      }
-
-      this.reviewCache.set(bookId, { review: reviewText, timestamp: Date.now() });
-
-      return {
-        success: true,
-        data: {
-          bookFound: true,
-          generatedReview: reviewText,
-          usedAI,
-          bookInfo: this.toBookInfo(book),
+      const turn = await this.gemini.runTurn({
+        history: session.contents,
+        message: text,
+        systemInstruction: SYSTEM_INSTRUCTION,
+        tools: CHATBOT_TOOLS,
+        executor: async (call) => {
+          const result = await this.tools.execute(call);
+          this.collectBooks(result, seen);
+          return result;
         },
+      });
+
+      const reply =
+        turn.text || "I'm not sure how to answer that — could you rephrase?";
+      await this.history.append(userId, text, reply, [...seen.values()]);
+
+      this.logger.log(
+        `chat(${userId}): ${turn.llmCalls} Gemini call(s), ${turn.toolCalls.length} tool call(s)`,
+      );
+
+      return {
+        success: true,
+        data: { reply, books: this.resolveReferenced(reply, seen) },
       };
     } catch (error) {
-      throw this.toHttpError(
-        error,
-        'Error while generating review',
-        'Please try again in a few moments, or check back later.',
-      );
+      throw this.toHttpError(error, 'Error while answering your message');
     }
   }
 
-  // ---------------------------------------------------------------------
-  // Gemini helper: throttles requests and always returns plain text
-  // ---------------------------------------------------------------------
-
-  private async callGemini(prompt: string): Promise<string> {
-    if (Date.now() - this.lastApiCall < MIN_API_DELAY_MS) {
-      await sleep(MIN_API_DELAY_MS);
-    }
-    this.lastApiCall = Date.now();
-
-    const result = await this.model.generateContent(prompt);
-    return result.response.text().trim();
+  async clearHistory(userId: string) {
+    await this.history.clear(userId);
+    return { success: true };
   }
 
   // ---------------------------------------------------------------------
   // Suggestions
   // ---------------------------------------------------------------------
 
-  /** e.g. "suggest best book for me" is generic; "suggest a good manga" is not. */
-  private isGenericRequest(userInput: string): boolean {
-    const lowerInput = userInput.toLowerCase();
-    const matchesGenericPattern = GENERIC_REQUEST_PATTERNS.some((pattern) =>
-      pattern.test(lowerInput),
+  /**
+   * Recommendation-shaped wrapper over the same pipeline. Unlike the previous
+   * version it never regex-parses the model's prose into structured data: the
+   * books come from the tool results, and only the wording comes from Gemini.
+   */
+  async suggestBooks(userId: string, userPreferences: string) {
+    const text = this.requireText(
+      userPreferences,
+      'Please provide your preferences.',
     );
-    const mentionsSpecificGenre = ALL_GENRE_NAMES.some((genre) => lowerInput.includes(genre));
-    return matchesGenericPattern && !mentionsSpecificGenre;
-  }
-
-  private async extractKeySubjects(userInput: string): Promise<string> {
-    const prompt = `Extract only the key book genres, subjects, or themes from this user request.
-Return ONLY the relevant keywords separated by commas (maximum 5 keywords).
-Do not include any extra words or explanations.
-If the user request is too general (like "best book", "any book", "good book") without specific genre, return "general".
-
-User request: "${userInput}"
-
-Example:
-Input: "I'm looking for some fantasy books with magic and adventure for my teenage son"
-Output: fantasy, magic, adventure
-
-Input: "Can you recommend sci-fi novels about space exploration?"
-Output: science fiction, space, exploration
-
-Input: "suggest best book for me"
-Output: general
-
-Input: "help me find a good book to read"
-Output: general
-
-Now extract keywords from the user request above:`;
+    await this.enforceRateLimit(userId);
 
     try {
-      return await this.callGemini(prompt);
+      const seen = new Map<string, SessionBook>();
+
+      const turn = await this.gemini.runTurn({
+        history: [],
+        message: text,
+        systemInstruction: SUGGESTION_INSTRUCTION,
+        tools: CHATBOT_TOOLS,
+        executor: async (call) => {
+          const result = await this.tools.execute(call);
+          this.collectBooks(result, seen);
+          return result;
+        },
+      });
+
+      const referenced = this.resolveReferenced(turn.text, seen);
+      const suggestions: Suggestion[] = referenced.length
+        ? referenced.map((book) => ({
+            title: book.title,
+            subjects: book.subjects,
+            reason: this.reasonFor(turn.text, book.title),
+            bookId: book.bookId,
+          }))
+        : await this.fallbackSuggestions();
+
+      return { success: true, data: { reply: turn.text, suggestions } };
     } catch (error) {
-      this.logger.error(`Error extracting keywords: ${(error as Error).message}`);
-      if (isQuotaError(error)) {
-        this.logger.warn('Gemini API quota exceeded, using fallback keyword extraction');
-      }
-      // Fallback: naive keyword extraction from the raw input
-      return userInput
-        .toLowerCase()
-        .split(/[,;\s]+/)
-        .filter((word) => word.length > 3)
-        .slice(0, 5)
-        .join(', ');
+      throw this.toHttpError(error, 'Error while suggesting books');
     }
   }
 
-  /**
-   * Finds the books to recommend: either books matching the extracted
-   * keywords, or (for generic requests) the store's top-rated books.
-   */
-  private async findBooksForRequest(userPreferences: string): Promise<BookSearch> {
-    const extractedKeywords = await this.extractKeySubjects(userPreferences);
-    this.logger.log(`Extracted keywords: ${extractedKeywords}`);
+  /** Top-rated books, used when Gemini is unavailable or named nothing we stock. */
+  private async fallbackSuggestions(): Promise<Suggestion[]> {
+    const query = new QueryBooksDto();
+    query.page = 1;
+    query.limit = 5;
+    query.sort = BookSort.Rating;
 
-    const isGenericQuery =
-      extractedKeywords.toLowerCase() === 'general' || this.isGenericRequest(userPreferences);
-
-    if (isGenericQuery) {
-      this.logger.log('Generic request detected - showing top rated books');
-      const books = await this.bookModel.find({}).sort({ rating: -1 }).limit(MAX_BOOKS);
-      return { books, isGenericQuery, extractedKeywords };
-    }
-
-    const searchPattern = extractedKeywords
-      .split(',')
-      .map((keyword) => escapeRegex(keyword.trim()))
-      .filter(Boolean)
-      .join('|');
-
-    const books = await this.bookModel
-      .find({ subjects: { $regex: searchPattern, $options: 'i' } })
-      .sort({ rating: -1 })
-      .limit(MAX_BOOKS);
-
-    return { books, isGenericQuery, extractedKeywords };
-  }
-
-  private formatBooksContext(books: BookDocument[]): string {
-    return books
-      .map(
-        (book) =>
-          `Title: "${book.title}"\nSubjects: ${book.subjects.join(', ')}\nRating: ${
-            book.rating || 'N/A'
-          }`,
-      )
-      .join('\n\n');
-  }
-
-  private buildSuggestionPrompt(
-    { books, isGenericQuery, extractedKeywords }: BookSearch,
-    userPreferences: string,
-  ): string {
-    const booksContext = this.formatBooksContext(books);
-
-    if (isGenericQuery) {
-      return `A user is looking for book recommendations without specific preferences. They asked: "${userPreferences}"
-
-Here are our top-rated books:
-${booksContext}
-
-Select the best 3-5 books from different genres to give them variety. For each book, write a natural, friendly recommendation (1-2 sentences) explaining why it's worth reading.
-
-${RECOMMENDATION_FORMAT}`;
-    }
-
-    return `A user is looking for books about: ${extractedKeywords}
-
-Here are the available books in our store:
-${booksContext}
-
-Select the best 3-5 books that match the user's interest. For each book, write a natural, friendly recommendation (1-2 sentences) explaining why it's a good match.
-
-${RECOMMENDATION_FORMAT}`;
-  }
-
-  /** Turns Gemini's "1. Title - reason" lines into structured suggestions. */
-  private parseSuggestionsFromText(aiText: string, books: BookDocument[]): Suggestion[] {
-    const suggestions: Suggestion[] = [];
-
-    for (const line of aiText.split('\n')) {
-      if (suggestions.length >= 5) break;
-
-      // Match pattern: "1. Title - Reason" or "- Title - Reason"
-      const match = line.match(/^[\d\-•]+\.?\s*(.+?)\s*[-–—]\s*(.+)$/);
-      if (!match) continue;
-
-      const titlePart = match[1].trim().replace(/["“”]/g, '');
-      const reason = match[2].trim();
-      const book = books.find(
-        (b) =>
-          titlePart.toLowerCase().includes(b.title.toLowerCase()) ||
-          b.title.toLowerCase().includes(titlePart.toLowerCase()),
-      );
-
-      if (book) {
-        suggestions.push({ title: book.title, subjects: book.subjects, reason, bookId: book._id });
-      }
-    }
-
-    return suggestions;
-  }
-
-  private buildFallbackSuggestions(
-    books: BookDocument[],
-    isGenericQuery: boolean,
-    count: number,
-  ): Suggestion[] {
-    return books.slice(0, count).map((book) => ({
+    const { items } = await this.booksService.findAll(query);
+    return items.map((book) => ({
       title: book.title,
-      subjects: book.subjects,
-      reason: isGenericQuery
-        ? `A highly-rated ${book.subjects[0]} book that's popular among readers. Worth checking out!`
-        : `This ${book.subjects[0]} book aligns with your interests and has great reviews.`,
-      bookId: book._id,
+      subjects: book.subjects ?? [],
+      reason: 'One of the highest-rated books in our store right now.',
+      bookId: String(book._id),
     }));
   }
 
@@ -395,133 +212,273 @@ ${RECOMMENDATION_FORMAT}`;
   // Reviews
   // ---------------------------------------------------------------------
 
-  private async extractBookTitle(userInput: string): Promise<string> {
-    const prompt = `Extract ONLY the book title from this user request. Return just the book title, nothing else.
+  /**
+   * Costs one Gemini call, down from two: the title is now pulled out locally
+   * and matched with the indexed catalogue search rather than by asking the
+   * model to extract it.
+   */
+  async generateSmartReview(userId: string, bookQuery: string) {
+    const text = this.requireText(
+      bookQuery,
+      'Please provide the book title or subject.',
+    );
 
-User request: "${userInput}"
+    const book = await this.findBookForReview(text);
+    if (!book) {
+      throw new HttpException(
+        {
+          success: false,
+          message: `I couldn't find that book in our store. Could you try a different title?`,
+        },
+        HttpStatus.NOT_FOUND,
+      );
+    }
 
-Examples:
-Input: "Can you review the book Harry Potter for me?"
-Output: Harry Potter
+    const bookId = String(book._id);
+    const bookInfo = {
+      id: bookId,
+      title: book.title,
+      subjects: book.subjects ?? [],
+    };
 
-Input: "I want to know about Naruto manga"
-Output: Naruto
+    const language = this.detectLanguage(text);
+    const cacheKey = `${REVIEW_CACHE_PREFIX}${bookId}:${language}`;
 
-Input: "review The Lord of the Rings please"
-Output: The Lord of the Rings
+    const cached = await this.redis.get(cacheKey);
+    if (cached) {
+      return {
+        success: true,
+        data: {
+          bookFound: true,
+          generatedReview: cached,
+          cached: true,
+          bookInfo,
+        },
+      };
+    }
 
-Input: "What do you think about 1984?"
-Output: 1984
-
-Now extract the book title from the user request above:`;
+    await this.enforceRateLimit(userId);
 
     try {
-      const title = await this.callGemini(prompt);
-      return title.replace(/["“”]/g, '');
-    } catch (error) {
-      this.logger.error(`Error extracting book title: ${(error as Error).message}`);
-      if (isQuotaError(error)) {
-        this.logger.warn('Gemini API quota exceeded, using fallback title extraction');
+      const review = await this.gemini.generate(
+        this.buildReviewPrompt(bookInfo.title, bookInfo.subjects, language),
+        REVIEW_INSTRUCTION,
+      );
+
+      // An empty completion is a failure, not a review: serve the template
+      // instead, and never cache it or the book gets a blank review for an hour.
+      if (!review) {
+        this.logger.warn(
+          `Gemini returned an empty review for "${bookInfo.title}"`,
+        );
+        return {
+          success: true,
+          data: {
+            bookFound: true,
+            generatedReview: this.fallbackReview(bookInfo.title, bookInfo.subjects, language),
+            usedAI: false,
+            bookInfo,
+          },
+        };
       }
-      // Fallback: strip common phrasing from the raw input
-      return userInput
-        .toLowerCase()
-        .replace(/review|book|tell me about|what about|show me/gi, '')
-        .trim();
+
+      await this.redis.setEx(
+        cacheKey,
+        REVIEW_CACHE_TTL_SECONDS,
+        review,
+      );
+      return {
+        success: true,
+        data: {
+          bookFound: true,
+          generatedReview: review,
+          usedAI: true,
+          bookInfo,
+        },
+      };
+    } catch (error) {
+      if (error instanceof GeminiQuotaError) {
+        return {
+          success: true,
+          data: {
+            bookFound: true,
+            generatedReview: this.fallbackReview(bookInfo.title, bookInfo.subjects, language),
+            usedAI: false,
+            bookInfo,
+          },
+        };
+      }
+      throw this.toHttpError(error, 'Error while generating review');
     }
   }
 
-  private async findBookForReview(bookQuery: string) {
-    const extractedTitle = await this.extractBookTitle(bookQuery);
-    this.logger.log(`Extracted book title: ${extractedTitle}`);
+  private async findBookForReview(bookQuery: string): Promise<LeanBook | null> {
+    const stripped = bookQuery
+      .replace(REVIEW_FILLER_ASCII, ' ')
+      .replace(REVIEW_FILLER_VI, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-    const pattern = escapeRegex(extractedTitle);
-    const book = await this.bookModel.findOne({
-      $or: [
-        { title: { $regex: pattern, $options: 'i' } },
-        { subjects: { $regex: pattern, $options: 'i' } },
-      ],
-    });
+    // Try the cleaned-up title first, then the raw query in case the stripping
+    // removed something that was actually part of the title ("The Book Thief").
+    for (const term of [stripped, bookQuery].filter(Boolean)) {
+      const query = new QueryBooksDto();
+      query.page = 1;
+      query.limit = 1;
+      query.sort = BookSort.Rating;
+      query.search = term;
 
-    return { book, extractedTitle };
-  }
+      const { items } = await this.booksService.findAll(query);
+      if (items.length) return items[0];
+    }
 
-  private buildReviewPrompt(book: BookDocument): string {
-    return `Write a natural, enthusiastic book review for:
-
-Title: "${book.title}"
-Genres: ${book.subjects.join(', ')}
-
-Write as if you're talking to a friend about this book. Include:
-- What makes it special or interesting
-- Who would enjoy it
-- The overall vibe or feeling of the book
-
-Keep it conversational, 3-5 sentences. Use "you" to address the reader.`;
-  }
-
-  /** Used only when the Gemini quota is exhausted. */
-  private generateFallbackReview(book: BookDocument): string {
-    const genre = book.subjects[0];
-    const templates = [
-      `"${book.title}" is a captivating read in the ${genre} genre. Many readers have found it engaging and thought-provoking. If you enjoy ${book.subjects.join(
-        ' and ',
-      )}, this book is definitely worth adding to your reading list!`,
-      `This ${genre} title, "${book.title}", has been popular among our readers. It offers a unique perspective that fans of ${book.subjects.join(
-        ', ',
-      )} will appreciate. A must-read for anyone interested in these genres!`,
-      `"${book.title}" stands out in the ${genre} category. Readers who love ${book.subjects.join(
-        ' and ',
-      )} will find this book both entertaining and meaningful. Don't miss out on this gem!`,
-    ];
-    return templates[Math.floor(Math.random() * templates.length)];
-  }
-
-  private toBookInfo(book: BookDocument) {
-    return { id: book._id, title: book.title, subjects: book.subjects };
-  }
-
-  // ---------------------------------------------------------------------
-  // Review cache: avoids re-generating (and re-billing) the same review
-  // ---------------------------------------------------------------------
-
-  private getCachedReview(bookId: string): string | null {
-    const cached = this.reviewCache.get(bookId);
-    if (!cached) return null;
-    if (Date.now() - cached.timestamp < REVIEW_CACHE_TTL_MS) return cached.review;
-    this.reviewCache.delete(bookId);
     return null;
   }
 
-  private sweepReviewCache(): void {
-    const now = Date.now();
-    for (const [bookId, cached] of this.reviewCache.entries()) {
-      if (now - cached.timestamp >= REVIEW_CACHE_TTL_MS) this.reviewCache.delete(bookId);
+  private buildReviewPrompt(
+    title: string,
+    subjects: string[],
+    language: ReviewLanguage,
+  ): string {
+    const languageName = language === 'vi' ? 'Vietnamese' : 'English';
+    return `Write a natural, enthusiastic review of "${title}" (genres: ${subjects.join(', ')}).
+Talk as if recommending it to a friend: what makes it special, who would enjoy it, and the overall feel.
+Keep it to 3-5 conversational sentences addressed to the reader.
+Write the review in ${languageName}.`;
+  }
+
+  /**
+   * Crude but sufficient: Vietnamese is the only non-English language the
+   * storefront ships, and its diacritics are unmistakable. The result is part
+   * of the review cache key, so a Vietnamese reader never gets served the
+   * English review generated for someone else.
+   */
+  private detectLanguage(text: string): ReviewLanguage {
+    return /[ăâêôơưđàáảãạèéẻẽẹìíỉĩịòóỏõọùúủũụỳýỷỹỵ]/i.test(text) ? 'vi' : 'en';
+  }
+
+  /** Used when Gemini is out of quota or returns nothing, so it follows the reader's language. */
+  private fallbackReview(
+    title: string,
+    subjects: string[],
+    language: ReviewLanguage,
+  ): string {
+    const genre = subjects[0] ?? 'this genre';
+    if (language === 'vi') {
+      return `"${title}" là một trong những cuốn được bạn đọc quay lại nhiều nhất ở thể loại ${genre}. Nếu bạn thích ${subjects.join(
+        ' và ',
+      )} thì cuốn này rất đáng thử.`;
     }
+    return `"${title}" is one of the titles our readers keep coming back to in ${genre}. If ${subjects.join(
+      ' and ',
+    )} is your thing, it is well worth a look.`;
   }
 
   // ---------------------------------------------------------------------
-  // Errors
+  // Helpers
   // ---------------------------------------------------------------------
 
-  private toHttpError(error: unknown, fallbackMessage: string, quotaHint: string): HttpException {
+  /** Records every book a tool returned, so replies can be linked to real rows. */
+  private collectBooks(result: object, seen: Map<string, SessionBook>): void {
+    const books = (result as { books?: SessionBook[] }).books;
+    if (!Array.isArray(books)) return;
+    for (const book of books) seen.set(book.title.toLowerCase(), book);
+  }
+
+  /**
+   * Matches titles the reply names against the books the tools returned, so the
+   * client can render real, clickable cards. Longer titles are checked first so
+   * a series entry wins over the shorter title it contains.
+   */
+  private resolveReferenced(
+    reply: string,
+    seen: Map<string, SessionBook>,
+  ): ReferencedBook[] {
+    const haystack = reply.toLowerCase();
+    return [...seen.entries()]
+      .sort(([a], [b]) => b.length - a.length)
+      .filter(([title]) => title.length > 2 && haystack.includes(title))
+      .map(([, book]) => ({
+        bookId: book.id,
+        title: book.title,
+        subjects: book.subjects,
+        price: book.price,
+        rating: book.rating,
+        inStock: book.inStock,
+      }));
+  }
+
+  /** Pulls the sentence mentioning a title, to use as that book's reason. */
+  private reasonFor(reply: string, title: string): string {
+    const sentence = reply
+      .split(/(?<=[.!?])\s+|\n+/)
+      .find((part) => part.toLowerCase().includes(title.toLowerCase()));
+    return (
+      sentence?.replace(/^[\d\-*•.\s]+/, '').trim() ||
+      'A good match for what you asked for.'
+    );
+  }
+
+  private requireText(value: string | undefined, message: string): string {
+    const text = value?.trim();
+    if (!text) {
+      throw new HttpException(
+        { success: false, message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    return text;
+  }
+
+  private async enforceRateLimit(userId: string): Promise<void> {
+    const result = await this.rateLimit.consume(
+      `chatbot:${userId}`,
+      RATE_LIMIT,
+      RATE_LIMIT_WINDOW_SECONDS,
+    );
+    if (result.allowed) return;
+
+    throw new HttpException(
+      {
+        success: false,
+        message: `You've sent a lot of messages just now. Please wait ${result.retryAfter}s and try again.`,
+        errorType: 'rate_limited',
+        retryAfter: result.retryAfter,
+      },
+      HttpStatus.TOO_MANY_REQUESTS,
+    );
+  }
+
+  private toHttpError(error: unknown, fallbackMessage: string): HttpException {
     if (error instanceof HttpException) return error;
 
-    this.logger.error(`${fallbackMessage}: ${(error as Error).message}`);
-
-    if (isQuotaError(error)) {
+    if (error instanceof GeminiBusyError) {
       return new HttpException(
         {
           success: false,
-          message: `Our AI service is currently experiencing high demand. ${quotaHint}`,
+          message:
+            'The advisor is handling a lot of requests right now. Please try again shortly.',
+          errorType: 'busy',
+        },
+        HttpStatus.SERVICE_UNAVAILABLE,
+      );
+    }
+
+    if (error instanceof GeminiQuotaError) {
+      return new HttpException(
+        {
+          success: false,
+          message:
+            'Our AI service is at capacity for the moment. Please try again in a few minutes.',
           errorType: 'quota_exceeded',
         },
         HttpStatus.TOO_MANY_REQUESTS,
       );
     }
 
+    this.logger.error(`${fallbackMessage}: ${(error as Error).message}`);
     return new HttpException(
-      { success: false, message: fallbackMessage, error: (error as Error).message },
+      { success: false, message: fallbackMessage },
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }

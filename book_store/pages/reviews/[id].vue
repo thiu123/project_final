@@ -33,11 +33,11 @@
 
         <div class="mx-8">
           <div
-            v-for="(rating, index) in ratingBreakdown"
-            :key="index"
+            v-for="star in [5, 4, 3, 2, 1]"
+            :key="star"
             class="mb-2 flex items-center"
           >
-            <span class="mr-2 text-sm font-medium">{{ 5 - index }}</span>
+            <span class="mr-2 text-sm font-medium">{{ star }}</span>
             <Star class="h-4 w-4 fill-amber-400 text-amber-400" />
           </div>
         </div>
@@ -504,13 +504,6 @@ const reviewToDelete = ref<string | null>(null);
 const averageRating = ref(0);
 const totalReviews = ref(0);
 const bookRating = ref(0); // Rating từ database
-const ratingBreakdown = ref([
-  { count: 20 },
-  { count: 2 },
-  { count: 2 },
-  { count: 0 },
-  { count: 0 },
-]);
 const loading = ref(false);
 const isLoaded = ref(false);
 // Reply management

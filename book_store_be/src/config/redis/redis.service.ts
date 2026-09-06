@@ -46,6 +46,15 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     return this.client.keys(pattern);
   }
 
+  /** Atomically increments a counter and returns the new value. */
+  async incr(key: string): Promise<number> {
+    return this.client.incr(key);
+  }
+
+  async expire(key: string, ttlSeconds: number): Promise<void> {
+    await this.client.expire(key, ttlSeconds);
+  }
+
   async getJson<T>(key: string): Promise<T | null> {
     const cached = await this.get(key);
     return cached ? (JSON.parse(cached) as T) : null;

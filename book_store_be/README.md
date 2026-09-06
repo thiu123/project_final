@@ -42,7 +42,7 @@ src/
     carts/  favorites/  reviews/  contacts/  vouchers/
     orders/               checkout (VNPay / MoMo), gateway callbacks, admin stats
       payments/           VnpayService, MomoService
-    chatbot/              Gemini-powered suggestions and reviews
+    chatbot/              Gemini advisor: tool calling over the catalogue
 ```
 
 Each module follows `*.module.ts` / `*.controller.ts` / `*.service.ts` / `schemas/` / `dto/`.
@@ -58,7 +58,7 @@ Each module follows `*.module.ts` / `*.controller.ts` / `*.service.ts` / `schema
 | `/api/reviews`  | admin replies under `/:reviewId/reply[/:replyId]`       |
 | `/api/order`    | `/vnpay_return`, `/momo_return` redirect to the frontend |
 | `/api/favorite` | toggle + list                                           |
-| `/api/chatbot`  | `/suggestions`, `/review/generate`                      |
+| `/api/chatbot`  | see **Chatbot** below; all routes require a token        |
 | `/api/contact`  | user + admin routes                                     |
 | `/api/voucher`  | `GET /all?activeOnly=true` for storefront               |
 
@@ -78,7 +78,8 @@ MongoDB. The client sends a query and renders exactly what comes back.
 | `sort` | `newest` | `newest` `oldest` `title_asc` `title_desc` `price_asc` `price_desc` `rating` `bestselling` |
 | `minPrice` / `maxPrice` | — | inclusive bounds |
 | `inStock` | — | `true` keeps only books with stock left |
-| `withDescription` | `false` | descriptions are stripped by default; the admin editor opts in |
+
+Rows are the full book document, descriptions included.
 
 ```jsonc
 {
@@ -97,7 +98,8 @@ Invalid values return `400` with the failing constraint.
   what `?subject=<category>` returns.
 - `GET /api/books/home` — one `$facet` aggregation returning `latest` (10
   newest), `bestSellers`, `groups` (one carousel per subject in
-  `src/constants/home-sections.ts`) and `categories`.
+  `src/constants/home-sections.ts`) and `categories`. Only `groups` carries
+  descriptions; the other two strips render covers alone.
 - `GET /api/books/search?title=&limit=` — capped typeahead suggestions. Use
   `GET /api/books?search=` when the full paginated result set is needed.
 
@@ -114,6 +116,41 @@ API are normalized on save so the filter keeps matching.
 All list, category and home responses are cached in Redis for 30 minutes under
 the `books:` prefix and dropped wholesale whenever a book is created, updated
 or deleted. Individual books are cached separately as `book:<id>`.
+
+## Chatbot
+
+The advisor answers with Gemini function calling rather than a hand-written
+pipeline. Gemini is given two tools — `search_books` and `list_categories` —
+both backed by `BooksService`, so the chatbot inherits the same indexed subject
+expansion, price/stock filters and Redis cache as the storefront, and can only
+ever name books the store actually sells.
+
+| Route | Notes |
+| --- | --- |
+| `POST /chat` | `{ message }` → `{ reply, books }`. Remembers the thread per user. |
+| `DELETE /history` | Starts a fresh conversation. |
+| `POST /suggestions` | `{ userPreferences }` → `{ reply, suggestions }`, stateless. |
+| `POST /review/generate` | `{ bookQuery }` → a cached review for one book. |
+
+**Cost per message.** A turn costs two Gemini calls when the catalogue has to be
+searched and one when the model can answer from the conversation so far
+("which of those is cheapest?"). Books shown earlier are stored with the
+history, so a follow-up answered from context still returns linkable rows.
+Reviews cost one call and are cached in Redis for an hour per book *and
+language*.
+
+**Model fallback.** `GEMINI_MODEL` is a comma-separated list tried in order.
+The free tier caps requests *per model per day* (20/day for gemini-3.6-flash at
+the time of writing), so a single model runs dry fast; each has its own budget,
+and falling through multiplies the daily allowance for free. A model that
+returns 429 is skipped for 15 minutes rather than being re-asked every request.
+
+**Limits.** Each user gets 15 messages per minute (`RateLimitService`, a fixed
+window in Redis). Process-wide, calls are serialized with a minimum gap of
+`GEMINI_MIN_GAP_MS`, because Gemini's rate limit applies to the API key rather
+than the caller; past 8 queued callers a request fails fast instead of hanging.
+Google's 503 "high demand" is retried once, and a retired model ID is logged as
+a config problem rather than a transient error.
 
 ## Environment variables
 
