@@ -125,10 +125,10 @@
           :key="review._id"
           class="flex flex-col gap-2.5 px-4 py-5 transition-colors hover:bg-muted/40 sm:flex-row sm:items-start"
         >
-          <img
-            :src="reviewUser(review)?.avatar_url || 'https://via.placeholder.com/56'"
-            :alt="reviewUser(review)?.username"
-            class="h-14 w-14 shrink-0 rounded-full bg-muted object-cover"
+          <UserAvatar
+            :src="reviewUser(review)?.avatar_url"
+            :name="reviewUser(review)?.username"
+            class="size-14 shrink-0"
           />
 
           <div class="min-w-0 flex-1">

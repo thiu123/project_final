@@ -3,16 +3,13 @@
     <!-- Reviewer -->
     <div class="mb-4 flex items-start justify-between gap-2">
       <div class="flex grow items-center">
-        <UiAvatar class="mr-3 size-10 bg-primary text-primary-foreground">
-          <UiAvatarImage
-            v-if="reviewAvatar(review)"
-            :src="reviewAvatar(review)!"
-            alt="User avatar"
-          />
-          <UiAvatarFallback class="flex h-full w-full items-center justify-center">
-            <User class="h-5 w-5" />
-          </UiAvatarFallback>
-        </UiAvatar>
+        <UserAvatar
+          :src="reviewAvatar(review)"
+          :name="reviewUsername(review)"
+          class="mr-3 size-10 bg-primary text-primary-foreground"
+        >
+          <User class="h-5 w-5" />
+        </UserAvatar>
 
         <div class="grow">
           <h3 class="mb-1 text-lg font-bold text-primary">

@@ -89,13 +89,19 @@
                     "
                   >
                     <UiSelectTrigger class="w-36">
-                      <UiSelectValue />
+                      <!-- Label rendered here rather than resolved from the
+                           item list: reka-ui records an item's value once, when
+                           it mounts, so after a status change the trigger would
+                           come up blank. -->
+                      <UiSelectValue>{{ order.status }}</UiSelectValue>
                     </UiSelectTrigger>
                     <UiSelectContent>
-                      <!-- The current status is listed so the trigger has a
-                           label; everything else is what this order may legally
-                           become next. -->
-                      <UiSelectItem :value="order.status" disabled>
+                      <!-- The current status is listed so the menu shows where
+                           the order stands; everything else is what it may
+                           legally become next. Keyed on the status so a change
+                           remounts the item instead of mutating its value in
+                           place, which would leave a stale entry behind. -->
+                      <UiSelectItem :key="order.status" :value="order.status" disabled>
                         {{ order.status }}
                       </UiSelectItem>
                       <UiSelectItem

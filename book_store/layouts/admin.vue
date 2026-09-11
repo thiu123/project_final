@@ -87,15 +87,11 @@
       <!-- User Info (Bottom) -->
       <div class="border-t border-border p-4">
         <div class="flex items-center gap-3" :class="rail ? 'md:hidden' : ''">
-          <UiAvatar class="h-9 w-9">
-            <UiAvatarImage
-              :src="currentUser?.avatar_url || ''"
-              :alt="currentUser?.username || 'Admin User'"
-            />
-            <UiAvatarFallback>
-              {{ (currentUser?.username || "A").charAt(0).toUpperCase() }}
-            </UiAvatarFallback>
-          </UiAvatar>
+          <UserAvatar
+            :src="currentUser?.avatar_url"
+            :name="currentUser?.username || 'Admin User'"
+            class="h-9 w-9"
+          />
           <div class="min-w-0 flex-1">
             <div class="truncate text-sm font-semibold text-foreground">
               {{ currentUser?.username || "Admin User" }}
