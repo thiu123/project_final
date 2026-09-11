@@ -239,3 +239,24 @@ export interface HomePayload {
   bestSellers: Book[];
   categories: CategoryNode[];
 }
+
+/**
+ * The checkout handoff. The cart page writes the selected rows to
+ * `localStorage["checkoutItems"]` and the order page reads them back — the two
+ * screens are separate route loads, so the shape has to be written down.
+ */
+export interface CheckoutItem {
+  bookId: string;
+  title: string;
+  /** First author only; the review list shows a single name. */
+  authors?: string;
+  cover_url?: string;
+  price: number;
+  quantity: number;
+  productType: ProductType;
+  subjects?: string[];
+  stock?: number;
+}
+
+/** Key under which `CheckoutItem[]` is handed from the cart to the order page. */
+export const CHECKOUT_ITEMS_KEY = "checkoutItems";

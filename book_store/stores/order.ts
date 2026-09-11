@@ -1,12 +1,9 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import orderApi from "@/api/orderApi";
-import type { Order, OrderItem, ShippingAddress } from "@/types";
+import type { Order, ShippingAddress } from "@/types";
 
 export const useOrderStore = defineStore("order", () => {
-  const cartItems = ref<OrderItem[]>([]);
-  const total = ref(0);
-  const orderStatus = ref("");
   const order = ref<Order | null>(null); // order detail
   const userOrders = ref<Order[]>([]); // all orders of user
   const purchasedEbooks = ref<Record<string, boolean>>({}); // { bookId: true/false }
@@ -32,9 +29,7 @@ export const useOrderStore = defineStore("order", () => {
 
   async function createMomoOrder(voucherCode: string | null = null) {
     try {
-      const { paymentUrl } = await orderApi.createMomoOrderFromCart(
-        voucherCode
-      );
+      const { paymentUrl } = await orderApi.createMomoOrderFromCart(voucherCode);
       return paymentUrl;
     } catch (error) {
       console.error("Error creating MoMo order:", error);
@@ -48,7 +43,7 @@ export const useOrderStore = defineStore("order", () => {
    */
   async function createCodOrder(
     shipping: ShippingAddress,
-    voucherCode: string | null = null,
+    voucherCode: string | null = null
   ) {
     return orderApi.createCodOrderFromCart(shipping, voucherCode);
   }
@@ -80,9 +75,6 @@ export const useOrderStore = defineStore("order", () => {
   }
 
   return {
-    cartItems,
-    total,
-    orderStatus,
     order,
     userOrders,
     purchasedEbooks,

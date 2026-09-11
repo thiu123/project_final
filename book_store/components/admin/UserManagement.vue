@@ -305,35 +305,13 @@
     </div>
 
     <!-- Delete Confirmation Dialog -->
-    <UiDialog v-model:open="deleteDialog">
-      <UiDialogContent class="sm:max-w-lg" hide-close>
-        <UiDialogHeader>
-          <UiDialogTitle class="flex items-center text-2xl font-semibold">
-            <Trash2 class="mr-2 h-6 w-6 text-destructive" />
-            Confirm Delete
-          </UiDialogTitle>
-        </UiDialogHeader>
-
-        <p class="text-sm text-foreground">
-          Are you sure you want to delete user
-          <strong>{{ selectedUser?.username }}</strong
-          >?
-          <br />
-          <span class="text-destructive">This action cannot be undone.</span>
-        </p>
-
-        <UiDialogFooter>
-          <UiButton variant="ghost" @click="deleteDialog = false">Cancel</UiButton>
-          <UiButton
-            variant="destructive"
-            :loading="deleteLoading"
-            @click="deleteUser"
-          >
-            Delete
-          </UiButton>
-        </UiDialogFooter>
-      </UiDialogContent>
-    </UiDialog>
+    <AdminConfirmDeleteDialog
+      v-model:open="deleteDialog"
+      question="Are you sure you want to delete this user?"
+      :subject="selectedUser?.username"
+      :loading="deleteLoading"
+      @confirm="deleteUser"
+    />
 
     <!-- User Details Dialog -->
     <UiDialog v-model:open="detailsDialog">

@@ -20,12 +20,12 @@ export const addToCart = (
   });
 };
 
-export const updateCartItem = (bookId: string, quantity: number) => {
-  return axiosInstance.put(`${API_URL}/update`, { bookId, quantity });
-};
-
 export const removeCartItem = (bookId: string) => {
   return axiosInstance.delete(`${API_URL}/delete`, {
     data: { bookId },
   });
+};
+
+export const updateCartItem = (bookId: string, quantity: number) => {
+  return axiosInstance.put(`${API_URL}/update`, { bookId, quantity });
 };

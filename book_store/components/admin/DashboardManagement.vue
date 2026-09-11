@@ -100,10 +100,10 @@
                 <td class="px-4 py-3">
                   <span
                     class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                    :class="getStatusClass(order.status)"
+                    :class="orderStatusClass(order.status)"
                   >
                     <component
-                      :is="getStatusIcon(order.status)"
+                      :is="orderStatusIcon(order.status)"
                       class="h-3.5 w-3.5"
                     />
                     {{ order.status }}
@@ -130,6 +130,7 @@
 </template>
 
 <script setup lang="ts">
+import { orderStatusClass, orderStatusIcon } from "@/utils/orderStatus";
 import { useTheme } from "@/composables/useTheme";
 import type { Component } from "vue";
 import orderApi from "~/api/orderApi";
@@ -144,15 +145,10 @@ import {
   Tooltip,
 } from "chart.js";
 import {
-  Ban,
   CheckCircle2,
-  Clock,
   DollarSign,
-  HelpCircle,
   PackageCheck,
-  ShieldCheck,
   ShoppingBag,
-  Truck,
   XCircle,
 } from "lucide-vue-next";
 
@@ -355,32 +351,6 @@ function formatDate(date?: string): string {
     month: "short",
     day: "numeric",
   });
-}
-
-function getStatusClass(status: OrderStatus): string {
-  const classes: Record<string, string> = {
-    Pending: "bg-warning text-warning-foreground",
-    Paid: "bg-success text-success-foreground",
-    Confirmed: "bg-info text-info-foreground",
-    "In Delivery": "bg-purple-600 text-purple-50 dark:bg-purple-500",
-    Delivered: "bg-teal-600 text-teal-50 dark:bg-teal-500",
-    Failed: "bg-destructive text-destructive-foreground",
-    Cancelled: "bg-muted text-muted-foreground",
-  };
-  return classes[status] || "bg-muted text-muted-foreground";
-}
-
-function getStatusIcon(status: OrderStatus): Component {
-  const icons: Record<string, Component> = {
-    Pending: Clock,
-    Paid: CheckCircle2,
-    Confirmed: ShieldCheck,
-    "In Delivery": Truck,
-    Delivered: PackageCheck,
-    Failed: XCircle,
-    Cancelled: Ban,
-  };
-  return icons[status] || HelpCircle;
 }
 
 onMounted(() => {

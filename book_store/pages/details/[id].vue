@@ -18,22 +18,13 @@
       <!-- Breadcrumb -->
       <nav aria-label="Breadcrumb" class="mb-6">
         <ol class="flex flex-wrap items-center gap-1 text-sm">
-          <template v-for="(item, i) in breadcrumbItems" :key="i">
-            <ChevronRight
-              v-if="i > 0"
-              class="h-4 w-4 text-muted-foreground"
-            />
-            <li>
-              <NuxtLink
-                v-if="!item.disabled && item.href"
-                :to="item.href"
-                class="text-primary hover:underline"
-              >
-                {{ item.title }}
-              </NuxtLink>
-              <span v-else class="text-muted-foreground">{{ item.title }}</span>
-            </li>
-          </template>
+          <li>
+            <NuxtLink to="/" class="text-primary hover:underline">Home</NuxtLink>
+          </li>
+          <ChevronRight class="h-4 w-4 text-muted-foreground" />
+          <li class="text-muted-foreground">
+            {{ book.title || "Book Details" }}
+          </li>
         </ol>
       </nav>
 
@@ -49,7 +40,7 @@
                 >
                   <img
                     :src="
-                      detailsBooks?.cover_url ||
+                      book?.cover_url ||
                       '/placeholder.svg?height=400&width=260'
                     "
                     alt="Book Cover"
@@ -64,7 +55,7 @@
               <div>
                 <!-- Title -->
                 <h1 class="mb-4 text-3xl font-bold text-primary">
-                  {{ detailsBooks.title }}
+                  {{ book.title }}
                 </h1>
 
                 <!-- Author -->
@@ -77,7 +68,7 @@
                     variant="outline"
                     class="border-primary px-3 py-1 text-sm text-primary"
                   >
-                    {{ detailsBooks.authors?.[0] }}
+                    {{ book.authors?.[0] }}
                   </UiBadge>
                 </div>
 
@@ -101,7 +92,7 @@
                 <div class="mb-4">
                   <UiBadge variant="success">
                     <Flame class="h-3.5 w-3.5" />
-                    Sold {{ detailsBooks.sold || 0 }}
+                    Sold {{ book.sold || 0 }}
                   </UiBadge>
                 </div>
 
@@ -110,23 +101,23 @@
                   <div class="mb-4 flex items-center justify-between">
                     <div>
                       <div class="mb-2 text-4xl font-bold text-success">
-                        ${{ displayPrice }}
+                        {{ formatUsd(displayPrice) }}
                       </div>
                       <!-- Stock Status -->
                       <div v-if="productType === 'hardbook'">
                         <UiBadge
-                          v-if="(detailsBooks.stock ?? 0) > 20"
+                          v-if="(book.stock ?? 0) > LOW_STOCK_THRESHOLD"
                           variant="success"
                         >
                           <CheckCircle2 class="h-3.5 w-3.5" />
-                          In Stock ({{ detailsBooks.stock }} available)
+                          In Stock ({{ book.stock }} available)
                         </UiBadge>
                         <UiBadge
-                          v-else-if="(detailsBooks.stock ?? 0) > 0"
+                          v-else-if="(book.stock ?? 0) > 0"
                           variant="warning"
                         >
                           <AlertTriangle class="h-3.5 w-3.5" />
-                          Low Stock (Only {{ detailsBooks.stock }} left!)
+                          Low Stock (Only {{ book.stock }} left!)
                         </UiBadge>
                         <UiBadge v-else variant="destructive">
                           <XCircle class="h-3.5 w-3.5" />
@@ -142,16 +133,16 @@
                       variant="outline"
                       size="icon"
                       :aria-label="
-                        isFavorite(detailsBooks._id)
+                        isFavorite
                           ? 'Remove from favorites'
                           : 'Add to favorites'
                       "
-                      @click="handleToggleFavorites(detailsBooks._id)"
+                      @click="handleToggleFavorites"
                     >
                       <Heart
                         class="h-5 w-5"
                         :class="
-                          isFavorite(detailsBooks._id)
+                          isFavorite
                             ? 'fill-current text-destructive'
                             : 'text-muted-foreground'
                         "
@@ -178,7 +169,7 @@
                         <span>
                           <span class="font-medium">📚 Hardbook</span>
                           <span class="block text-xs text-muted-foreground">
-                            ${{ detailsBooks.price }}
+                            {{ formatUsd(hardbookPrice) }}
                           </span>
                         </span>
                       </span>
@@ -196,7 +187,7 @@
                         <span>
                           <span class="font-medium">📱 Ebook (PDF)</span>
                           <span class="block text-xs text-muted-foreground">
-                            ${{ ebookPrice }}
+                            {{ formatUsd(ebookPrice) }}
                           </span>
                         </span>
                       </span>
@@ -214,11 +205,11 @@
                         ? 'border-success text-success hover:text-success'
                         : 'border-info text-info hover:text-info'
                     "
-                    @click="previewEbook"
+                    @click="router.push({ path: '/reader', query: { bookId } })"
                   >
                     <CheckCircle2 v-if="hasPurchasedEbook" class="h-4 w-4" />
                     <BookOpen v-else class="h-4 w-4" />
-                    {{ previewButtonText }}
+                    {{ hasPurchasedEbook ? "Preview full" : "Preview (20 pages free)" }}
                   </UiButton>
                 </div>
 
@@ -258,12 +249,12 @@
                     <div
                       v-if="
                         productType === 'hardbook' &&
-                        (detailsBooks.stock ?? 0) > 0 &&
-                        (detailsBooks.stock ?? 0) < 10
+                        (book.stock ?? 0) > 0 &&
+                        (book.stock ?? 0) < MAX_LINE_QUANTITY
                       "
                       class="mt-1 text-xs text-warning"
                     >
-                      Maximum {{ detailsBooks.stock }} items available
+                      Maximum {{ book.stock }} items available
                     </div>
                   </div>
 
@@ -273,7 +264,7 @@
                       size="lg"
                       class="grow"
                       :disabled="isOutOfStock"
-                      @click="handleAddToCart(detailsBooks._id, quantity)"
+                      @click="handleAddToCart"
                     >
                       <ShoppingCart class="h-5 w-5" />
                       {{ isOutOfStock ? "Out of Stock" : "Add to Cart" }}
@@ -312,7 +303,7 @@
                 <div>
                   <div class="text-sm font-medium">Book ID</div>
                   <div class="text-sm text-muted-foreground">
-                    {{ detailsBooks.key?.split("/").pop() || "8935250707640" }}
+                    {{ book.key?.split("/").pop() || "8935250707640" }}
                   </div>
                 </div>
               </div>
@@ -324,7 +315,7 @@
                 <div>
                   <div class="text-sm font-medium">Author</div>
                   <div class="text-sm text-muted-foreground">
-                    {{ detailsBooks.authors?.[0] }}
+                    {{ book.authors?.[0] }}
                   </div>
                 </div>
               </div>
@@ -336,7 +327,7 @@
                 <div>
                   <div class="text-sm font-medium">Publication Year</div>
                   <div class="text-sm text-muted-foreground">
-                    {{ detailsBooks.first_publish_year }}
+                    {{ book.first_publish_year }}
                   </div>
                 </div>
               </div>
@@ -401,7 +392,7 @@
                   variant="outline"
                   size="sm"
                   class="border-primary text-primary hover:text-primary"
-                  @click="router.push(`/reviews/${detailsBooks._id}`)"
+                  @click="router.push(`/reviews/${book._id}`)"
                 >
                   <Pencil class="h-4 w-4" />
                   Write Review
@@ -414,7 +405,7 @@
 
       <!-- Description -->
       <UiCard
-        v-if="detailsBooks.description"
+        v-if="book.description"
         class="mt-6 overflow-hidden shadow"
       >
         <div
@@ -433,20 +424,15 @@
 
     <!-- Snackbar -->
     <SnackbarAlert
-      v-model="showSnackbar"
-      :text="snackbarText"
-      :color="snackbarColor"
+      v-model="snackbar.show"
+      :text="snackbar.message"
+      :color="snackbar.color"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { useAuthStore } from "@/stores/auth";
-import { useCartStore } from "@/stores/cart";
-import { useFavoriteStore } from "@/stores/favorite";
-import { useOrderStore } from "@/stores/order";
-import { useReviewStore } from "@/stores/review";
 import {
   AlertTriangle,
   BookOpen,
@@ -468,9 +454,22 @@ import {
   XCircle,
   Zap,
 } from "lucide-vue-next";
+import { useAuthStore } from "@/stores/auth";
+import { useCartStore } from "@/stores/cart";
+import { useFavoriteStore } from "@/stores/favorite";
+import { useOrderStore } from "@/stores/order";
+import { useReviewStore } from "@/stores/review";
+import { useSnackbar } from "@/composables/useSnackbar";
+import { isFavoriteBook } from "@/utils/favorites";
+import { EBOOK_PRICE_RATIO, formatUsd } from "@/utils/pricing";
 import { getBookById } from "@/api/bookApi";
-import { getAverageRating as fetchAverageRating } from "@/api/reviewApi";
+import { getAverageRating } from "@/api/reviewApi";
 import type { Book, ProductType } from "@/types";
+
+/** Stock below this is called out as running low. */
+const LOW_STOCK_THRESHOLD = 20;
+/** Cap on a single line, so one order cannot clear the shelf. */
+const MAX_LINE_QUANTITY = 10;
 
 const route = useRoute();
 const router = useRouter();
@@ -486,100 +485,101 @@ const { currentUser } = storeToRefs(authStore);
 const { purchasedEbooks } = storeToRefs(orderStore);
 const { reviews } = storeToRefs(reviewStore);
 
-const detailsBooks = ref<Partial<Book>>({});
+const { snackbar, notify, notifyError } = useSnackbar();
+
+const book = ref<Partial<Book>>({});
 const isLoading = ref(false);
 const quantity = ref(1);
 const productType = ref<ProductType>("hardbook");
-const showSnackbar = ref(false);
-const snackbarText = ref("");
-const snackbarColor = ref("success");
 const averageRating = ref(0);
 const totalReviews = ref(0);
 
+const bookId = computed(() => route.params.id as string);
+
+const isFavorite = computed(() => isFavoriteBook(favorites.value, book.value._id));
+
+/** Counts per star, highest first — index 0 is five stars. */
 const ratingBreakdown = computed(() => {
-  if (!reviews.value || reviews.value.length === 0) {
-    return [
-      { percentage: 0, count: 0 },
-      { percentage: 0, count: 0 },
-      { percentage: 0, count: 0 },
-      { percentage: 0, count: 0 },
-      { percentage: 0, count: 0 },
-    ];
-  }
-
   const counts = [0, 0, 0, 0, 0];
-  reviews.value.forEach((review) => {
-    const rating = review.rating;
-    if (rating >= 1 && rating <= 5) {
-      counts[5 - rating]++;
-    }
-  });
-
+  for (const review of reviews.value) {
+    if (review.rating >= 1 && review.rating <= 5) counts[5 - review.rating]++;
+  }
   const total = reviews.value.length;
   return counts.map((count) => ({
-    percentage: total > 0 ? (count / total) * 100 : 0,
     count,
+    percentage: total > 0 ? (count / total) * 100 : 0,
   }));
 });
 
-const breadcrumbItems = computed(() => [
-  { title: "Home", disabled: false, href: "/" },
-  { title: detailsBooks.value.title || "Book Details", disabled: true },
-]);
+const displayRating = computed(() =>
+  totalReviews.value > 0 ? averageRating.value : book.value.rating || 0
+);
 
-const displayRating = computed(() => {
-  if (totalReviews.value > 0) {
-    return averageRating.value;
-  }
-  return detailsBooks.value.rating || 0;
-});
+const hardbookPrice = computed(() => book.value.price ?? 0);
 
-const ebookPrice = computed(() => {
-  const price = detailsBooks.value.price || 120;
-  return (price * 0.7).toFixed(2);
-});
+const ebookPrice = computed(() => hardbookPrice.value * EBOOK_PRICE_RATIO);
 
 const displayPrice = computed(() =>
-  productType.value === "ebook"
-    ? ebookPrice.value
-    : detailsBooks.value.price || "120.00"
+  productType.value === "ebook" ? ebookPrice.value : hardbookPrice.value
 );
 
 const hasPurchasedEbook = computed(
-  () => purchasedEbooks.value[detailsBooks.value._id as string] || false
-);
-
-const previewButtonText = computed(() =>
-  hasPurchasedEbook.value ? "Preview full" : "Preview (20 pages free)"
+  () => purchasedEbooks.value[book.value._id as string] ?? false
 );
 
 const isOutOfStock = computed(
-  () => productType.value === "hardbook" && detailsBooks.value.stock === 0
+  () => productType.value === "hardbook" && (book.value.stock ?? 0) === 0
 );
 
-const maxQuantity = computed(() => {
-  if (productType.value === "ebook") {
-    return 10;
-  }
-  return Math.min(detailsBooks.value.stock || 0, 10);
-});
+const maxQuantity = computed(() =>
+  productType.value === "ebook"
+    ? MAX_LINE_QUANTITY
+    : Math.min(book.value.stock ?? 0, MAX_LINE_QUANTITY)
+);
 
+/**
+ * Some legacy rows store the description as `{ value }` rather than a string.
+ */
 const displayDescription = computed(() => {
-  const description = detailsBooks.value.description as unknown;
+  const description = book.value.description as unknown;
   return typeof description === "object" && description !== null
     ? (description as { value: string }).value
     : (description as string | undefined);
 });
 
 watch(productType, () => {
-  if (quantity.value > maxQuantity.value) {
-    quantity.value = maxQuantity.value;
-  }
+  quantity.value = Math.min(quantity.value, Math.max(1, maxQuantity.value));
 });
 
-async function getAverageRating(bookId: string) {
+onMounted(async () => {
+  await loadBook();
+  await Promise.all([
+    orderStore.fetchUserOrders(),
+    reviewStore.loadReviews(bookId.value),
+  ]);
+});
+
+async function loadBook() {
+  isLoading.value = true;
   try {
-    const response = await fetchAverageRating(bookId);
+    const response = await getBookById(bookId.value);
+    book.value = response.data;
+
+    await loadAverageRating();
+
+    if (currentUser.value) {
+      await orderStore.checkEbookPurchase(bookId.value);
+    }
+  } catch (error) {
+    console.error("Fetch error:", error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+async function loadAverageRating() {
+  try {
+    const response = await getAverageRating(bookId.value);
     averageRating.value = response.data.averageRating;
     totalReviews.value = response.data.totalReviews;
   } catch (error) {
@@ -589,115 +589,45 @@ async function getAverageRating(bookId: string) {
   }
 }
 
-async function getDetailsBooks() {
-  try {
-    isLoading.value = true;
-    const bookId = route.params.id as string;
-    console.log("Book ID:", bookId);
-
-    if (!bookId) {
-      throw new Error("Invalid book ID");
-    }
-
-    const response = await getBookById(bookId);
-    detailsBooks.value = response.data;
-
-    await getAverageRating(bookId);
-
-    if (currentUser.value) {
-      await orderStore.checkEbookPurchase(bookId);
-    }
-  } catch (error) {
-    console.error("Fetch error:", error);
-  } finally {
-    isLoading.value = false;
-  }
-}
-
-async function getOrderOfUser() {
-  try {
-    await orderStore.fetchUserOrders();
-  } catch (error) {
-    console.error("Error fetching user orders:", error);
-  }
-}
-
-async function handleAddToCart(bookId: string | undefined, qty: number) {
+async function handleAddToCart() {
   try {
     await cartStore.addToCart({
-      bookId: bookId as string,
-      quantity: qty,
+      bookId: bookId.value,
+      quantity: quantity.value,
       productType: productType.value,
     });
 
     const typeName = productType.value === "ebook" ? "Ebook" : "Hardbook";
-    snackbarText.value = `${typeName} added to cart successfully!`;
-    showSnackbar.value = true;
-    snackbarColor.value = "success";
+    notify(`${typeName} added to cart successfully!`);
   } catch (error) {
     console.error("Error adding to cart:", error);
-    snackbarText.value = "Failed to add to cart.";
-    showSnackbar.value = true;
-    snackbarColor.value = "error";
+    notifyError("Failed to add to cart.");
   }
 }
 
 async function handleBuyNow() {
   try {
-    // Add to cart first
     await cartStore.addToCart({
-      bookId: detailsBooks.value._id as string,
+      bookId: bookId.value,
       quantity: quantity.value,
       productType: productType.value,
     });
-
-    // Navigate to cart page for checkout
     router.push("/cart");
   } catch (error) {
     console.error("Error during buy now:", error);
-    snackbarText.value = "Failed to proceed to checkout.";
-    showSnackbar.value = true;
-    snackbarColor.value = "error";
+    notifyError("Failed to proceed to checkout.");
   }
 }
 
-function previewEbook() {
-  router.push({
-    path: "/reader",
-    query: { bookId: detailsBooks.value._id },
-  });
-}
-
-async function handleToggleFavorites(bookId: string | undefined) {
+async function handleToggleFavorites() {
+  // Read before the toggle: the store swaps the list out underneath us.
+  const wasFavorite = isFavorite.value;
   try {
-    await favoriteStore.toggleFavorites(bookId as string);
-    snackbarText.value = isFavorite(bookId)
-      ? "Added to favorites!"
-      : "Removed from favorites!";
-    showSnackbar.value = true;
-    snackbarColor.value = "success";
+    await favoriteStore.toggleFavorites(bookId.value);
+    notify(wasFavorite ? "Removed from favorites!" : "Added to favorites!");
   } catch (error) {
     console.error("Error toggling favorites:", error);
-    snackbarText.value = "Failed to update favorites.";
-    showSnackbar.value = true;
-    snackbarColor.value = "error";
+    notifyError("Failed to update favorites.");
   }
 }
-
-function isFavorite(bookId: string | undefined) {
-  return favorites.value.some((favorite: any) => {
-    const favoriteBookId = favorite.bookId?._id || favorite.bookId;
-    return favoriteBookId === bookId;
-  });
-}
-
-onMounted(async () => {
-  await getDetailsBooks();
-  await getOrderOfUser();
-
-  const bookId = route.params.id as string;
-  if (bookId) {
-    await reviewStore.loadReviews(bookId);
-  }
-});
 </script>

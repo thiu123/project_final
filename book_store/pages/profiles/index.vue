@@ -17,7 +17,7 @@
           :loading-favorites="loadingFavorites"
           :loading-reviews="loadingReviews"
           @toggle-drawer="drawer = !drawer"
-          @show-snackbar="showSnackbar"
+          @show-snackbar="notifyFromPayload"
         />
       </div>
     </div>
@@ -26,7 +26,6 @@
       v-model="snackbar.show"
       :text="snackbar.message"
       :color="snackbar.color"
-      :timeout="snackbar.timeout"
     />
   </div>
 </template>
@@ -37,7 +36,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useFavoriteStore } from "@/stores/favorite";
 import { useOrderStore } from "@/stores/order";
 import { useReviewStore } from "@/stores/review";
-import type { SnackbarPayload } from "@/types";
+import { useSnackbar } from "@/composables/useSnackbar";
 
 const router = useRouter();
 const route = useRoute();
@@ -54,12 +53,7 @@ const activeTab = ref("personal");
 const loadingOrders = ref(false);
 const loadingFavorites = ref(false);
 const loadingReviews = ref(false);
-const snackbar = reactive({
-  show: false,
-  message: "",
-  color: "success",
-  timeout: 4000,
-});
+const { snackbar, notifyFromPayload } = useSnackbar();
 
 watch(activeTab, (newTab) => {
   router.replace({ query: { tab: newTab } });
@@ -121,9 +115,4 @@ async function loadUserReviews() {
   }
 }
 
-function showSnackbar(data: SnackbarPayload) {
-  snackbar.message = data.message;
-  snackbar.color = data.color || "success";
-  snackbar.show = true;
-}
 </script>

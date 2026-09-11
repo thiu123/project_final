@@ -28,12 +28,6 @@ export const registerUser = (user: RegisterPayload) => {
   return axiosInstance.post<User>(`${BASE_URL}/register`, user);
 };
 
-export const loginWithGoogle = (googleToken: string) => {
-  return axiosInstance.post<User>(`${BASE_URL}/google`, {
-    token: googleToken,
-  });
-};
-
 export const changePassword = (passwordData: ChangePasswordPayload) => {
   return axiosInstance.put(`${BASE_URL}/change-password`, passwordData);
 };

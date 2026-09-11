@@ -202,7 +202,7 @@
                       type="button"
                       variant="link"
                       class="px-1 font-medium"
-                      @click="$emit('toggleLinkSignIn', 'sign-in')"
+                      @click="$emit('toggle-sign-in')"
                     >
                       Sign In
                     </UiButton>
@@ -267,8 +267,8 @@ import {
 import { API_ENDPOINTS } from "@/constants/apiEndpoints";
 
 const emit = defineEmits<{
-  (e: "checkIsSignUp", value: boolean): void;
-  (e: "toggleLinkSignIn", tab: string): void;
+  (e: "signed-up"): void;
+  (e: "toggle-sign-in"): void;
 }>();
 
 const runtimeConfig = useRuntimeConfig();
@@ -386,7 +386,7 @@ async function onSubmit() {
 
     successMessage.value =
       "Account registration successful! You can now log in.";
-    emit("checkIsSignUp", true);
+    emit("signed-up");
 
     resetForm();
     return data;

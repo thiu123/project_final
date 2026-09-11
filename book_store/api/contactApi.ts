@@ -27,11 +27,6 @@ export const getAllContacts = async () => {
   return await axiosInstance.get<ContactListResponse>(API_URL);
 };
 
-// Get contact by ID
-export const getContactById = async (id: string) => {
-  return await axiosInstance.get<ContactResponse>(`${API_URL}/${id}`);
-};
-
 // Delete contact (Admin)
 export const deleteContact = async (id: string) => {
   return await axiosInstance.delete(`${API_URL}/${id}`);

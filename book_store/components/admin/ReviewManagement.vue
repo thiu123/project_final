@@ -291,31 +291,12 @@
     </UiDialog>
 
     <!-- Delete Confirmation Dialog -->
-    <UiDialog v-model:open="deleteDialog">
-      <UiDialogContent class="sm:max-w-sm">
-        <UiDialogHeader>
-          <UiDialogTitle>Confirm Delete</UiDialogTitle>
-        </UiDialogHeader>
-
-        <p class="text-sm text-muted-foreground">
-          Are you sure you want to delete this {{ deleteType }}? This action
-          cannot be undone.
-        </p>
-
-        <UiDialogFooter>
-          <UiButton variant="ghost" @click="deleteDialog = false">
-            Cancel
-          </UiButton>
-          <UiButton
-            variant="destructive"
-            :loading="deleting"
-            @click="performDelete"
-          >
-            Delete
-          </UiButton>
-        </UiDialogFooter>
-      </UiDialogContent>
-    </UiDialog>
+    <AdminConfirmDeleteDialog
+      v-model:open="deleteDialog"
+      :question="`Are you sure you want to delete this ${deleteType}?`"
+      :loading="deleting"
+      @confirm="performDelete"
+    />
 
     <!-- Snackbar -->
     <SnackbarAlert

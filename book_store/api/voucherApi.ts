@@ -37,16 +37,6 @@ export const validateVoucher = async (
   }
 };
 
-// Apply voucher (increment usage count)
-export const applyVoucher = async (code: string) => {
-  try {
-    const response = await axiosInstance.post(`${BASE_URL}/apply`, { code });
-    return response.data;
-  } catch (error: any) {
-    throw error.response?.data || error.message;
-  }
-};
-
 // Get vouchers. Pass activeOnly=true to only get vouchers a customer could
 // actually redeem right now (used by checkout); omit it for the admin panel,
 // which needs to see and manage inactive/expired vouchers too.
