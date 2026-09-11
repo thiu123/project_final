@@ -32,13 +32,7 @@ export interface OrderVoucher {
   discountAmount: number;
 }
 
-/**
- * Where the courier delivers and who they call.
- *
- * Captured per order rather than on the user, because the recipient is often
- * not the account holder — a gift, an office address, a parent ordering for a
- * child. Required for COD; prepaid orders may still be missing it.
- */
+
 export interface ShippingAddress {
   fullName: string;
   phone: string;

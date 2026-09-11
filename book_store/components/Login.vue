@@ -98,7 +98,7 @@
                       variant="link"
                       size="sm"
                       class="text-xs"
-                      @click="$emit('toggleLinkForgotPassword')"
+                      @click="$emit('toggle-forgot-password')"
                     >
                       Forgot password?
                     </UiButton>
@@ -144,7 +144,7 @@
                       type="button"
                       variant="link"
                       class="px-1 font-medium"
-                      @click="$emit('toggleLinkSignUp', 'sign-up')"
+                      @click="$emit('toggle-sign-up')"
                     >
                       Sign Up
                     </UiButton>
@@ -205,8 +205,8 @@ import type { SnackbarPayload } from "@/types";
 
 const emit = defineEmits<{
   (e: "show-snackbar", payload: SnackbarPayload): void;
-  (e: "toggleLinkSignUp", tab: string): void;
-  (e: "toggleLinkForgotPassword"): void;
+  (e: "toggle-sign-up"): void;
+  (e: "toggle-forgot-password"): void;
 }>();
 
 const router = useRouter();

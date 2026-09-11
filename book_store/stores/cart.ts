@@ -6,25 +6,12 @@ import {
   updateCartItem as updateCartItemApi,
   removeCartItem as removeCartItemApi,
 } from "@/api/cartApi";
-import { validateVoucher, applyVoucher } from "@/api/voucherApi";
-import type { Cart, ProductType, Voucher } from "@/types";
+import type { Cart, CartItem, ProductType } from "@/types";
 
 export const useCartStore = defineStore("cart", () => {
   const cart = ref<Partial<Cart>>({});
-  const appliedVoucher = ref<Voucher | null>(null);
-  const voucherDiscount = ref(0);
 
-  const cartTotal = computed(() => {
-    return (
-      cart.value.items?.reduce((total, item) => {
-        return total + (item.bookId?.price || 0) * item.quantity;
-      }, 0) || 0
-    );
-  });
-
-  const finalTotal = computed(() => {
-    return Math.max(0, cartTotal.value - voucherDiscount.value);
-  });
+  const items = computed<CartItem[]>(() => cart.value.items ?? []);
 
   async function fetchCart() {
     try {
@@ -63,18 +50,19 @@ export const useCartStore = defineStore("cart", () => {
     }
   }
 
-  async function updateCartItem({
-    bookId,
-    quantity,
-  }: {
-    bookId: string;
-    quantity: number;
-  }) {
+  /**
+   * Persists a quantity change. The cart screen used to mutate `item.quantity`
+   * in the store only, so the server kept the original count and the order was
+   * placed for the wrong number of copies.
+   */
+  async function updateCartItem(bookId: string, quantity: number) {
     try {
       await updateCartItemApi(bookId, quantity);
       await fetchCart();
     } catch (error) {
       console.error("Failed to update cart item", error);
+      // Re-read so the row snaps back to whatever the server actually holds.
+      await fetchCart();
     }
   }
 
@@ -87,66 +75,17 @@ export const useCartStore = defineStore("cart", () => {
     }
   }
 
-  async function validateAndApplyVoucher(voucherCode: string) {
-    try {
-      // Calculate cart total (including ebook discount)
-      const total =
-        cart.value.items?.reduce((sum, item) => {
-          const price =
-            item.productType === "ebook"
-              ? (item.bookId?.price || 0) * 0.7
-              : item.bookId?.price || 0;
-          return sum + price * item.quantity;
-        }, 0) || 0;
-
-      // Validate voucher
-      const response = await validateVoucher(voucherCode, total);
-
-      if (response.success) {
-        appliedVoucher.value = response.data.voucher;
-        voucherDiscount.value = response.data.discountAmount;
-        return { success: true, data: response.data };
-      }
-    } catch (error) {
-      console.error("Failed to validate voucher", error);
-      throw error;
-    }
-  }
-
-  function removeVoucher() {
-    appliedVoucher.value = null;
-    voucherDiscount.value = 0;
-  }
-
   function clearCart() {
     cart.value = { items: [] };
-    appliedVoucher.value = null;
-    voucherDiscount.value = 0;
-  }
-
-  async function confirmVoucherUsage() {
-    try {
-      if (appliedVoucher.value) {
-        await applyVoucher(appliedVoucher.value.code);
-      }
-    } catch (error) {
-      console.error("Failed to confirm voucher usage", error);
-    }
   }
 
   return {
     cart,
-    appliedVoucher,
-    voucherDiscount,
-    cartTotal,
-    finalTotal,
+    items,
     fetchCart,
     addToCart,
     updateCartItem,
     removeCartItem,
-    validateAndApplyVoucher,
-    removeVoucher,
     clearCart,
-    confirmVoucherUsage,
   };
 });

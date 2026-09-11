@@ -262,7 +262,6 @@ function handleLogout() {
 
 onMounted(() => {
   authStore.restoreSession();
-  console.log(currentUser.value, "current user in admin layout");
   // Get tab from query params
   const tab = route.query.tab as string | undefined;
   if (tab && menuItems.find((item) => item.value === tab)) {

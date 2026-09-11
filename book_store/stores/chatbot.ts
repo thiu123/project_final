@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 import { clearChatHistory, sendChatMessage } from "@/api/chatbotApi";
 import type { ChatMessage } from "@/types";
 
@@ -20,8 +20,6 @@ export const useChatbotStore = defineStore("chatbot", () => {
   const isTyping = ref(false);
   const isChatbotOpen = ref(false);
   const error = ref<string | null>(null);
-
-  const hasMessages = computed(() => messages.value.length > 0);
 
   function addMessage(message: Omit<ChatMessage, "id" | "timestamp">) {
     messages.value.push({ ...message, id: Date.now(), timestamp: new Date() });
@@ -81,7 +79,6 @@ export const useChatbotStore = defineStore("chatbot", () => {
     isTyping,
     isChatbotOpen,
     error,
-    hasMessages,
     addMessage,
     initializeChatbot,
     send,

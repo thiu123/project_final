@@ -32,7 +32,6 @@ export const useBookStore = defineStore("book", () => {
 
   /** Home carousels, keyed by subject. */
   const homeSubjects = ref<Record<string, Book[]>>({});
-  const bestSellers = ref<Book[]>([]);
   /** Category tree served by the API, including counts and covers. */
   const categories = ref<CategoryNode[]>([]);
 
@@ -66,7 +65,6 @@ export const useBookStore = defineStore("book", () => {
       const { data } = await getHomeBooksApi();
       books.value = data.latest;
       homeSubjects.value = data.groups;
-      bestSellers.value = data.bestSellers;
       categories.value = data.categories;
       return data;
     } catch (error) {
@@ -137,7 +135,6 @@ export const useBookStore = defineStore("book", () => {
     books,
     pagination,
     homeSubjects,
-    bestSellers,
     categories,
     loading,
     fetchBooks,

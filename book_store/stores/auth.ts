@@ -6,7 +6,6 @@ import {
   loginUser,
   registerUser,
   changePassword as changePasswordApi,
-  loginWithGoogle as loginWithGoogleApi,
   type LoginPayload,
   type RegisterPayload,
   type ChangePasswordPayload,
@@ -73,24 +72,6 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
-  async function loginWithGoogle(googleToken: string) {
-    try {
-      isFetching.value = true;
-      error.value = false;
-      const res = await loginWithGoogleApi(googleToken);
-      loginSuccess(res.data);
-      return res.data;
-    } catch (err: any) {
-      isFetching.value = false;
-      error.value = true;
-      console.error(
-        "Google login error:",
-        err.response ? err.response.data : err.message
-      );
-      throw err;
-    }
-  }
-
   async function changePassword(passwordData: ChangePasswordPayload) {
     try {
       const res = await changePasswordApi(passwordData);
@@ -108,10 +89,6 @@ export const useAuthStore = defineStore("auth", () => {
     accessToken.value = localStorage.getItem("accessToken") || "";
   }
 
-  function setAccessToken(token: string) {
-    accessToken.value = token;
-  }
-
   return {
     currentUser,
     accessToken,
@@ -120,10 +97,8 @@ export const useAuthStore = defineStore("auth", () => {
     login,
     logout,
     register,
-    loginWithGoogle,
     changePassword,
     restoreSession,
-    setAccessToken,
     loginSuccess,
   };
 });

@@ -199,34 +199,12 @@
     </UiDialog>
 
     <!-- Delete Confirmation Dialog -->
-    <UiDialog v-model:open="deleteDialog">
-      <UiDialogContent class="sm:max-w-sm">
-        <UiDialogHeader>
-          <UiDialogTitle>Confirm Delete</UiDialogTitle>
-        </UiDialogHeader>
-
-        <p class="text-sm text-muted-foreground">
-          Are you sure you want to delete this feedback?
-        </p>
-
-        <UiDialogFooter>
-          <UiButton
-            variant="ghost"
-            class="text-muted-foreground"
-            @click="deleteDialog = false"
-          >
-            Cancel
-          </UiButton>
-          <UiButton
-            variant="destructive"
-            :loading="deleting"
-            @click="deleteContactMessenger"
-          >
-            Delete
-          </UiButton>
-        </UiDialogFooter>
-      </UiDialogContent>
-    </UiDialog>
+    <AdminConfirmDeleteDialog
+      v-model:open="deleteDialog"
+      question="Are you sure you want to delete this feedback?"
+      :loading="deleting"
+      @confirm="deleteContactMessenger"
+    />
 
     <!-- Snackbar -->
     <SnackbarAlert
