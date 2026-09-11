@@ -8,12 +8,13 @@
       <div class="p-8">
         <!-- Avatar -->
         <div class="mb-8 flex items-center">
-          <UiAvatar class="mr-6 h-[120px] w-[120px] text-4xl shadow-md">
-            <UiAvatarImage :src="currentUser?.avatar_url || ''" alt="User Avatar" />
-            <UiAvatarFallback>
-              <User class="h-10 w-10 text-muted-foreground" />
-            </UiAvatarFallback>
-          </UiAvatar>
+          <UserAvatar
+            :src="currentUser?.avatar_url"
+            :name="currentUser?.username"
+            class="mr-6 h-[120px] w-[120px] text-4xl shadow-md"
+          >
+            <User class="h-10 w-10 text-muted-foreground" />
+          </UserAvatar>
 
           <div>
             <h3 class="mb-2 text-2xl font-semibold">

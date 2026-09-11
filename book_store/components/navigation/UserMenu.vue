@@ -29,7 +29,11 @@
         type="button"
         class="ml-1 hidden items-center rounded-full py-1 pl-1 pr-3 transition-all hover:-translate-y-0.5 hover:bg-muted sm:flex md:ml-2"
       >
-        <NavigationUserAvatar :user="currentUser" class="h-9 w-9 shadow" />
+        <UserAvatar
+          :src="currentUser?.avatar_url"
+          :name="currentUser?.username"
+          class="h-9 w-9 shadow"
+        />
         <span
           class="ml-2 hidden text-sm font-bold text-foreground md:inline lg:text-base"
         >

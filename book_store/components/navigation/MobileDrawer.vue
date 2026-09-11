@@ -102,7 +102,11 @@
 
           <template v-if="currentUser">
             <div class="mb-2 flex items-center rounded-lg bg-muted p-3">
-              <NavigationUserAvatar :user="currentUser" class="mr-3 h-9 w-9" />
+              <UserAvatar
+                :src="currentUser?.avatar_url"
+                :name="currentUser?.username"
+                class="mr-3 h-9 w-9"
+              />
               <div class="min-w-0">
                 <div class="truncate text-sm font-bold text-foreground">
                   {{ currentUser.username }}

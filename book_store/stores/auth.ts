@@ -13,14 +13,13 @@ import {
 import type { User } from "@/types";
 
 export const useAuthStore = defineStore("auth", () => {
-  const currentUser = ref<User | null>(
-    import.meta.client
-      ? JSON.parse(localStorage.getItem("currentUser") || "null")
-      : null
-  );
-  const accessToken = ref<string>(
-    import.meta.client ? localStorage.getItem("accessToken") || "" : ""
-  );
+  // Starts empty on BOTH sides of the render. Seeding from localStorage here
+  // would only happen on the client, so the first client render would show the
+  // signed-in nav where the server HTML has the signed-out one — a hydration
+  // mismatch that makes Vue throw that subtree away and rebuild it. The session
+  // is read back in `restoreSession()`, once mounted.
+  const currentUser = ref<User | null>(null);
+  const accessToken = ref<string>("");
   const isFetching = ref(false);
   const error = ref(false);
 

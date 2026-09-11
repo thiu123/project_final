@@ -15,17 +15,13 @@
       <!-- User Profile Header -->
       <div class="border-b border-border p-6 text-center">
         <div class="mb-4 flex justify-center">
-          <UiAvatar
+          <UserAvatar
+            :src="currentUser?.avatar_url"
+            :name="currentUser?.username"
             class="h-[100px] w-[100px] border-4 border-white text-3xl shadow-md dark:border-muted"
           >
-            <UiAvatarImage
-              :src="currentUser?.avatar_url || ''"
-              alt="User Avatar"
-            />
-            <UiAvatarFallback>
-              <CircleUser class="h-10 w-10 text-muted-foreground" />
-            </UiAvatarFallback>
-          </UiAvatar>
+            <CircleUser class="h-10 w-10 text-muted-foreground" />
+          </UserAvatar>
         </div>
         <h3 class="mb-2 text-2xl font-bold text-foreground">
           {{ currentUser?.username || "User" }}

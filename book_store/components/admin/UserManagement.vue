@@ -163,15 +163,13 @@
                 <tr v-for="item in paginatedUsers" :key="item._id" class="hover:bg-muted/40">
                   <!-- Avatar -->
                   <td class="px-4 py-3">
-                    <UiAvatar class="my-2 size-10">
-                      <UiAvatarImage
-                        :src="item?.avatar_url || ''"
-                        :alt="item?.username"
-                      />
-                      <UiAvatarFallback>
-                        <CircleUser class="h-6 w-6" />
-                      </UiAvatarFallback>
-                    </UiAvatar>
+                    <UserAvatar
+                      :src="item?.avatar_url"
+                      :name="item?.username"
+                      class="my-2 size-10"
+                    >
+                      <CircleUser class="h-6 w-6" />
+                    </UserAvatar>
                   </td>
 
                   <!-- Username -->
@@ -325,15 +323,13 @@
 
         <div v-if="selectedUser" class="grid grid-cols-12 gap-4">
           <div class="col-span-12 text-center">
-            <UiAvatar class="mx-auto mb-4 h-[100px] w-[100px]">
-              <UiAvatarImage
-                :src="selectedUser.avatar_url || ''"
-                :alt="selectedUser.username"
-              />
-              <UiAvatarFallback>
-                <CircleUser class="h-14 w-14" />
-              </UiAvatarFallback>
-            </UiAvatar>
+            <UserAvatar
+              :src="selectedUser.avatar_url"
+              :name="selectedUser.username"
+              class="mx-auto mb-4 h-[100px] w-[100px]"
+            >
+              <CircleUser class="h-14 w-14" />
+            </UserAvatar>
           </div>
 
           <div class="col-span-6">

@@ -224,6 +224,7 @@ export class AuthService {
 
   /** Finds or creates the local user for a Google profile. */
   async validateGoogleUser(profile: Profile): Promise<UserDocument> {
+    const photo = profile.photos?.[0]?.value;
     let user = await this.userModel.findOne({ googleId: profile.id });
 
     if (!user) {
@@ -231,8 +232,18 @@ export class AuthService {
         username: profile.displayName,
         googleId: profile.id,
         email: profile.emails?.[0]?.value,
-        avatar_url: profile.photos?.[0]?.value,
+        avatar_url: photo,
       });
+      await user.save();
+      return user;
+    }
+
+    // Google mints a fresh `lh3.googleusercontent.com` URL whenever the member
+    // changes their picture and stops serving the old one, so the photo has to
+    // be re-read on every sign-in — storing it once at account creation left
+    // accounts pointing at a URL that had since gone dead.
+    if (photo && user.avatar_url !== photo) {
+      user.avatar_url = photo;
       await user.save();
     }
 
