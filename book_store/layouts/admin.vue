@@ -151,6 +151,7 @@
         </h1>
 
         <div class="ml-auto flex items-center gap-2">
+          <AdminOrderNotificationBell />
           <ThemeToggle />
         </div>
       </header>
@@ -160,12 +161,22 @@
         <slot />
       </main>
     </div>
+
+    <SnackbarAlert
+      v-model="snackbar.show"
+      :text="snackbar.message"
+      :color="snackbar.color"
+      :timeout="4000"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
+import { useNotificationStore } from "@/stores/notification";
+import { useSnackbar } from "@/composables/useSnackbar";
+import { formatVndAsUsd } from "@/utils/pricing";
 import type { Component } from "vue";
 import {
   BookCopy,
@@ -192,6 +203,10 @@ const route = useRoute();
 
 const authStore = useAuthStore();
 const { currentUser } = storeToRefs(authStore);
+
+const notificationStore = useNotificationStore();
+const { latest } = storeToRefs(notificationStore);
+const { snackbar, notify } = useSnackbar();
 
 const rail = ref(false);
 const mobileOpen = ref(false);
@@ -256,8 +271,19 @@ function handleLogout() {
   router.push("/");
 }
 
+watch(latest, (order) => {
+  if (order) {
+    notify(`New order from ${order.customer} · ${formatVndAsUsd(order.total)}`);
+  }
+});
+
+onUnmounted(() => {
+  notificationStore.disconnect();
+});
+
 onMounted(() => {
   authStore.restoreSession();
+  notificationStore.connect(authStore.accessToken);
   // Get tab from query params
   const tab = route.query.tab as string | undefined;
   if (tab && menuItems.find((item) => item.value === tab)) {

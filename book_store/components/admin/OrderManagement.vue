@@ -116,7 +116,9 @@ import {
   Search,
   X,
 } from "lucide-vue-next";
+import { storeToRefs } from "pinia";
 import orderApi from "~/api/orderApi";
+import { useNotificationStore } from "@/stores/notification";
 import { useSnackbar } from "@/composables/useSnackbar";
 import { isPaidFor } from "@/utils/orderStatus";
 import { orderUser } from "@/utils/orders";
@@ -236,6 +238,12 @@ const stats = computed(() => [
     iconClass: "text-white",
   },
 ]);
+
+const { latest } = storeToRefs(useNotificationStore());
+
+watch(latest, (order) => {
+  if (order) fetchOrders();
+});
 
 watch([search, statusFilter, paymentFilter], () => {
   page.value = 1;
