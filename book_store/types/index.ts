@@ -260,3 +260,17 @@ export interface CheckoutItem {
 
 /** Key under which `CheckoutItem[]` is handed from the cart to the order page. */
 export const CHECKOUT_ITEMS_KEY = "checkoutItems";
+
+export interface NewOrderPayload {
+  orderId: string;
+  total: number;
+  paymentMethod: PaymentMethod;
+  status: OrderStatus;
+  customer: string;
+  createdAt: string;
+}
+
+export interface OrderNotification extends NewOrderPayload {
+  id: string;
+  read: boolean;
+}

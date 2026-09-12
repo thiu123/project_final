@@ -12,6 +12,7 @@ import {
 import { BooksService } from '../books/books.service';
 import { Book, BookDocument } from '../books/schemas/book.schema';
 import { Cart, CartDocument, CartItem } from '../carts/schemas/cart.schema';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 import {
   VoucherRejectReason,
   VouchersService,
@@ -49,6 +50,7 @@ export class OrdersService {
     private readonly vouchersService: VouchersService,
     private readonly vnpayService: VnpayService,
     private readonly momoService: MomoService,
+    private readonly notificationsGateway: NotificationsGateway,
   ) {}
 
   // ---------------------------------------------------------------------
@@ -303,6 +305,7 @@ export class OrdersService {
 
     const order = await this.orderModel.findOne({ orderId });
     if (order) await this.commitInventory(order);
+    await this.notifyNewOrder(orderId);
 
     return {
       orderId,
@@ -456,6 +459,7 @@ export class OrdersService {
       this.logger.error(`Order not found: ${orderId}`);
       return;
     }
+    const alreadyNotified = order.inventoryCommitted;
 
     order.status = success ? 'Paid' : 'Failed';
     await order.save();
@@ -463,6 +467,31 @@ export class OrdersService {
 
     if (!success) return;
     await this.commitInventory(order);
+    if (!alreadyNotified) await this.notifyNewOrder(order.orderId);
+  }
+
+  private async notifyNewOrder(orderId: string): Promise<void> {
+    const order = await this.orderModel
+      .findOne({ orderId })
+      .populate<{ userId: { username?: string; email?: string } | null }>(
+        'userId',
+        'username email',
+      );
+
+    if (!order) return;
+
+    this.notificationsGateway.notifyNewOrder({
+      orderId: order.orderId,
+      total: order.total,
+      paymentMethod: order.paymentMethod,
+      status: order.status,
+      customer:
+        order.shipping?.fullName ||
+        order.userId?.username ||
+        order.userId?.email ||
+        'Customer',
+      createdAt: new Date().toISOString(),
+    });
   }
 
   /**
