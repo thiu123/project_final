@@ -10,7 +10,6 @@ import { LeanBook } from '../books/books.types';
 import { BookSort, QueryBooksDto } from '../books/dto/query-books.dto';
 import { SessionBook } from './chat-history.service';
 
-/** Books handed to the model per lookup. Enough to choose from, small enough to stay cheap. */
 const TOOL_RESULT_LIMIT = 12;
 const MAX_TOOL_RESULT_LIMIT = 20;
 
@@ -73,13 +72,8 @@ export const CHATBOT_TOOLS: Tool[] = [
   { functionDeclarations: [searchBooks, listCategories] },
 ];
 
-/**
- * Executes the catalogue lookups Gemini asks for.
- *
- * Everything routes through `BooksService`, so the chatbot inherits the
- * indexed subject expansion, the price/stock filters and the Redis cache that
- * the storefront already uses, instead of running its own unindexed regex.
- */
+// Every lookup goes through BooksService, so the chatbot inherits the same
+// indexed subject expansion, filters and Redis cache as the storefront.
 @Injectable()
 export class ChatbotToolsService {
   private readonly logger = new Logger(ChatbotToolsService.name);
@@ -97,8 +91,8 @@ export class ChatbotToolsService {
           return { error: `Unknown tool "${call.name}"` };
       }
     } catch (error) {
-      // A failed lookup is reported back to the model as data, so it can
-      // apologise in its own words instead of the whole turn throwing.
+      // Reported back to the model as data, so it can apologise in its own
+      // words instead of the whole turn throwing.
       this.logger.error(
         `Tool ${call.name} failed: ${(error as Error).message}`,
       );
@@ -108,7 +102,6 @@ export class ChatbotToolsService {
 
   private async searchBooks(args: Record<string, unknown>): Promise<object> {
     const query = new QueryBooksDto();
-    query.page = 1;
     query.limit = this.clampLimit(args.limit);
     query.sort = this.toSort(args.sort);
 
@@ -129,7 +122,7 @@ export class ChatbotToolsService {
 
     return {
       totalMatches: meta.total,
-      books: items.map((book): SessionBook => this.toSessionBook(book)),
+      books: items.map((book) => this.toSessionBook(book)),
     };
   }
 
@@ -139,7 +132,7 @@ export class ChatbotToolsService {
       categories: categories.map((category) => ({
         name: category.name,
         count: category.count,
-        subcategories: (category.subcategories ?? []).map((sub) => sub.name),
+        subcategories: category.subcategories.map((sub) => sub.name),
       })),
     };
   }

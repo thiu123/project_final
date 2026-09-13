@@ -1,18 +1,16 @@
-import { Prop, raw, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
-// Reference fields use SchemaTypes.ObjectId, never Types.ObjectId: @nestjs/mongoose
-// recognises only the former. Given the latter it treats it as a plain class, builds
-// an empty definition from it, and the field silently becomes Mixed — which stops
-// casting, so ids get stored as raw strings and no longer match id queries.
 import {
   ORDER_STATUSES,
   OrderStatus,
   PAYMENT_METHODS,
-  PaymentMethod,
   PRODUCT_TYPES,
+  PaymentMethod,
   ProductType,
 } from '../../../constants/app.constants';
 
+// Reference fields must use SchemaTypes.ObjectId; with Types.ObjectId
+// @nestjs/mongoose turns the field into Mixed and ids stop casting.
 @Schema()
 export class OrderItem {
   @Prop({ type: SchemaTypes.ObjectId, ref: 'Book', required: true })
@@ -32,7 +30,6 @@ export interface OrderVoucher {
   discountAmount: number;
 }
 
-
 export interface ShippingAddress {
   fullName: string;
   phone: string;
@@ -42,7 +39,7 @@ export interface ShippingAddress {
 
 @Schema({ timestamps: true })
 export class Order {
-  /** Human-readable id also used as the payment gateway transaction reference. */
+  // Public id, also used as the payment gateway transaction reference.
   @Prop({ type: String, required: true, unique: true })
   orderId: string;
 
@@ -52,7 +49,7 @@ export class Order {
   @Prop({ type: [OrderItemSchema], default: [] })
   items: Types.DocumentArray<OrderItem>;
 
-  /** Total in VND. */
+  // Total in VND.
   @Prop({ type: Number, required: true })
   total: number;
 

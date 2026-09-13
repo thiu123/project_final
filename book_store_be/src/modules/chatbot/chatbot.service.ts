@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { RateLimitService } from '../../common/services/rate-limit.service';
 import { RedisService } from '../../config/redis/redis.service';
 import { BooksService } from '../books/books.service';
@@ -12,23 +18,17 @@ import {
   GeminiService,
 } from './gemini.service';
 
-/** Messages allowed per user per window. Gemini's free tier is shared by everyone. */
+// Gemini's free tier is shared by every user, so each one gets a small budget.
 const RATE_LIMIT = 15;
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 
 const REVIEW_CACHE_PREFIX = 'chatbot:review:';
 const REVIEW_CACHE_TTL_SECONDS = 3600;
 
-/** The languages the storefront serves; part of the review cache key. */
 type ReviewLanguage = 'vi' | 'en';
 
-/**
- * Filler stripped from "review Harry Potter" before searching the catalogue.
- *
- * Split in two because `\b` in JavaScript is ASCII-only: anchoring "đánh giá"
- * with it never matches, since `đ` is not a word character and a boundary
- * therefore cannot exist before it.
- */
+// Filler stripped from "review Harry Potter" before searching the catalogue.
+// Split in two because `\b` is ASCII-only and never matches before "đ".
 const REVIEW_FILLER_ASCII =
   /\b(reviews?|books?|please|about|tell me|what do you think of|show me|give me|for me)\b/gi;
 const REVIEW_FILLER_VI =
@@ -44,12 +44,8 @@ Rules:
 - Be warm and concise: two or three sentences of framing, then the books. Mention each book by its exact title so it can be linked.
 - Prices are in the store's own currency; quote the number the tool gave you and nothing else.`;
 
-/**
- * Reviews are written in a single call with no tools attached, so they need
- * their own instruction: the tool rules above told the model it may only speak
- * about books a tool returned, and with no tools available it answered with
- * nothing at all.
- */
+// Reviews are written with no tools attached, so they need their own
+// instruction: the rule above would otherwise leave the model nothing to say.
 const REVIEW_INSTRUCTION = `You are the AI book advisor for an online bookstore.
 Write about the book you are given as if recommending it to a friend.
 Never mention that you are an AI, and write in the language the prompt asks for.`;
@@ -64,7 +60,6 @@ export interface Suggestion {
   bookId?: string;
 }
 
-/** A book the reply actually names, resolved back to a real catalogue row. */
 export interface ReferencedBook {
   bookId: string;
   title: string;
@@ -87,33 +82,21 @@ export class ChatbotService {
     private readonly redis: RedisService,
   ) {}
 
-  // ---------------------------------------------------------------------
-  // Chat
-  // ---------------------------------------------------------------------
-
-  /**
-   * One conversational turn with memory and catalogue access.
-   *
-   * Costs a single Gemini call when the model can answer from the running
-   * history ("which of those is cheapest?", "thanks") and two when it needs a
-   * catalogue lookup.
-   */
   async chat(userId: string, message: string) {
-    const text = this.requireText(message, 'Please type a message.');
     await this.enforceRateLimit(userId);
 
     try {
       const session = await this.history.get(userId);
 
-      // Seeded with the books already shown this conversation, so a follow-up
-      // the model answers from context still resolves to linkable rows.
+      // Seeded with the books already shown, so a follow-up answered from
+      // context still resolves to rows the client can link.
       const seen = new Map<string, SessionBook>(
         session.books.map((book) => [book.title.toLowerCase(), book]),
       );
 
       const turn = await this.gemini.runTurn({
         history: session.contents,
-        message: text,
+        message,
         systemInstruction: SYSTEM_INSTRUCTION,
         tools: CHATBOT_TOOLS,
         executor: async (call) => {
@@ -125,10 +108,10 @@ export class ChatbotService {
 
       const reply =
         turn.text || "I'm not sure how to answer that — could you rephrase?";
-      await this.history.append(userId, text, reply, [...seen.values()]);
+      await this.history.append(userId, message, reply, [...seen.values()]);
 
       this.logger.log(
-        `chat(${userId}): ${turn.llmCalls} Gemini call(s), ${turn.toolCalls.length} tool call(s)`,
+        `chat(${userId}): ${turn.llmCalls} Gemini call(s), ${turn.toolCalls} tool call(s)`,
       );
 
       return {
@@ -145,20 +128,9 @@ export class ChatbotService {
     return { success: true };
   }
 
-  // ---------------------------------------------------------------------
-  // Suggestions
-  // ---------------------------------------------------------------------
-
-  /**
-   * Recommendation-shaped wrapper over the same pipeline. Unlike the previous
-   * version it never regex-parses the model's prose into structured data: the
-   * books come from the tool results, and only the wording comes from Gemini.
-   */
+  // Same pipeline as chat, shaped as recommendations. The books always come
+  // from the tool results; only the wording comes from Gemini.
   async suggestBooks(userId: string, userPreferences: string) {
-    const text = this.requireText(
-      userPreferences,
-      'Please provide your preferences.',
-    );
     await this.enforceRateLimit(userId);
 
     try {
@@ -166,7 +138,7 @@ export class ChatbotService {
 
       const turn = await this.gemini.runTurn({
         history: [],
-        message: text,
+        message: userPreferences,
         systemInstruction: SUGGESTION_INSTRUCTION,
         tools: CHATBOT_TOOLS,
         executor: async (call) => {
@@ -192,57 +164,22 @@ export class ChatbotService {
     }
   }
 
-  /** Top-rated books, used when Gemini is unavailable or named nothing we stock. */
-  private async fallbackSuggestions(): Promise<Suggestion[]> {
-    const query = new QueryBooksDto();
-    query.page = 1;
-    query.limit = 5;
-    query.sort = BookSort.Rating;
-
-    const { items } = await this.booksService.findAll(query);
-    return items.map((book) => ({
-      title: book.title,
-      subjects: book.subjects ?? [],
-      reason: 'One of the highest-rated books in our store right now.',
-      bookId: String(book._id),
-    }));
-  }
-
-  // ---------------------------------------------------------------------
-  // Reviews
-  // ---------------------------------------------------------------------
-
-  /**
-   * Costs one Gemini call, down from two: the title is now pulled out locally
-   * and matched with the indexed catalogue search rather than by asking the
-   * model to extract it.
-   */
   async generateSmartReview(userId: string, bookQuery: string) {
-    const text = this.requireText(
-      bookQuery,
-      'Please provide the book title or subject.',
-    );
-
-    const book = await this.findBookForReview(text);
+    const book = await this.findBookForReview(bookQuery);
     if (!book) {
-      throw new HttpException(
-        {
-          success: false,
-          message: `I couldn't find that book in our store. Could you try a different title?`,
-        },
-        HttpStatus.NOT_FOUND,
-      );
+      throw new NotFoundException({
+        success: false,
+        message: `I couldn't find that book in our store. Could you try a different title?`,
+      });
     }
 
-    const bookId = String(book._id);
     const bookInfo = {
-      id: bookId,
+      id: String(book._id),
       title: book.title,
       subjects: book.subjects ?? [],
     };
-
-    const language = this.detectLanguage(text);
-    const cacheKey = `${REVIEW_CACHE_PREFIX}${bookId}:${language}`;
+    const language = this.detectLanguage(bookQuery);
+    const cacheKey = `${REVIEW_CACHE_PREFIX}${bookInfo.id}:${language}`;
 
     const cached = await this.redis.get(cacheKey);
     if (cached) {
@@ -265,28 +202,16 @@ export class ChatbotService {
         REVIEW_INSTRUCTION,
       );
 
-      // An empty completion is a failure, not a review: serve the template
-      // instead, and never cache it or the book gets a blank review for an hour.
+      // An empty completion is a failure, not a review: never cache it, or the
+      // book gets a blank review for an hour.
       if (!review) {
         this.logger.warn(
           `Gemini returned an empty review for "${bookInfo.title}"`,
         );
-        return {
-          success: true,
-          data: {
-            bookFound: true,
-            generatedReview: this.fallbackReview(bookInfo.title, bookInfo.subjects, language),
-            usedAI: false,
-            bookInfo,
-          },
-        };
+        return this.templateReview(bookInfo, language);
       }
 
-      await this.redis.setEx(
-        cacheKey,
-        REVIEW_CACHE_TTL_SECONDS,
-        review,
-      );
+      await this.redis.setEx(cacheKey, REVIEW_CACHE_TTL_SECONDS, review);
       return {
         success: true,
         data: {
@@ -298,18 +223,25 @@ export class ChatbotService {
       };
     } catch (error) {
       if (error instanceof GeminiQuotaError) {
-        return {
-          success: true,
-          data: {
-            bookFound: true,
-            generatedReview: this.fallbackReview(bookInfo.title, bookInfo.subjects, language),
-            usedAI: false,
-            bookInfo,
-          },
-        };
+        return this.templateReview(bookInfo, language);
       }
       throw this.toHttpError(error, 'Error while generating review');
     }
+  }
+
+  // Top-rated books, used when Gemini is unavailable or named nothing we stock.
+  private async fallbackSuggestions(): Promise<Suggestion[]> {
+    const query = new QueryBooksDto();
+    query.limit = 5;
+    query.sort = BookSort.Rating;
+
+    const { items } = await this.booksService.findAll(query);
+    return items.map((book) => ({
+      title: book.title,
+      subjects: book.subjects ?? [],
+      reason: 'One of the highest-rated books in our store right now.',
+      bookId: String(book._id),
+    }));
   }
 
   private async findBookForReview(bookQuery: string): Promise<LeanBook | null> {
@@ -320,10 +252,9 @@ export class ChatbotService {
       .trim();
 
     // Try the cleaned-up title first, then the raw query in case the stripping
-    // removed something that was actually part of the title ("The Book Thief").
+    // removed part of the real title ("The Book Thief").
     for (const term of [stripped, bookQuery].filter(Boolean)) {
       const query = new QueryBooksDto();
-      query.page = 1;
       query.limit = 1;
       query.sort = BookSort.Rating;
       query.search = term;
@@ -347,49 +278,37 @@ Keep it to 3-5 conversational sentences addressed to the reader.
 Write the review in ${languageName}.`;
   }
 
-  /**
-   * Crude but sufficient: Vietnamese is the only non-English language the
-   * storefront ships, and its diacritics are unmistakable. The result is part
-   * of the review cache key, so a Vietnamese reader never gets served the
-   * English review generated for someone else.
-   */
+  // Vietnamese is the only other language the storefront ships, and its
+  // diacritics are unmistakable. The result is part of the cache key.
   private detectLanguage(text: string): ReviewLanguage {
     return /[ăâêôơưđàáảãạèéẻẽẹìíỉĩịòóỏõọùúủũụỳýỷỹỵ]/i.test(text) ? 'vi' : 'en';
   }
 
-  /** Used when Gemini is out of quota or returns nothing, so it follows the reader's language. */
-  private fallbackReview(
-    title: string,
-    subjects: string[],
+  private templateReview(
+    bookInfo: { id: string; title: string; subjects: string[] },
     language: ReviewLanguage,
-  ): string {
-    const genre = subjects[0] ?? 'this genre';
-    if (language === 'vi') {
-      return `"${title}" là một trong những cuốn được bạn đọc quay lại nhiều nhất ở thể loại ${genre}. Nếu bạn thích ${subjects.join(
-        ' và ',
-      )} thì cuốn này rất đáng thử.`;
-    }
-    return `"${title}" is one of the titles our readers keep coming back to in ${genre}. If ${subjects.join(
-      ' and ',
-    )} is your thing, it is well worth a look.`;
+  ) {
+    const genre = bookInfo.subjects[0] ?? 'this genre';
+    const generatedReview =
+      language === 'vi'
+        ? `"${bookInfo.title}" là một trong những cuốn được bạn đọc quay lại nhiều nhất ở thể loại ${genre}. Nếu bạn thích ${bookInfo.subjects.join(' và ')} thì cuốn này rất đáng thử.`
+        : `"${bookInfo.title}" is one of the titles our readers keep coming back to in ${genre}. If ${bookInfo.subjects.join(' and ')} is your thing, it is well worth a look.`;
+
+    return {
+      success: true,
+      data: { bookFound: true, generatedReview, usedAI: false, bookInfo },
+    };
   }
 
-  // ---------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------
-
-  /** Records every book a tool returned, so replies can be linked to real rows. */
   private collectBooks(result: object, seen: Map<string, SessionBook>): void {
     const books = (result as { books?: SessionBook[] }).books;
     if (!Array.isArray(books)) return;
     for (const book of books) seen.set(book.title.toLowerCase(), book);
   }
 
-  /**
-   * Matches titles the reply names against the books the tools returned, so the
-   * client can render real, clickable cards. Longer titles are checked first so
-   * a series entry wins over the shorter title it contains.
-   */
+  // Matches titles the reply names against the books the tools returned, so
+  // the client can render real cards. Longer titles win over shorter ones
+  // they contain.
   private resolveReferenced(
     reply: string,
     seen: Map<string, SessionBook>,
@@ -408,26 +327,15 @@ Write the review in ${languageName}.`;
       }));
   }
 
-  /** Pulls the sentence mentioning a title, to use as that book's reason. */
   private reasonFor(reply: string, title: string): string {
     const sentence = reply
       .split(/(?<=[.!?])\s+|\n+/)
       .find((part) => part.toLowerCase().includes(title.toLowerCase()));
+
     return (
       sentence?.replace(/^[\d\-*•.\s]+/, '').trim() ||
       'A good match for what you asked for.'
     );
-  }
-
-  private requireText(value: string | undefined, message: string): string {
-    const text = value?.trim();
-    if (!text) {
-      throw new HttpException(
-        { success: false, message },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    return text;
   }
 
   private async enforceRateLimit(userId: string): Promise<void> {

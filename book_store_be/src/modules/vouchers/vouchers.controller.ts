@@ -13,7 +13,6 @@ import {
 import { AdminGuard } from '../../common/guards/admin.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import {
-  ApplyVoucherDto,
   CreateVoucherDto,
   UpdateVoucherDto,
   ValidateVoucherDto,
@@ -29,13 +28,6 @@ export class VouchersController {
   @UseGuards(JwtAuthGuard)
   validateVoucher(@Body() dto: ValidateVoucherDto) {
     return this.vouchersService.validateVoucher(dto);
-  }
-
-  @Post('apply')
-  @HttpCode(200)
-  @UseGuards(JwtAuthGuard)
-  applyVoucher(@Body() dto: ApplyVoucherDto) {
-    return this.vouchersService.applyVoucher(dto);
   }
 
   @Get('all')

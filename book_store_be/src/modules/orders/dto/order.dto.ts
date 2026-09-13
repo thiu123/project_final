@@ -1,6 +1,7 @@
 import { Transform, Type } from 'class-transformer';
 import {
   IsDefined,
+  IsIn,
   IsNotEmpty,
   IsObject,
   IsOptional,
@@ -10,31 +11,23 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { OrderStatus } from '../../../constants/app.constants';
+import { Trim, TrimSpaces } from '../../../common/decorators/trim.decorator';
+import { ORDER_STATUSES, OrderStatus } from '../../../constants/app.constants';
 
 export class CheckoutDto {
+  @IsOptional()
+  @Trim()
+  @IsString()
   voucherCode?: string;
 }
 
-const trim = ({ value }: { value: unknown }): unknown =>
-  typeof value === 'string' ? value.trim() : value;
-
-/** Collapses the runs of whitespace a pasted address usually arrives with. */
-const tidy = ({ value }: { value: unknown }): unknown =>
-  typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : value;
-
 export class ShippingAddressDto {
-  @Transform(tidy)
+  @TrimSpaces()
   @IsString()
   @IsNotEmpty({ message: 'Recipient name is required' })
   @MaxLength(100)
   fullName: string;
 
-  /**
-   * Vietnamese mobile number, written locally (`0912345678`) or with the
-   * country code (`+84912345678`). The courier calls this before delivering,
-   * so an unreachable number costs a real trip.
-   */
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.replace(/[\s.-]/g, '') : value,
   )
@@ -44,14 +37,14 @@ export class ShippingAddressDto {
   })
   phone: string;
 
-  @Transform(tidy)
+  @TrimSpaces()
   @IsString()
   @MinLength(10, { message: 'Please give a full delivery address' })
   @MaxLength(255)
   address: string;
 
   @IsOptional()
-  @Transform(trim)
+  @Trim()
   @IsString()
   @MaxLength(255)
   note?: string;
@@ -59,14 +52,12 @@ export class ShippingAddressDto {
 
 export class CodCheckoutDto {
   @IsOptional()
-  @Transform(trim)
+  @Trim()
   @IsString()
   voucherCode?: string;
 
-  /**
-   * Required: there is nobody to collect from without it. `@ValidateNested`
-   * passes silently on an absent object, so presence is asserted separately.
-   */
+  // @ValidateNested passes silently on a missing object, so presence is
+  // asserted separately.
   @IsDefined({ message: 'Shipping information is required' })
   @IsObject({ message: 'Shipping information is required' })
   @ValidateNested()
@@ -75,17 +66,16 @@ export class CodCheckoutDto {
 }
 
 export class UpdateOrderStatusDto {
+  @IsIn(ORDER_STATUSES, { message: 'Invalid status' })
   status: OrderStatus;
 }
 
-/** Query string VNPay appends when redirecting back to `/order/vnpay_return`. */
 export interface VnpayReturnQuery {
   vnp_ResponseCode?: string;
   vnp_TxnRef?: string;
   [key: string]: string | undefined;
 }
 
-/** Query string MoMo appends when redirecting back to `/order/momo_return`. */
 export interface MomoReturnQuery {
   resultCode?: string | number;
   orderId?: string;

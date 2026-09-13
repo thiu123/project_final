@@ -42,7 +42,10 @@ export class AuthController {
 
   @Put('change-password')
   @UseGuards(JwtAuthGuard)
-  changePassword(@CurrentUser() user: JwtPayload, @Body() dto: ChangePasswordDto) {
+  changePassword(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ChangePasswordDto,
+  ) {
     return this.authService.changePassword(user.id, dto);
   }
 
@@ -64,17 +67,17 @@ export class AuthController {
     return this.authService.refresh(req.cookies?.refreshToken, res);
   }
 
-  /** Redirects the browser to Google's consent screen (handled by passport). */
   @Get('google')
   @UseGuards(AuthGuard('google'))
   googleAuth(): void {
-    // Intentionally empty: passport performs the redirect.
+    // Passport redirects to Google; nothing to do here.
   }
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   googleCallback(@Req() req: Request, @Res() res: Response): void {
-    const redirectUrl = this.authService.googleCallback(req.user as UserDocument, res);
-    res.redirect(redirectUrl);
+    res.redirect(
+      this.authService.googleCallback(req.user as UserDocument, res),
+    );
   }
 }

@@ -1,17 +1,12 @@
-import { Transform } from 'class-transformer';
 import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { Trim } from '../../../common/decorators/trim.decorator';
 
-/**
- * User text goes straight into a Gemini prompt, so the length cap is not
- * cosmetic: it bounds both the token bill and how much a caller can inject.
- */
+// User text goes straight into a Gemini prompt, so the cap bounds both the
+// token bill and how much a caller can inject.
 const MAX_INPUT_LENGTH = 1000;
 
-const trim = ({ value }: { value: unknown }): unknown =>
-  typeof value === 'string' ? value.trim() : value;
-
 export class ChatDto {
-  @Transform(trim)
+  @Trim()
   @IsString()
   @IsNotEmpty({ message: 'Please type a message.' })
   @MaxLength(MAX_INPUT_LENGTH)
@@ -19,7 +14,7 @@ export class ChatDto {
 }
 
 export class SuggestBooksDto {
-  @Transform(trim)
+  @Trim()
   @IsString()
   @IsNotEmpty({ message: 'Please provide your preferences.' })
   @MaxLength(MAX_INPUT_LENGTH)
@@ -27,7 +22,7 @@ export class SuggestBooksDto {
 }
 
 export class GenerateReviewDto {
-  @Transform(trim)
+  @Trim()
   @IsString()
   @IsNotEmpty({ message: 'Please provide the book title or subject.' })
   @MaxLength(MAX_INPUT_LENGTH)

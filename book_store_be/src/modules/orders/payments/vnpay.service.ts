@@ -1,6 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { dateFormat, HashAlgorithm, ignoreLogger, ProductCode, VNPay, VnpLocale } from 'vnpay';
+import {
+  dateFormat,
+  HashAlgorithm,
+  ignoreLogger,
+  ProductCode,
+  VNPay,
+  VnpLocale,
+} from 'vnpay';
 import { PaymentRequest } from './payment.types';
 
 @Injectable()
@@ -10,14 +17,16 @@ export class VnpayService {
   private readonly returnUrl: string;
 
   constructor(configService: ConfigService) {
-    const backendUrl = configService.get<string>('BACKEND_URL') ?? 'http://localhost:5000';
+    const backendUrl =
+      configService.get<string>('BACKEND_URL') ?? 'http://localhost:5000';
     this.returnUrl = `${backendUrl}/api/order/vnpay_return`;
 
     // Sandbox credentials are the defaults so the dev flow keeps working without extra env.
     this.vnpay = new VNPay({
       tmnCode: configService.get<string>('VNPAY_TMN_CODE') ?? 'PLQTSFX0',
       secureSecret:
-        configService.get<string>('VNPAY_SECURE_SECRET') ?? 'QJII36JEMAK9961SUTIL54JLJG9IY58H',
+        configService.get<string>('VNPAY_SECURE_SECRET') ??
+        'QJII36JEMAK9961SUTIL54JLJG9IY58H',
       vnpayHost: 'https://sandbox.vnpayment.vn',
       testMode: true,
       hashAlgorithm: HashAlgorithm.SHA512,
@@ -42,7 +51,10 @@ export class VnpayService {
         vnp_TxnRef: orderId,
       });
     } catch (error) {
-      this.logger.error(`VNPay Error: ${(error as Error).message}`, (error as Error).stack);
+      this.logger.error(
+        `VNPay Error: ${(error as Error).message}`,
+        (error as Error).stack,
+      );
       throw error;
     }
   }

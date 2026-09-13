@@ -34,9 +34,10 @@ export class NotificationsGateway implements OnGatewayConnection {
     private readonly configService: ConfigService,
   ) {}
 
+  // Only admins may listen: everyone else is disconnected on connect.
   handleConnection(client: Socket): void {
     const raw = client.handshake.auth?.token as string | undefined;
-    const token = raw?.startsWith('Bearer ') ? raw.slice(7) : raw;
+    const token = raw?.replace('Bearer ', '');
 
     if (!token) {
       client.disconnect();

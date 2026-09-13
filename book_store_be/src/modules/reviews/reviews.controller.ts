@@ -27,7 +27,6 @@ export class ReviewsController {
     return this.reviewsService.createReview(user.id, dto);
   }
 
-  /** User: edit their own review */
   @Put('edit/:id')
   @UseGuards(JwtAuthGuard)
   editReview(
@@ -49,14 +48,12 @@ export class ReviewsController {
     return this.reviewsService.getAverageRatingByBook(bookId);
   }
 
-  // ========== ADMIN ROUTES ==========
   @Get('admin/all')
   @UseGuards(AdminGuard)
   getAllReviewsAdmin() {
     return this.reviewsService.getAllReviewsAdmin();
   }
 
-  /** All reviews of a book (`:id` is the bookId) */
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   getReviewsByBook(@Param('id') bookId: string) {
@@ -69,7 +66,6 @@ export class ReviewsController {
     return this.reviewsService.deleteReview(user.id, id);
   }
 
-  // ========== ADMIN REPLY ROUTES ==========
   @Post(':reviewId/reply')
   @HttpCode(200)
   @UseGuards(AdminGuard)
@@ -89,7 +85,12 @@ export class ReviewsController {
     @Param('replyId') replyId: string,
     @Body() dto: ReplyDto,
   ) {
-    return this.reviewsService.updateReply(user.id, reviewId, replyId, dto.content);
+    return this.reviewsService.updateReply(
+      user.id,
+      reviewId,
+      replyId,
+      dto.content,
+    );
   }
 
   @Delete(':reviewId/reply/:replyId')

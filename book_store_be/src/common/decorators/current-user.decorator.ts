@@ -1,10 +1,11 @@
-import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { JwtPayload, RequestWithUser } from '../interfaces/jwt-payload.interface';
+import { ExecutionContext, createParamDecorator } from '@nestjs/common';
+import {
+  JwtPayload,
+  RequestWithUser,
+} from '../interfaces/jwt-payload.interface';
 
-/** Injects the JWT payload attached to the request by JwtAuthGuard / AdminGuard. */
+// Reads the JWT payload that JwtAuthGuard / AdminGuard put on the request.
 export const CurrentUser = createParamDecorator(
-  (_data: unknown, ctx: ExecutionContext): JwtPayload => {
-    const request = ctx.switchToHttp().getRequest<RequestWithUser>();
-    return request.user;
-  },
+  (_data: unknown, ctx: ExecutionContext): JwtPayload =>
+    ctx.switchToHttp().getRequest<RequestWithUser>().user,
 );

@@ -33,11 +33,10 @@ export class Book {
   @Prop({ type: Number, min: 0, max: 5 })
   rating?: number;
 
-  /** 0 means out of stock, or an ebook (no stock needed). */
+  // 0 means out of stock, or an ebook (which needs no stock).
   @Prop({ type: Number, default: 0, min: 0 })
   stock: number;
 
-  /** Units sold. */
   @Prop({ type: Number, default: 0, min: 0 })
   sold: number;
 }
@@ -48,20 +47,13 @@ export const BookSchema = SchemaFactory.createForClass(Book);
 /**
  * Indexes backing the list endpoint's sort options.
  *
- * The collection already carries these hand-built indexes, so they are
- * deliberately NOT redeclared here (Mongoose would try to recreate them under
- * a different auto-generated name and MongoDB rejects that):
- *   subject_price_index      { subjects: 1, price: 1 }
- *   price_index              { price: 1 }
- *   rating_index             { rating: -1 }
- *   publication_year_index   { first_publish_year: -1 }
- *   created_at_index         { createdAt: -1 }
- *   text_search_index        text on title (weight 10) + authors (weight 5)
+ * These already exist in the collection under hand-picked names, so they are
+ * deliberately NOT redeclared here — Mongoose would recreate them under a
+ * different name and MongoDB rejects that:
+ *   { subjects: 1, price: 1 }, { price: 1 }, { rating: -1 },
+ *   { first_publish_year: -1 }, { createdAt: -1 },
+ *   text index on title (weight 10) + authors (weight 5)
  */
-
-// Category browsing sorted by newest is the single most common query.
 BookSchema.index({ subjects: 1, createdAt: -1 });
-// Backs sort=bestselling and the best-seller home groups.
 BookSchema.index({ sold: -1 });
-// Backs sort=title_asc / title_desc.
 BookSchema.index({ title: 1 });

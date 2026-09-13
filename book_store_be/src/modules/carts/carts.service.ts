@@ -1,42 +1,47 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { AddToCartDto, RemoveCartItemDto, UpdateCartItemDto } from './dto/cart.dto';
+import {
+  AddToCartDto,
+  RemoveCartItemDto,
+  UpdateCartItemDto,
+} from './dto/cart.dto';
 import { Cart, CartDocument } from './schemas/cart.schema';
 
 @Injectable()
 export class CartsService {
-  constructor(@InjectModel(Cart.name) private readonly cartModel: Model<CartDocument>) {}
+  constructor(
+    @InjectModel(Cart.name) private readonly cartModel: Model<CartDocument>,
+  ) {}
 
   async getCart(userId: string) {
-    const cart = await this.cartModel.findOne({ userId }).populate('items.bookId');
-    if (!cart) {
-      return { userId, items: [] };
-    }
-    return cart;
+    const cart = await this.cartModel
+      .findOne({ userId })
+      .populate('items.bookId');
+    return cart ?? { userId, items: [] };
   }
 
   async addToCart(userId: string, dto: AddToCartDto) {
-    const { bookId, quantity } = dto;
-    const type = dto.productType || 'hardbook';
+    const productType = dto.productType ?? 'hardbook';
+    const cart =
+      (await this.cartModel.findOne({ userId })) ??
+      new this.cartModel({ userId, items: [] });
 
-    let cart = await this.cartModel.findOne({ userId });
+    // The same book in print and as an ebook are two separate lines.
+    const existing = cart.items.find(
+      (item) =>
+        item.bookId.toString() === dto.bookId &&
+        item.productType === productType,
+    );
 
-    if (!cart) {
-      cart = new this.cartModel({
-        userId,
-        items: [{ bookId, quantity, productType: type }],
-      });
+    if (existing) {
+      existing.quantity += dto.quantity;
     } else {
-      // Same book AND same product type: bump quantity, otherwise add a new line
-      const existing = cart.items.find(
-        (item) => item.bookId.toString() === bookId && item.productType === type,
-      );
-      if (existing) {
-        existing.quantity += quantity;
-      } else {
-        cart.items.push({ bookId, quantity, productType: type });
-      }
+      cart.items.push({
+        bookId: dto.bookId,
+        quantity: dto.quantity,
+        productType,
+      });
     }
 
     await cart.save();
@@ -44,33 +49,27 @@ export class CartsService {
   }
 
   async updateItem(userId: string, dto: UpdateCartItemDto) {
-    const { bookId, quantity } = dto;
-    if (!bookId || quantity < 1) {
-      throw new HttpException({ msg: 'Invalid bookId or quantity' }, HttpStatus.BAD_REQUEST);
-    }
-
     const cart = await this.findCartOrFail(userId);
-    const item = cart.items.find((entry) => entry.bookId.toString() === bookId);
+    const item = cart.items.find(
+      (entry) => entry.bookId.toString() === dto.bookId,
+    );
+
     if (!item) {
-      throw new HttpException({ msg: 'Item not found' }, HttpStatus.NOT_FOUND);
+      throw new NotFoundException({ msg: 'Item not found' });
     }
 
-    item.quantity = quantity;
+    item.quantity = dto.quantity;
     await cart.save();
     return cart;
   }
 
   async removeItem(userId: string, dto: RemoveCartItemDto) {
-    const { bookId } = dto;
-    if (!bookId) {
-      throw new HttpException({ msg: 'Invalid bookId' }, HttpStatus.BAD_REQUEST);
+    const cart = await this.findCartOrFail(userId);
+
+    for (const item of [...cart.items]) {
+      if (item.bookId.toString() === dto.bookId) cart.items.pull(item._id);
     }
 
-    const cart = await this.findCartOrFail(userId);
-    const toRemove = cart.items.filter((item) => item.bookId.toString() === bookId);
-    for (const item of toRemove) {
-      cart.items.pull(item._id);
-    }
     await cart.save();
     return cart;
   }
@@ -78,7 +77,7 @@ export class CartsService {
   async deleteCart(userId: string) {
     const cart = await this.cartModel.findOneAndDelete({ userId });
     if (!cart) {
-      throw new HttpException({ msg: 'Cart not found' }, HttpStatus.NOT_FOUND);
+      throw new NotFoundException({ msg: 'Cart not found' });
     }
     return { msg: 'Cart deleted successfully' };
   }
@@ -86,7 +85,7 @@ export class CartsService {
   private async findCartOrFail(userId: string): Promise<CartDocument> {
     const cart = await this.cartModel.findOne({ userId });
     if (!cart) {
-      throw new HttpException({ msg: 'Cart not found' }, HttpStatus.NOT_FOUND);
+      throw new NotFoundException({ msg: 'Cart not found' });
     }
     return cart;
   }

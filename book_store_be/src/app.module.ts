@@ -2,6 +2,7 @@ import { Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
+import { Connection } from 'mongoose';
 import { CloudinaryModule } from './config/cloudinary/cloudinary.module';
 import { RedisModule } from './config/redis/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -24,14 +25,19 @@ const mongoLogger = new Logger('Mongoose');
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         uri: configService.getOrThrow<string>('MONGODB_URL'),
-        onConnectionCreate: (connection) => {
-          connection.on('connected', () => mongoLogger.log('Connected to MongoDB'));
-          connection.on('error', (err) => mongoLogger.error(`Error connecting to MongoDB: ${err}`));
+        onConnectionCreate: (connection: Connection) => {
+          connection.on('connected', () =>
+            mongoLogger.log('MongoDB connected'),
+          );
+          connection.on('error', (error) =>
+            mongoLogger.error(`MongoDB error: ${error}`),
+          );
           return connection;
         },
       }),
     }),
-    // Global JwtModule: the secret is passed per call (access vs refresh key).
+    // Global so every module can inject JwtService. The secret is passed per
+    // call, because access and refresh tokens use different keys.
     JwtModule.register({ global: true }),
     RedisModule,
     CloudinaryModule,

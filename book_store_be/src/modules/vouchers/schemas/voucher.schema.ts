@@ -10,7 +10,13 @@ export type DiscountType = (typeof DISCOUNT_TYPES)[number];
 @Schema({ timestamps: true })
 export class Voucher {
   /** Unique code, e.g. "BOOKSALE10". Stored uppercase & trimmed. */
-  @Prop({ type: String, required: true, unique: true, uppercase: true, trim: true })
+  @Prop({
+    type: String,
+    required: true,
+    unique: true,
+    uppercase: true,
+    trim: true,
+  })
   code: string;
 
   @Prop({ type: String, enum: DISCOUNT_TYPES, required: true })

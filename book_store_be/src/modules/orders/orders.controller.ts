@@ -9,7 +9,6 @@ import {
   Query,
   Res,
   UseGuards,
-  ValidationPipe,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -24,13 +23,6 @@ import {
   VnpayReturnQuery,
 } from './dto/order.dto';
 import { OrdersService } from './orders.service';
-
-/**
- * Validates the COD body only. The pipe is scoped to that one route because
- * the other DTOs on this controller carry no decorators, and `whitelist` would
- * strip their fields away.
- */
-const shippingPipe = new ValidationPipe({ transform: true, whitelist: true });
 
 @Controller('order')
 export class OrdersController {
@@ -50,17 +42,10 @@ export class OrdersController {
     return this.ordersService.checkoutWithMomo(user.id, dto.voucherCode);
   }
 
-  /**
-   * Cash on delivery: places the order outright, no gateway redirect.
-   * Delivery details are required — see `CodCheckoutDto`.
-   */
   @Post('checkout_cod')
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
-  checkoutCod(
-    @CurrentUser() user: JwtPayload,
-    @Body(shippingPipe) dto: CodCheckoutDto,
-  ) {
+  checkoutCod(@CurrentUser() user: JwtPayload, @Body() dto: CodCheckoutDto) {
     return this.ordersService.checkoutWithCod(user.id, dto);
   }
 
@@ -112,7 +97,6 @@ export class OrdersController {
     return this.ordersService.checkEbookPurchase(user.id, bookId);
   }
 
-  /** VNPay redirects the customer here after payment. */
   @Get('vnpay_return')
   async vnpayReturn(
     @Query() query: VnpayReturnQuery,
@@ -121,7 +105,6 @@ export class OrdersController {
     res.redirect(await this.ordersService.handleVnpayReturn(query));
   }
 
-  /** MoMo redirects the customer here after payment (also used as IPN URL). */
   @Get('momo_return')
   async momoReturn(
     @Query() query: MomoReturnQuery,
@@ -130,7 +113,7 @@ export class OrdersController {
     res.redirect(await this.ordersService.handleMomoReturn(query));
   }
 
-  /** Public lookup by `orderId` (used by the order status page). Keep last: catches `/:id`. */
+  // Keep last: it also matches every static path above.
   @Get(':id')
   getOrderById(@Param('id') orderId: string) {
     return this.ordersService.getOrderById(orderId);

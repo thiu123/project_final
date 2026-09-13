@@ -6,7 +6,11 @@ export interface BookSubject {
 export const BOOK_SUBJECTS: BookSubject[] = [
   {
     category: 'Fiction',
-    subcategories: ['Literary Fiction', 'Historical Fiction', 'Contemporary Fiction'],
+    subcategories: [
+      'Literary Fiction',
+      'Historical Fiction',
+      'Contemporary Fiction',
+    ],
   },
   {
     category: 'Romance',

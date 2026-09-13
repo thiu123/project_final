@@ -25,7 +25,8 @@ export class MomoService {
     this.accessKey = configService.get<string>('MOMO_ACCESS_KEY') ?? '';
     this.secretKey = configService.get<string>('MOMO_SECRET_KEY') ?? '';
 
-    const backendUrl = configService.get<string>('BACKEND_URL') ?? 'http://localhost:5000';
+    const backendUrl =
+      configService.get<string>('BACKEND_URL') ?? 'http://localhost:5000';
     this.redirectUrl = `${backendUrl}/api/order/momo_return`;
     this.ipnUrl = this.redirectUrl;
   }
@@ -80,12 +81,15 @@ export class MomoService {
         return data.payUrl;
       }
       throw new Error(
-        data.message || `MoMo payment creation failed with code: ${data.resultCode}`,
+        data.message ||
+          `MoMo payment creation failed with code: ${data.resultCode}`,
       );
     } catch (error) {
       const details =
         (error as AxiosError).response?.data ?? (error as Error).message;
-      this.logger.error(`MoMo Create Payment Error: ${JSON.stringify(details)}`);
+      this.logger.error(
+        `MoMo Create Payment Error: ${JSON.stringify(details)}`,
+      );
       throw error;
     }
   }

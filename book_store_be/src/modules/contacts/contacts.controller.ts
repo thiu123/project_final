@@ -1,9 +1,18 @@
-import { Body, Controller, Delete, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { AdminGuard } from '../../common/guards/admin.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { ContactsService } from './contacts.service';
+import { CreateContactDto } from './dto/contact.dto';
 
 @Controller('contact')
 export class ContactsController {
@@ -12,10 +21,10 @@ export class ContactsController {
   @Post()
   @UseGuards(JwtAuthGuard)
   createContact(
-    @CurrentUser() user: JwtPayload & { username?: string },
-    @Body('message') message?: string,
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateContactDto,
   ) {
-    return this.contactsService.createContact(user.id, user.username, message);
+    return this.contactsService.createContact(user.id, dto);
   }
 
   @Get('user')
@@ -28,12 +37,6 @@ export class ContactsController {
   @UseGuards(AdminGuard)
   getAllContacts() {
     return this.contactsService.getAllContacts();
-  }
-
-  @Get(':id')
-  @UseGuards(JwtAuthGuard)
-  getContactById(@Param('id') id: string) {
-    return this.contactsService.getContactById(id);
   }
 
   @Delete(':id')

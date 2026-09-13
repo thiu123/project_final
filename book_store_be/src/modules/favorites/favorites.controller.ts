@@ -1,7 +1,15 @@
-import { Body, Controller, Get, HttpCode, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+import { ToggleFavoriteDto } from './dto/favorite.dto';
 import { FavoritesService } from './favorites.service';
 
 @Controller('favorite')
@@ -11,8 +19,11 @@ export class FavoritesController {
 
   @Post('toggle')
   @HttpCode(200)
-  toggleFavorite(@CurrentUser() user: JwtPayload, @Body('bookId') bookId?: string) {
-    return this.favoritesService.toggleFavorite(user.id, bookId);
+  toggleFavorite(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ToggleFavoriteDto,
+  ) {
+    return this.favoritesService.toggleFavorite(user.id, dto.bookId);
   }
 
   @Get()

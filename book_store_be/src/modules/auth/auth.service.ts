@@ -1,4 +1,10 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
@@ -27,7 +33,7 @@ const REFRESH_COOKIE_OPTIONS: CookieOptions = {
 
 const ACCESS_TOKEN_TTL = '30d';
 const REFRESH_TOKEN_TTL = '365d';
-const RESET_TOKEN_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const RESET_TOKEN_TTL_MS = 10 * 60 * 1000;
 
 @Injectable()
 export class AuthService {
@@ -37,81 +43,43 @@ export class AuthService {
     private readonly configService: ConfigService,
   ) {}
 
-  // ---------------------------------------------------------------------
-  // Tokens
-  // ---------------------------------------------------------------------
-
-  generateAccessToken(payload: JwtPayload): string {
-    return this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_ACCESS_KEY'),
-      expiresIn: ACCESS_TOKEN_TTL,
-    });
-  }
-
-  generateRefreshToken(payload: JwtPayload): string {
-    return this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('JWT_REFRESH_KEY'),
-      expiresIn: REFRESH_TOKEN_TTL,
-    });
-  }
-
-  private toPayload(user: { id?: unknown; _id?: unknown; admin: boolean }): JwtPayload {
-    return { id: String(user.id ?? user._id), admin: user.admin };
-  }
-
-  private setRefreshCookie(res: Response, refreshToken: string): void {
-    res.cookie(REFRESH_COOKIE, refreshToken, REFRESH_COOKIE_OPTIONS);
-  }
-
-  /** Strips secrets before returning a user document to the client. */
-  private sanitize(user: UserDocument) {
-    const { password, resetPasswordToken, resetPasswordExpires, ...others } = user.toObject();
-    void password;
-    void resetPasswordToken;
-    void resetPasswordExpires;
-    return others;
-  }
-
-  private async hashPassword(plain: string): Promise<string> {
-    const salt = await bcrypt.genSalt(10);
-    return bcrypt.hash(plain, salt);
-  }
-
-  // ---------------------------------------------------------------------
-  // Register / Login / Refresh
-  // ---------------------------------------------------------------------
-
   async register(dto: RegisterDto) {
-    const hashedPassword = await this.hashPassword(dto.password);
     const user = await new this.userModel({
       username: dto.username,
       email: dto.email,
-      password: hashedPassword,
+      password: await this.hashPassword(dto.password),
     }).save();
+
     return this.sanitize(user);
   }
 
   async login(dto: LoginDto, res: Response) {
     const user = await this.userModel.findOne({ username: dto.username });
     if (!user) {
-      throw new HttpException({ msg: 'User not found' }, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException({ msg: 'User not found' });
     }
 
-    const validPassword = await bcrypt.compare(dto.password, user.password ?? '');
+    const validPassword = await bcrypt.compare(
+      dto.password,
+      user.password ?? '',
+    );
     if (!validPassword) {
-      throw new HttpException({ msg: 'Invalid password' }, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException({ msg: 'Invalid password' });
     }
 
     const payload = this.toPayload(user);
-    const accessToken = this.generateAccessToken(payload);
     this.setRefreshCookie(res, this.generateRefreshToken(payload));
 
-    return { msg: 'Login successful', accessToken, ...this.sanitize(user) };
+    return {
+      msg: 'Login successful',
+      accessToken: this.generateAccessToken(payload),
+      ...this.sanitize(user),
+    };
   }
 
   refresh(refreshToken: string | undefined, res: Response) {
     if (!refreshToken) {
-      throw new HttpException({ msg: 'You are not authenticated' }, HttpStatus.UNAUTHORIZED);
+      throw new UnauthorizedException({ msg: 'You are not authenticated' });
     }
 
     let decoded: JwtPayload;
@@ -120,52 +88,45 @@ export class AuthService {
         secret: this.configService.get<string>('JWT_REFRESH_KEY'),
       });
     } catch {
-      throw new HttpException({ msg: 'Refresh token is not valid' }, HttpStatus.FORBIDDEN);
+      throw new ForbiddenException({ msg: 'Refresh token is not valid' });
     }
 
     const payload = this.toPayload(decoded);
-    const accessToken = this.generateAccessToken(payload);
     this.setRefreshCookie(res, this.generateRefreshToken(payload));
 
-    return { accessToken };
+    return { accessToken: this.generateAccessToken(payload) };
   }
-
-  // ---------------------------------------------------------------------
-  // Password management
-  // ---------------------------------------------------------------------
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new HttpException({ msg: 'User not found' }, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException({ msg: 'User not found' });
     }
 
-    const isMatch = await bcrypt.compare(dto.currentPassword, user.password ?? '');
+    const isMatch = await bcrypt.compare(
+      dto.currentPassword,
+      user.password ?? '',
+    );
     if (!isMatch) {
-      throw new HttpException({ msg: 'Invalid current password' }, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException({ msg: 'Invalid current password' });
     }
 
     user.password = await this.hashPassword(dto.newPassword);
     await user.save();
+
     return { msg: 'Password changed successfully' };
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
-    const { email } = dto;
-    if (!email) {
-      throw new HttpException({ msg: 'Email is required' }, HttpStatus.BAD_REQUEST);
-    }
-
-    const user = await this.userModel.findOne({ email });
+    const user = await this.userModel.findOne({ email: dto.email });
     if (!user) {
-      throw new HttpException({ msg: 'User not found with this email' }, HttpStatus.NOT_FOUND);
+      throw new NotFoundException({ msg: 'User not found with this email' });
     }
 
     if (!user.password) {
-      throw new HttpException(
-        { msg: 'This account uses Google login. Please use Google to sign in.' },
-        HttpStatus.BAD_REQUEST,
-      );
+      throw new BadRequestException({
+        msg: 'This account uses Google login. Please use Google to sign in.',
+      });
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex');
@@ -181,32 +142,16 @@ export class AuthService {
   }
 
   async resetPassword(dto: ResetPasswordDto) {
-    const { token, newPassword } = dto;
-
-    if (!token || !newPassword) {
-      throw new HttpException(
-        { msg: 'Reset token and new password are required' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (newPassword.length < 6) {
-      throw new HttpException(
-        { msg: 'Password must be at least 6 characters' },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
     const user = await this.userModel.findOne({
-      resetPasswordToken: this.hashResetToken(token),
+      resetPasswordToken: this.hashResetToken(dto.token),
       resetPasswordExpires: { $gt: new Date() },
     });
 
     if (!user) {
-      throw new HttpException({ msg: 'Invalid or expired reset token' }, HttpStatus.BAD_REQUEST);
+      throw new BadRequestException({ msg: 'Invalid or expired reset token' });
     }
 
-    user.password = await this.hashPassword(newPassword);
+    user.password = await this.hashPassword(dto.newPassword);
     user.resetPasswordToken = null;
     user.resetPasswordExpires = null;
     await user.save();
@@ -214,34 +159,21 @@ export class AuthService {
     return { msg: 'Password reset successfully' };
   }
 
-  private hashResetToken(token: string): string {
-    return crypto.createHash('sha256').update(token).digest('hex');
-  }
-
-  // ---------------------------------------------------------------------
-  // Google OAuth
-  // ---------------------------------------------------------------------
-
-  /** Finds or creates the local user for a Google profile. */
   async validateGoogleUser(profile: Profile): Promise<UserDocument> {
     const photo = profile.photos?.[0]?.value;
-    let user = await this.userModel.findOne({ googleId: profile.id });
+    const user = await this.userModel.findOne({ googleId: profile.id });
 
     if (!user) {
-      user = new this.userModel({
+      return new this.userModel({
         username: profile.displayName,
         googleId: profile.id,
         email: profile.emails?.[0]?.value,
         avatar_url: photo,
-      });
-      await user.save();
-      return user;
+      }).save();
     }
 
-    // Google mints a fresh `lh3.googleusercontent.com` URL whenever the member
-    // changes their picture and stops serving the old one, so the photo has to
-    // be re-read on every sign-in — storing it once at account creation left
-    // accounts pointing at a URL that had since gone dead.
+    // Google mints a new photo URL on every change and drops the old one,
+    // so it has to be refreshed at each sign-in.
     if (photo && user.avatar_url !== photo) {
       user.avatar_url = photo;
       await user.save();
@@ -250,16 +182,58 @@ export class AuthService {
     return user;
   }
 
-  /** Sets the refresh cookie and builds the frontend redirect URL carrying the access token. */
   googleCallback(user: UserDocument, res: Response): string {
     const payload = this.toPayload(user);
     const accessToken = this.generateAccessToken(payload);
-    const refreshToken = this.generateRefreshToken(payload);
 
-    res.cookie(REFRESH_COOKIE, refreshToken, { httpOnly: true, sameSite: 'strict' });
+    res.cookie(REFRESH_COOKIE, this.generateRefreshToken(payload), {
+      httpOnly: true,
+      sameSite: 'strict',
+    });
 
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') ?? 'http://localhost:3000';
     const encodedUser = encodeURIComponent(JSON.stringify(user));
     return `${frontendUrl}?googleAuth=success&token=${accessToken}&user=${encodedUser}`;
+  }
+
+  private generateAccessToken(payload: JwtPayload): string {
+    return this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('JWT_ACCESS_KEY'),
+      expiresIn: ACCESS_TOKEN_TTL,
+    });
+  }
+
+  private generateRefreshToken(payload: JwtPayload): string {
+    return this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('JWT_REFRESH_KEY'),
+      expiresIn: REFRESH_TOKEN_TTL,
+    });
+  }
+
+  private setRefreshCookie(res: Response, refreshToken: string): void {
+    res.cookie(REFRESH_COOKIE, refreshToken, REFRESH_COOKIE_OPTIONS);
+  }
+
+  private toPayload(user: {
+    id?: unknown;
+    _id?: unknown;
+    admin: boolean;
+  }): JwtPayload {
+    return { id: String(user.id ?? user._id), admin: user.admin };
+  }
+
+  private sanitize(user: UserDocument) {
+    const { password, resetPasswordToken, resetPasswordExpires, ...safe } =
+      user.toObject();
+    return safe;
+  }
+
+  private hashPassword(plain: string): Promise<string> {
+    return bcrypt.hash(plain, 10);
+  }
+
+  private hashResetToken(token: string): string {
+    return crypto.createHash('sha256').update(token).digest('hex');
   }
 }

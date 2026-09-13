@@ -10,7 +10,8 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     private readonly authService: AuthService,
     configService: ConfigService,
   ) {
-    const backendUrl = configService.get<string>('BACKEND_URL') ?? 'http://localhost:5000';
+    const backendUrl =
+      configService.get<string>('BACKEND_URL') ?? 'http://localhost:5000';
     super({
       clientID: configService.get<string>('GOOGLE_CLIENT_ID') ?? '',
       clientSecret: configService.get<string>('GOOGLE_CLIENT_SECRET') ?? '',
