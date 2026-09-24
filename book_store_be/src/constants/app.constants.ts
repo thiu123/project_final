@@ -21,6 +21,14 @@ export const PAID_ORDER_STATUSES: OrderStatus[] = [
   'Delivered',
 ];
 
+export const STATUS_ACTORS = [
+  'system',
+  'customer',
+  'admin',
+  'gateway',
+] as const;
+export type StatusActor = (typeof STATUS_ACTORS)[number];
+
 export const PRODUCT_TYPES = ['hardbook', 'ebook'] as const;
 export type ProductType = (typeof PRODUCT_TYPES)[number];
 

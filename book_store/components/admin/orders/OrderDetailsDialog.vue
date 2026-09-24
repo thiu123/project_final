@@ -44,6 +44,10 @@
           </AdminOrdersDetailPanel>
         </div>
 
+        <div class="col-span-12">
+          <AdminOrdersOrderTimeline :order="order" />
+        </div>
+
         <!-- Delivery details: what the courier needs. COD orders always carry
              this; prepaid ones predate the form. -->
         <div v-if="order.shipping" class="col-span-12">

@@ -70,16 +70,17 @@ export class OrdersController {
   @Put('admin/:id/status')
   @UseGuards(AdminGuard)
   updateOrderStatus(
+    @CurrentUser() user: JwtPayload,
     @Param('id') id: string,
     @Body() dto: UpdateOrderStatusDto,
   ) {
-    return this.ordersService.updateOrderStatus(id, dto.status);
+    return this.ordersService.updateOrderStatus(id, dto.status, user.id);
   }
 
   @Put('admin/:id/confirm')
   @UseGuards(AdminGuard)
-  confirmOrder(@Param('id') id: string) {
-    return this.ordersService.confirmOrder(id);
+  confirmOrder(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
+    return this.ordersService.confirmOrder(id, user.id);
   }
 
   @Put(':id/cancel')

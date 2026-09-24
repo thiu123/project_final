@@ -76,6 +76,16 @@ export interface ShippingAddress {
   note?: string;
 }
 
+export type StatusActor = "system" | "customer" | "admin" | "gateway";
+
+export interface OrderStatusEvent {
+  status: OrderStatus;
+  actor: StatusActor;
+  actorId?: User | string | null;
+  note?: string;
+  at: string;
+}
+
 export interface Order {
   _id: string;
   orderId: string;
@@ -89,6 +99,7 @@ export interface Order {
   shipping?: ShippingAddress;
   paymentMethod: PaymentMethod;
   status: OrderStatus;
+  statusHistory?: OrderStatusEvent[];
   confirmedByAdmin: boolean;
   confirmedAt?: string;
   createdAt?: string;

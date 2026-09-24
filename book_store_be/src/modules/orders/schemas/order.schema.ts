@@ -7,6 +7,8 @@ import {
   PRODUCT_TYPES,
   PaymentMethod,
   ProductType,
+  STATUS_ACTORS,
+  StatusActor,
 } from '../../../constants/app.constants';
 
 // Reference fields must use SchemaTypes.ObjectId; with Types.ObjectId
@@ -24,6 +26,27 @@ export class OrderItem {
 }
 
 export const OrderItemSchema = SchemaFactory.createForClass(OrderItem);
+
+@Schema({ _id: false })
+export class OrderStatusEvent {
+  @Prop({ type: String, enum: ORDER_STATUSES, required: true })
+  status: OrderStatus;
+
+  @Prop({ type: String, enum: STATUS_ACTORS, required: true })
+  actor: StatusActor;
+
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'User', default: null })
+  actorId?: Types.ObjectId | null;
+
+  @Prop({ type: String })
+  note?: string;
+
+  @Prop({ type: Date, default: Date.now })
+  at: Date;
+}
+
+export const OrderStatusEventSchema =
+  SchemaFactory.createForClass(OrderStatusEvent);
 
 export interface OrderVoucher {
   code?: string;
@@ -76,6 +99,9 @@ export class Order {
 
   @Prop({ type: String, enum: ORDER_STATUSES, default: 'Pending' })
   status: OrderStatus;
+
+  @Prop({ type: [OrderStatusEventSchema], default: [] })
+  statusHistory: OrderStatusEvent[];
 
   @Prop({ type: Boolean, default: false })
   inventoryCommitted: boolean;

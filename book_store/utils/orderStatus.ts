@@ -138,6 +138,22 @@ export function orderStatusIcon(status?: string): Component {
   return styleFor(status).icon;
 }
 
+const DOT_CLASSES: Record<BadgeVariant, string> = {
+  default: "bg-primary text-primary-foreground",
+  secondary: "bg-secondary text-secondary-foreground",
+  destructive: "bg-destructive text-destructive-foreground",
+  success: "bg-success text-success-foreground",
+  warning: "bg-warning text-warning-foreground",
+  info: "bg-info text-info-foreground",
+  outline: "border border-border bg-background text-foreground",
+  muted: "bg-muted text-muted-foreground",
+};
+
+export function orderStatusDotClass(status?: string): string {
+  const style = styleFor(status);
+  return style.class || DOT_CLASSES[style.variant];
+}
+
 // ---------------------------------------------------------------------------
 // Payment methods
 // ---------------------------------------------------------------------------

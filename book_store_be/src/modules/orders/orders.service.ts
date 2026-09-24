@@ -6,13 +6,14 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import {
   EBOOK_PRICE_RATIO,
   EXCHANGE_RATE_USD_TO_VND,
   OrderStatus,
   PAID_ORDER_STATUSES,
   PaymentMethod,
+  StatusActor,
 } from '../../constants/app.constants';
 import { BooksService } from '../books/books.service';
 import { Book, BookDocument } from '../books/schemas/book.schema';
@@ -33,6 +34,8 @@ import { VnpayService } from './payments/vnpay.service';
 import { Order, OrderDocument, ShippingAddress } from './schemas/order.schema';
 
 type PopulatedCartItem = Omit<CartItem, 'bookId'> & { bookId: BookDocument };
+
+const HISTORY_ACTOR_FIELDS = 'username email avatar_url';
 
 const VOUCHER_MESSAGES: Record<
   Exclude<VoucherRejectReason, 'MIN_AMOUNT'>,
@@ -62,6 +65,7 @@ export class OrdersService {
     return this.orderModel
       .find({ userId })
       .populate('items.bookId')
+      .populate('statusHistory.actorId', HISTORY_ACTOR_FIELDS)
       .sort({ createdAt: -1 });
   }
 
@@ -70,6 +74,7 @@ export class OrdersService {
       .find()
       .populate('items.bookId')
       .populate('userId', 'username email')
+      .populate('statusHistory.actorId', HISTORY_ACTOR_FIELDS)
       .sort({ createdAt: -1 });
   }
 
@@ -104,7 +109,8 @@ export class OrdersService {
   async getOrderById(orderId: string) {
     const order = await this.orderModel
       .findOne({ orderId })
-      .populate('items.bookId');
+      .populate('items.bookId')
+      .populate('statusHistory.actorId', HISTORY_ACTOR_FIELDS);
 
     if (!order) {
       throw new NotFoundException({ msg: 'Order not found' });
@@ -127,7 +133,7 @@ export class OrdersService {
     return { isPurchased: !!order };
   }
 
-  async updateOrderStatus(id: string, status: OrderStatus) {
+  async updateOrderStatus(id: string, status: OrderStatus, adminId?: string) {
     const order = await this.findOrderOrFail(id);
     const allowed = allowedTransitions(order.paymentMethod, order.status);
 
@@ -137,25 +143,32 @@ export class OrdersService {
       });
     }
 
+    let note: string | undefined;
+
     if (status === 'Cancelled') {
+      const wasCommitted = order.inventoryCommitted;
       await this.releaseInventory(order);
+      if (wasCommitted) note = 'Reserved stock returned';
     } else if (status === 'Confirmed') {
       order.confirmedByAdmin = true;
       order.confirmedAt = new Date();
+    } else if (status === 'Paid') {
+      note = 'Cash collected on delivery';
     }
 
-    order.status = status;
+    this.recordStatus(order, status, 'admin', { actorId: adminId, note });
     await order.save();
     this.logger.log(`Order ${order.orderId} moved to ${status}`);
 
     return this.orderModel
       .findById(id)
       .populate('items.bookId')
-      .populate('userId', 'username email');
+      .populate('userId', 'username email')
+      .populate('statusHistory.actorId', HISTORY_ACTOR_FIELDS);
   }
 
-  confirmOrder(id: string) {
-    return this.updateOrderStatus(id, 'Confirmed');
+  confirmOrder(id: string, adminId?: string) {
+    return this.updateOrderStatus(id, 'Confirmed', adminId);
   }
 
   async cancelOrder(userId: string, id: string) {
@@ -178,11 +191,18 @@ export class OrdersService {
       });
     }
 
+    const wasCommitted = order.inventoryCommitted;
     await this.releaseInventory(order);
-    order.status = 'Cancelled';
+    this.recordStatus(order, 'Cancelled', 'customer', {
+      actorId: userId,
+      note: wasCommitted ? 'Reserved stock returned' : undefined,
+    });
     await order.save();
 
-    return this.orderModel.findById(id).populate('items.bookId');
+    return this.orderModel
+      .findById(id)
+      .populate('items.bookId')
+      .populate('statusHistory.actorId', HISTORY_ACTOR_FIELDS);
   }
 
   async checkoutWithVnpay(userId: string, voucherCode?: string) {
@@ -323,6 +343,14 @@ export class OrdersService {
       total: totalAmount,
       paymentMethod,
       shipping,
+      statusHistory: [
+        {
+          status: 'Pending',
+          actor: 'customer',
+          actorId: userId,
+          note: `Order placed via ${paymentMethod}`,
+        },
+      ],
       voucher: voucherCode
         ? {
             code: voucherCode.toUpperCase(),
@@ -366,7 +394,11 @@ export class OrdersService {
     }
 
     const alreadyNotified = order.inventoryCommitted;
-    order.status = success ? 'Paid' : 'Failed';
+    this.recordStatus(order, success ? 'Paid' : 'Failed', 'gateway', {
+      note: success
+        ? `${order.paymentMethod} confirmed the payment`
+        : `${order.paymentMethod} rejected the payment`,
+    });
     await order.save();
     this.logger.log(`Order ${orderId} updated to status: ${order.status}`);
 
@@ -451,6 +483,25 @@ export class OrdersService {
         'Customer',
       createdAt: new Date().toISOString(),
     });
+  }
+
+  private recordStatus(
+    order: OrderDocument,
+    status: OrderStatus,
+    actor: StatusActor,
+    options: { actorId?: string; note?: string } = {},
+  ): void {
+    if (order.status !== status || order.statusHistory.length === 0) {
+      order.statusHistory.push({
+        status,
+        actor,
+        actorId: options.actorId ? new Types.ObjectId(options.actorId) : null,
+        note: options.note,
+        at: new Date(),
+      });
+    }
+
+    order.status = status;
   }
 
   // Explains a refused transition in terms of what the admin can actually do.
