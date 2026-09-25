@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto max-w-[1500px] px-4 py-12">
+  <div class="container mx-auto max-w-7xl px-4 py-12">
     <div class="mb-8">
       <h2 class="mb-2 text-3xl font-bold text-foreground">
         Weekly Best Sellers
@@ -78,7 +78,7 @@
               <div class="mb-2 flex items-center">
                 <UiRating :model-value="book.rating ?? 0" :size="16" readonly />
                 <span class="ml-2 text-xs text-muted-foreground">
-                  {{ book.rating ?? "—" }}
+                  {{ book.rating ?? "No rating" }}
                 </span>
               </div>
               <p class="mb-2 text-xs text-muted-foreground">

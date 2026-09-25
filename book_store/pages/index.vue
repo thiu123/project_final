@@ -1,21 +1,31 @@
 <template>
   <div>
-    <HomeHeroSection :book="books[0]" @add-to-cart="handleAddToCart" />
+    <HomeHeroSection :books="books" @add-to-cart="handleAddToCart" />
+    <HomeServiceStrip />
 
+    <HomeTopTen />
+    <HomeCategoryShowcase />
     <HomeBookSearchPanel :trending-books="books" />
 
     <HomeBestSellingBooks @add-to-cart="handleAddToCart" />
-    <HomeBestSellerTabs @show-snackbar="notifyFromPayload" />
-    <HomeCategoryShowcase />
 
     <BookCarouselSection
-      v-for="carousel in HOME_CAROUSELS"
+      :carousel="firstCarousel"
+      @add-to-cart="handleAddToCart"
+    />
+
+    <HomeEbookPromo :books="promoBooks" />
+
+    <HomeBestSellerTabs @show-snackbar="notifyFromPayload" />
+
+    <BookCarouselSection
+      v-for="carousel in otherCarousels"
       :key="carousel.subject"
       :carousel="carousel"
       @add-to-cart="handleAddToCart"
     />
 
-    <HomeWhyShopSection :books="books" />
+    <HomeClosingCta :books="books" />
 
     <SnackbarAlert
       v-model="snackbar.show"
@@ -36,7 +46,16 @@ import { HOME_CAROUSELS } from "@/constants/homeCarousels";
 import type { User } from "@/types";
 
 const bookStore = useBookStore();
-const { books } = storeToRefs(bookStore);
+const { books, homeSubjects } = storeToRefs(bookStore);
+
+const [firstCarousel, ...otherCarousels] = HOME_CAROUSELS;
+
+const promoBooks = computed(() => {
+  const seen = new Set<string>();
+  return Object.values(homeSubjects.value)
+    .flatMap((group) => group.slice(0, 3))
+    .filter((book) => !seen.has(book._id) && seen.add(book._id));
+});
 
 const favoriteStore = useFavoriteStore();
 const cartStore = useCartStore();

@@ -1,5 +1,5 @@
 <template>
-  <section class="mx-auto mt-12 w-full max-w-[1500px] px-4">
+  <section class="mx-auto mt-12 w-full max-w-7xl px-4">
     <!-- Header -->
     <div class="mb-8 flex items-center justify-between">
       <div class="flex items-center">

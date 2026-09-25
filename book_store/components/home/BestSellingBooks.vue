@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto mt-4 max-w-[1440px] px-3 md:mt-8 md:px-4">
+  <div class="container mx-auto mt-4 max-w-7xl px-3 md:mt-8 md:px-4">
     <div
       class="rounded-xl border border-border bg-gradient-to-br from-card to-muted/60 p-4 shadow-lg md:p-8"
     >

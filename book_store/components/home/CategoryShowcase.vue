@@ -1,177 +1,113 @@
 <template>
-  <div class="container mx-auto mt-8 max-w-[1500px] px-4">
-    <div class="mb-8">
-      <h2 class="mb-3 text-left text-3xl font-bold text-darkgreen dark:text-foreground">
-        Product Catalog
+  <section class="container mx-auto mt-16 max-w-7xl px-4 md:mt-24">
+    <div v-reveal class="mb-8 flex items-end justify-between gap-6">
+      <h2 class="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+        Shop by category
       </h2>
+      <NuxtLink
+        to="/subjects/all"
+        class="group inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-primary"
+      >
+        All categories
+        <ArrowRight class="h-4 w-4 transition-transform group-hover:translate-x-1" />
+      </NuxtLink>
     </div>
 
-    <div class="swiper-container-wrapper relative">
-      <!-- Custom Previous Button -->
-      <button
-        type="button"
-        aria-label="Previous categories"
-        class="swiper-button-custom swiper-button-prev-custom absolute z-10 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-md transition-colors hover:bg-muted"
-        @click="slidePrev"
+    <div
+      v-if="tiles.length"
+      class="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4 lg:grid-rows-2"
+    >
+      <NuxtLink
+        v-for="(tile, index) in tiles"
+        :key="tile.slug"
+        v-reveal="index * 70"
+        :to="`/subjects/${tile.slug}`"
+        class="group relative isolate flex overflow-hidden rounded-2xl p-5 ring-1 ring-border transition-shadow duration-300 hover:shadow-[0_20px_40px_-20px_hsl(var(--foreground)/0.35)] md:p-6"
+        :class="[
+          TONES[index % TONES.length],
+          index === 0
+            ? 'col-span-2 min-h-[280px] lg:row-span-2 lg:min-h-[440px]'
+            : 'min-h-[200px] lg:min-h-0',
+        ]"
       >
-        <ChevronLeft class="h-6 w-6" />
-      </button>
-
-      <swiper
-        :modules="modules"
-        :slides-per-view="2"
-        :space-between="16"
-        :loop="true"
-        :breakpoints="{
-          640: { slidesPerView: 3, spaceBetween: 16 },
-          960: { slidesPerView: 4, spaceBetween: 20 },
-          1280: { slidesPerView: 7, spaceBetween: 24 },
-        }"
-        class="category-swiper"
-        @swiper="onSwiper"
-      >
-        <swiper-slide
-          v-for="(category, index) in displayCategories"
-          :key="index"
-        >
-          <div
-            class="group h-full cursor-pointer overflow-hidden rounded-lg border border-border bg-card shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-            @click="navigateToCategory(category)"
+        <div class="relative z-[1] flex max-w-[58%] flex-col">
+          <h3
+            class="font-bold capitalize leading-tight tracking-tight"
+            :class="index === 0 ? 'text-2xl md:text-4xl' : 'text-base md:text-lg'"
           >
-            <div class="flex flex-col">
-              <!-- Category Image -->
-              <div
-                class="relative flex h-[180px] items-center justify-center overflow-hidden"
-              >
-                <img
-                  :src="
-                    category.cover_url ||
-                    'https://via.placeholder.com/300x400?text=No+Image'
-                  "
-                  :alt="category.name"
-                  class="h-full max-h-[170px] w-[70%] object-cover transition-transform duration-300 group-hover:scale-105"
-                />
-                <div
-                  v-if="!category.cover_url"
-                  class="absolute inset-0 flex items-center justify-center bg-muted"
-                >
-                  <UiSpinner class="text-primary" />
-                </div>
-              </div>
+            {{ tile.name }}
+          </h3>
+          <p class="mt-1.5 text-sm opacity-75">
+            {{ tile.count.toLocaleString() }} {{ tile.count === 1 ? "title" : "titles" }}
+          </p>
+          <span
+            v-if="index === 0"
+            class="mt-auto inline-flex items-center gap-1.5 pt-6 text-sm font-semibold"
+          >
+            Browse shelf
+            <ArrowRight class="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </span>
+        </div>
 
-              <!-- Category Name -->
-              <div class="p-3 text-center">
-                <h3
-                  class="flex min-h-[36px] items-center justify-center text-sm font-bold leading-snug text-foreground"
-                >
-                  {{ category.name }}
-                </h3>
-              </div>
-            </div>
-          </div>
-        </swiper-slide>
-      </swiper>
-
-      <!-- Custom Next Button -->
-      <button
-        type="button"
-        aria-label="Next categories"
-        class="swiper-button-custom swiper-button-next-custom absolute z-10 flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-foreground shadow-md transition-colors hover:bg-muted"
-        @click="slideNext"
-      >
-        <ChevronRight class="h-6 w-6" />
-      </button>
+        <div
+          v-if="tile.cover"
+          class="absolute -z-0 aspect-[2/3] overflow-hidden rounded-md shadow-[0_18px_36px_-12px_rgb(0_0_0/0.45)] transition-transform duration-500 ease-out"
+          :class="
+            index === 0
+              ? 'bottom-[-10%] right-[6%] w-[34%] rotate-[8deg] group-hover:rotate-[4deg] group-hover:-translate-y-2 lg:w-[30%]'
+              : 'bottom-[-18%] right-[-4%] w-[46%] rotate-[10deg] group-hover:rotate-[6deg] group-hover:-translate-y-2'
+          "
+        >
+          <img
+            :src="tile.cover"
+            alt=""
+            class="h-full w-full object-cover"
+            loading="lazy"
+          />
+        </div>
+      </NuxtLink>
     </div>
-  </div>
+
+    <div
+      v-else
+      class="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4 lg:grid-rows-2"
+    >
+      <UiSkeleton class="col-span-2 h-[280px] rounded-2xl lg:row-span-2 lg:h-[440px]" />
+      <UiSkeleton v-for="n in 4" :key="n" class="h-[200px] rounded-2xl lg:h-auto" />
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
+import { ArrowRight } from "lucide-vue-next";
 import { useBookStore } from "@/stores/book";
-import { Swiper, SwiperSlide } from "swiper/vue";
-import { Pagination } from "swiper/modules";
-import type { Swiper as SwiperType } from "swiper/types";
-import { ChevronLeft, ChevronRight } from "lucide-vue-next";
-import "swiper/css";
-import "swiper/css/pagination";
 
-interface CategoryItem {
-  name: string;
-  route: string;
-  subject: string;
-  cover_url: string | null;
-}
+const TILE_COUNT = 5;
 
-const modules = [Pagination];
+const TONES = [
+  "bg-darkgreen text-white",
+  "bg-accent text-accent-foreground",
+  "bg-primary/15 text-foreground",
+  "bg-muted text-foreground",
+  "bg-foreground text-background",
+];
 
-const router = useRouter();
-const bookStore = useBookStore();
-// Categories, their covers and their counts all come from the API.
-const { categories } = storeToRefs(bookStore);
+const { categories } = storeToRefs(useBookStore());
 
-const swiperInstance = shallowRef<SwiperType | null>(null);
-
-function onSwiper(swiper: SwiperType) {
-  swiperInstance.value = swiper;
-}
-
-/**
- * Leaf categories, most stocked first. Subcategories stand in for their parent
- * when one exists, so the strip shows browsable shelves rather than groupings.
- */
-const displayCategories = computed<CategoryItem[]>(() =>
+const tiles = computed(() =>
   categories.value
     .flatMap((category) =>
       category.subcategories.length ? category.subcategories : [category]
     )
     .filter((node) => node.count > 0)
     .sort((a, b) => b.count - a.count)
-    .slice(0, 8)
+    .slice(0, TILE_COUNT)
     .map((node) => ({
       name: node.name,
-      route: node.slug,
-      subject: node.subject,
-      cover_url: node.cover_url,
+      slug: node.slug,
+      count: node.count,
+      cover: node.cover_url,
     }))
 );
-
-function navigateToCategory(category: CategoryItem) {
-  router.push(`/subjects/${category.route}`);
-}
-
-function slidePrev() {
-  swiperInstance.value?.slidePrev();
-}
-
-function slideNext() {
-  swiperInstance.value?.slideNext();
-}
 </script>
-
-<style scoped>
-/* Swiper needs overflow visible so the side nav buttons can hang outside */
-.swiper-container-wrapper {
-  overflow: visible;
-}
-
-/* Custom navigation button positioning (vertically centered on the covers) */
-.swiper-button-custom {
-  top: 50%;
-  transform: translateY(-50%);
-  margin-top: -25px;
-}
-
-.swiper-button-prev-custom {
-  left: -20px;
-}
-
-.swiper-button-next-custom {
-  right: -20px;
-}
-
-/* Swiper customization */
-.category-swiper {
-  padding: 0 4px 50px 4px;
-  position: relative;
-}
-</style>

@@ -1,8 +1,8 @@
 <template>
-  <div class="container mx-auto px-4 py-16">
+  <div v-reveal class="container mx-auto mt-16 px-4 md:mt-24">
     <div class="mx-auto w-full lg:max-w-5xl xl:max-w-4xl">
       <div
-        class="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/60 p-8 shadow-2xl"
+        class="rounded-2xl border border-border bg-card p-6 md:p-10"
       >
         <!-- Header -->
         <div class="mb-8 text-center">
@@ -85,7 +85,7 @@
 
                 <div class="flex shrink-0 items-center">
                   <Star class="mr-1 h-4 w-4 fill-amber-400 text-amber-400" />
-                  <span class="text-xs text-foreground">{{ book.rating ?? "—" }}</span>
+                  <span class="text-xs text-foreground">{{ book.rating ?? "-" }}</span>
                 </div>
               </li>
             </ul>
