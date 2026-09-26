@@ -18,7 +18,7 @@
 
     <UiDropdownMenuContent align="end" class="w-80">
       <UiDropdownMenuLabel class="flex items-center justify-between">
-        <span class="text-sm font-semibold">New Orders</span>
+        <span class="text-sm font-semibold">New orders</span>
         <span class="flex items-center gap-1.5 text-xs font-normal text-muted-foreground">
           <span
             class="h-2 w-2 rounded-full"
@@ -44,7 +44,7 @@
             <span class="truncate text-sm font-semibold text-foreground">
               {{ item.customer }}
             </span>
-            <span class="shrink-0 text-sm font-bold text-lightgreen dark:text-customyellow">
+            <span class="shrink-0 text-sm font-semibold tabular-nums text-foreground">
               {{ formatVndAsUsd(item.total) }}
             </span>
           </div>

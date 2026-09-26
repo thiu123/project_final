@@ -13,7 +13,14 @@ export default <Partial<Config>>{
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Poppins", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: [
+          "Inter",
+          "ui-sans-serif",
+          "system-ui",
+          "-apple-system",
+          "Segoe UI",
+          "sans-serif",
+        ],
       },
       colors: {
         // Brand palette (carried over from the original Vuetify theme)
@@ -68,6 +75,7 @@ export default <Partial<Config>>{
           DEFAULT: "hsl(var(--info) / <alpha-value>)",
           foreground: "hsl(var(--info-foreground) / <alpha-value>)",
         },
+        canvas: "hsl(var(--canvas) / <alpha-value>)",
         border: "hsl(var(--border) / <alpha-value>)",
         input: "hsl(var(--input) / <alpha-value>)",
         ring: "hsl(var(--ring) / <alpha-value>)",

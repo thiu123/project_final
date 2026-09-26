@@ -8,31 +8,27 @@
     >
       <!-- Header -->
       <div
-        class="flex items-center justify-between bg-customblack px-6 py-4 text-white"
+        class="flex items-start justify-between gap-4 border-b border-border px-6 py-4"
       >
-        <div class="flex items-center">
-          <component
-            :is="isEditing ? Pencil : Plus"
-            class="mr-3 h-6 w-6 text-customyellow"
-          />
-          <UiDialogTitle class="text-xl font-medium">
-            {{ isEditing ? "Edit Book" : "Add New Book" }}
+        <div class="min-w-0">
+          <UiDialogTitle class="text-lg font-semibold text-foreground">
+            {{ isEditing ? "Edit book" : "Add book" }}
           </UiDialogTitle>
-          <UiDialogDescription class="sr-only">
+          <UiDialogDescription class="mt-0.5 text-sm text-muted-foreground">
             {{
               isEditing
                 ? "Update the details of this book."
-                : "Fill in the details to add a new book."
+                : "Fill in the details to add a new book to the catalog."
             }}
           </UiDialogDescription>
         </div>
         <button
           type="button"
-          class="rounded-md p-1 text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+          class="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           aria-label="Close"
           @click="open = false"
         >
-          <X class="h-5 w-5" />
+          <X class="h-4 w-4" />
         </button>
       </div>
 
@@ -40,7 +36,7 @@
       <div class="max-h-[70vh] overflow-y-auto px-6 py-6">
         <form @submit.prevent="save">
           <!-- Basic information -->
-          <AdminBooksFormSection :icon="Info" title="Basic Information" accent-class="text-primary">
+          <AdminBooksFormSection :icon="Info" title="Basic Information">
             <div class="col-span-12 md:col-span-6">
               <UiInput
                 v-model="form.key"
@@ -134,8 +130,7 @@
 
           <AdminBooksFormSection
             :icon="Tag"
-            title="Categories &amp; Classification"
-            accent-class="text-secondary"
+            title="Categories"
           >
             <div class="col-span-12">
               <AdminBooksTagInput
@@ -154,8 +149,7 @@
 
           <AdminBooksFormSection
             :icon="Calendar"
-            title="Publication Details"
-            accent-class="text-info"
+            title="Publication"
           >
             <div class="col-span-12 md:col-span-4">
               <UiInput
@@ -175,8 +169,7 @@
 
           <AdminBooksFormSection
             :icon="DollarSign"
-            title="Pricing &amp; Details"
-            accent-class="text-success"
+            title="Pricing and inventory"
           >
             <div class="col-span-12 md:col-span-6">
               <UiInput
@@ -225,20 +218,11 @@
 
       <!-- Actions -->
       <div
-        class="flex items-center justify-end gap-3 border-t border-border bg-muted/50 px-6 py-4"
+        class="flex items-center justify-end gap-2 border-t border-border bg-muted/30 px-6 py-3"
       >
-        <UiButton variant="outline" size="lg" @click="open = false">
-          <X class="h-4 w-4" />
-          Cancel
-        </UiButton>
-        <UiButton
-          size="lg"
-          class="bg-customyellow text-customblack transition-transform hover:-translate-y-px hover:bg-customyellow/90"
-          :loading="saving"
-          @click="save"
-        >
-          <component :is="isEditing ? Check : Plus" v-if="!saving" class="h-4 w-4" />
-          {{ isEditing ? "Update Book" : "Add Book" }}
+        <UiButton variant="outline" @click="open = false">Cancel</UiButton>
+        <UiButton variant="ink" :loading="saving" @click="save">
+          {{ isEditing ? "Save changes" : "Add book" }}
         </UiButton>
       </div>
     </UiDialogContent>
@@ -256,8 +240,6 @@ import {
   Info,
   KeyRound,
   Package,
-  Pencil,
-  Plus,
   Tag,
   Tags,
   UserPen,

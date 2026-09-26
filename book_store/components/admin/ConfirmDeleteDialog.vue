@@ -2,66 +2,64 @@
   <UiDialog v-model:open="open">
     <UiDialogContent
       hide-close
-      class="gap-0 p-0 sm:max-w-lg"
+      class="gap-0 p-0 sm:max-w-md"
       @pointer-down-outside.prevent
       @escape-key-down.prevent
     >
-      <div class="px-6 pb-8 pt-8 text-center">
-        <div
-          class="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-destructive"
+      <div class="flex gap-4 p-6">
+        <span
+          class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive"
         >
-          <Trash2 class="h-10 w-10 text-white" />
-        </div>
+          <TriangleAlert class="h-5 w-5" />
+        </span>
 
-        <UiDialogTitle class="mb-4 text-2xl font-bold text-foreground">
-          Confirm Deletion
-        </UiDialogTitle>
+        <div class="min-w-0 flex-1">
+          <UiDialogTitle class="text-base font-semibold text-foreground">
+            {{ title }}
+          </UiDialogTitle>
+          <UiDialogDescription class="mt-1.5 text-sm text-muted-foreground">
+            {{ question }}
+            This can't be undone.
+          </UiDialogDescription>
 
-        <UiDialogDescription class="mb-3 text-base text-foreground">
-          {{ question }}
-        </UiDialogDescription>
-
-        <UiAlert v-if="subject" variant="warning" class="text-left">
-          <div class="font-medium">{{ subject }}</div>
-          <div class="text-xs opacity-80">This action cannot be undone.</div>
-        </UiAlert>
-
-        <div class="mt-6 flex justify-center gap-3">
-          <UiButton
-            variant="outline"
-            size="lg"
-            class="min-w-[100px]"
-            @click="open = false"
+          <div
+            v-if="subject"
+            class="mt-3 truncate rounded-md border border-border bg-muted/50 px-3 py-2 text-sm font-medium text-foreground"
           >
-            Cancel
-          </UiButton>
-          <UiButton
-            variant="destructive"
-            size="lg"
-            class="min-w-[100px]"
-            :loading="loading"
-            @click="emit('confirm')"
-          >
-            <Trash2 v-if="!loading" class="h-4 w-4" />
-            Delete
-          </UiButton>
+            {{ subject }}
+          </div>
         </div>
+      </div>
+
+      <div
+        class="flex flex-col-reverse gap-2 border-t border-border bg-muted/30 px-6 py-3 sm:flex-row sm:justify-end"
+      >
+        <UiButton variant="outline" :disabled="loading" @click="open = false">
+          Cancel
+        </UiButton>
+        <UiButton
+          variant="destructive"
+          :loading="loading"
+          @click="emit('confirm')"
+        >
+          Delete
+        </UiButton>
       </div>
     </UiDialogContent>
   </UiDialog>
 </template>
 
 <script setup lang="ts">
-import { Trash2 } from "lucide-vue-next";
+import { TriangleAlert } from "lucide-vue-next";
 
 withDefaults(
   defineProps<{
     question: string;
-    /** Name of the thing being deleted, shown in the warning box. */
+    title?: string;
     subject?: string;
     loading?: boolean;
   }>(),
-  { subject: "", loading: false }
+  { title: "Delete permanently?", subject: "", loading: false }
 );
 
 const emit = defineEmits<{ confirm: [] }>();

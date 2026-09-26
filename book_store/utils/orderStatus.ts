@@ -149,6 +149,36 @@ const DOT_CLASSES: Record<BadgeVariant, string> = {
   muted: "bg-muted text-muted-foreground",
 };
 
+const SOFT_CLASSES: Record<BadgeVariant, string> = {
+  default: "bg-primary/10 text-primary ring-primary/25",
+  secondary: "bg-secondary/10 text-secondary ring-secondary/25",
+  destructive: "bg-destructive/10 text-destructive ring-destructive/25",
+  success: "bg-success/10 text-success ring-success/25",
+  warning: "bg-warning/10 text-warning ring-warning/25",
+  info: "bg-info/10 text-info ring-info/25",
+  outline: "bg-background text-foreground ring-border",
+  muted: "bg-muted text-muted-foreground ring-border",
+};
+
+const SOFT_OVERRIDES: Partial<Record<OrderStatus, string>> = {
+  "In Delivery":
+    "bg-purple-500/10 text-purple-700 ring-purple-500/25 dark:text-purple-300",
+  Delivered:
+    "bg-teal-500/10 text-teal-700 ring-teal-500/25 dark:text-teal-300",
+};
+
+export function softToneClass(variant: BadgeVariant): string {
+  return SOFT_CLASSES[variant];
+}
+
+export function orderStatusSoftClass(status?: string): string {
+  const match = (Object.keys(STATUS_STYLES) as OrderStatus[]).find(
+    (key) => key.toLowerCase() === status?.toLowerCase()
+  );
+  if (match && SOFT_OVERRIDES[match]) return SOFT_OVERRIDES[match]!;
+  return SOFT_CLASSES[styleFor(status).variant];
+}
+
 export function orderStatusDotClass(status?: string): string {
   const style = styleFor(status);
   return style.class || DOT_CLASSES[style.variant];

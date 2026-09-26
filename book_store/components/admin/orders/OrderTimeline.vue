@@ -1,9 +1,9 @@
 <template>
   <div class="rounded-lg border border-border">
     <div class="flex flex-wrap items-center justify-between gap-2 px-4 pt-4">
-      <div class="flex items-center gap-2 text-base font-bold">
-        <History class="h-5 w-5" />
-        Status Timeline
+      <div class="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <History class="h-4 w-4 text-muted-foreground" />
+        Status history
       </div>
       <span v-if="totalElapsed" class="text-xs text-muted-foreground">
         {{ totalElapsed }} since the order was placed

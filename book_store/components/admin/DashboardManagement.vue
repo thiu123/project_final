@@ -1,166 +1,151 @@
 <template>
   <div>
-    <!-- Stats Cards -->
-    <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-      <UiCard
-        v-for="stat in statsCards"
-        :key="stat.title"
-        class="rounded-2xl transition duration-200 hover:-translate-y-1 hover:shadow-md"
+    <AdminPageHeader
+      title="Dashboard"
+      description="How the store is doing across every order to date."
+    >
+      <template #actions>
+        <UiButton variant="outline" :loading="loading" @click="fetchDashboardData">
+          <RefreshCw v-if="!loading" class="h-4 w-4" />
+          Refresh
+        </UiButton>
+      </template>
+    </AdminPageHeader>
+
+    <AdminStatStrip :items="stats" :loading="loading && !loaded" />
+
+    <div class="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <AdminPanel
+        title="Recent orders"
+        description="The latest orders placed in the store"
+        class="xl:col-span-2"
+        :loading="loading && loaded"
       >
-        <div class="flex items-center justify-between p-4">
-          <div>
-            <p class="mb-1 text-xs text-muted-foreground">{{ stat.title }}</p>
-            <h3 class="text-3xl font-bold tabular-nums text-foreground">
-              {{ stat.value }}
-            </h3>
-          </div>
-          <span
-            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg"
-            :class="stat.avatarClass"
-          >
-            <component
-              :is="stat.icon"
-              class="h-[30px] w-[30px]"
-              :class="stat.iconClass"
-            />
-          </span>
-        </div>
-      </UiCard>
-    </div>
-
-    <!-- Revenue Chart -->
-    <div class="mb-6">
-      <UiCard class="rounded-2xl">
-        <div class="p-4 pb-0 text-lg font-bold text-foreground">
-          Revenue Chart
-        </div>
-        <div class="p-4">
-          <div v-if="!loading" class="relative h-[300px]">
-            <canvas ref="revenueChart"></canvas>
-          </div>
-          <div v-else class="py-12 text-center">
-            <UiSpinner size="lg" class="mx-auto text-waterblue" />
-          </div>
-        </div>
-      </UiCard>
-    </div>
-
-    <!-- Recent Orders -->
-    <div>
-      <UiCard class="rounded-2xl">
-        <div class="flex items-center justify-between p-4 pb-0">
-          <span class="text-lg font-bold text-foreground">Recent Orders</span>
+        <template #actions>
           <UiButton
             variant="ghost"
             size="sm"
-            class="text-waterblue hover:text-waterblue"
+            class="text-muted-foreground hover:text-foreground"
             @click="router.push('/admin?tab=order-management')"
           >
-            View All
+            View all
+            <ArrowRight class="h-4 w-4" />
           </UiButton>
-        </div>
-        <div class="overflow-x-auto p-4">
-          <table class="w-full text-sm">
-            <thead class="text-left">
-              <tr class="border-b border-border">
-                <th class="px-4 py-3 font-medium text-muted-foreground">
-                  Order ID
-                </th>
-                <th class="px-4 py-3 font-medium text-muted-foreground">
-                  Customer
-                </th>
-                <th class="px-4 py-3 font-medium text-muted-foreground">
-                  Items
-                </th>
-                <th class="px-4 py-3 font-medium text-muted-foreground">
-                  Total
-                </th>
-                <th class="px-4 py-3 font-medium text-muted-foreground">
-                  Status
-                </th>
-                <th class="px-4 py-3 font-medium text-muted-foreground">
-                  Date
-                </th>
+        </template>
+
+        <div class="overflow-x-auto border-t border-border">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Customer</th>
+                <th>Status</th>
+                <th class="!text-right">Total</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-border">
-              <tr
-                v-for="order in recentOrders"
-                :key="order._id"
-                class="hover:bg-muted/40"
-              >
-                <td class="px-4 py-3 font-medium">{{ order.orderId }}</td>
-                <td class="px-4 py-3">
-                  {{ orderUser(order)?.username || "N/A" }}
-                </td>
-                <td class="px-4 py-3">{{ order.items?.length || 0 }} items</td>
-                <td class="px-4 py-3 font-bold">
-                  {{ formatCurrency(order.total) }}
-                </td>
-                <td class="px-4 py-3">
-                  <span
-                    class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold"
-                    :class="orderStatusClass(order.status)"
-                  >
-                    <component
-                      :is="orderStatusIcon(order.status)"
-                      class="h-3.5 w-3.5"
+            <tbody>
+              <AdminTableSkeleton v-if="loading && !loaded" :columns="4" :rows="5" />
+              <template v-else>
+                <tr v-for="order in recentOrders" :key="order._id">
+                  <td>
+                    <div class="font-mono text-[13px] font-medium text-foreground">
+                      {{ order.orderId }}
+                    </div>
+                    <div class="text-xs text-muted-foreground">
+                      {{ formatDateTime(order.createdAt) }}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="max-w-[220px] truncate font-medium">
+                      {{ orderUser(order)?.username || "Guest" }}
+                    </div>
+                    <div class="text-xs text-muted-foreground">
+                      {{ order.items?.length || 0 }}
+                      {{ order.items?.length === 1 ? "item" : "items" }}
+                    </div>
+                  </td>
+                  <td>
+                    <AdminPill :status="order.status">{{ order.status }}</AdminPill>
+                  </td>
+                  <td class="whitespace-nowrap text-right font-medium">
+                    {{ formatVnd(order.total) }}
+                  </td>
+                </tr>
+                <tr v-if="!recentOrders.length" class="hover:bg-transparent">
+                  <td colspan="4">
+                    <AdminEmptyState
+                      :icon="PackageCheck"
+                      title="No orders yet"
+                      description="New orders show up here as soon as customers check out."
                     />
-                    {{ order.status }}
-                  </span>
-                </td>
-                <td class="px-4 py-3">{{ formatDate(order.createdAt) }}</td>
-              </tr>
-              <tr v-if="recentOrders.length === 0">
-                <td colspan="6" class="px-4 py-8 text-center">
-                  <PackageCheck
-                    class="mx-auto h-12 w-12 text-muted-foreground/30"
-                  />
-                  <p class="mt-2 text-xs text-muted-foreground">
-                    No recent orders
-                  </p>
-                </td>
-              </tr>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
-      </UiCard>
+      </AdminPanel>
+
+      <AdminPanel
+        title="Orders by status"
+        :description="`${totalOrders} orders in total`"
+      >
+        <div class="border-t border-border px-5 py-4">
+          <ul v-if="loading && !loaded" class="space-y-4">
+            <li v-for="n in 6" :key="n" class="space-y-2">
+              <UiSkeleton class="h-3.5 w-full bg-muted" />
+              <UiSkeleton class="h-1.5 w-1/2 bg-muted" />
+            </li>
+          </ul>
+
+          <ul v-else class="space-y-3.5">
+            <li
+              v-for="row in statusBreakdown"
+              :key="row.status"
+              :title="`${row.status}: ${row.count} orders (${row.share}%)`"
+            >
+              <div class="flex items-center justify-between gap-3 text-sm">
+                <span class="flex min-w-0 items-center gap-2">
+                  <component
+                    :is="orderStatusIcon(row.status)"
+                    class="h-4 w-4 shrink-0 text-muted-foreground"
+                  />
+                  <span class="truncate text-foreground">{{ row.status }}</span>
+                </span>
+                <span class="shrink-0 tabular-nums">
+                  <span class="font-medium text-foreground">{{ row.count }}</span>
+                  <span class="ml-1.5 inline-block w-10 text-right text-xs text-muted-foreground">
+                    {{ row.share }}%
+                  </span>
+                </span>
+              </div>
+              <div
+                class="mt-1.5 h-1.5 rounded-full bg-primary transition-[width] duration-500 ease-out"
+                :class="row.count ? '' : 'opacity-0'"
+                :style="{ width: `${Math.max(row.share, row.count ? 2 : 0)}%` }"
+              />
+            </li>
+          </ul>
+        </div>
+      </AdminPanel>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { orderStatusClass, orderStatusIcon } from "@/utils/orderStatus";
-import { useTheme } from "@/composables/useTheme";
-import type { Component } from "vue";
+import { orderStatusIcon } from "@/utils/orderStatus";
+import { formatDateTime, formatVnd, orderUser } from "@/utils/orders";
 import orderApi from "~/api/orderApi";
-import type { Order, OrderStatus, User } from "@/types";
+import type { Order, OrderStatus } from "@/types";
+import type { AdminStat } from "@/types/admin";
 import {
-  Chart,
-  BarController,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  Legend,
-  Tooltip,
-} from "chart.js";
-import {
-  CheckCircle2,
-  DollarSign,
+  ArrowRight,
+  Clock,
   PackageCheck,
+  RefreshCw,
   ShoppingBag,
-  XCircle,
+  Wallet,
 } from "lucide-vue-next";
-
-// Register only the controllers/elements/scales/plugins the bar chart needs.
-Chart.register(
-  BarController,
-  BarElement,
-  CategoryScale,
-  LinearScale,
-  Legend,
-  Tooltip
-);
 
 interface OrderStat {
   _id: OrderStatus;
@@ -173,68 +158,65 @@ interface DashboardData {
   recentOrders: Order[];
 }
 
+const STATUS_ORDER: OrderStatus[] = [
+  "Pending",
+  "Paid",
+  "Confirmed",
+  "In Delivery",
+  "Delivered",
+  "Cancelled",
+  "Failed",
+];
+
 const router = useRouter();
-const { isDark } = useTheme();
 
 const loading = ref(false);
+const loaded = ref(false);
 const totalRevenue = ref(0);
 const orderStats = ref<OrderStat[]>([]);
 const recentOrders = ref<Order[]>([]);
-const revenueChart = ref<HTMLCanvasElement | null>(null);
-let chart: Chart | null = null;
 
-interface StatCard {
-  title: string;
-  value: string | number;
-  icon: Component;
-  avatarClass: string;
-  iconClass: string;
+function countOf(status: OrderStatus): number {
+  return orderStats.value.find((stat) => stat._id === status)?.count ?? 0;
 }
 
-const statsCards = computed<StatCard[]>(() => {
-  const paidOrders =
-    orderStats.value.find((s) => s._id !== "Pending")?.count || 0;
-  const totalOrders = orderStats.value.reduce((sum, s) => sum + s.count, 0);
-  const failedOrders =
-    orderStats.value.find((s) => s._id === "Failed")?.count || 0;
+const totalOrders = computed(() =>
+  orderStats.value.reduce((sum, stat) => sum + stat.count, 0)
+);
 
-  return [
-    {
-      title: "Total Revenue",
-      value: formatCurrency(totalRevenue.value),
-      icon: DollarSign,
-      avatarClass: "bg-lightgreen",
-      iconClass: "text-white",
-    },
-    {
-      title: "Total Orders",
-      value: totalOrders,
-      icon: ShoppingBag,
-      avatarClass: "bg-customyellow",
-      iconClass: "text-customblack",
-    },
-    {
-      title: "Completed",
-      value: paidOrders,
-      icon: CheckCircle2,
-      avatarClass: "bg-waterblue",
-      iconClass: "text-white",
-    },
-    {
-      title: "Failed",
-      value: failedOrders,
-      icon: XCircle,
-      avatarClass: "bg-destructive",
-      iconClass: "text-destructive-foreground",
-    },
-  ];
-});
+const statusBreakdown = computed(() =>
+  STATUS_ORDER.map((status) => {
+    const count = countOf(status);
+    const share = totalOrders.value
+      ? Math.round((count / totalOrders.value) * 100)
+      : 0;
+    return { status, count, share };
+  })
+);
 
-function orderUser(order: Order): User | null {
-  return typeof order.userId === "object" && order.userId !== null
-    ? order.userId
-    : null;
-}
+const stats = computed<AdminStat[]>(() => [
+  {
+    label: "Revenue",
+    value: formatVnd(totalRevenue.value),
+    icon: Wallet,
+  },
+  {
+    label: "Orders",
+    value: totalOrders.value,
+    icon: ShoppingBag,
+  },
+  {
+    label: "Pending",
+    value: countOf("Pending"),
+    icon: Clock,
+    hint: "Waiting for payment or confirmation",
+  },
+  {
+    label: "Delivered",
+    value: countOf("Delivered"),
+    icon: PackageCheck,
+  },
+]);
 
 async function fetchDashboardData() {
   loading.value = true;
@@ -243,123 +225,13 @@ async function fetchDashboardData() {
     totalRevenue.value = data.totalRevenue;
     orderStats.value = data.orderStats;
     recentOrders.value = data.recentOrders;
-
-    // Render chart after data is loaded
-    nextTick(() => {
-      renderChart();
-    });
-  } catch (error: any) {
+    loaded.value = true;
+  } catch (error) {
     console.error("Error fetching dashboard data:", error);
   } finally {
     loading.value = false;
   }
 }
 
-function renderChart() {
-  if (!revenueChart.value) return;
-
-  const ctx = revenueChart.value.getContext("2d");
-  if (!ctx) return;
-
-  // Destroy existing chart
-  if (chart) {
-    chart.destroy();
-  }
-
-  // Brand palette (waterblue #5295D0) — readable on light and dark grounds.
-  const tickColor = isDark.value
-    ? "rgba(241, 242, 238, 0.75)" // whitesmoke
-    : "rgba(25, 27, 36, 0.65)"; // customblack
-  const gridColor = isDark.value
-    ? "rgba(241, 242, 238, 0.08)"
-    : "rgba(25, 27, 36, 0.08)";
-
-  // Simple bar chart showing total revenue
-  chart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: ["Total Revenue"],
-      datasets: [
-        {
-          label: "Revenue (VND)",
-          data: [totalRevenue.value],
-          backgroundColor: "rgba(82, 149, 208, 0.7)", // waterblue
-          borderColor: "#5295D0",
-          borderWidth: 1,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          display: false,
-        },
-        tooltip: {
-          callbacks: {
-            label: (context) => {
-              return `Revenue: ${formatCurrency(context.parsed.y ?? 0)}`;
-            },
-          },
-        },
-      },
-      scales: {
-        x: {
-          ticks: {
-            color: tickColor,
-          },
-          grid: {
-            color: gridColor,
-          },
-        },
-        y: {
-          beginAtZero: true,
-          ticks: {
-            color: tickColor,
-            callback: (value) => {
-              return formatCurrency(Number(value));
-            },
-          },
-          grid: {
-            color: gridColor,
-          },
-        },
-      },
-    },
-  });
-}
-
-// Re-render the chart with theme-appropriate axis colors when the theme flips.
-watch(isDark, () => {
-  if (!loading.value && revenueChart.value) {
-    renderChart();
-  }
-});
-
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-  }).format(amount);
-}
-
-function formatDate(date?: string): string {
-  if (!date) return "";
-  return new Date(date).toLocaleDateString("vi-VN", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-}
-
-onMounted(() => {
-  fetchDashboardData();
-});
-
-onBeforeUnmount(() => {
-  if (chart) {
-    chart.destroy();
-  }
-});
+onMounted(fetchDashboardData);
 </script>

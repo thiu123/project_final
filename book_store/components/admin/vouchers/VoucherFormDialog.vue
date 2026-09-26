@@ -6,11 +6,11 @@
       @pointer-down-outside.prevent
       @escape-key-down.prevent
     >
-      <div class="bg-customblack p-6">
-        <UiDialogTitle class="text-2xl font-bold text-white">
-          {{ isEditing ? "Edit Voucher" : "Create New Voucher" }}
+      <div class="border-b border-border px-6 py-4">
+        <UiDialogTitle class="text-lg font-semibold text-foreground">
+          {{ isEditing ? "Edit voucher" : "Create voucher" }}
         </UiDialogTitle>
-        <UiDialogDescription class="sr-only">
+        <UiDialogDescription class="mt-0.5 text-sm text-muted-foreground">
           {{
             isEditing
               ? "Update the details of this discount voucher."
@@ -155,15 +155,17 @@
         </form>
       </div>
 
-      <div class="flex items-center justify-end gap-2 p-6 pt-0">
-        <UiButton variant="ghost" @click="open = false">Cancel</UiButton>
+      <div
+        class="flex items-center justify-end gap-2 border-t border-border bg-muted/30 px-6 py-3"
+      >
+        <UiButton variant="outline" @click="open = false">Cancel</UiButton>
         <UiButton
-          class="bg-customyellow text-customblack transition-transform hover:-translate-y-px hover:bg-customyellow/90"
+          variant="ink"
           :loading="saving"
           :disabled="!isValid"
           @click="save"
         >
-          {{ isEditing ? "Update" : "Create" }}
+          {{ isEditing ? "Save changes" : "Create voucher" }}
         </UiButton>
       </div>
     </UiDialogContent>

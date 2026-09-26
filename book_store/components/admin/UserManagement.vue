@@ -1,387 +1,220 @@
 <template>
   <div>
-    <div class="p-4">
-      <!-- Header Section -->
-      <div class="mb-4 flex items-center justify-between gap-4">
-        <div>
-          <h1 class="mb-2 text-3xl font-bold text-foreground">User Management</h1>
-          <p class="text-base text-muted-foreground">
-            Manage all users in the system
-          </p>
-        </div>
-        <UiButton
-          class="bg-waterblue text-white hover:bg-waterblue/90"
-          :loading="loading"
-          @click="refreshUsers"
-        >
+    <AdminPageHeader
+      title="Users"
+      description="Everyone with an account, including administrators."
+    >
+      <template #actions>
+        <UiButton variant="outline" :loading="loading" @click="refreshUsers">
           <RefreshCw v-if="!loading" class="h-4 w-4" />
           Refresh
         </UiButton>
-      </div>
+      </template>
+    </AdminPageHeader>
 
-      <!-- Statistics Cards -->
-      <div class="mb-6 grid grid-cols-12 gap-4">
-        <div class="col-span-12 md:col-span-3">
-          <div
-            class="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div class="flex items-center">
-              <div class="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-customyellow">
-                <Users class="h-5 w-5 text-customblack" />
-              </div>
-              <div>
-                <p class="mb-0 text-xs text-muted-foreground">Total Users</p>
-                <p class="mb-0 text-2xl font-bold tabular-nums text-foreground">
-                  {{ totalUsers }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+    <AdminStatStrip :items="stats" :loading="loading && !users.length" />
 
-        <div class="col-span-12 md:col-span-3">
-          <div
-            class="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div class="flex items-center">
-              <div class="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-waterblue">
-                <UserCheck class="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p class="mb-0 text-xs text-muted-foreground">Regular Users</p>
-                <p class="mb-0 text-2xl font-bold tabular-nums text-foreground">
-                  {{ regularUsers }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-span-12 md:col-span-3">
-          <div
-            class="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div class="flex items-center">
-              <div class="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-darkgreen">
-                <ShieldCheck class="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p class="mb-0 text-xs text-muted-foreground">Admins</p>
-                <p class="mb-0 text-2xl font-bold tabular-nums text-foreground">
-                  {{ adminUsers }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-span-12 md:col-span-3">
-          <div
-            class="rounded-2xl border border-border bg-card p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg"
-          >
-            <div class="flex items-center">
-              <div class="mr-3 flex h-10 w-10 items-center justify-center rounded-lg bg-lightgreen">
-                <UserPlus class="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p class="mb-0 text-xs text-muted-foreground">This Month</p>
-                <p class="mb-0 text-2xl font-bold tabular-nums text-foreground">
-                  {{ newUsersThisMonth }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Search and Filter Section -->
-      <div class="mb-4 grid grid-cols-12 gap-4">
-        <div class="col-span-12 md:col-span-6">
-          <UiInput v-model="search" placeholder="Search users...">
-            <template #prepend>
-              <Search class="h-4 w-4" />
-            </template>
-            <template #append>
-              <button
-                v-if="search"
-                type="button"
-                class="text-muted-foreground transition-colors hover:text-foreground"
-                aria-label="Clear search"
-                @click="search = ''"
+    <AdminPanel :loading="loading && users.length > 0">
+      <template #toolbar>
+        <AdminSearchInput v-model="search" placeholder="Search name, email or ID" />
+        <div class="flex items-center gap-1 md:ml-auto md:w-48">
+          <UiSelect v-model="filterRole">
+            <UiSelectTrigger class="w-full bg-background" aria-label="Filter by role">
+              <UiSelectValue placeholder="All roles" />
+            </UiSelectTrigger>
+            <UiSelectContent>
+              <UiSelectItem
+                v-for="opt in roleOptions"
+                :key="opt.value"
+                :value="opt.value"
               >
-                <X class="h-4 w-4" />
-              </button>
-            </template>
-          </UiInput>
+                {{ opt.label }}
+              </UiSelectItem>
+            </UiSelectContent>
+          </UiSelect>
+          <UiButton
+            v-if="filterRole"
+            variant="ghost"
+            size="iconSm"
+            aria-label="Clear role filter"
+            @click="filterRole = undefined"
+          >
+            <X class="h-4 w-4" />
+          </UiButton>
         </div>
-        <div class="col-span-12 md:col-span-3">
-          <div class="flex items-center gap-1">
-            <UiSelect v-model="filterRole">
-              <UiSelectTrigger class="w-full">
-                <UiSelectValue placeholder="Filter by Role" />
-              </UiSelectTrigger>
-              <UiSelectContent>
-                <UiSelectItem
-                  v-for="opt in roleOptions"
-                  :key="opt.value"
-                  :value="opt.value"
-                >
-                  {{ opt.label }}
-                </UiSelectItem>
-              </UiSelectContent>
-            </UiSelect>
-            <UiButton
-              v-if="filterRole"
-              variant="ghost"
-              size="iconSm"
-              aria-label="Clear role filter"
-              @click="filterRole = undefined"
-            >
-              <X class="h-4 w-4" />
-            </UiButton>
-          </div>
-        </div>
-      </div>
+      </template>
 
-      <!-- Users Table -->
-      <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-        <UiProgress v-if="loading" indeterminate class="h-1 rounded-none" />
-
-        <UiTooltipProvider :delay-duration="200">
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="bg-muted/60 text-left">
-                <tr>
-                  <th class="w-[80px] px-4 py-3 font-medium text-muted-foreground">Avatar</th>
-                  <th class="px-4 py-3 font-medium text-muted-foreground">User</th>
-                  <th class="px-4 py-3 font-medium text-muted-foreground">Role</th>
-                  <th class="px-4 py-3 font-medium text-muted-foreground">Joined</th>
-                  <th class="w-[120px] px-4 py-3 font-medium text-muted-foreground">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-border">
-                <tr v-for="item in paginatedUsers" :key="item._id" class="hover:bg-muted/40">
-                  <!-- Avatar -->
-                  <td class="px-4 py-3">
+      <div class="overflow-x-auto">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Joined</th>
+              <th class="w-px"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <AdminTableSkeleton v-if="loading && !users.length" :columns="4" media />
+            <template v-else>
+              <tr v-for="item in paginatedUsers" :key="item._id">
+                <td>
+                  <div class="flex items-center gap-3">
                     <UserAvatar
                       :src="item?.avatar_url"
                       :name="item?.username"
-                      class="my-2 size-10"
-                    >
-                      <CircleUser class="h-6 w-6" />
-                    </UserAvatar>
-                  </td>
-
-                  <!-- Username -->
-                  <td class="px-4 py-3">
-                    <div class="flex items-center">
-                      <div>
-                        <div class="font-medium">{{ item.username }}</div>
-                        <div class="text-xs text-muted-foreground">{{ item.email }}</div>
+                      class="size-9 shrink-0"
+                    />
+                    <div class="min-w-0">
+                      <button
+                        type="button"
+                        class="block max-w-[260px] truncate text-left font-medium text-foreground hover:underline"
+                        @click="viewUser(item)"
+                      >
+                        {{ item.username }}
+                        <span
+                          v-if="currentUser && item._id === currentUser._id"
+                          class="ml-1 text-xs font-normal text-muted-foreground"
+                        >
+                          (you)
+                        </span>
+                      </button>
+                      <div class="max-w-[260px] truncate text-xs text-muted-foreground">
+                        {{ item.email }}
                       </div>
                     </div>
-                  </td>
+                  </div>
+                </td>
 
-                  <!-- Role -->
-                  <td class="px-4 py-3">
-                    <UiBadge
-                      class="border-transparent"
-                      :class="
-                        item.admin
-                          ? 'bg-customyellow text-customblack'
-                          : 'bg-waterblue text-white'
-                      "
+                <td>
+                  <AdminPill
+                    :tone="item.admin ? 'default' : 'muted'"
+                    :icon="item.admin ? ShieldCheck : undefined"
+                  >
+                    {{ item.admin ? "Admin" : "Customer" }}
+                  </AdminPill>
+                </td>
+
+                <td class="whitespace-nowrap text-muted-foreground">
+                  {{ formatDate(item.createdAt) }}
+                </td>
+
+                <td>
+                  <div class="flex items-center justify-end gap-0.5">
+                    <UiButton
+                      variant="ghost"
+                      size="iconSm"
+                      class="text-muted-foreground hover:text-foreground"
+                      aria-label="View user details"
+                      title="View details"
+                      @click="viewUser(item)"
                     >
-                      <ShieldCheck v-if="item.admin" class="h-3 w-3" />
-                      <UserIcon v-else class="h-3 w-3" />
-                      {{ item.admin ? "Admin" : "User" }}
-                    </UiBadge>
-                  </td>
+                      <Eye class="h-4 w-4" />
+                    </UiButton>
+                    <UiButton
+                      variant="ghost"
+                      size="iconSm"
+                      class="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      aria-label="Delete user"
+                      title="Delete user"
+                      :disabled="
+                        Boolean(item.admin && currentUser && item._id === currentUser._id)
+                      "
+                      @click="confirmDelete(item)"
+                    >
+                      <Trash2 class="h-4 w-4" />
+                    </UiButton>
+                  </div>
+                </td>
+              </tr>
 
-                  <!-- Created Date -->
-                  <td class="px-4 py-3">
-                    <div class="text-xs">
-                      {{ formatDate(item.createdAt) }}
-                    </div>
-                  </td>
-
-                  <!-- Actions -->
-                  <td class="px-4 py-3">
-                    <div class="flex gap-2">
-                      <UiTooltip>
-                        <UiTooltipTrigger as-child>
-                          <UiButton
-                            variant="ghost"
-                            size="iconSm"
-                            aria-label="View user details"
-                            @click="viewUser(item)"
-                          >
-                            <Eye class="h-4 w-4" />
-                          </UiButton>
-                        </UiTooltipTrigger>
-                        <UiTooltipContent>View Details</UiTooltipContent>
-                      </UiTooltip>
-
-                      <UiTooltip>
-                        <UiTooltipTrigger as-child>
-                          <UiButton
-                            variant="ghost"
-                            size="iconSm"
-                            class="text-destructive hover:text-destructive"
-                            aria-label="Delete user"
-                            :disabled="
-                              Boolean(
-                                item.admin && currentUser && item._id === currentUser._id
-                              )
-                            "
-                            @click="confirmDelete(item)"
-                          >
-                            <Trash2 class="h-4 w-4" />
-                          </UiButton>
-                        </UiTooltipTrigger>
-                        <UiTooltipContent>Delete User</UiTooltipContent>
-                      </UiTooltip>
-                    </div>
-                  </td>
-                </tr>
-
-                <!-- No data -->
-                <tr v-if="!paginatedUsers.length">
-                  <td colspan="5" class="px-4 py-8 text-center">
-                    <div v-if="loading" class="flex justify-center py-4">
-                      <UiSpinner size="lg" class="text-muted-foreground" />
-                    </div>
-                    <div v-else>
-                      <UserX class="mx-auto h-20 w-20 text-muted-foreground/40" />
-                      <h3 class="mb-2 mt-4 text-lg font-semibold text-foreground">
-                        No Users Found
-                      </h3>
-                      <p class="text-muted-foreground">
-                        No users match your search criteria
-                      </p>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </UiTooltipProvider>
-
-        <!-- Pagination -->
-        <div class="flex flex-wrap items-center justify-between gap-3 border-t border-border p-4">
-          <div class="text-sm text-muted-foreground">
-            Showing {{ paginatedUsers.length }} of {{ filteredUsers.length }} users
-          </div>
-
-          <UiPagination
-            v-slot="{ page: currentPage }"
-            v-model:page="page"
-            :total="filteredUsers.length"
-            :items-per-page="itemsPerPage"
-            :sibling-count="1"
-            class="mx-0 w-auto justify-end"
-            show-edges
-          >
-            <UiPaginationContent v-slot="{ items }">
-              <UiPaginationPrevious />
-              <template v-for="(item, index) in items">
-                <UiPaginationItem
-                  v-if="item.type === 'page'"
-                  :key="index"
-                  :value="item.value"
-                  :is-active="item.value === currentPage"
-                >
-                  {{ item.value }}
-                </UiPaginationItem>
-                <UiPaginationEllipsis v-else :key="item.type" :index="index" />
-              </template>
-              <UiPaginationNext />
-            </UiPaginationContent>
-          </UiPagination>
-        </div>
+              <tr v-if="!paginatedUsers.length" class="hover:bg-transparent">
+                <td colspan="4">
+                  <AdminEmptyState
+                    :icon="UserX"
+                    title="No users found"
+                    description="Nobody matches this search or role filter."
+                  />
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
       </div>
-    </div>
 
-    <!-- Delete Confirmation Dialog -->
+      <template #footer>
+        <AdminTablePagination
+          v-model:page="page"
+          :total="filteredUsers.length"
+          :items-per-page="itemsPerPage"
+          noun="users"
+        />
+      </template>
+    </AdminPanel>
+
     <AdminConfirmDeleteDialog
       v-model:open="deleteDialog"
-      question="Are you sure you want to delete this user?"
+      title="Delete user?"
+      question="The account is removed and the user can no longer sign in."
       :subject="selectedUser?.username"
       :loading="deleteLoading"
       @confirm="deleteUser"
     />
 
-    <!-- User Details Dialog -->
     <UiDialog v-model:open="detailsDialog">
-      <UiDialogContent class="sm:max-w-xl" hide-close>
+      <UiDialogContent class="sm:max-w-md">
         <UiDialogHeader>
-          <UiDialogTitle class="flex items-center text-2xl font-semibold">
-            <CircleUser class="mr-2 h-6 w-6" />
-            User Details
-          </UiDialogTitle>
+          <UiDialogTitle>User details</UiDialogTitle>
+          <UiDialogDescription class="sr-only">
+            Account information for this user.
+          </UiDialogDescription>
         </UiDialogHeader>
 
-        <div v-if="selectedUser" class="grid grid-cols-12 gap-4">
-          <div class="col-span-12 text-center">
+        <div v-if="selectedUser">
+          <div class="flex items-center gap-4">
             <UserAvatar
               :src="selectedUser.avatar_url"
               :name="selectedUser.username"
-              class="mx-auto mb-4 h-[100px] w-[100px]"
-            >
-              <CircleUser class="h-14 w-14" />
-            </UserAvatar>
-          </div>
-
-          <div class="col-span-6">
-            <div class="text-sm font-medium text-foreground">Username</div>
-            <div class="text-sm text-muted-foreground">
-              {{ selectedUser.username }}
+              class="size-14 shrink-0"
+            />
+            <div class="min-w-0">
+              <div class="truncate text-base font-semibold text-foreground">
+                {{ selectedUser.username }}
+              </div>
+              <div class="truncate text-sm text-muted-foreground">
+                {{ selectedUser.email }}
+              </div>
             </div>
           </div>
 
-          <div class="col-span-6">
-            <div class="text-sm font-medium text-foreground">Email</div>
-            <div class="text-sm text-muted-foreground">
-              {{ selectedUser.email }}
+          <dl class="mt-5 divide-y divide-border rounded-lg border border-border text-sm">
+            <div class="flex items-center justify-between gap-4 px-4 py-2.5">
+              <dt class="text-muted-foreground">Role</dt>
+              <dd>
+                <AdminPill :tone="selectedUser.admin ? 'default' : 'muted'">
+                  {{ selectedUser.admin ? "Admin" : "Customer" }}
+                </AdminPill>
+              </dd>
             </div>
-          </div>
-
-          <div class="col-span-6">
-            <div class="mb-1 text-sm font-medium text-foreground">Role</div>
-            <UiBadge
-              class="border-transparent"
-              :class="
-                selectedUser.admin
-                  ? 'bg-customyellow text-customblack'
-                  : 'bg-waterblue text-white'
-              "
-            >
-              {{ selectedUser.admin ? "Admin" : "User" }}
-            </UiBadge>
-          </div>
-
-          <div class="col-span-6">
-            <div class="text-sm font-medium text-foreground">User ID</div>
-            <div class="text-xs text-muted-foreground">
-              {{ selectedUser._id }}
+            <div class="flex items-center justify-between gap-4 px-4 py-2.5">
+              <dt class="text-muted-foreground">Joined</dt>
+              <dd class="text-foreground">{{ formatDate(selectedUser.createdAt) }}</dd>
             </div>
-          </div>
-
-          <div class="col-span-12">
-            <div class="text-sm font-medium text-foreground">Joined Date</div>
-            <div class="text-sm text-muted-foreground">
-              {{ formatDate(selectedUser.createdAt) }}
+            <div class="flex items-center justify-between gap-4 px-4 py-2.5">
+              <dt class="shrink-0 text-muted-foreground">User ID</dt>
+              <dd class="truncate font-mono text-xs text-foreground">
+                {{ selectedUser._id }}
+              </dd>
             </div>
-          </div>
+          </dl>
         </div>
 
         <UiDialogFooter>
-          <UiButton variant="ghost" @click="detailsDialog = false">Close</UiButton>
+          <UiButton variant="outline" @click="detailsDialog = false">Close</UiButton>
         </UiDialogFooter>
       </UiDialogContent>
     </UiDialog>
 
-    <!-- Snackbar for notifications -->
     <SnackbarAlert
       v-model="snackbar.show"
       :text="snackbar.message"
@@ -395,13 +228,10 @@
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import {
-  CircleUser,
   Eye,
   RefreshCw,
-  Search,
   ShieldCheck,
   Trash2,
-  User as UserIcon,
   UserCheck,
   UserPlus,
   Users,
@@ -410,6 +240,7 @@ import {
 } from "lucide-vue-next";
 import { getAllUsers, deleteUser as deleteUserApi } from "~/api/userApi";
 import type { User } from "@/types";
+import type { AdminStat } from "@/types/admin";
 
 const authStore = useAuthStore();
 const { currentUser } = storeToRefs(authStore);
@@ -433,8 +264,8 @@ const snackbar = reactive({
 });
 
 const roleOptions = [
-  { label: "All Users", value: "all" },
-  { label: "Regular Users", value: "user" },
+  { label: "All roles", value: "all" },
+  { label: "Customers", value: "user" },
   { label: "Admins", value: "admin" },
 ];
 
@@ -461,6 +292,13 @@ const newUsersThisMonth = computed(() => {
     );
   }).length;
 });
+
+const stats = computed<AdminStat[]>(() => [
+  { label: "Total users", value: totalUsers.value, icon: Users },
+  { label: "Customers", value: regularUsers.value, icon: UserCheck },
+  { label: "Admins", value: adminUsers.value, icon: ShieldCheck },
+  { label: "Joined this month", value: newUsersThisMonth.value, icon: UserPlus },
+]);
 
 const filteredUsers = computed<User[]>(() => {
   let filtered = users.value;
@@ -501,7 +339,6 @@ async function fetchUsers() {
     loading.value = true;
     const response = await getAllUsers();
     users.value = response.data || [];
-    showSnackbar("Users loaded successfully", "success");
   } catch (error) {
     console.error("Error fetching users:", error);
     showSnackbar("Failed to load users", "error");

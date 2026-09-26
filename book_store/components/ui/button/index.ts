@@ -22,6 +22,7 @@ export const buttonVariants = cva(
         success: 'bg-success text-success-foreground shadow-sm hover:bg-success/90',
         warning: 'bg-warning text-warning-foreground shadow-sm hover:bg-warning/90',
         info: 'bg-info text-info-foreground shadow-sm hover:bg-info/90',
+        ink: 'bg-foreground text-background shadow-sm hover:bg-foreground/85 active:scale-[0.98]',
       },
       size: {
         'default': 'h-9 px-4 py-2',

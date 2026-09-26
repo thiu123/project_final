@@ -1,212 +1,176 @@
 <template>
-  <div class="p-4">
-    <UiCard class="rounded-2xl p-4">
-      <div class="flex flex-wrap items-center justify-between gap-3 p-2">
-        <div>
-          <h2 class="text-3xl font-bold text-foreground">
-            User Feedback Management
-          </h2>
-          <p class="text-sm font-medium text-muted-foreground">
-            View and manage customer feedback
-          </p>
-        </div>
-        <span
-          class="inline-flex items-center rounded-full bg-customyellow px-3 py-1 text-xs font-semibold text-customblack shadow-sm"
-        >
-          {{ contacts.length }} Total
-        </span>
-      </div>
+  <div>
+    <AdminPageHeader
+      title="Feedback"
+      description="Messages customers send through the contact form."
+    >
+      <template #actions>
+        <UiButton variant="outline" :loading="loading" @click="loadContacts">
+          <RefreshCw v-if="!loading" class="h-4 w-4" />
+          Refresh
+        </UiButton>
+      </template>
+    </AdminPageHeader>
 
-      <!-- Filters -->
-      <div class="p-2 pt-4">
-        <div class="mb-4">
-          <UiInput
-            v-model="search"
-            placeholder="Search by username or message"
-          >
-            <template #prepend>
-              <Search class="h-4 w-4" />
-            </template>
-            <template #append>
-              <button
-                v-if="search"
-                type="button"
-                class="pointer-events-auto rounded-full p-0.5 hover:text-foreground"
-                aria-label="Clear search"
-                @click="search = ''"
-              >
-                <X class="h-4 w-4" />
-              </button>
-            </template>
-          </UiInput>
-        </div>
+    <AdminPanel :loading="loading && contacts.length > 0">
+      <template #toolbar>
+        <AdminSearchInput v-model="search" placeholder="Search name or message" />
+        <p class="text-sm tabular-nums text-muted-foreground md:ml-auto">
+          {{ contacts.length }} messages
+        </p>
+      </template>
 
-        <!-- Contacts Table -->
-        <div class="overflow-x-auto rounded-lg border border-border">
-          <table class="w-full text-sm">
-            <thead class="bg-muted/60 text-left">
-              <tr>
-                <th class="px-4 py-3 font-medium text-muted-foreground">
-                  Username
-                </th>
-                <th class="px-4 py-3 font-medium text-muted-foreground">
-                  Message
-                </th>
-                <th class="px-4 py-3 font-medium text-muted-foreground">
-                  Date
-                </th>
-                <th class="px-4 py-3 text-center font-medium text-muted-foreground">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-border">
-              <tr v-if="loading">
-                <td colspan="4" class="px-4 py-8 text-center">
-                  <UiSpinner size="lg" class="mx-auto text-waterblue" />
+      <div class="overflow-x-auto">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>From</th>
+              <th>Message</th>
+              <th>Received</th>
+              <th class="w-px"><span class="sr-only">Actions</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <AdminTableSkeleton v-if="loading && !contacts.length" :columns="4" media />
+            <template v-else>
+              <tr v-for="contact in paginatedContacts" :key="contact._id">
+                <td class="whitespace-nowrap">
+                  <div class="flex items-center gap-3">
+                    <UserAvatar
+                      :src="contactUser(contact)?.avatar_url"
+                      :name="contactUsername(contact)"
+                      class="size-8 shrink-0"
+                    />
+                    <div class="min-w-0">
+                      <div class="max-w-[200px] truncate font-medium text-foreground">
+                        {{ contactUsername(contact) }}
+                      </div>
+                      <div
+                        v-if="contactUser(contact)?.email"
+                        class="max-w-[200px] truncate text-xs text-muted-foreground"
+                      >
+                        {{ contactUser(contact)?.email }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <button
+                    type="button"
+                    class="line-clamp-2 max-w-xl text-left text-foreground/90 hover:text-foreground"
+                    @click="viewContact(contact)"
+                  >
+                    {{ contact.message }}
+                  </button>
+                </td>
+                <td class="whitespace-nowrap text-muted-foreground">
+                  {{ formatDate(contact.createdAt) }}
+                </td>
+                <td>
+                  <div class="flex items-center justify-end gap-0.5">
+                    <UiButton
+                      variant="ghost"
+                      size="iconSm"
+                      class="text-muted-foreground hover:text-foreground"
+                      aria-label="View feedback"
+                      title="View"
+                      @click="viewContact(contact)"
+                    >
+                      <Eye class="h-4 w-4" />
+                    </UiButton>
+                    <UiButton
+                      variant="ghost"
+                      size="iconSm"
+                      class="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      aria-label="Delete feedback"
+                      title="Delete"
+                      @click="confirmDelete(contact)"
+                    >
+                      <Trash2 class="h-4 w-4" />
+                    </UiButton>
+                  </div>
                 </td>
               </tr>
-              <template v-else>
-                <tr
-                  v-for="contact in paginatedContacts"
-                  :key="contact._id"
-                  class="hover:bg-muted/40"
-                >
-                  <td class="px-4 py-3">
-                    <div class="max-w-[400px] truncate">
-                      {{ contactUsername(contact) }}
-                    </div>
-                  </td>
-                  <td class="px-4 py-3">
-                    <div class="max-w-[400px] truncate">
-                      {{ contact.message }}
-                    </div>
-                  </td>
-                  <td class="px-4 py-3">
-                    {{ formatDate(contact.createdAt) }}
-                  </td>
-                  <td class="px-4 py-3">
-                    <div class="flex items-center justify-center gap-1">
-                      <UiButton
-                        variant="ghost"
-                        size="iconSm"
-                        class="text-waterblue hover:text-waterblue"
-                        aria-label="View feedback"
-                        @click="viewContact(contact)"
-                      >
-                        <Eye class="h-5 w-5" />
-                      </UiButton>
-                      <UiButton
-                        variant="ghost"
-                        size="iconSm"
-                        class="text-destructive hover:text-destructive"
-                        aria-label="Delete feedback"
-                        @click="confirmDelete(contact)"
-                      >
-                        <Trash2 class="h-5 w-5" />
-                      </UiButton>
-                    </div>
-                  </td>
-                </tr>
-                <tr v-if="!paginatedContacts.length">
-                  <td
-                    colspan="4"
-                    class="px-4 py-8 text-center text-muted-foreground"
-                  >
-                    No feedback found
-                  </td>
-                </tr>
-              </template>
-            </tbody>
-          </table>
-        </div>
-        <div v-if="pageCount > 1" class="flex justify-center pt-3">
-          <UiPagination
-            v-slot="{ page: currentPage }"
-            v-model:page="page"
-            :total="filteredContacts.length"
-            :items-per-page="itemsPerPage"
-            :sibling-count="1"
-            show-edges
-          >
-            <UiPaginationContent v-slot="{ items }">
-              <UiPaginationPrevious />
-              <template v-for="(item, index) in items">
-                <UiPaginationItem
-                  v-if="item.type === 'page'"
-                  :key="index"
-                  :value="item.value"
-                  :is-active="item.value === currentPage"
-                >
-                  {{ item.value }}
-                </UiPaginationItem>
-                <UiPaginationEllipsis v-else :key="item.type" :index="index" />
-              </template>
-              <UiPaginationNext />
-            </UiPaginationContent>
-          </UiPagination>
-        </div>
+              <tr v-if="!paginatedContacts.length" class="hover:bg-transparent">
+                <td colspan="4">
+                  <AdminEmptyState
+                    :icon="Inbox"
+                    :title="search ? 'No messages match' : 'Inbox is empty'"
+                    :description="
+                      search
+                        ? 'Try another name or keyword.'
+                        : 'Messages from the contact form will land here.'
+                    "
+                  />
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
       </div>
-    </UiCard>
 
-    <!-- View Dialog -->
+      <template #footer>
+        <AdminTablePagination
+          v-model:page="page"
+          :total="filteredContacts.length"
+          :items-per-page="itemsPerPage"
+          noun="messages"
+        />
+      </template>
+    </AdminPanel>
+
     <UiDialog v-model:open="dialog">
-      <UiDialogContent class="sm:max-w-xl">
+      <UiDialogContent class="sm:max-w-lg">
         <UiDialogHeader>
-          <UiDialogTitle>Feedback Details</UiDialogTitle>
+          <UiDialogTitle>Feedback</UiDialogTitle>
+          <UiDialogDescription v-if="selectedContact">
+            Received {{ formatDate(selectedContact.createdAt) }}
+          </UiDialogDescription>
         </UiDialogHeader>
 
-        <div v-if="selectedContact">
-          <div class="space-y-3">
-            <div>
-              <p class="text-sm font-bold">Username</p>
-              <p class="text-sm text-muted-foreground">
-                {{ contactUser(selectedContact)?.username }}
-              </p>
-            </div>
-            <div>
-              <p class="text-sm font-bold">Email</p>
-              <p class="text-sm text-muted-foreground">
-                {{ contactUser(selectedContact)?.email || "N/A" }}
-              </p>
-            </div>
-            <div>
-              <p class="text-sm font-bold">Date</p>
-              <p class="text-sm text-muted-foreground">
-                {{ formatDate(selectedContact.createdAt) }}
-              </p>
+        <div v-if="selectedContact" class="space-y-4">
+          <div class="flex items-center gap-3">
+            <UserAvatar
+              :src="contactUser(selectedContact)?.avatar_url"
+              :name="contactUsername(selectedContact)"
+              class="size-10 shrink-0"
+            />
+            <div class="min-w-0">
+              <div class="truncate text-sm font-medium text-foreground">
+                {{ contactUsername(selectedContact) }}
+              </div>
+              <a
+                v-if="contactUser(selectedContact)?.email"
+                :href="`mailto:${contactUser(selectedContact)?.email}`"
+                class="truncate text-sm text-primary hover:underline"
+              >
+                {{ contactUser(selectedContact)?.email }}
+              </a>
+              <div v-else class="text-sm text-muted-foreground">No email on file</div>
             </div>
           </div>
 
-          <UiSeparator class="my-4" />
-
-          <div class="mb-4">
-            <h4 class="mb-2 text-base font-bold">Feedback Message:</h4>
-            <p class="text-sm">{{ selectedContact.message }}</p>
-          </div>
+          <p
+            class="whitespace-pre-line rounded-lg border border-border bg-muted/40 p-4 text-sm leading-relaxed text-foreground"
+          >
+            {{ selectedContact.message }}
+          </p>
         </div>
 
         <UiDialogFooter>
-          <UiButton
-            variant="ghost"
-            class="text-muted-foreground"
-            @click="dialog = false"
-          >
-            Close
-          </UiButton>
+          <UiButton variant="outline" @click="dialog = false">Close</UiButton>
         </UiDialogFooter>
       </UiDialogContent>
     </UiDialog>
 
-    <!-- Delete Confirmation Dialog -->
     <AdminConfirmDeleteDialog
       v-model:open="deleteDialog"
-      question="Are you sure you want to delete this feedback?"
+      title="Delete feedback?"
+      question="The message is removed from the feedback inbox."
       :loading="deleting"
       @confirm="deleteContactMessenger"
     />
 
-    <!-- Snackbar -->
     <SnackbarAlert
       v-model="snackbar.show"
       :text="snackbar.message"
@@ -219,7 +183,7 @@
 import { storeToRefs } from "pinia";
 import { useContactStore } from "@/stores/contact";
 import type { Contact, User } from "@/types";
-import { Eye, Search, Trash2, X } from "lucide-vue-next";
+import { Eye, Inbox, RefreshCw, Trash2 } from "lucide-vue-next";
 
 const contactStore = useContactStore();
 const { contacts, loading } = storeToRefs(contactStore);

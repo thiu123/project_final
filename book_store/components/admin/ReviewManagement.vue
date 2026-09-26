@@ -1,187 +1,154 @@
 <template>
   <div>
-    <!-- Header with Stats -->
-    <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
-      <UiCard
-        v-for="stat in reviewStats"
-        :key="stat.title"
-        class="rounded-2xl transition duration-200 hover:-translate-y-1 hover:shadow-md"
-      >
-        <div class="flex items-center justify-between p-4">
-          <div>
-            <p class="mb-1 text-xs text-muted-foreground">{{ stat.title }}</p>
-            <h3 class="text-3xl font-bold tabular-nums text-foreground">
-              {{ stat.value }}
-            </h3>
-          </div>
-          <span
-            class="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg"
-            :class="stat.avatarClass"
+    <AdminPageHeader
+      title="Reviews"
+      description="Read what customers say about each book and reply on behalf of the store."
+    >
+      <template #actions>
+        <UiButton variant="outline" :loading="loading" @click="fetchReviews">
+          <RefreshCw v-if="!loading" class="h-4 w-4" />
+          Refresh
+        </UiButton>
+      </template>
+    </AdminPageHeader>
+
+    <AdminStatStrip :items="reviewStats" :loading="loading && !reviews.length" />
+
+    <AdminPanel :loading="loading && reviews.length > 0">
+      <template #toolbar>
+        <AdminSearchInput
+          v-model="search"
+          placeholder="Search comment, customer or book"
+        />
+        <div class="flex items-center gap-2 md:ml-auto">
+          <UiSelect v-model="filterRating">
+            <UiSelectTrigger class="w-full bg-background md:w-36" aria-label="Filter by rating">
+              <UiSelectValue placeholder="All ratings" />
+            </UiSelectTrigger>
+            <UiSelectContent>
+              <UiSelectItem
+                v-for="opt in ratingFilters"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </UiSelectItem>
+            </UiSelectContent>
+          </UiSelect>
+          <UiSelect v-model="filterReplied">
+            <UiSelectTrigger class="w-full bg-background md:w-40" aria-label="Filter by reply status">
+              <UiSelectValue placeholder="Any reply status" />
+            </UiSelectTrigger>
+            <UiSelectContent>
+              <UiSelectItem
+                v-for="opt in repliedFilters"
+                :key="opt.value"
+                :value="opt.value"
+              >
+                {{ opt.label }}
+              </UiSelectItem>
+            </UiSelectContent>
+          </UiSelect>
+          <UiButton
+            v-if="hasFilters"
+            variant="ghost"
+            size="sm"
+            class="shrink-0 text-muted-foreground"
+            @click="resetFilters"
           >
-            <component :is="stat.icon" class="h-[30px] w-[30px]" :class="stat.iconClass" />
-          </span>
+            Clear
+          </UiButton>
         </div>
-      </UiCard>
-    </div>
+      </template>
 
-    <!-- Filters -->
-    <UiCard class="mb-6 rounded-2xl">
-      <div class="p-4">
-        <div class="grid grid-cols-12 items-center gap-4">
-          <div class="col-span-12 md:col-span-4">
-            <UiInput v-model="search" placeholder="Search reviews...">
-              <template #prepend>
-                <Search class="h-4 w-4" />
-              </template>
-              <template #append>
-                <button
-                  v-if="search"
-                  type="button"
-                  class="pointer-events-auto rounded-full p-0.5 hover:text-foreground"
-                  aria-label="Clear search"
-                  @click="search = ''"
-                >
-                  <X class="h-4 w-4" />
-                </button>
-              </template>
-            </UiInput>
+      <ul v-if="loading && !reviews.length" class="divide-y divide-border">
+        <li v-for="n in 4" :key="n" class="flex gap-4 px-5 py-5">
+          <UiSkeleton class="size-10 shrink-0 rounded-full bg-muted" />
+          <div class="flex-1 space-y-2">
+            <UiSkeleton class="h-3.5 w-40 bg-muted" />
+            <UiSkeleton class="h-3 w-24 bg-muted" />
+            <UiSkeleton class="h-3.5 w-3/4 bg-muted" />
           </div>
-          <div class="col-span-12 md:col-span-3">
-            <UiSelect v-model="filterRating">
-              <UiSelectTrigger class="w-full">
-                <UiSelectValue placeholder="Filter by Rating" />
-              </UiSelectTrigger>
-              <UiSelectContent>
-                <UiSelectItem
-                  v-for="opt in ratingFilters"
-                  :key="opt.value"
-                  :value="opt.value"
-                >
-                  {{ opt.label }}
-                </UiSelectItem>
-              </UiSelectContent>
-            </UiSelect>
-          </div>
-          <div class="col-span-12 md:col-span-3">
-            <UiSelect v-model="filterReplied">
-              <UiSelectTrigger class="w-full">
-                <UiSelectValue placeholder="Reply Status" />
-              </UiSelectTrigger>
-              <UiSelectContent>
-                <UiSelectItem
-                  v-for="opt in repliedFilters"
-                  :key="opt.value"
-                  :value="opt.value"
-                >
-                  {{ opt.label }}
-                </UiSelectItem>
-              </UiSelectContent>
-            </UiSelect>
-          </div>
-          <div class="col-span-12 md:col-span-2">
-            <UiButton
-              variant="ghost"
-              block
-              class="bg-waterblue/15 text-waterblue hover:bg-waterblue/25 hover:text-waterblue"
-              @click="resetFilters"
-            >
-              <RefreshCw class="h-4 w-4" />
-              Reset
-            </UiButton>
-          </div>
-        </div>
-      </div>
-    </UiCard>
+        </li>
+      </ul>
 
-    <!-- Reviews List -->
-    <UiCard class="rounded-2xl">
-      <div class="flex items-center justify-between p-4">
-        <span class="text-lg font-bold text-foreground">All Reviews</span>
-        <span
-          class="inline-flex items-center rounded-full bg-customyellow px-2.5 py-0.5 text-xs font-semibold text-customblack"
-        >
-          {{ filteredReviews.length }} reviews
-        </span>
-      </div>
+      <AdminEmptyState
+        v-else-if="filteredReviews.length === 0"
+        :icon="MessageSquareX"
+        title="No reviews found"
+        :description="
+          reviews.length
+            ? 'Nothing matches these filters.'
+            : 'Reviews appear here once customers rate a book.'
+        "
+      >
+        <UiButton v-if="hasFilters" variant="outline" size="sm" @click="resetFilters">
+          Clear filters
+        </UiButton>
+      </AdminEmptyState>
 
-      <UiSeparator />
-
-      <div v-if="loading" class="py-8 text-center">
-        <UiSpinner class="mx-auto text-primary" />
-        <p class="mt-4 text-xs text-muted-foreground">Loading reviews...</p>
-      </div>
-
-      <div v-else-if="filteredReviews.length === 0" class="py-12 text-center">
-        <MessageSquareX class="mx-auto h-20 w-20 text-muted-foreground/30" />
-        <h3 class="mt-4 text-lg font-semibold text-muted-foreground">
-          No reviews found
-        </h3>
-        <p class="text-xs text-muted-foreground">Try adjusting your filters</p>
-      </div>
-
-      <div v-else class="divide-y divide-border">
-        <div
+      <ul v-else class="divide-y divide-border">
+        <li
           v-for="review in paginatedReviews"
           :key="review._id"
-          class="flex flex-col gap-2.5 px-4 py-5 transition-colors hover:bg-muted/40 sm:flex-row sm:items-start"
+          class="flex flex-col gap-4 px-5 py-5 sm:flex-row"
         >
           <UserAvatar
             :src="reviewUser(review)?.avatar_url"
             :name="reviewUser(review)?.username"
-            class="size-14 shrink-0"
+            class="size-10 shrink-0"
           />
 
           <div class="min-w-0 flex-1">
-            <div class="mb-2 flex flex-wrap items-center">
-              <span class="mr-2 font-bold">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span class="font-medium text-foreground">
                 {{ reviewUser(review)?.username || "Anonymous" }}
               </span>
-              <UiRating :model-value="review.rating" :size="16" readonly />
-              <span class="ml-2 text-xs text-muted-foreground">
+              <span class="text-xs text-muted-foreground">
                 {{ formatDate(review.createdAt) }}
+              </span>
+              <AdminPill v-if="!review.replies?.length" tone="warning">
+                Awaiting reply
+              </AdminPill>
+            </div>
+
+            <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+              <UiRating :model-value="review.rating" :size="14" readonly />
+              <span class="inline-flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+                <BookOpen class="h-3.5 w-3.5 shrink-0" />
+                <span class="truncate">
+                  {{ reviewBook(review)?.title || "Unknown book" }}
+                </span>
               </span>
             </div>
 
-            <div class="mb-3">
-              <div class="mb-2 flex items-center">
-                <span
-                  class="mr-2 inline-flex items-center gap-1 rounded-full bg-waterblue/15 px-2 py-0.5 text-[11px] font-semibold text-waterblue"
-                >
-                  <BookOpen class="h-3 w-3" />
-                  {{ reviewBook(review)?.title || "Unknown Book" }}
-                </span>
-              </div>
-              <p class="mt-2 text-sm text-foreground/90">
-                {{ review.comment }}
-              </p>
-            </div>
+            <p class="mt-2.5 max-w-[75ch] text-sm leading-relaxed text-foreground">
+              {{ review.comment }}
+            </p>
 
-            <!-- Admin Replies Section -->
-            <div
-              v-if="review.replies && review.replies.length > 0"
-              class="ml-0 mt-3 space-y-2 sm:ml-12"
-            >
+            <div v-if="review.replies?.length" class="mt-3 space-y-2">
               <div
                 v-for="reply in review.replies"
                 :key="reply._id"
-                class="rounded-lg bg-waterblue/10 px-3 py-2"
+                class="group rounded-lg border border-border bg-muted/40 px-3.5 py-2.5"
               >
-                <div class="mb-1 flex items-center justify-between">
-                  <div class="flex items-center">
-                    <ShieldCheck class="mr-1 h-4 w-4 text-waterblue" />
-                    <span class="text-xs font-bold text-waterblue">
-                      {{ replyAdmin(reply)?.username || "Admin" }}
+                <div class="flex items-center justify-between gap-2">
+                  <div class="flex min-w-0 items-center gap-1.5 text-xs">
+                    <ShieldCheck class="h-3.5 w-3.5 shrink-0 text-primary" />
+                    <span class="truncate font-medium text-foreground">
+                      {{ replyAdmin(reply)?.username || "Store" }}
                     </span>
-                    <span class="ml-2 text-xs text-muted-foreground">
+                    <span class="shrink-0 text-muted-foreground">
                       {{ formatDate(reply.createdAt) }}
                     </span>
                   </div>
-                  <div class="flex items-center">
+                  <div class="flex shrink-0 items-center">
                     <UiButton
                       variant="ghost"
                       size="iconSm"
-                      class="h-6 w-6"
+                      class="h-7 w-7 text-muted-foreground hover:text-foreground"
                       aria-label="Edit reply"
+                      title="Edit reply"
                       @click="editReply(review, reply)"
                     >
                       <Pencil class="h-3.5 w-3.5" />
@@ -189,116 +156,97 @@
                     <UiButton
                       variant="ghost"
                       size="iconSm"
-                      class="h-6 w-6 text-destructive hover:text-destructive"
+                      class="h-7 w-7 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                       aria-label="Delete reply"
+                      title="Delete reply"
                       @click="confirmDeleteReply(review._id, reply._id)"
                     >
                       <Trash2 class="h-3.5 w-3.5" />
                     </UiButton>
                   </div>
                 </div>
-                <p class="text-sm text-foreground/80">
-                  {{ reply.content }}
-                </p>
+                <p class="mt-1 text-sm text-foreground/90">{{ reply.content }}</p>
               </div>
             </div>
           </div>
 
-          <div class="flex shrink-0 flex-row gap-2 sm:flex-col">
-            <UiButton
-              variant="ghost"
-              size="sm"
-              class="bg-waterblue/15 text-waterblue hover:bg-waterblue/25 hover:text-waterblue"
-              @click="openReplyDialog(review)"
-            >
+          <div class="flex shrink-0 items-start gap-1">
+            <UiButton variant="outline" size="sm" @click="openReplyDialog(review)">
               <Reply class="h-4 w-4" />
               Reply
             </UiButton>
             <UiButton
               variant="ghost"
-              size="sm"
-              class="text-destructive hover:text-destructive"
+              size="iconSm"
+              class="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              aria-label="Delete review"
+              title="Delete review"
               @click="confirmDeleteReview(review._id)"
             >
               <Trash2 class="h-4 w-4" />
-              Delete
             </UiButton>
           </div>
-        </div>
-      </div>
+        </li>
+      </ul>
 
-      <!-- Pagination -->
-      <div
-        v-if="filteredReviews.length > itemsPerPage"
-        class="flex justify-center border-t border-border py-3"
-      >
-        <UiPagination
-          v-slot="{ page: currentPage }"
+      <template #footer>
+        <AdminTablePagination
           v-model:page="page"
           :total="filteredReviews.length"
           :items-per-page="itemsPerPage"
-          :sibling-count="1"
-          show-edges
-        >
-          <UiPaginationContent v-slot="{ items }">
-            <UiPaginationPrevious />
-            <template v-for="(item, index) in items">
-              <UiPaginationItem
-                v-if="item.type === 'page'"
-                :key="index"
-                :value="item.value"
-                :is-active="item.value === currentPage"
-              >
-                {{ item.value }}
-              </UiPaginationItem>
-              <UiPaginationEllipsis v-else :key="item.type" :index="index" />
-            </template>
-            <UiPaginationNext />
-          </UiPaginationContent>
-        </UiPagination>
-      </div>
-    </UiCard>
+          noun="reviews"
+        />
+      </template>
+    </AdminPanel>
 
-    <!-- Reply Dialog -->
     <UiDialog v-model:open="replyDialog">
-      <UiDialogContent class="sm:max-w-xl">
+      <UiDialogContent class="sm:max-w-lg">
         <UiDialogHeader>
           <UiDialogTitle>
-            {{ editingReply ? "Edit Reply" : "Reply to Review" }}
+            {{ editingReply ? "Edit reply" : "Reply to review" }}
           </UiDialogTitle>
+          <UiDialogDescription>
+            Replies are public and show under the review on the book page.
+          </UiDialogDescription>
         </UiDialogHeader>
+
+        <blockquote
+          v-if="selectedReview"
+          class="line-clamp-3 border-l-2 border-border pl-3 text-sm text-muted-foreground"
+        >
+          {{ selectedReview.comment }}
+        </blockquote>
 
         <UiTextarea
           v-model="replyContent"
           label="Your reply"
           :rows="4"
           :error-message="replyError"
-          :hint="`${replyContent.length} characters`"
+          :hint="`${replyContent.length} characters, at least 10`"
         />
 
         <UiDialogFooter>
-          <UiButton variant="ghost" @click="closeReplyDialog">Cancel</UiButton>
+          <UiButton variant="outline" @click="closeReplyDialog">Cancel</UiButton>
           <UiButton
-            class="bg-waterblue text-white hover:bg-waterblue/90"
+            variant="ink"
             :loading="submitting"
             :disabled="!replyContent || replyContent.length < 10"
             @click="submitReply"
           >
-            {{ editingReply ? "Update" : "Submit" }}
+            {{ editingReply ? "Save reply" : "Post reply" }}
           </UiButton>
         </UiDialogFooter>
       </UiDialogContent>
     </UiDialog>
 
-    <!-- Delete Confirmation Dialog -->
     <AdminConfirmDeleteDialog
       v-model:open="deleteDialog"
-      :question="`Are you sure you want to delete this ${deleteType}?`"
+      :question="`This ${deleteType} will be removed from the book page.`"
+      :title="`Delete ${deleteType}?`"
       :loading="deleting"
       @confirm="performDelete"
     />
 
-    <!-- Snackbar -->
     <SnackbarAlert
       v-model="snackbar"
       :text="snackbarText"
@@ -309,7 +257,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Component } from "vue";
+import type { AdminStat } from "@/types/admin";
 import {
   getAllReviewsAdmin,
   createReply,
@@ -325,11 +273,9 @@ import {
   Pencil,
   RefreshCw,
   Reply,
-  Search,
   ShieldCheck,
   Star,
   Trash2,
-  X,
 } from "lucide-vue-next";
 
 const loading = ref(false);
@@ -361,50 +307,32 @@ const snackbarColor = ref("success");
 
 // Filter options
 const ratingFilters = [
-  { label: "All Ratings", value: "all" },
-  { label: "5 Stars", value: "5" },
-  { label: "4 Stars", value: "4" },
-  { label: "3 Stars", value: "3" },
-  { label: "2 Stars", value: "2" },
-  { label: "1 Star", value: "1" },
+  { label: "All ratings", value: "all" },
+  { label: "5 stars", value: "5" },
+  { label: "4 stars", value: "4" },
+  { label: "3 stars", value: "3" },
+  { label: "2 stars", value: "2" },
+  { label: "1 star", value: "1" },
 ];
 const repliedFilters = [
-  { label: "All", value: "all" },
+  { label: "Any reply status", value: "all" },
   { label: "Replied", value: "replied" },
-  { label: "Not Replied", value: "not-replied" },
+  { label: "Awaiting reply", value: "not-replied" },
 ];
 
-interface ReviewStat {
-  title: string;
-  value: string | number;
-  icon: Component;
-  avatarClass: string;
-  iconClass: string;
-}
-
-const reviewStats = computed<ReviewStat[]>(() => [
-  {
-    title: "Total Reviews",
-    value: reviews.value.length,
-    icon: MessagesSquare,
-    avatarClass: "bg-waterblue",
-    iconClass: "text-white",
-  },
-  {
-    title: "Average Rating",
-    value: averageRating.value,
-    icon: Star,
-    avatarClass: "bg-customyellow",
-    iconClass: "text-customblack",
-  },
-  {
-    title: "Pending Replies",
-    value: pendingReplies.value,
-    icon: Reply,
-    avatarClass: "bg-darkgreen",
-    iconClass: "text-white",
-  },
+const reviewStats = computed<AdminStat[]>(() => [
+  { label: "Total reviews", value: reviews.value.length, icon: MessagesSquare },
+  { label: "Average rating", value: `${averageRating.value} / 5`, icon: Star },
+  { label: "Awaiting reply", value: pendingReplies.value, icon: Reply },
 ]);
+
+const hasFilters = computed(() =>
+  Boolean(
+    search.value ||
+      (filterRating.value && filterRating.value !== "all") ||
+      (filterReplied.value && filterReplied.value !== "all")
+  )
+);
 
 const averageRating = computed(() => {
   if (reviews.value.length === 0) return "0.0";

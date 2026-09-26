@@ -1,96 +1,74 @@
 <template>
-  <div class="w-full p-4">
-    <!-- Header -->
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3">
-      <div>
-        <h1 class="mb-2 text-3xl font-bold text-foreground">Order Management</h1>
-        <p class="text-base font-medium text-muted-foreground">
-          Manage all orders in the system
-        </p>
-      </div>
-      <UiButton
-        class="bg-waterblue text-white hover:bg-waterblue/90"
-        :loading="loading"
-        @click="fetchOrders"
-      >
-        <RefreshCw v-if="!loading" class="h-4 w-4" />
-        Refresh
-      </UiButton>
-    </div>
+  <div>
+    <AdminPageHeader
+      title="Orders"
+      description="Track payments, move orders through fulfillment and review details."
+    >
+      <template #actions>
+        <UiButton variant="outline" :loading="loading" @click="fetchOrders">
+          <RefreshCw v-if="!loading" class="h-4 w-4" />
+          Refresh
+        </UiButton>
+      </template>
+    </AdminPageHeader>
 
-    <!-- Statistics -->
-    <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
-      <AdminStatCard v-for="stat in stats" :key="stat.label" v-bind="stat" />
-    </div>
+    <AdminStatStrip :items="stats" :loading="loading && !orders.length" />
 
-    <!-- Filters -->
-    <div class="mb-4 grid grid-cols-12 gap-4">
-      <div class="col-span-12 md:col-span-6">
-        <UiInput
+    <AdminPanel :loading="loading && orders.length > 0">
+      <template #toolbar>
+        <AdminSearchInput
           v-model="search"
-          placeholder="Search orders (Order ID, User email)..."
-        >
-          <template #prepend>
-            <Search class="h-4 w-4" />
-          </template>
-          <template #append>
-            <button
-              v-if="search"
-              type="button"
-              class="pointer-events-auto rounded-full p-0.5 hover:text-foreground"
-              aria-label="Clear search"
-              @click="search = ''"
-            >
-              <X class="h-4 w-4" />
-            </button>
-          </template>
-        </UiInput>
-      </div>
+          placeholder="Search order ID, customer or email"
+        />
+        <div class="flex items-center gap-2 md:ml-auto">
+          <UiSelect v-model="statusFilter">
+            <UiSelectTrigger class="w-full bg-background md:w-44" aria-label="Filter by status">
+              <UiSelectValue placeholder="All statuses" />
+            </UiSelectTrigger>
+            <UiSelectContent>
+              <UiSelectItem
+                v-for="option in statusFilterItems"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </UiSelectItem>
+            </UiSelectContent>
+          </UiSelect>
 
-      <div class="col-span-12 md:col-span-3">
-        <UiSelect v-model="statusFilter">
-          <UiSelectTrigger class="w-full">
-            <UiSelectValue placeholder="Filter by Status" />
-          </UiSelectTrigger>
-          <UiSelectContent>
-            <UiSelectItem
-              v-for="option in statusFilterItems"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </UiSelectItem>
-          </UiSelectContent>
-        </UiSelect>
-      </div>
+          <UiSelect v-model="paymentFilter">
+            <UiSelectTrigger class="w-full bg-background md:w-40" aria-label="Filter by payment">
+              <UiSelectValue placeholder="All payments" />
+            </UiSelectTrigger>
+            <UiSelectContent>
+              <UiSelectItem
+                v-for="option in paymentFilterItems"
+                :key="option.value"
+                :value="option.value"
+              >
+                {{ option.label }}
+              </UiSelectItem>
+            </UiSelectContent>
+          </UiSelect>
+        </div>
+      </template>
 
-      <div class="col-span-12 md:col-span-3">
-        <UiSelect v-model="paymentFilter">
-          <UiSelectTrigger class="w-full">
-            <UiSelectValue placeholder="Filter by Payment" />
-          </UiSelectTrigger>
-          <UiSelectContent>
-            <UiSelectItem
-              v-for="option in paymentFilterItems"
-              :key="option.value"
-              :value="option.value"
-            >
-              {{ option.label }}
-            </UiSelectItem>
-          </UiSelectContent>
-        </UiSelect>
-      </div>
-    </div>
+      <AdminOrdersOrderTable
+        :orders="paginatedOrders"
+        :loading="loading && !orders.length"
+        @view="viewOrderDetails"
+        @update-status="updateStatus"
+      />
 
-    <AdminOrdersOrderTable
-      v-model:page="page"
-      :orders="paginatedOrders"
-      :loading="loading"
-      :total="filteredOrders.length"
-      :items-per-page="ITEMS_PER_PAGE"
-      @view="viewOrderDetails"
-      @update-status="updateStatus"
-    />
+      <template #footer>
+        <AdminTablePagination
+          v-model:page="page"
+          :total="filteredOrders.length"
+          :items-per-page="ITEMS_PER_PAGE"
+          noun="orders"
+        />
+      </template>
+    </AdminPanel>
 
     <AdminOrdersOrderDetailsDialog
       v-model:open="detailsDialog"
@@ -113,8 +91,6 @@ import {
   Clock,
   Package,
   RefreshCw,
-  Search,
-  X,
 } from "lucide-vue-next";
 import { storeToRefs } from "pinia";
 import orderApi from "~/api/orderApi";
@@ -124,6 +100,7 @@ import { isPaidFor } from "@/utils/orderStatus";
 import { orderUser } from "@/utils/orders";
 import { formatUsd, vndToUsd } from "@/utils/pricing";
 import type { Order, OrderStatus, PaymentMethod } from "@/types";
+import type { AdminStat } from "@/types/admin";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -206,36 +183,28 @@ const paginatedOrders = computed<Order[]>(() => {
 // literal status made these cards disagree with the dashboard totals.
 const settledOrders = computed(() => orders.value.filter(isPaidFor));
 
-const stats = computed(() => [
+const stats = computed<AdminStat[]>(() => [
   {
-    label: "Total Orders",
+    label: "Orders",
     value: orders.value.length,
     icon: Package,
-    accentClass: "bg-customyellow",
-    iconClass: "text-customblack",
   },
   {
-    label: "Paid Orders",
+    label: "Paid",
     value: settledOrders.value.length,
     icon: CheckCircle2,
-    accentClass: "bg-success",
-    iconClass: "text-success-foreground",
   },
   {
-    label: "Pending Orders",
+    label: "Pending",
     value: orders.value.filter((order) => order.status === "Pending").length,
     icon: Clock,
-    accentClass: "bg-warning",
-    iconClass: "text-warning-foreground",
   },
   {
-    label: "Total Revenue",
+    label: "Collected revenue",
     value: formatUsd(
       vndToUsd(settledOrders.value.reduce((sum, order) => sum + order.total, 0))
     ),
     icon: Banknote,
-    accentClass: "bg-waterblue",
-    iconClass: "text-white",
   },
 ]);
 

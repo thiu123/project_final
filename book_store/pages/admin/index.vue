@@ -1,75 +1,70 @@
 <template>
-  <div>
-    <Transition name="admin-tab-fade" mode="out-in">
-      <!-- Dashboard -->
-      <AdminDashboardManagement v-if="currentTab === 'dashboard'" />
-
-      <!-- Book Management Component -->
-      <AdminBookManagement v-else-if="currentTab === 'book-management'" />
-
-      <!-- User Management Component (Placeholder) -->
-      <AdminUserManagement v-else-if="currentTab === 'user-management'" />
-
-      <!-- Review Management Component -->
-      <AdminReviewManagement v-else-if="currentTab === 'review-management'" />
-
-      <!-- Contact Management Component -->
-      <AdminContactManagement v-else-if="currentTab === 'contact-management'" />
-
-      <!-- Order Management Component -->
-      <AdminOrderManagement v-else-if="currentTab === 'order-management'" />
-
-      <!-- Voucher Management Component -->
-      <AdminVoucherManagement v-else-if="currentTab === 'voucher-management'" />
-
-      <!-- Default Dashboard -->
-      <div v-else class="p-8 text-center">
-        <div
-          class="mx-auto mb-4 flex h-[88px] w-[88px] items-center justify-center rounded-3xl bg-customyellow"
-        >
-          <LayoutDashboard class="h-10 w-10 text-customblack" />
-        </div>
-        <h2 class="mb-2 text-3xl font-bold text-foreground">
-          Welcome to Admin Panel
-        </h2>
-        <p class="text-muted-foreground">Select a tab from sidebar to get started</p>
-      </div>
-    </Transition>
-  </div>
+  <Transition name="admin-tab-fade" mode="out-in">
+    <component :is="currentView" :key="currentTab" />
+  </Transition>
 </template>
 
 <script setup lang="ts">
 import type { NavigationGuard } from "vue-router";
 import { definePageMeta } from "#imports";
-import { LayoutDashboard } from "lucide-vue-next";
+import {
+  AdminBookManagement,
+  AdminContactManagement,
+  AdminDashboardManagement,
+  AdminOrderManagement,
+  AdminReviewManagement,
+  AdminUserManagement,
+  AdminVoucherManagement,
+} from "#components";
 
 definePageMeta({
   layout: "admin",
   middleware: "admin" as unknown as NavigationGuard,
 });
 
-const route = useRoute();
-const currentTab = ref("dashboard");
+const VIEWS = {
+  dashboard: AdminDashboardManagement,
+  "book-management": AdminBookManagement,
+  "user-management": AdminUserManagement,
+  "review-management": AdminReviewManagement,
+  "contact-management": AdminContactManagement,
+  "order-management": AdminOrderManagement,
+  "voucher-management": AdminVoucherManagement,
+} as const;
 
-watch(
-  () => route.query.tab,
-  (newTab) => {
-    if (newTab) {
-      currentTab.value = newTab as string;
-    }
-  },
-  { immediate: true }
-);
+type AdminTab = keyof typeof VIEWS;
+
+const route = useRoute();
+
+const currentTab = computed<AdminTab>(() => {
+  const tab = route.query.tab as string | undefined;
+  return tab && tab in VIEWS ? (tab as AdminTab) : "dashboard";
+});
+
+const currentView = computed(() => VIEWS[currentTab.value]);
 </script>
 
 <style scoped>
 .admin-tab-fade-enter-active,
 .admin-tab-fade-leave-active {
-  transition: opacity 200ms ease;
+  transition:
+    opacity 180ms ease,
+    transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.admin-tab-fade-enter-from,
+.admin-tab-fade-enter-from {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
 .admin-tab-fade-leave-to {
   opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-tab-fade-enter-active,
+  .admin-tab-fade-leave-active {
+    transition: none;
+  }
 }
 </style>

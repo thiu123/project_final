@@ -1,24 +1,48 @@
 <template>
   <div>
-    <AdminBooksBookToolbar
-      v-model:search="search"
-      v-model:subject="filterSubject"
-      v-model:sort="sortBy"
-      :subject-options="subjectOptions"
-      :loading="loading"
-      @add="openForm(null)"
-      @refresh="refreshBooks"
-    />
+    <AdminPageHeader
+      title="Books"
+      description="Manage the catalog, pricing and inventory."
+    >
+      <template #actions>
+        <UiButton variant="outline" :loading="loading" @click="refreshBooks">
+          <RefreshCw v-if="!loading" class="h-4 w-4" />
+          Refresh
+        </UiButton>
+        <UiButton variant="ink" @click="openForm(null)">
+          <Plus class="h-4 w-4" />
+          Add book
+        </UiButton>
+      </template>
+    </AdminPageHeader>
 
-    <AdminBooksBookTable
-      v-model:page="page"
-      :books="books"
-      :pagination="pagination"
-      :loading="loading"
-      @view="openView"
-      @edit="openForm"
-      @delete="askToDelete"
-    />
+    <AdminPanel :loading="loading && books.length > 0">
+      <template #toolbar>
+        <AdminBooksBookToolbar
+          v-model:search="search"
+          v-model:subject="filterSubject"
+          v-model:sort="sortBy"
+          :subject-options="subjectOptions"
+        />
+      </template>
+
+      <AdminBooksBookTable
+        :books="books"
+        :loading="loading"
+        @view="openView"
+        @edit="openForm"
+        @delete="askToDelete"
+      />
+
+      <template #footer>
+        <AdminTablePagination
+          v-model:page="page"
+          :total="pagination.total"
+          :items-per-page="pagination.limit || ITEMS_PER_PAGE"
+          noun="books"
+        />
+      </template>
+    </AdminPanel>
 
     <AdminBooksBookFormDialog
       v-model:open="formDialog"
@@ -32,7 +56,8 @@
 
     <AdminConfirmDeleteDialog
       v-model:open="deleteDialog"
-      question="Are you sure you want to delete this book?"
+      title="Delete book?"
+      question="The book is removed from the catalog and can no longer be ordered."
       :subject="bookToDelete?.title"
       :loading="deleting"
       @confirm="deleteBook"
@@ -50,6 +75,7 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import debounce from "lodash/debounce";
+import { Plus, RefreshCw } from "lucide-vue-next";
 import { useBookStore } from "@/stores/book";
 import { useSnackbar } from "@/composables/useSnackbar";
 import type { Book, BookSort } from "@/types";

@@ -27,15 +27,6 @@ export function toDateInputValue(date: string): string {
   return new Date(date).toISOString().split("T")[0];
 }
 
-/** Colours the usage badge as a voucher approaches its redemption limit. */
-export function usageClass(voucher: Voucher): string {
-  if (!voucher.usageLimit) return "bg-info/15 text-info";
-
-  const used = ((voucher.usedCount ?? 0) / voucher.usageLimit) * 100;
-  if (used >= 90) return "bg-destructive/15 text-destructive";
-  if (used >= 70) return "bg-warning/15 text-warning";
-  return "bg-success/15 text-success";
-}
 
 /** How the discount reads in a table cell: `20%` or `$5`. */
 export function formatDiscount(voucher: Voucher): string {

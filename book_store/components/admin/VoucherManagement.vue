@@ -1,90 +1,61 @@
 <template>
-  <div class="p-6">
-    <!-- Header + filters -->
-    <div class="mb-6 rounded-2xl border border-border bg-card shadow-sm">
-      <div class="p-6">
-        <div class="mb-4 flex items-center justify-between gap-4">
-          <div>
-            <h2 class="mb-2 text-3xl font-bold text-foreground">
-              Voucher Management
-            </h2>
-            <p class="text-base text-muted-foreground">
-              Manage discount vouchers and promotional codes
-            </p>
-          </div>
+  <div>
+    <AdminPageHeader
+      title="Vouchers"
+      description="Discount codes customers can apply at checkout."
+    >
+      <template #actions>
+        <UiButton variant="outline" :loading="loading" @click="fetchVouchers">
+          <RefreshCw v-if="!loading" class="h-4 w-4" />
+          Refresh
+        </UiButton>
+        <UiButton variant="ink" @click="openForm(null)">
+          <Plus class="h-4 w-4" />
+          Create voucher
+        </UiButton>
+      </template>
+    </AdminPageHeader>
 
-          <div class="flex items-center gap-3">
-            <UiButton
-              class="bg-customyellow text-customblack transition-transform hover:-translate-y-px hover:bg-customyellow/90"
-              @click="openForm(null)"
-            >
-              <Plus class="h-4 w-4" />
-              Create Voucher
-            </UiButton>
-
-            <UiButton
-              variant="outline"
-              class="border-waterblue text-waterblue hover:bg-waterblue/10 hover:text-waterblue"
-              :loading="loading"
-              @click="fetchVouchers"
-            >
-              <RefreshCw v-if="!loading" class="h-4 w-4" />
-              Refresh
-            </UiButton>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-12 gap-4">
-          <div class="col-span-12 md:col-span-6">
-            <UiInput v-model="search" placeholder="Search vouchers...">
-              <template #prepend>
-                <Search class="h-4 w-4" />
-              </template>
-              <template #append>
-                <button
-                  v-if="search"
-                  type="button"
-                  class="text-muted-foreground transition-colors hover:text-foreground"
-                  aria-label="Clear search"
-                  @click="search = ''"
-                >
-                  <X class="h-4 w-4" />
-                </button>
-              </template>
-            </UiInput>
-          </div>
-
-          <div class="col-span-12 md:col-span-3">
+    <AdminPanel :loading="loading && vouchers.length > 0">
+      <template #toolbar>
+        <AdminSearchInput v-model="search" placeholder="Search code or description" />
+        <div class="flex items-center gap-2 md:ml-auto">
+          <div class="w-full md:w-44">
             <AdminVouchersFilterSelect
               v-model="filterStatus"
-              placeholder="Filter by status"
+              placeholder="All statuses"
               clear-label="Clear status filter"
               :options="STATUS_OPTIONS"
             />
           </div>
-
-          <div class="col-span-12 md:col-span-3">
+          <div class="w-full md:w-44">
             <AdminVouchersFilterSelect
               v-model="filterType"
-              placeholder="Filter by type"
+              placeholder="All types"
               clear-label="Clear type filter"
               :options="TYPE_OPTIONS"
             />
           </div>
         </div>
-      </div>
-    </div>
+      </template>
 
-    <AdminVouchersVoucherTable
-      v-model:page="page"
-      :vouchers="paginatedVouchers"
-      :loading="loading"
-      :total="filteredVouchers.length"
-      :items-per-page="ITEMS_PER_PAGE"
-      @edit="openForm"
-      @delete="askToDelete"
-      @toggle-active="toggleActive"
-    />
+      <AdminVouchersVoucherTable
+        :vouchers="paginatedVouchers"
+        :loading="loading && !vouchers.length"
+        @edit="openForm"
+        @delete="askToDelete"
+        @toggle-active="toggleActive"
+      />
+
+      <template #footer>
+        <AdminTablePagination
+          v-model:page="page"
+          :total="filteredVouchers.length"
+          :items-per-page="ITEMS_PER_PAGE"
+          noun="vouchers"
+        />
+      </template>
+    </AdminPanel>
 
     <AdminVouchersVoucherFormDialog
       v-model:open="formDialog"
@@ -95,7 +66,8 @@
 
     <AdminConfirmDeleteDialog
       v-model:open="deleteDialog"
-      question="Are you sure you want to delete this voucher?"
+      title="Delete voucher?"
+      question="Customers will no longer be able to redeem this code."
       :subject="voucherToDelete?.code"
       :loading="deleting"
       @confirm="deleteVoucher"
@@ -111,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { Plus, RefreshCw, Search, X } from "lucide-vue-next";
+import { Plus, RefreshCw } from "lucide-vue-next";
 import {
   getAllVouchers,
   updateVoucher as updateVoucherApi,
