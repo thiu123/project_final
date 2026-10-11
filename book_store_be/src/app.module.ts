@@ -15,6 +15,7 @@ import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { ContactsModule } from './modules/contacts/contacts.module';
 import { EbooksModule } from './modules/ebooks/ebooks.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
 import { UsersModule } from './modules/users/users.module';
@@ -51,6 +52,7 @@ const mongoLogger = new Logger('Mongoose');
     UsersModule,
     BooksModule,
     EbooksModule,
+    InventoryModule,
     CartsModule,
     ReviewsModule,
     OrdersModule,

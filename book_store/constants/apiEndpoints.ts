@@ -10,4 +10,5 @@ export const API_ENDPOINTS = {
   CHATBOT: "/api/chatbot",
   CONTACT: "/api/contact",
   VOUCHER: "/api/voucher",
+  INVENTORY: "/api/inventory",
 } as const;

@@ -1,6 +1,7 @@
 export const EXCHANGE_RATE_USD_TO_VND = 24000;
 export const EBOOK_PRICE_RATIO = 0.7;
 export const BOOK_CACHE_TTL_SECONDS = 1800;
+export const LOW_STOCK_THRESHOLD = 10;
 
 export const ORDER_STATUSES = [
   'Pending',

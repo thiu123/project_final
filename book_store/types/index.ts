@@ -287,3 +287,79 @@ export interface OrderNotification extends NewOrderPayload {
   id: string;
   read: boolean;
 }
+
+export type StockMovementReason =
+  | "restock"
+  | "sale"
+  | "cancellation"
+  | "damage"
+  | "count";
+
+export type StockAdjustmentType = "restock" | "damage" | "count";
+
+export type StockStatusFilter = "in" | "low" | "out" | "oversold";
+
+export type StockSort = "stock_asc" | "stock_desc" | "title_asc" | "sold_desc";
+
+export type StockLevel = Pick<
+  Book,
+  "_id" | "title" | "authors" | "cover_url" | "price" | "stock" | "sold" | "pdf_pages"
+>;
+
+export type StockMovementBook = Pick<Book, "_id" | "title" | "authors" | "cover_url">;
+
+export interface StockMovementActor {
+  _id: string;
+  username?: string;
+  email?: string;
+  avatar_url?: string | null;
+}
+
+export interface StockMovement {
+  _id: string;
+  bookId: StockMovementBook | string | null;
+  delta: number;
+  balanceAfter: number;
+  reason: StockMovementReason;
+  orderCode?: string;
+  actorId?: StockMovementActor | string | null;
+  note?: string;
+  createdAt: string;
+}
+
+export interface InventorySummary {
+  titles: number;
+  units: number;
+  value: number;
+  lowStock: number;
+  outOfStock: number;
+  oversold: number;
+  lowStockThreshold: number;
+}
+
+export interface StockQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: StockStatusFilter;
+  sort?: StockSort;
+}
+
+export interface StockMovementQuery {
+  page?: number;
+  limit?: number;
+  bookId?: string;
+  reason?: StockMovementReason;
+}
+
+export interface StockAdjustment {
+  type: StockAdjustmentType;
+  quantity: number;
+  note?: string;
+}
+
+export interface StockAdjustmentResult {
+  msg: string;
+  stock: number;
+  movement: StockMovement;
+}

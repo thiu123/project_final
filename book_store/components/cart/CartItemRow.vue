@@ -151,7 +151,7 @@ const price = computed(() =>
 const maxQuantity = computed(() =>
   props.item.productType === "ebook"
     ? EBOOK_QUANTITY_CAP
-    : book.value?.stock ?? 0
+    : Math.max(book.value?.stock ?? 0, 0)
 );
 
 const stock = computed(() => {

@@ -39,8 +39,9 @@ export class Book {
   @Prop({ type: Number, min: 0, max: 5 })
   rating?: number;
 
-  // 0 means out of stock, or an ebook (which needs no stock).
-  @Prop({ type: Number, default: 0, min: 0 })
+  // Units available to sell; only InventoryService writes it. 0 means out of
+  // stock or ebook-only, below 0 means paid orders are waiting for a restock.
+  @Prop({ type: Number, default: 0 })
   stock: number;
 
   @Prop({ type: Number, default: 0, min: 0 })

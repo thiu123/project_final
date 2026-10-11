@@ -21,7 +21,7 @@
         <AdminSearchInput v-model="search" placeholder="Search code or description" />
         <div class="flex items-center gap-2 md:ml-auto">
           <div class="w-full md:w-44">
-            <AdminVouchersFilterSelect
+            <AdminFilterSelect
               v-model="filterStatus"
               placeholder="All statuses"
               clear-label="Clear status filter"
@@ -29,7 +29,7 @@
             />
           </div>
           <div class="w-full md:w-44">
-            <AdminVouchersFilterSelect
+            <AdminFilterSelect
               v-model="filterType"
               placeholder="All types"
               clear-label="Clear type filter"

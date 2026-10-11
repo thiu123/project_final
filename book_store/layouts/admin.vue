@@ -226,6 +226,7 @@ import {
   Store,
   TicketPercent,
   Users,
+  Warehouse,
   X,
 } from "lucide-vue-next";
 
@@ -269,6 +270,7 @@ const menuGroups: AdminMenuGroup[] = [
     label: "Catalog",
     items: [
       { title: "Books", value: "book-management", icon: BookCopy },
+      { title: "Inventory", value: "inventory-management", icon: Warehouse },
       { title: "Reviews", value: "review-management", icon: MessagesSquare },
     ],
   },

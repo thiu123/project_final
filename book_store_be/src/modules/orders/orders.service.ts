@@ -1,13 +1,14 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import * as crypto from 'crypto';
-import { Model, Types } from 'mongoose';
+import { ClientSession, Connection, Model, Types } from 'mongoose';
 import {
   InpOrderAlreadyConfirmed,
   IpnFailChecksum,
@@ -26,9 +27,10 @@ import {
   StatusActor,
 } from '../../constants/app.constants';
 import { BooksService } from '../books/books.service';
-import { Book, BookDocument } from '../books/schemas/book.schema';
+import { BookDocument } from '../books/schemas/book.schema';
 import { Cart, CartDocument, CartItem } from '../carts/schemas/cart.schema';
 import { EbooksService } from '../ebooks/ebooks.service';
+import { InventoryService } from '../inventory/inventory.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import {
   VoucherRejectReason,
@@ -43,7 +45,12 @@ import { REVENUE_MATCH, allowedTransitions } from './order-transitions';
 import { MomoService } from './payments/momo.service';
 import { PaymentResult } from './payments/payment.types';
 import { VnpayService } from './payments/vnpay.service';
-import { Order, OrderDocument, ShippingAddress } from './schemas/order.schema';
+import {
+  Order,
+  OrderDocument,
+  OrderStatusEvent,
+  ShippingAddress,
+} from './schemas/order.schema';
 
 type PopulatedCartItem = Omit<CartItem, 'bookId'> & { bookId: BookDocument };
 
@@ -75,10 +82,11 @@ export class OrdersService {
   private readonly logger = new Logger(OrdersService.name);
 
   constructor(
+    @InjectConnection() private readonly connection: Connection,
     @InjectModel(Order.name) private readonly orderModel: Model<OrderDocument>,
     @InjectModel(Cart.name) private readonly cartModel: Model<CartDocument>,
-    @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
     private readonly booksService: BooksService,
+    private readonly inventoryService: InventoryService,
     private readonly ebooksService: EbooksService,
     private readonly vouchersService: VouchersService,
     private readonly vnpayService: VnpayService,
@@ -163,21 +171,21 @@ export class OrdersService {
       });
     }
 
-    let note: string | undefined;
-
     if (status === 'Cancelled') {
-      const wasCommitted = order.inventoryCommitted;
-      await this.releaseInventory(order);
-      if (wasCommitted) note = 'Reserved stock returned';
-    } else if (status === 'Confirmed') {
-      order.confirmedByAdmin = true;
-      order.confirmedAt = new Date();
-    } else if (status === 'Paid') {
-      note = 'Cash collected on delivery';
-    }
+      await this.cancelAndRestock(order, 'admin', adminId);
+    } else {
+      let note: string | undefined;
 
-    this.recordStatus(order, status, 'admin', { actorId: adminId, note });
-    await order.save();
+      if (status === 'Confirmed') {
+        order.confirmedByAdmin = true;
+        order.confirmedAt = new Date();
+      } else if (status === 'Paid') {
+        note = 'Cash collected on delivery';
+      }
+
+      this.recordStatus(order, status, 'admin', { actorId: adminId, note });
+      await order.save();
+    }
     this.logger.log(`Order ${order.orderId} moved to ${status}`);
 
     return this.orderModel
@@ -207,13 +215,7 @@ export class OrdersService {
       });
     }
 
-    const wasCommitted = order.inventoryCommitted;
-    await this.releaseInventory(order);
-    this.recordStatus(order, 'Cancelled', 'customer', {
-      actorId: userId,
-      note: wasCommitted ? 'Reserved stock returned' : undefined,
-    });
-    await order.save();
+    await this.cancelAndRestock(order, 'customer', userId);
 
     return this.orderModel
       .findById(id)
@@ -222,27 +224,19 @@ export class OrdersService {
   }
 
   async checkoutWithVnpay(userId: string, voucherCode?: string) {
-    const { orderId, totalAmount } = await this.createOrderFromCart(
-      userId,
-      voucherCode,
-      'Vnpay',
-    );
+    const order = await this.createOrderFromCart(userId, voucherCode, 'Vnpay');
     const paymentUrl = await this.vnpayService.buildPaymentUrl({
-      orderId,
-      amount: totalAmount,
+      orderId: order.orderId,
+      amount: order.total,
     });
     return { paymentUrl };
   }
 
   async checkoutWithMomo(userId: string, voucherCode?: string) {
-    const { orderId, totalAmount } = await this.createOrderFromCart(
-      userId,
-      voucherCode,
-      'Momo',
-    );
+    const order = await this.createOrderFromCart(userId, voucherCode, 'Momo');
     const paymentUrl = await this.momoService.buildPaymentUrl({
-      orderId,
-      amount: totalAmount,
+      orderId: order.orderId,
+      amount: order.total,
     });
     return { paymentUrl };
   }
@@ -252,20 +246,27 @@ export class OrdersService {
   async checkoutWithCod(userId: string, dto: CodCheckoutDto) {
     await this.rejectEbooksForCod(userId);
 
-    const { orderId, totalAmount } = await this.createOrderFromCart(
-      userId,
-      dto.voucherCode,
-      'COD',
-      dto.shipping,
-    );
+    const order = await this.connection.transaction(async (session) => {
+      const created = await this.createOrderFromCart(
+        userId,
+        dto.voucherCode,
+        'COD',
+        { shipping: dto.shipping, inventoryCommitted: true, session },
+      );
+      await this.inventoryService.commitSale(created.items, {
+        orderCode: created.orderId,
+        actorId: userId,
+        session,
+      });
+      return created;
+    });
 
-    const order = await this.orderModel.findOne({ orderId });
-    if (order) await this.commitInventory(order);
-    await this.notifyNewOrder(orderId);
+    await this.afterStockCommitted(order);
+    await this.notifyNewOrder(order.orderId);
 
     return {
-      orderId,
-      totalAmount,
+      orderId: order.orderId,
+      totalAmount: order.total,
       paymentMethod: 'COD' as const,
       status: 'Pending' as const,
     };
@@ -347,10 +348,15 @@ export class OrdersService {
     userId: string,
     voucherCode: string | undefined,
     paymentMethod: PaymentMethod,
-    shipping?: ShippingAddress,
-  ): Promise<{ orderId: string; totalAmount: number }> {
+    options: {
+      shipping?: ShippingAddress;
+      inventoryCommitted?: boolean;
+      session?: ClientSession;
+    } = {},
+  ): Promise<OrderDocument> {
     const cart = await this.cartModel
       .findOne({ userId })
+      .session(options.session ?? null)
       .populate<{ items: PopulatedCartItem[] }>('items.bookId');
 
     if (!cart || cart.items.length === 0) {
@@ -383,7 +389,7 @@ export class OrdersService {
     );
     const orderId = `ORD${Date.now()}${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
-    await new this.orderModel({
+    return new this.orderModel({
       userId,
       orderId,
       items: cart.items.map((item) => ({
@@ -393,7 +399,8 @@ export class OrdersService {
       })),
       total: totalAmount,
       paymentMethod,
-      shipping,
+      shipping: options.shipping,
+      inventoryCommitted: options.inventoryCommitted ?? false,
       statusHistory: [
         {
           status: 'Pending',
@@ -410,9 +417,7 @@ export class OrdersService {
             ),
           }
         : undefined,
-    }).save();
-
-    return { orderId, totalAmount };
+    }).save({ session: options.session });
   }
 
   private async resolveDiscount(
@@ -452,82 +457,124 @@ export class OrdersService {
     }
 
     if (order.status !== 'Pending') {
-      if (success && order.status === 'Cancelled') {
-        this.logger.error(
-          `${gateway} reports payment for cancelled order ${orderId}: refund it manually`,
-        );
-      }
-      return 'already_settled';
+      return this.alreadySettled(order, success, gateway);
     }
 
-    const alreadyNotified = order.inventoryCommitted;
-    this.recordStatus(order, success ? 'Paid' : 'Failed', 'gateway', {
+    const status: OrderStatus = success ? 'Paid' : 'Failed';
+    const takesStock = success && !order.inventoryCommitted;
+    const event = this.statusEvent(status, 'gateway', {
       note: success
         ? `${order.paymentMethod} confirmed the payment`
         : `${order.paymentMethod} rejected the payment`,
     });
-    await order.save();
-    this.logger.log(`Order ${orderId} updated to status: ${order.status}`);
 
-    if (success) {
-      await this.commitInventory(order);
-      if (!alreadyNotified) await this.notifyNewOrder(order.orderId);
+    const settled = await this.connection.transaction(async (session) => {
+      const claimed = await this.orderModel.updateOne(
+        { _id: order._id, status: 'Pending' },
+        {
+          $set: {
+            status,
+            inventoryCommitted: order.inventoryCommitted || takesStock,
+          },
+          $push: { statusHistory: event },
+        },
+        { session },
+      );
+      if (claimed.matchedCount === 0) return false;
+
+      if (takesStock) {
+        await this.inventoryService.commitSale(order.items, {
+          orderCode: order.orderId,
+          actorId: order.userId,
+          allowOversell: true,
+          session,
+        });
+      }
+      return true;
+    });
+
+    if (!settled) {
+      const current = await this.orderModel.findById(order._id);
+      return this.alreadySettled(current ?? order, success, gateway);
+    }
+    this.logger.log(`Order ${orderId} updated to status: ${status}`);
+
+    if (takesStock) {
+      await this.afterStockCommitted(order);
+      await this.notifyNewOrder(order.orderId);
     }
     return 'settled';
   }
 
-  // Takes the stock, the voucher usage and the cart. COD reaches this while
-  // still Pending: the goods are reserved when the order is placed.
-  private async commitInventory(order: OrderDocument): Promise<void> {
-    if (order.inventoryCommitted) return;
-
-    for (const item of order.items) {
-      const book = await this.bookModel.findById(item.bookId);
-      if (!book) continue;
-
-      if (item.productType === 'hardbook' && book.stock >= item.quantity) {
-        book.stock -= item.quantity;
-      }
-      book.sold += item.quantity;
-      await book.save();
+  private alreadySettled(
+    order: OrderDocument,
+    success: boolean,
+    gateway: Gateway,
+  ): SettleOutcome {
+    if (success && order.status === 'Cancelled') {
+      this.logger.error(
+        `${gateway} reports payment for cancelled order ${order.orderId}: refund it manually`,
+      );
     }
+    return 'already_settled';
+  }
 
+  private async afterStockCommitted(order: OrderDocument): Promise<void> {
     if (order.voucher?.code) {
       await this.vouchersService.adjustUsage(order.voucher.code, 1);
     }
-
-    order.inventoryCommitted = true;
-    await order.save();
-
-    await this.booksService.invalidateBooks(
-      order.items.map((item) => String(item.bookId)),
-    );
+    await this.booksService.invalidateBooks(this.bookIds(order));
     await this.cartModel.findOneAndDelete({ userId: order.userId });
   }
 
-  // Gives back whatever a cancelled order took, once. Orders created before
-  // `inventoryCommitted` existed fall back to "committed when Paid".
-  private async releaseInventory(order: OrderDocument): Promise<void> {
-    const committed = order.inventoryCommitted ?? order.status === 'Paid';
-    if (!committed) return;
+  private async cancelAndRestock(
+    order: OrderDocument,
+    actor: StatusActor,
+    actorId?: string,
+  ): Promise<void> {
+    const restock = order.inventoryCommitted ?? order.status === 'Paid';
+    const event = this.statusEvent('Cancelled', actor, {
+      actorId,
+      note: restock ? 'Reserved stock returned' : undefined,
+    });
 
-    for (const item of order.items) {
-      const book = await this.bookModel.findById(item.bookId);
-      if (!book) continue;
+    const cancelled = await this.connection.transaction(async (session) => {
+      const claimed = await this.orderModel.updateOne(
+        { _id: order._id, status: order.status },
+        {
+          $set: { status: 'Cancelled', inventoryCommitted: false },
+          $push: { statusHistory: event },
+        },
+        { session },
+      );
+      if (claimed.matchedCount === 0) return false;
 
-      if (item.productType === 'hardbook') book.stock += item.quantity;
-      book.sold = Math.max(0, book.sold - item.quantity);
-      await book.save();
+      if (restock) {
+        await this.inventoryService.revertSale(order.items, {
+          orderCode: order.orderId,
+          actorId,
+          session,
+        });
+      }
+      return true;
+    });
+
+    if (!cancelled) {
+      throw new ConflictException({
+        msg: 'This order was just updated by someone else. Refresh and try again.',
+      });
     }
 
-    if (order.voucher?.code) {
-      await this.vouchersService.adjustUsage(order.voucher.code, -1);
+    if (restock) {
+      if (order.voucher?.code) {
+        await this.vouchersService.adjustUsage(order.voucher.code, -1);
+      }
+      await this.booksService.invalidateBooks(this.bookIds(order));
     }
+  }
 
-    await this.booksService.invalidateBooks(
-      order.items.map((item) => String(item.bookId)),
-    );
-    order.inventoryCommitted = false;
+  private bookIds(order: OrderDocument): string[] {
+    return order.items.map((item) => String(item.bookId));
   }
 
   private async notifyNewOrder(orderId: string): Promise<void> {
@@ -561,16 +608,24 @@ export class OrdersService {
     options: { actorId?: string; note?: string } = {},
   ): void {
     if (order.status !== status || order.statusHistory.length === 0) {
-      order.statusHistory.push({
-        status,
-        actor,
-        actorId: options.actorId ? new Types.ObjectId(options.actorId) : null,
-        note: options.note,
-        at: new Date(),
-      });
+      order.statusHistory.push(this.statusEvent(status, actor, options));
     }
 
     order.status = status;
+  }
+
+  private statusEvent(
+    status: OrderStatus,
+    actor: StatusActor,
+    options: { actorId?: string; note?: string } = {},
+  ): OrderStatusEvent {
+    return {
+      status,
+      actor,
+      actorId: options.actorId ? new Types.ObjectId(options.actorId) : null,
+      note: options.note,
+      at: new Date(),
+    };
   }
 
   // Explains a refused transition in terms of what the admin can actually do.

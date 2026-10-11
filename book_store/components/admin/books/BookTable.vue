@@ -82,14 +82,12 @@
             </td>
 
             <td class="whitespace-nowrap">
-              <AdminPill v-if="!book.stock" tone="destructive">
-                Out of stock
-              </AdminPill>
+              <AdminInventoryStockPill v-if="(book.stock ?? 0) <= 0" :stock="book.stock ?? 0" />
               <span v-else class="inline-flex items-center gap-2">
                 <span class="tabular-nums text-foreground">
                   {{ book.stock }} in stock
                 </span>
-                <AdminPill v-if="book.stock <= LOW_STOCK" tone="warning">
+                <AdminPill v-if="book.stock <= LOW_STOCK_THRESHOLD" tone="warning">
                   Low
                 </AdminPill>
               </span>
@@ -152,11 +150,11 @@
 
 <script setup lang="ts">
 import { BookOpen, Eye, Pencil, Trash2 } from "lucide-vue-next";
+import { LOW_STOCK_THRESHOLD } from "@/utils/inventory";
 import { formatUsd } from "@/utils/pricing";
 import type { Book } from "@/types";
 
 const VISIBLE_SUBJECTS = 2;
-const LOW_STOCK = 10;
 
 defineProps<{
   books: Book[];

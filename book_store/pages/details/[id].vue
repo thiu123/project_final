@@ -370,7 +370,7 @@ const hasPurchasedEbook = computed(
 );
 
 const isOutOfStock = computed(
-  () => productType.value === "hardbook" && (book.value.stock ?? 0) === 0
+  () => productType.value === "hardbook" && (book.value.stock ?? 0) <= 0
 );
 
 const maxQuantity = computed(() =>

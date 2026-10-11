@@ -55,7 +55,7 @@ export const searchBooksByTitle = (title: string, limit = 8) => {
 };
 
 export const createBook = (bookData: Partial<Book>) => {
-  return axiosInstance.post<Book>(API_URL, bookData);
+  return axiosInstance.post<{ message: string; book: Book }>(API_URL, bookData);
 };
 
 export const updateBook = (id: string, bookData: Partial<Book>) => {

@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, PipelineStage } from 'mongoose';
 import { Paginated, paginate } from '../../common/dto/pagination.dto';
+import { escapeRegex } from '../../common/utils/escape-regex';
 import { RedisService } from '../../config/redis/redis.service';
 import { BOOK_CACHE_TTL_SECONDS } from '../../constants/app.constants';
 import { BOOK_SUBJECTS } from '../../constants/book-subjects';
@@ -48,10 +49,6 @@ const SUBJECT_STATS_PIPELINE: PipelineStage.FacetPipelineStage[] = [
     },
   },
 ];
-
-function escapeRegex(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
 
 @Injectable()
 export class BooksService {

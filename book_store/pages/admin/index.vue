@@ -11,6 +11,7 @@ import {
   AdminBookManagement,
   AdminContactManagement,
   AdminDashboardManagement,
+  AdminInventoryManagement,
   AdminOrderManagement,
   AdminReviewManagement,
   AdminUserManagement,
@@ -25,6 +26,7 @@ definePageMeta({
 const VIEWS = {
   dashboard: AdminDashboardManagement,
   "book-management": AdminBookManagement,
+  "inventory-management": AdminInventoryManagement,
   "user-management": AdminUserManagement,
   "review-management": AdminReviewManagement,
   "contact-management": AdminContactManagement,

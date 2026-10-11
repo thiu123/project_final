@@ -189,16 +189,41 @@
 
             <div class="col-span-12 md:col-span-6">
               <UiInput
+                v-if="!isEditing"
                 v-model="form.stock"
-                label="Stock Quantity"
+                label="Opening stock"
                 type="number"
                 min="0"
-                hint="0 = Out of stock / Ebook only"
+                step="1"
+                hint="Recorded as received stock in the inventory ledger. Leave 0 for ebook-only."
+                :error-message="errors.stock"
               >
                 <template #prepend>
                   <Package class="h-4 w-4" />
                 </template>
               </UiInput>
+
+              <template v-else>
+                <UiLabel class="mb-1.5 block">Stock on hand</UiLabel>
+                <div
+                  class="flex h-9 items-center justify-between gap-2 rounded-md border border-input bg-muted/40 px-3 text-sm"
+                >
+                  <span class="inline-flex items-center gap-2 tabular-nums text-foreground">
+                    <Package class="h-4 w-4 text-muted-foreground" />
+                    {{ form.stock ?? 0 }} units
+                  </span>
+                  <NuxtLink
+                    to="/admin?tab=inventory-management"
+                    class="text-xs font-medium text-foreground underline-offset-4 hover:underline"
+                    @click="open = false"
+                  >
+                    Adjust in Inventory
+                  </NuxtLink>
+                </div>
+                <p class="mt-1 text-xs text-muted-foreground">
+                  Stock changes go through Inventory so every unit is recorded.
+                </p>
+              </template>
             </div>
 
             <div class="col-span-12 md:col-span-6">
@@ -251,6 +276,7 @@ import {
 import { v4 as uuidv4 } from "uuid";
 import { uploadBookImage } from "~/api/userApi";
 import { uploadEbookFile } from "~/api/bookApi";
+import { adjustStock } from "~/api/inventoryApi";
 import { useBookStore } from "@/stores/book";
 import type { Book, SnackbarPayload } from "@/types";
 
@@ -341,6 +367,11 @@ function validate(): boolean {
   if (!form.value.cover_url) next.cover_url = "Cover image is required";
   if (form.value.price < 0) next.price = "Price must be non-negative";
 
+  const openingStock = Number(form.value.stock || 0);
+  if (!isEditing.value && (!Number.isInteger(openingStock) || openingStock < 0)) {
+    next.stock = "Opening stock must be a whole number, 0 or more";
+  }
+
   const year = form.value.first_publish_year;
   if (year && (year < 1000 || year > currentYear + 1)) {
     next.first_publish_year = "Please enter a valid publication year";
@@ -420,15 +451,17 @@ async function save() {
 
   saving.value = true;
   try {
+    const { stock, sold: _sold, ...bookData } = form.value;
+
     if (isEditing.value) {
       await bookStore.updateBook({
         id: form.value._id as string,
-        bookData: form.value as Partial<Book>,
+        bookData: bookData as Partial<Book>,
       });
       notify("Book updated successfully");
     } else {
-      await bookStore.createBook(form.value as Partial<Book>);
-      notify("Book added successfully");
+      const { book } = await bookStore.createBook(bookData as Partial<Book>);
+      await recordOpeningStock(book, Number(stock || 0));
     }
     open.value = false;
     emit("saved");
@@ -441,6 +474,28 @@ async function save() {
     );
   } finally {
     saving.value = false;
+  }
+}
+
+async function recordOpeningStock(book: Book, quantity: number) {
+  if (quantity <= 0) {
+    notify("Book added successfully");
+    return;
+  }
+
+  try {
+    await adjustStock(book._id, {
+      type: "restock",
+      quantity,
+      note: "Opening stock",
+    });
+    notify(`Book added with ${quantity} units in stock`);
+  } catch (error) {
+    console.error("Opening stock error:", error);
+    notify(
+      "Book added, but its opening stock was not recorded. Add it from Inventory.",
+      "warning"
+    );
   }
 }
 </script>

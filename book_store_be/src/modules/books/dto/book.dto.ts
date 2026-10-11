@@ -64,16 +64,6 @@ export class CreateBookDto {
   @Min(0)
   @Max(5)
   rating?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  stock?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  sold?: number;
 }
 
 export class UpdateBookDto {
@@ -133,14 +123,4 @@ export class UpdateBookDto {
   @Min(0)
   @Max(5)
   rating?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  stock?: number;
-
-  @IsOptional()
-  @IsInt()
-  @Min(0)
-  sold?: number;
 }
