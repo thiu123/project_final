@@ -1,31 +1,53 @@
 <template>
   <div>
     <HomeHeroSection :books="books" @add-to-cart="handleAddToCart" />
-    <HomeServiceStrip />
+    <HomeServiceStrip class="mt-12 md:mt-16" />
 
-    <HomeTopTen />
-    <HomeCategoryShowcase />
-    <HomeBookSearchPanel :trending-books="books" />
-
-    <HomeBestSellingBooks @add-to-cart="handleAddToCart" />
+    <HomeTopTen number="01" :class="SECTION_SPACING" />
+    <HomeCategoryShowcase number="02" :class="SECTION_SPACING" />
 
     <BookCarouselSection
-      :carousel="firstCarousel"
+      v-if="literaryCarousel"
+      number="03"
+      :carousel="literaryCarousel"
+      :class="SECTION_SPACING"
       @add-to-cart="handleAddToCart"
     />
 
-    <HomeEbookPromo :books="promoBooks" />
+    <HomeBookSearchPanel :trending-books="books" :class="SECTION_SPACING" />
 
-    <HomeBestSellerTabs @show-snackbar="notifyFromPayload" />
+    <HomeBestSellingBooks
+      number="04"
+      :class="SECTION_SPACING"
+      @add-to-cart="handleAddToCart"
+    />
 
     <BookCarouselSection
-      v-for="carousel in otherCarousels"
+      v-if="mangaCarousel"
+      number="05"
+      :carousel="mangaCarousel"
+      :class="SECTION_SPACING"
+      @add-to-cart="handleAddToCart"
+    />
+
+    <HomeEbookPromo :books="promoBooks" :class="SECTION_SPACING" />
+
+    <HomeBestSellerTabs
+      number="06"
+      :class="SECTION_SPACING"
+      @show-snackbar="notifyFromPayload"
+    />
+
+    <BookCarouselSection
+      v-for="(carousel, index) in laterCarousels"
       :key="carousel.subject"
+      :number="sectionNumber(7 + index)"
       :carousel="carousel"
+      :class="SECTION_SPACING"
       @add-to-cart="handleAddToCart"
     />
 
-    <HomeClosingCta :books="books" />
+    <HomeClosingCta :books="books" :class="SECTION_SPACING" />
 
     <SnackbarAlert
       v-model="snackbar.show"
@@ -49,7 +71,13 @@ import type { User } from "@/types";
 const bookStore = useBookStore();
 const { books, homeSubjects } = storeToRefs(bookStore);
 
-const [firstCarousel, ...otherCarousels] = HOME_CAROUSELS;
+const SECTION_SPACING = "mt-24 md:mt-32";
+
+const [literaryCarousel, mangaCarousel, ...laterCarousels] = HOME_CAROUSELS;
+
+function sectionNumber(value: number) {
+  return String(value).padStart(2, "0");
+}
 
 const promoBooks = computed(() => {
   const seen = new Set<string>();

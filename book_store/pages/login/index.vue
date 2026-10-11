@@ -1,10 +1,5 @@
 <template>
-  <div
-    :class="[
-      'w-full overflow-hidden rounded-xl border border-border shadow-[0_24px_60px_-28px_hsl(var(--foreground)/0.25)] dark:shadow-none',
-      view === 'login' ? 'max-w-[920px]' : 'max-w-md',
-    ]"
-  >
+  <div class="w-full max-w-[1040px] sm:border sm:border-border">
     <Login
       v-if="view === 'login'"
       :notice="notice"

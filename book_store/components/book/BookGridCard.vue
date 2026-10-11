@@ -1,80 +1,80 @@
 <template>
-  <div
-    class="group flex h-full flex-col overflow-hidden rounded-xl border border-transparent bg-card shadow-md transition-all duration-300 hover:-translate-y-1 hover:border-primary/20 hover:shadow-xl"
-  >
-    <div
-      class="relative flex min-h-[320px] items-center justify-center bg-gradient-to-br from-muted/60 to-muted p-5"
-    >
+  <article class="group flex h-full flex-col">
+    <div class="relative bg-muted transition-colors duration-500 group-hover:bg-accent">
       <NuxtLink
         :to="`/details/${book._id}`"
-        class="relative aspect-[2/3] w-[70%] max-w-[200px] overflow-hidden shadow-lg transition-all duration-500 group-hover:-translate-y-2 group-hover:scale-105 group-hover:shadow-2xl"
+        class="flex aspect-[4/5] items-center justify-center"
+        :aria-label="book.title"
       >
-        <img
-          v-if="book.cover_url"
-          class="block h-full w-full object-cover"
-          :src="book.cover_url"
-          :alt="book.title"
-          loading="lazy"
-        />
+        <div
+          class="ed-cover aspect-[2/3] w-[60%] overflow-hidden bg-card transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-1.5"
+        >
+          <img
+            v-if="book.cover_url"
+            class="h-full w-full object-cover"
+            :src="book.cover_url"
+            :alt="book.title"
+            loading="lazy"
+          />
+          <div v-else class="flex h-full items-center justify-center p-3 text-center font-serif text-sm text-muted-foreground">
+            {{ book.title }}
+          </div>
+        </div>
       </NuxtLink>
 
       <button
         type="button"
-        class="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-white shadow-md transition-transform hover:scale-105 dark:bg-card"
+        class="absolute right-3 top-3 flex size-9 items-center justify-center rounded-full bg-background/90 text-foreground transition-all duration-300 hover:scale-105 focus-visible:opacity-100"
+        :class="!favorite && '[@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100'"
         :aria-label="favorite ? 'Remove from favorites' : 'Add to favorites'"
-        @click.stop="emit('toggle-favorite', book._id)"
+        :aria-pressed="favorite"
+        @click="emit('toggle-favorite', book._id)"
       >
-        <Heart
-          class="h-6 w-6"
-          :class="favorite ? 'fill-current text-red-500' : 'text-muted-foreground'"
-        />
+        <Heart class="size-4" :class="favorite && 'fill-primary text-primary'" />
       </button>
 
-      <UiBadge class="absolute bottom-3 left-3 shadow">
-        {{ formatUsd(book.price) }}
-      </UiBadge>
+      <span
+        v-if="outOfStock"
+        class="absolute left-3 top-3 bg-background px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]"
+      >
+        Sold out
+      </span>
+
+      <button
+        v-else
+        type="button"
+        class="absolute inset-x-3 bottom-3 flex h-10 items-center justify-center gap-2 bg-foreground text-[11px] font-semibold uppercase tracking-[0.16em] text-background transition-all duration-300 hover:bg-foreground/85 focus-visible:translate-y-0 focus-visible:opacity-100 [@media(hover:hover)]:translate-y-2 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-hover:opacity-100"
+        @click="emit('add-to-cart', book._id)"
+      >
+        <Plus class="size-3.5" />
+        Add to cart
+      </button>
     </div>
 
-    <div class="grow p-4">
-      <div class="mb-3 flex items-center">
-        <UiRating :model-value="book.rating || 0" :size="16" readonly class="mr-2" />
-      </div>
-
+    <div class="flex grow flex-col pt-4">
+      <p class="eyebrow truncate leading-normal">
+        {{ book.authors?.[0] || "Unknown author" }}
+      </p>
       <NuxtLink
         :to="`/details/${book._id}`"
-        class="mb-2 block truncate text-base font-bold text-foreground no-underline hover:text-primary"
+        class="mt-2 line-clamp-2 font-serif text-[1.2rem] leading-snug text-foreground transition-colors hover:text-primary"
         :title="book.title"
       >
         {{ book.title }}
       </NuxtLink>
-
-      <div class="mb-3 text-sm text-muted-foreground">
-        by {{ book.authors?.[0] || "Unknown Author" }}
+      <div class="mt-auto flex items-baseline justify-between gap-3 pt-3 text-sm">
+        <span class="tabular-nums">{{ formatUsd(book.price) }}</span>
+        <span v-if="book.rating" class="flex items-center gap-1 text-xs text-muted-foreground">
+          <Star class="size-3 fill-current" />
+          {{ book.rating.toFixed(1) }}
+        </span>
       </div>
-
-      <UiBadge variant="success" class="mb-2 text-[10px]">
-        <Flame class="h-3 w-3" />
-        Sold {{ book.sold || 0 }}
-      </UiBadge>
     </div>
-
-    <div class="p-4 pt-0">
-      <UiButton
-        size="lg"
-        block
-        class="rounded-lg text-sm font-bold"
-        :disabled="outOfStock"
-        @click="emit('add-to-cart', book._id)"
-      >
-        <ShoppingCart class="h-5 w-5" />
-        {{ outOfStock ? "Out of Stock" : "Add to Cart" }}
-      </UiButton>
-    </div>
-  </div>
+  </article>
 </template>
 
 <script setup lang="ts">
-import { Flame, Heart, ShoppingCart } from "lucide-vue-next";
+import { Heart, Plus, Star } from "lucide-vue-next";
 import type { Book } from "@/types";
 import { formatUsd } from "@/utils/pricing";
 

@@ -2,12 +2,12 @@
   <UiButton
     type="button"
     variant="outline"
-    size="lg"
+    size="cta"
     block
-    class="px-4 hover:bg-muted hover:text-foreground active:scale-[0.98]"
+    class="rounded-none border-border bg-transparent px-4 shadow-none hover:border-foreground hover:bg-transparent hover:text-foreground"
     @click="continueWithGoogle"
   >
-    <svg class="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
+    <svg class="size-4" viewBox="0 0 24 24" aria-hidden="true">
       <path
         fill="#4285F4"
         d="M23.49 12.27c0-.79-.07-1.54-.19-2.27H12v4.51h6.47c-.29 1.48-1.14 2.73-2.4 3.58v3h3.86c2.26-2.09 3.56-5.17 3.56-8.82z"

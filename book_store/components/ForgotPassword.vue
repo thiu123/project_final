@@ -1,47 +1,53 @@
 <template>
   <AuthShell
     :embedded="embedded"
+    eyebrow="Password reset"
     title="Reset your password"
     :subtitle="
       sent
         ? 'Check your inbox for the reset link.'
         : 'Enter the email on your account and we will send you a reset link.'
     "
+    panel-label="Locked out"
+    caption="It takes a minute. We will email you a link, and your shelf will be waiting."
   >
-    <form v-if="!sent" class="grid gap-4" novalidate @submit.prevent="onSubmit">
-      <UiInput
-        id="forgot-email"
-        v-model="email"
-        label="Email"
-        type="email"
-        autocomplete="email"
-        class="h-10"
-        :error-message="emailError"
-        @input="emailError = ''"
-      />
+    <template #panel>It happens to <span class="italic">every</span> reader.</template>
+
+    <form v-if="!sent" class="grid gap-7" novalidate @submit.prevent="onSubmit">
+      <div>
+        <label for="forgot-email" class="eyebrow mb-1 block">Email</label>
+        <UiInput
+          id="forgot-email"
+          v-model="email"
+          type="email"
+          autocomplete="email"
+          :class="FIELD_CLASS"
+          :error-message="emailError"
+          @input="emailError = ''"
+        />
+      </div>
 
       <AuthFormMessage v-if="errorMessage" tone="error">
         {{ errorMessage }}
       </AuthFormMessage>
 
-      <UiButton type="submit" variant="ink" size="lg" block :loading="submitting">
+      <UiButton type="submit" variant="ink" size="cta" block :loading="submitting" class="mt-1 shadow-none">
         Send reset link
       </UiButton>
     </form>
 
-    <div v-else class="grid gap-4">
+    <div v-else class="grid gap-6">
       <AuthFormMessage tone="success">
         If an account exists for <strong class="font-semibold">{{ email }}</strong>,
         a reset link is on its way. It expires in 10 minutes.
       </AuthFormMessage>
-      <UiButton type="button" variant="outline" size="lg" block @click="sent = false">
+      <UiButton type="button" variant="outline" size="cta" block class="rounded-none shadow-none" @click="sent = false">
         Use a different email
       </UiButton>
     </div>
 
     <template #footer>
-      <AuthTextLink @click="$emit('back-to-login')">
-        <ArrowLeft class="h-4 w-4" />
+      <AuthTextLink back class="text-[12px] uppercase tracking-[0.14em]" @click="$emit('back-to-login')">
         Back to sign in
       </AuthTextLink>
     </template>
@@ -49,8 +55,10 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowLeft } from "lucide-vue-next";
 import { forgotPassword } from "~/api/authApi";
+
+const FIELD_CLASS =
+  "h-12 rounded-none border-0 border-b bg-transparent px-0 text-[15px] shadow-none focus-visible:border-foreground focus-visible:ring-0";
 
 withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
 

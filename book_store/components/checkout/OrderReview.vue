@@ -1,69 +1,63 @@
 <template>
-  <UiCard class="mb-4 overflow-hidden rounded-xl shadow md:mb-6">
-    <div class="flex items-center bg-primary px-4 py-4 text-primary-foreground">
-      <ShoppingCart class="mr-3 h-6 w-6" />
-      <span class="text-lg font-semibold">
-        Order Summary ({{ items.length }} items)
-      </span>
-    </div>
-
-    <div v-if="items.length" class="p-4 md:p-6">
-      <div
-        v-for="(item, index) in items"
-        :key="item.bookId"
-        class="mb-4"
-        :class="{ 'border-b border-border pb-4': index < items.length - 1 }"
-      >
-        <div class="flex gap-3 sm:gap-4">
-          <img
-            :src="item.cover_url"
-            :alt="item.title"
-            class="h-[110px] w-[80px] shrink-0 rounded bg-muted object-cover sm:h-[160px] sm:w-[120px]"
-          />
-
-          <div class="flex min-w-0 grow flex-col">
-            <div class="mb-2 text-base font-bold sm:text-lg sm:font-semibold">
-              {{ item.title }}
-            </div>
-
-            <div class="mb-2 flex items-center text-xs text-muted-foreground sm:mb-3 sm:text-sm">
-              <User class="mr-1 h-3 w-3 sm:h-4 sm:w-4" />
-              {{ item.authors || "Unknown Author" }}
-            </div>
-
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-              <UiBadge :variant="item.productType === 'ebook' ? 'success' : 'info'">
-                {{ item.productType === "ebook" ? "📱 Ebook" : "📚 Hardbook" }}
-              </UiBadge>
-              <span class="text-xs text-muted-foreground">
-                {{ formatUsd(unitPrice(item.price, item.productType)) }} each
-              </span>
-            </div>
-
-            <div
-              class="mt-auto flex items-center justify-between gap-3 pt-3 sm:pt-4"
-            >
-              <div class="flex items-center gap-2 rounded bg-muted px-3 py-1.5">
-                <span class="text-sm text-muted-foreground">Qty:</span>
-                <span class="text-base font-medium">{{ item.quantity }}</span>
-              </div>
-              <span class="text-lg font-bold text-primary sm:text-2xl">
-                {{ formatUsd(lineTotalFor(item)) }}
-              </span>
-            </div>
-          </div>
-        </div>
+  <ul v-if="items.length" class="divide-y divide-border border-y border-border">
+    <li v-for="item in items" :key="item.bookId" class="flex gap-4 py-4">
+      <div class="ed-cover aspect-[2/3] w-12 shrink-0 self-start overflow-hidden bg-background md:w-14">
+        <img
+          v-if="item.cover_url"
+          :src="item.cover_url"
+          :alt="item.title"
+          class="h-full w-full object-cover"
+          loading="lazy"
+        />
       </div>
-    </div>
 
-    <div v-else class="p-8 text-center text-muted-foreground">
-      No items selected for checkout.
-    </div>
-  </UiCard>
+      <div class="min-w-0 flex-1">
+        <p class="line-clamp-2 font-serif text-base leading-snug text-foreground">
+          {{ item.title }}
+        </p>
+        <p class="mt-0.5 truncate text-[12px] text-muted-foreground">
+          {{ item.authors || "Unknown author" }}
+        </p>
+        <p
+          class="mt-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground"
+        >
+          {{ item.productType === "ebook" ? "Ebook" : "Hardback" }}
+          <span class="mx-1.5 text-border">/</span>
+          <span class="tabular-nums">Qty {{ item.quantity }}</span>
+        </p>
+      </div>
+
+      <div class="shrink-0 text-right">
+        <p class="text-[15px] tabular-nums text-foreground">
+          {{ formatUsd(lineTotalFor(item)) }}
+        </p>
+        <p
+          v-if="item.quantity > 1"
+          class="mt-0.5 text-[12px] tabular-nums text-muted-foreground"
+        >
+          {{ formatUsd(unitPrice(item.price, item.productType)) }} each
+        </p>
+      </div>
+    </li>
+  </ul>
+
+  <div v-else class="border-y border-border py-8">
+    <p class="text-[15px] text-muted-foreground">No books selected for checkout.</p>
+    <NuxtLink
+      to="/cart"
+      class="group mt-4 inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.14em]"
+    >
+      <ArrowLeft
+        class="size-4 transition-transform group-hover:-translate-x-1"
+        :stroke-width="1.5"
+      />
+      <span class="ed-link">Back to cart</span>
+    </NuxtLink>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ShoppingCart, User } from "lucide-vue-next";
+import { ArrowLeft } from "lucide-vue-next";
 import { formatUsd, unitPrice } from "@/utils/pricing";
 import type { CheckoutItem } from "@/types";
 

@@ -1,70 +1,60 @@
 <template>
-  <UiCard class="mb-4 overflow-hidden rounded-xl shadow md:mb-6">
-    <div class="flex items-center bg-primary px-4 py-4 text-primary-foreground">
-      <CreditCard class="mr-3 h-6 w-6" />
-      <span class="text-lg font-semibold">Payment Method</span>
-    </div>
-    <div class="p-4 md:p-6">
-      <div role="radiogroup" class="flex flex-col gap-3">
-        <button
-          v-for="method in PAYMENT_METHODS"
-          :key="method.id"
-          type="button"
-          role="radio"
-          :aria-checked="modelValue === method.id"
-          :disabled="isDisabled(method.id)"
-          class="rounded-lg border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60"
-          :class="
-            modelValue === method.id
-              ? 'border-primary bg-primary/5 dark:bg-primary/10'
-              : 'border-border bg-card'
-          "
-          @click="emit('update:modelValue', method.id)"
-        >
-          <div class="flex items-center">
-            <!-- Radio dot -->
-            <span
-              class="mr-3 flex h-4 w-4 shrink-0 items-center justify-center rounded-full border"
-              :class="modelValue === method.id ? 'border-primary' : 'border-input'"
-            >
-              <span
-                v-if="modelValue === method.id"
-                class="h-2 w-2 rounded-full bg-primary"
-              />
-            </span>
+  <div role="radiogroup" aria-label="Payment method" class="grid gap-3">
+    <button
+      v-for="method in PAYMENT_METHODS"
+      :key="method.id"
+      type="button"
+      role="radio"
+      :aria-checked="modelValue === method.id"
+      :disabled="isDisabled(method.id)"
+      class="flex w-full items-center gap-4 border p-4 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 md:gap-5 md:px-5"
+      :class="
+        modelValue === method.id
+          ? 'border-foreground'
+          : 'border-border hover:border-foreground/40'
+      "
+      @click="emit('update:modelValue', method.id)"
+    >
+      <span
+        class="flex h-12 w-16 shrink-0 items-center justify-center overflow-hidden border border-border bg-background dark:bg-foreground"
+      >
+        <img
+          v-if="method.logo"
+          :src="method.logo"
+          :alt="method.label"
+          :class="method.logoClass"
+        />
+        <Banknote
+          v-else
+          class="size-5 text-foreground dark:text-background"
+          :stroke-width="1.5"
+        />
+      </span>
 
-            <!-- Logo -->
-            <span
-              class="mr-3 flex shrink-0 items-center justify-center overflow-hidden rounded"
-              :class="method.logoClass"
-            >
-              <img
-                v-if="method.logo"
-                :src="method.logo"
-                :alt="method.label"
-                class="h-full w-full object-contain"
-              />
-              <Banknote v-else class="h-6 w-6 text-success" />
-            </span>
+      <span class="min-w-0 flex-1">
+        <span class="block text-[15px] font-medium text-foreground">{{ method.label }}</span>
+        <span class="mt-0.5 block text-[13px] leading-snug text-muted-foreground">
+          {{ descriptionFor(method.id) }}
+        </span>
+      </span>
 
-            <span>
-              <span class="block text-base font-medium">{{ method.label }}</span>
-              <span
-                v-if="descriptionFor(method.id)"
-                class="block text-xs text-muted-foreground"
-              >
-                {{ descriptionFor(method.id) }}
-              </span>
-            </span>
-          </div>
-        </button>
-      </div>
-    </div>
-  </UiCard>
+      <span
+        class="flex size-5 shrink-0 items-center justify-center rounded-full border transition-colors"
+        :class="
+          modelValue === method.id
+            ? 'border-foreground bg-foreground text-background'
+            : 'border-input'
+        "
+        aria-hidden="true"
+      >
+        <Check v-if="modelValue === method.id" class="size-3" :stroke-width="2.5" />
+      </span>
+    </button>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { Banknote, CreditCard } from "lucide-vue-next";
+import { Banknote, Check } from "lucide-vue-next";
 import vnpayLogo from "~/assets/vnpay-logo-inkythuatso.svg";
 import momoLogo from "~/assets/Logo-MoMo-Square-300x300.png";
 
@@ -88,23 +78,27 @@ const PAYMENT_METHODS: {
   label: string;
   logo?: string;
   logoClass: string;
+  description: string;
 }[] = [
   {
     id: "vnpay",
-    label: "VNPay Wallet",
+    label: "VNPay",
     logo: vnpayLogo,
-    logoClass: "h-[60px] w-[60px] bg-white",
+    logoClass: "h-full w-full object-cover",
+    description: "Bank card, banking app or QR code",
   },
   {
     id: "momo",
-    label: "Momo Wallet",
+    label: "MoMo",
     logo: momoLogo,
-    logoClass: "h-10 w-10",
+    logoClass: "size-9 object-contain",
+    description: "Pay in the MoMo app",
   },
   {
     id: "cod",
-    label: "Cash on Delivery",
-    logoClass: "h-10 w-10 bg-success/10",
+    label: "Cash on delivery",
+    logoClass: "",
+    description: "Pay the courier when your books arrive",
   },
 ];
 
@@ -113,9 +107,9 @@ function isDisabled(id: PaymentChoice) {
 }
 
 function descriptionFor(id: PaymentChoice) {
-  if (id !== "cod") return "";
-  return props.hasEbook
-    ? "Not available for ebooks — remove them or pay online"
-    : "Pay the courier when your books arrive";
+  if (id === "cod" && props.hasEbook) {
+    return "Not available for ebooks — remove them or pay online";
+  }
+  return PAYMENT_METHODS.find((method) => method.id === id)?.description ?? "";
 }
 </script>

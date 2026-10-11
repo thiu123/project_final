@@ -21,6 +21,7 @@ export default <Partial<Config>>{
           "Segoe UI",
           "sans-serif",
         ],
+        serif: ["Newsreader", "Iowan Old Style", "Georgia", "serif"],
       },
       colors: {
         // Brand palette (carried over from the original Vuetify theme)

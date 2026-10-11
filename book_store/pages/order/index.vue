@@ -1,109 +1,183 @@
 <template>
-  <main class="min-h-screen bg-muted">
-    <div class="mx-auto w-full max-w-[1200px] p-2 md:p-6">
-      <!-- Header -->
-      <div class="mb-6">
-        <h1 class="mb-2 text-2xl font-bold md:text-3xl">Checkout</h1>
-        <nav aria-label="Breadcrumb" class="flex items-center gap-1 text-sm">
-          <NuxtLink to="/" class="text-foreground hover:underline">Home</NuxtLink>
-          <ChevronRight class="h-4 w-4 text-muted-foreground" />
-          <NuxtLink to="/cart" class="text-foreground hover:underline">Cart</NuxtLink>
-          <ChevronRight class="h-4 w-4 text-muted-foreground" />
-          <span class="text-muted-foreground">Checkout</span>
-        </nav>
+  <div class="container mx-auto max-w-7xl px-4 pt-10 md:pt-16">
+    <header class="hero-rise border-b border-border pb-8 md:pb-10">
+      <nav
+        aria-label="Breadcrumb"
+        class="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground"
+      >
+        <NuxtLink to="/" class="transition-colors hover:text-foreground">Home</NuxtLink>
+        <span class="text-border" aria-hidden="true">/</span>
+        <NuxtLink to="/cart" class="transition-colors hover:text-foreground">Cart</NuxtLink>
+        <span class="text-border" aria-hidden="true">/</span>
+        <span class="text-foreground" aria-current="page">Checkout</span>
+      </nav>
+      <h1
+        class="mt-6 font-serif text-4xl font-normal leading-[1.02] tracking-[-0.025em] md:text-6xl"
+      >
+        Almost <span class="italic">yours</span>.
+      </h1>
+      <p class="mt-4 max-w-[52ch] text-[15px] leading-relaxed text-muted-foreground">
+        Choose how to pay, add a code if you have one, and confirm your order.
+      </p>
+    </header>
+
+    <div class="mt-10 grid grid-cols-1 gap-12 md:mt-12 lg:grid-cols-12 lg:gap-16">
+      <div class="divide-y divide-border lg:col-span-7">
+        <section class="pb-10 md:pb-12" aria-labelledby="step-payment">
+          <div :class="STEP_HEAD_CLASS">
+            <span :class="STEP_NUMBER_CLASS">{{ stepNumber("payment") }}</span>
+            <div class="min-w-0">
+              <h2 id="step-payment" :class="STEP_TITLE_CLASS">Payment</h2>
+              <p class="mt-1 text-[14px] text-muted-foreground">How would you like to pay?</p>
+            </div>
+          </div>
+          <div :class="STEP_BODY_CLASS">
+            <CheckoutPaymentMethodPicker
+              v-model="selectedPayment"
+              :has-ebook="hasEbook"
+            />
+          </div>
+        </section>
+
+        <section
+          v-if="selectedPayment === 'cod'"
+          class="py-10 md:py-12"
+          aria-labelledby="step-delivery"
+        >
+          <div :class="STEP_HEAD_CLASS">
+            <span :class="STEP_NUMBER_CLASS">{{ stepNumber("delivery") }}</span>
+            <div class="min-w-0">
+              <h2 id="step-delivery" :class="STEP_TITLE_CLASS">Delivery</h2>
+              <p class="mt-1 text-[14px] text-muted-foreground">
+                Where should the courier bring your books?
+              </p>
+            </div>
+          </div>
+          <div :class="STEP_BODY_CLASS">
+            <CheckoutShippingDetailsForm :shipping="shipping" />
+          </div>
+        </section>
+
+        <section class="py-10 md:py-12" aria-labelledby="step-code">
+          <div :class="STEP_HEAD_CLASS">
+            <span :class="STEP_NUMBER_CLASS">{{ stepNumber("code") }}</span>
+            <div class="min-w-0">
+              <h2 id="step-code" :class="STEP_TITLE_CLASS">Promotion code</h2>
+              <p class="mt-1 text-[14px] text-muted-foreground">
+                Optional. Enter a code or choose one of ours.
+              </p>
+            </div>
+          </div>
+          <div :class="STEP_BODY_CLASS">
+            <CheckoutVoucherPanel :subtotal="subtotal" @applied="onVoucherApplied" />
+          </div>
+        </section>
       </div>
 
-      <CheckoutPaymentMethodPicker
-        v-model="selectedPayment"
-        :has-ebook="hasEbook"
-      />
-
-      <!-- Only COD collects an address on site -->
-      <CheckoutShippingDetailsForm
-        v-if="selectedPayment === 'cod'"
-        :shipping="shipping"
-      />
-
-      <CheckoutVoucherPanel :subtotal="subtotal" @applied="onVoucherApplied" />
-
-      <CheckoutOrderReview :items="orderItems" />
-
-      <!-- Totals -->
-      <UiCard class="mb-4 rounded-xl shadow md:mb-6">
-        <div class="p-4 md:p-6">
-          <div class="mb-3 flex justify-between text-base">
-            <span class="text-muted-foreground">Subtotal</span>
-            <span class="font-medium">{{ formatUsd(subtotal) }}</span>
-          </div>
-          <div v-if="discount > 0" class="mb-3 flex justify-between text-base">
-            <span class="text-muted-foreground">Discount</span>
-            <span class="font-medium text-success">
-              -{{ formatUsd(discount) }}
+      <aside class="lg:col-span-5" aria-labelledby="step-review">
+        <div class="bg-muted px-5 py-8 sm:px-8 lg:sticky lg:top-32">
+          <div class="flex items-baseline gap-4">
+            <span :class="STEP_NUMBER_CLASS">{{ stepNumber("review") }}</span>
+            <h2 id="step-review" :class="STEP_TITLE_CLASS">Review</h2>
+            <span class="eyebrow ml-auto tabular-nums">
+              {{ orderItems.length }} {{ orderItems.length === 1 ? "book" : "books" }}
             </span>
           </div>
-          <UiSeparator class="my-4" />
-          <div
-            class="flex items-center justify-between rounded-lg bg-primary/10 p-4"
-          >
-            <span class="text-lg font-bold">Total Amount</span>
-            <span class="text-3xl font-bold text-primary">
+
+          <div class="mt-6">
+            <CheckoutOrderReview :items="orderItems" />
+          </div>
+
+          <dl class="divide-y divide-border border-b border-border text-[15px]">
+            <div class="flex items-baseline justify-between gap-4 py-3">
+              <dt class="text-muted-foreground">Subtotal</dt>
+              <dd class="tabular-nums">{{ formatUsd(subtotal) }}</dd>
+            </div>
+            <div v-if="discount > 0" class="flex items-baseline justify-between gap-4 py-3">
+              <dt class="text-muted-foreground">
+                Discount
+                <span
+                  v-if="appliedVoucher?.code"
+                  class="ml-1 text-[11px] font-medium uppercase tracking-[0.12em]"
+                >
+                  {{ appliedVoucher.code }}
+                </span>
+              </dt>
+              <dd class="tabular-nums">&minus;{{ formatUsd(discount) }}</dd>
+            </div>
+            <div v-if="hasHardback" class="flex items-baseline justify-between gap-4 py-3">
+              <dt class="text-muted-foreground">Delivery</dt>
+              <dd>Free</dd>
+            </div>
+          </dl>
+
+          <div class="flex items-baseline justify-between gap-4 pt-6">
+            <span class="eyebrow">Total</span>
+            <span class="font-serif text-4xl leading-none tabular-nums md:text-5xl">
               {{ formatUsd(total) }}
             </span>
           </div>
-          <div class="mt-2 text-center text-xs text-muted-foreground">
-            (including VAT)
+          <p class="mt-2 text-right text-[12px] text-muted-foreground">VAT included</p>
+
+          <UiButton
+            variant="ink"
+            size="cta"
+            block
+            class="mt-8 shadow-none"
+            :disabled="isProcessing || !orderItems.length"
+            :loading="isProcessing"
+            @click="handleConfirmPayment"
+          >
+            <Lock v-if="!isProcessing" :stroke-width="1.5" />
+            {{ ctaLabel }}
+          </UiButton>
+
+          <p
+            v-if="checkoutError"
+            role="alert"
+            class="mt-4 flex items-start justify-between gap-4 text-[13px] leading-relaxed text-destructive"
+          >
+            <span class="inline-flex items-start gap-2">
+              <span class="mt-[8px] size-1.5 shrink-0 rounded-full bg-destructive" />
+              {{ checkoutError }}
+            </span>
+            <button
+              type="button"
+              class="mt-0.5 shrink-0 opacity-70 transition-opacity hover:opacity-100"
+              aria-label="Dismiss"
+              @click="checkoutError = ''"
+            >
+              <X class="size-4" :stroke-width="1.5" />
+            </button>
+          </p>
+
+          <div class="mt-6 flex justify-center">
+            <NuxtLink
+              to="/cart"
+              class="group inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.14em]"
+            >
+              <ArrowLeft
+                class="size-4 transition-transform group-hover:-translate-x-1"
+                :stroke-width="1.5"
+              />
+              <span class="ed-link">Back to cart</span>
+            </NuxtLink>
           </div>
+
+          <p
+            class="mt-8 flex items-center gap-2 border-t border-border pt-5 text-[12px] text-muted-foreground"
+          >
+            <ShieldCheck class="size-3.5 shrink-0" :stroke-width="1.5" />
+            Your payment information is secured with 256-bit SSL encryption
+          </p>
         </div>
-      </UiCard>
-
-      <!-- Actions -->
-      <div class="mb-4 flex flex-col gap-3 sm:flex-row">
-        <UiButton
-          variant="outline"
-          size="lg"
-          class="order-2 h-12 grow text-muted-foreground sm:order-1"
-          @click="router.push('/cart')"
-        >
-          <ArrowLeft class="mr-2 h-5 w-5" />
-          <span class="hidden sm:inline">Back to Cart</span>
-          <span class="sm:hidden">Back</span>
-        </UiButton>
-        <UiButton
-          size="lg"
-          class="order-1 h-12 grow sm:order-2"
-          :disabled="isProcessing || !orderItems.length"
-          :loading="isProcessing"
-          @click="handleConfirmPayment"
-        >
-          <span class="hidden font-bold sm:inline">
-            {{ isProcessing ? "PROCESSING..." : "CONFIRM PAYMENT" }}
-          </span>
-          <span class="font-bold sm:hidden">
-            {{ isProcessing ? "PROCESSING..." : "CONFIRM" }}
-          </span>
-          <Lock class="ml-2 h-5 w-5" />
-        </UiButton>
-      </div>
-
-      <UiAlert
-        v-if="checkoutError"
-        variant="error"
-        class="mb-4 rounded-lg"
-        closable
-        @close="checkoutError = ''"
-      >
-        {{ checkoutError }}
-      </UiAlert>
-
-      <UiAlert variant="success" class="rounded-lg">
-        Your payment information is secured with 256-bit SSL encryption
-      </UiAlert>
+      </aside>
     </div>
-  </main>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { ArrowLeft, ChevronRight, Lock } from "lucide-vue-next";
+import { ArrowLeft, Lock, ShieldCheck, X } from "lucide-vue-next";
 import { useCartStore } from "@/stores/cart";
 import { useOrderStore } from "@/stores/order";
 import { formatUsd, unitPrice } from "@/utils/pricing";
@@ -116,6 +190,15 @@ import { CHECKOUT_ITEMS_KEY, type CheckoutItem, type ShippingAddress } from "@/t
  * retype their address — the account itself stores no address or phone.
  */
 const SHIPPING_STORAGE_KEY = "shippingDetails";
+
+const STEP_HEAD_CLASS = "flex items-baseline gap-4 md:gap-6";
+const STEP_NUMBER_CLASS =
+  "shrink-0 font-serif text-xl leading-none tabular-nums text-muted-foreground md:w-10 md:text-2xl";
+const STEP_TITLE_CLASS =
+  "font-serif text-2xl font-normal leading-snug tracking-[-0.015em] md:text-[2rem]";
+const STEP_BODY_CLASS = "mt-6 md:mt-8 md:pl-16";
+
+type CheckoutStep = "payment" | "delivery" | "code" | "review";
 
 const router = useRouter();
 const orderStore = useOrderStore();
@@ -149,6 +232,25 @@ const total = computed(() => Math.max(0, subtotal.value - discount.value));
 const hasEbook = computed(() =>
   orderItems.value.some((item) => item.productType === "ebook")
 );
+
+const hasHardback = computed(() =>
+  orderItems.value.some((item) => item.productType === "hardbook")
+);
+
+const visibleSteps = computed<CheckoutStep[]>(() =>
+  selectedPayment.value === "cod"
+    ? ["payment", "delivery", "code", "review"]
+    : ["payment", "code", "review"]
+);
+
+const ctaLabel = computed(() => {
+  if (isProcessing.value) return "Processing";
+  return selectedPayment.value === "cod" ? "Place order" : "Confirm payment";
+});
+
+function stepNumber(step: CheckoutStep) {
+  return String(visibleSteps.value.indexOf(step) + 1).padStart(2, "0");
+}
 
 // Keep the selection valid if an ebook is in the basket.
 watch(hasEbook, (ebookPresent) => {

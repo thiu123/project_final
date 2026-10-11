@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="w-full max-w-[920px] overflow-hidden rounded-xl border border-border shadow-[0_24px_60px_-28px_hsl(var(--foreground)/0.25)] dark:shadow-none"
-  >
+  <div class="w-full max-w-[1040px] sm:border sm:border-border">
     <SignUp
       @signed-up="router.push({ path: '/login', query: { registered: '1' } })"
       @toggle-sign-in="router.push('/login')"

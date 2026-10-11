@@ -1,58 +1,50 @@
 <template>
-  <!-- Signed out -->
   <UiDropdownMenu v-if="!currentUser">
     <UiDropdownMenuTrigger as-child>
       <button
         type="button"
-        class="ml-1 hidden items-center rounded-full bg-customyellow px-4 py-2 text-sm font-bold text-darkgreen shadow transition-all hover:-translate-y-0.5 hover:shadow-md sm:flex md:ml-2 md:text-base"
+        class="ml-1 hidden h-10 items-center gap-2 pl-2 text-[12.5px] font-medium uppercase tracking-[0.16em] text-foreground transition-opacity hover:opacity-60 sm:inline-flex"
       >
-        <span class="hidden md:inline">Account</span>
-        <CircleUser class="h-5 w-5 md:ml-1" />
+        <CircleUser class="size-5" :stroke-width="1.5" />
+        <span class="hidden xl:inline">Account</span>
       </button>
     </UiDropdownMenuTrigger>
-    <UiDropdownMenuContent align="end">
+    <UiDropdownMenuContent align="end" class="w-48">
       <UiDropdownMenuItem @select="emit('open-dialog', 'sign-in')">
-        <LogIn class="mr-2 size-4" />
-        Sign In
+        <LogIn class="mr-2 size-4" :stroke-width="1.5" />
+        Sign in
       </UiDropdownMenuItem>
       <UiDropdownMenuItem @select="emit('open-dialog', 'sign-up')">
-        <UserPlus class="mr-2 size-4" />
-        Sign Up
+        <UserPlus class="mr-2 size-4" :stroke-width="1.5" />
+        Create account
       </UiDropdownMenuItem>
     </UiDropdownMenuContent>
   </UiDropdownMenu>
 
-  <!-- Signed in -->
   <UiDropdownMenu v-else>
     <UiDropdownMenuTrigger as-child>
       <button
         type="button"
-        class="ml-1 hidden items-center rounded-full py-1 pl-1 pr-3 transition-all hover:-translate-y-0.5 hover:bg-muted sm:flex md:ml-2"
+        class="ml-1 hidden h-10 items-center gap-2 pl-1.5 transition-opacity hover:opacity-70 sm:inline-flex"
+        :aria-label="`Account menu for ${currentUser.username}`"
       >
         <UserAvatar
           :src="currentUser?.avatar_url"
           :name="currentUser?.username"
-          class="h-9 w-9 shadow"
+          class="size-8 bg-muted text-xs font-semibold text-foreground"
         />
-        <span
-          class="ml-2 hidden text-sm font-bold text-foreground md:inline lg:text-base"
-        >
-          {{ currentUser.username }}
-        </span>
-        <ChevronDown class="ml-1 hidden h-4 w-4 text-muted-foreground md:inline" />
+        <ChevronDown class="hidden size-3.5 text-muted-foreground xl:inline" />
       </button>
     </UiDropdownMenuTrigger>
 
-    <UiDropdownMenuContent align="end" class="w-56">
-      <UiDropdownMenuLabel class="font-normal">
-        <div class="flex flex-col space-y-1">
-          <span class="truncate text-sm font-semibold text-foreground">
-            {{ currentUser.username }}
-          </span>
-          <span class="truncate text-xs text-muted-foreground">
-            {{ currentUser.email }}
-          </span>
-        </div>
+    <UiDropdownMenuContent align="end" class="w-60">
+      <UiDropdownMenuLabel class="py-3 font-normal">
+        <span class="block truncate font-serif text-base text-foreground">
+          {{ currentUser.username }}
+        </span>
+        <span class="mt-0.5 block truncate text-xs text-muted-foreground">
+          {{ currentUser.email }}
+        </span>
       </UiDropdownMenuLabel>
       <UiDropdownMenuSeparator />
 
@@ -61,7 +53,7 @@
         :key="entry.tab"
         @select="navigateTo(`/profiles?tab=${entry.tab}`)"
       >
-        <component :is="entry.icon" class="mr-2 size-4" />
+        <component :is="entry.icon" class="mr-2 size-4" :stroke-width="1.5" />
         {{ entry.label }}
       </UiDropdownMenuItem>
 
@@ -70,8 +62,8 @@
         class="text-destructive focus:text-destructive"
         @select="emit('logout')"
       >
-        <LogOut class="mr-2 size-4" />
-        Logout
+        <LogOut class="mr-2 size-4" :stroke-width="1.5" />
+        Sign out
       </UiDropdownMenuItem>
     </UiDropdownMenuContent>
   </UiDropdownMenu>

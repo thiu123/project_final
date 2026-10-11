@@ -1,191 +1,109 @@
 <template>
-  <div class="bg-whitesmoke dark:bg-background">
-    <!-- Hero Section -->
-    <section
-      class="relative overflow-hidden bg-gradient-to-b from-white to-whitesmoke dark:from-card dark:to-background"
-    >
-      <div
-        class="pointer-events-none absolute -left-20 -top-[120px] h-80 w-80 rounded-full bg-customyellow opacity-35 blur-[60px]"
-      ></div>
-      <div
-        class="pointer-events-none absolute -bottom-[100px] right-[5%] h-[260px] w-[260px] rounded-full bg-waterblue opacity-25 blur-[60px]"
-      ></div>
-      <div class="container relative z-[1] mx-auto px-4 pb-12 pt-16">
-        <div class="mx-auto max-w-3xl text-center">
-          <span
-            class="mb-3 inline-block text-[0.8rem] font-semibold uppercase tracking-[0.08em] text-waterblue"
+  <div class="container mx-auto max-w-7xl px-4 pt-10 md:pt-16">
+    <div class="grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-12">
+      <section class="hero-rise lg:col-span-5">
+        <p class="eyebrow">Contact</p>
+        <h1 class="mt-5 font-serif text-4xl font-normal leading-[1.02] tracking-[-0.025em] md:text-6xl">
+          We read every <span class="italic">letter.</span>
+        </h1>
+        <p class="mt-6 max-w-[42ch] text-[15px] leading-relaxed text-muted-foreground">
+          Questions about an order, a book you cannot find, or an idea for the shop. Send us a note and
+          we will get back to you.
+        </p>
+
+        <dl class="mt-12 border-t border-border md:mt-16">
+          <div
+            v-for="detail in CONTACT_DETAILS"
+            :key="detail.label"
+            class="grid grid-cols-1 gap-2 border-b border-border py-5 sm:grid-cols-[120px_minmax(0,1fr)] sm:gap-6"
           >
-            We read every message
-          </span>
-          <h1
-            class="mb-4 text-[clamp(2.2rem,4vw,3rem)] font-bold tracking-tight text-foreground"
-          >
-            Contact &amp; feedback
-          </h1>
-          <p class="mx-auto max-w-[42ch] text-lg text-foreground/65">
-            Questions, issues, or ideas — send us a message and we'll get back
-            to you.
+            <dt class="eyebrow pt-1">{{ detail.label }}</dt>
+            <dd class="min-w-0">
+              <p class="break-words font-serif text-xl leading-snug">{{ detail.value }}</p>
+              <p class="mt-1 text-[14px] text-muted-foreground">{{ detail.note }}</p>
+            </dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="hero-rise lg:col-span-6 lg:col-start-7" style="--rise-delay: 120ms">
+        <div class="border-t border-foreground pt-6 lg:mt-[3.25rem]">
+          <p class="eyebrow">Send a message</p>
+          <h2 class="mt-4 font-serif text-[2rem] font-normal leading-[1.05] tracking-[-0.02em] md:text-[2.5rem]">
+            Write to us
+          </h2>
+          <p v-if="isLoggedIn" class="mt-3 text-[14px] text-muted-foreground">
+            Sending as <span class="text-foreground">{{ currentUser?.username }}</span>
+            <template v-if="currentUser?.email">
+              <span class="mx-1.5 text-border">/</span>{{ currentUser?.email }}
+            </template>
           </p>
         </div>
-      </div>
-    </section>
 
-    <!-- Contact & Info Section -->
-    <div class="container mx-auto px-4 pb-16 pt-8">
-      <div class="grid grid-cols-12 gap-6">
-        <!-- Form -->
-        <div class="col-span-12 lg:col-span-7">
-          <div
-            class="form-card rounded-xl border border-border bg-card p-6 md:p-8"
+        <div
+          v-if="!isLoggedIn"
+          class="mt-8 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 bg-muted px-5 py-4"
+        >
+          <p class="flex items-center gap-3 text-[14px]">
+            <span class="size-1.5 shrink-0 rounded-full bg-warning" aria-hidden="true" />
+            Please sign in to send feedback.
+          </p>
+          <NuxtLink
+            to="/login?redirect=/contact"
+            class="group inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.14em]"
           >
-            <h2 class="mb-6 text-2xl font-bold text-foreground">
-              Send a message
-            </h2>
-
-            <UiAlert v-if="!isLoggedIn" variant="warning" class="mb-6 rounded-lg">
-              Please login to send feedback
-            </UiAlert>
-
-            <form @submit.prevent="submitForm">
-              <label
-                class="mb-1.5 block text-sm font-medium text-foreground"
-                for="contact-message"
-              >
-                Your feedback
-              </label>
-              <div class="relative">
-                <MessageSquare
-                  class="pointer-events-none absolute left-3 top-2.5 h-5 w-5 text-muted-foreground"
-                />
-                <UiTextarea
-                  id="contact-message"
-                  v-model="message"
-                  :rows="7"
-                  placeholder="Write your question, feedback, issue report, or anything you want to share..."
-                  :disabled="!isLoggedIn"
-                  :error-message="messageError"
-                  class="rounded-lg pl-10"
-                  @blur="validateMessage"
-                />
-              </div>
-
-              <UiButton
-                type="submit"
-                size="lg"
-                block
-                class="send-btn mt-4 rounded-lg font-bold"
-                :loading="loading"
-                :disabled="!formValid || !isLoggedIn"
-              >
-                <Send class="mr-1 h-5 w-5" />
-                Send message
-              </UiButton>
-            </form>
-
-            <!-- User's Previous Messages -->
-            <div v-if="isLoggedIn && userContacts.length > 0" class="mt-8">
-              <UiSeparator class="mb-5" />
-              <h3 class="mb-4 text-[1.05rem] font-bold text-foreground">
-                Your message history
-              </h3>
-
-              <div
-                v-for="contact in userContacts"
-                :key="contact._id"
-                class="mb-3 rounded-r-[10px] border-l-[3px] border-waterblue bg-waterblue/5 px-4 py-3.5 transition-all hover:translate-x-0.5 hover:bg-waterblue/10"
-              >
-                <div class="mb-2 flex items-center justify-between">
-                  <UiBadge class="bg-waterblue/15 text-waterblue">
-                    <MessageSquare class="h-3 w-3" />
-                    Message
-                  </UiBadge>
-                  <span class="text-xs text-muted-foreground">
-                    {{ formatDate(contact.createdAt) }}
-                  </span>
-                </div>
-                <p class="mb-0 text-sm">{{ contact.message }}</p>
-              </div>
-            </div>
-          </div>
+            <span class="ed-link">Sign in</span>
+            <ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" :stroke-width="1.5" />
+          </NuxtLink>
         </div>
 
-        <!-- Contact Info -->
-        <div class="col-span-12 lg:col-span-5">
-          <div
-            class="relative overflow-hidden rounded-xl bg-customblack p-6 text-white md:p-8"
-          >
-            <div
-              class="pointer-events-none absolute -bottom-20 -right-[60px] h-[220px] w-[220px] rounded-full bg-customyellow opacity-[0.12]"
-            ></div>
-            <h2 class="mb-2 text-[1.4rem] font-bold text-white">Get in touch</h2>
-            <p class="mb-6 text-[0.95rem] text-white/65">
-              Reach us directly through any of these channels.
-            </p>
+        <form class="mt-10" @submit.prevent="submitForm">
+          <label class="eyebrow mb-2 block" for="contact-message">Your message</label>
+          <UiTextarea
+            id="contact-message"
+            v-model="message"
+            :rows="7"
+            placeholder="Write your question, feedback, issue report, or anything you want to share..."
+            :disabled="!isLoggedIn"
+            :error-message="messageError"
+            class="min-h-[220px] resize-y rounded-none bg-transparent px-5 py-4 text-[15px] leading-relaxed shadow-none placeholder:text-muted-foreground/70 focus-visible:border-foreground focus-visible:ring-0"
+            @blur="validateMessage"
+          />
 
-            <ul class="relative z-[1] m-0 list-none p-0">
-              <li
-                class="flex items-start gap-3.5 pb-4 transition-transform hover:translate-x-1"
-              >
-                <span
-                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.08]"
-                >
-                  <MapPin class="h-[22px] w-[22px] text-customyellow" />
-                </span>
-                <div>
-                  <h4 class="mb-0.5 text-[0.95rem] font-semibold text-white">
-                    Visit us
-                  </h4>
-                  <p class="m-0 text-[0.85rem] leading-normal text-white/65">
-                    1234 Bookstore Drive<br />
-                    Ho Chi Minh City, Vietnam
-                  </p>
-                </div>
-              </li>
-
-              <li
-                class="flex items-start gap-3.5 border-t border-white/10 py-4 transition-transform hover:translate-x-1"
-              >
-                <span
-                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.08]"
-                >
-                  <Phone class="h-[22px] w-[22px] text-customyellow" />
-                </span>
-                <div>
-                  <h4 class="mb-0.5 text-[0.95rem] font-semibold text-white">
-                    Call us
-                  </h4>
-                  <p class="m-0 text-[0.85rem] leading-normal text-white/65">
-                    +84 971 450 800<br />
-                    Mon - Fri: 8AM - 6PM
-                  </p>
-                </div>
-              </li>
-
-              <li
-                class="flex items-start gap-3.5 border-t border-white/10 py-4 transition-transform hover:translate-x-1"
-              >
-                <span
-                  class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.08]"
-                >
-                  <Mail class="h-[22px] w-[22px] text-customyellow" />
-                </span>
-                <div>
-                  <h4 class="mb-0.5 text-[0.95rem] font-semibold text-white">
-                    Email us
-                  </h4>
-                  <p class="m-0 text-[0.85rem] leading-normal text-white/65">
-                    nhokhieukute2004@gmail.com<br />
-                    We reply within 24 hours
-                  </p>
-                </div>
-              </li>
-            </ul>
+          <div class="mt-8 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p class="text-[12px] text-muted-foreground">At least 10 characters.</p>
+            <UiButton
+              type="submit"
+              variant="ink"
+              size="cta"
+              class="w-full shadow-none sm:w-auto"
+              :loading="loading"
+              :disabled="!formValid || !isLoggedIn"
+            >
+              Send message
+              <ArrowRight class="size-4" :stroke-width="1.5" />
+            </UiButton>
           </div>
+        </form>
+
+        <div v-if="isLoggedIn && userContacts.length > 0" class="mt-20">
+          <div class="flex items-baseline justify-between gap-4 border-b border-border pb-4">
+            <h3 class="font-serif text-xl font-normal leading-snug md:text-2xl">Your message history</h3>
+            <span class="eyebrow tabular-nums">{{ userContacts.length }}</span>
+          </div>
+
+          <ul class="divide-y divide-border">
+            <li v-for="contact in userContacts" :key="contact._id" class="py-6">
+              <p class="eyebrow tabular-nums">{{ formatDate(contact.createdAt) }}</p>
+              <p class="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-foreground/85">
+                {{ contact.message }}
+              </p>
+            </li>
+          </ul>
         </div>
-      </div>
+      </section>
     </div>
 
-    <!-- Snackbar for notifications -->
     <SnackbarAlert
       v-model="snackbar.show"
       :text="snackbar.message"
@@ -198,7 +116,13 @@
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
 import { useContactStore } from "@/stores/contact";
-import { Mail, MapPin, MessageSquare, Phone, Send } from "lucide-vue-next";
+import { ArrowRight } from "lucide-vue-next";
+
+const CONTACT_DETAILS = [
+  { label: "Visit", value: "1234 Bookstore Drive", note: "Ho Chi Minh City, Vietnam" },
+  { label: "Call", value: "+84 971 450 800", note: "Monday to Friday, 8 am to 6 pm" },
+  { label: "Email", value: "nhokhieukute2004@gmail.com", note: "We reply within 24 hours" },
+];
 
 const authStore = useAuthStore();
 const contactStore = useContactStore();
@@ -295,27 +219,3 @@ onMounted(() => {
   }
 });
 </script>
-
-<style scoped>
-.form-card {
-  box-shadow: 0 20px 40px -24px rgba(82, 149, 208, 0.35);
-  transition: box-shadow 0.3s ease;
-}
-
-.form-card:hover {
-  box-shadow: 0 24px 48px -20px rgba(82, 149, 208, 0.42);
-}
-
-.send-btn {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.send-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px -10px rgba(82, 149, 208, 0.55);
-}
-
-.send-btn:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
-}
-</style>

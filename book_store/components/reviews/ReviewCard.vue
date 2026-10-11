@@ -1,148 +1,89 @@
 <template>
-  <article
-    class="rounded-2xl bg-card p-5 transition-shadow duration-300 hover:shadow-[0_16px_40px_-24px_hsl(var(--foreground)/0.4)] md:p-6"
-    :class="own ? 'ring-2 ring-accent' : 'ring-1 ring-border'"
-  >
-    <header class="flex items-start gap-3">
-      <UserAvatar
-        :src="reviewAvatar(review)"
-        :name="username"
-        class="size-11 text-sm font-bold"
-        :class="avatarTone(username)"
-      >
-        <User class="size-5" />
-      </UserAvatar>
-
-      <div class="min-w-0 grow">
-        <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <p class="truncate font-semibold">{{ username }}</p>
-          <span
-            v-if="own"
-            class="rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground"
-          >
-            You
-          </span>
-        </div>
-        <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
-          <UiRating :model-value="review.rating" :size="14" readonly />
-          <span class="text-xs text-muted-foreground">
-            {{ formatReviewDate(review.createdAt) }}
-          </span>
+  <article class="py-8">
+    <header class="flex items-start justify-between gap-4">
+      <div class="flex min-w-0 items-center gap-3">
+        <UserAvatar
+          :src="reviewAvatar(review)"
+          :name="username"
+          class="size-9 bg-muted text-xs font-semibold text-foreground"
+        >
+          <User class="size-4" :stroke-width="1.5" />
+        </UserAvatar>
+        <div class="min-w-0">
+          <p class="flex items-center gap-2 truncate text-sm font-medium">
+            {{ username }}
+            <span v-if="own" class="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">You</span>
+          </p>
+          <p class="text-xs text-muted-foreground">{{ formatReviewDate(review.createdAt) }}</p>
         </div>
       </div>
-
-      <div v-if="own" class="flex shrink-0 gap-1">
-        <button
-          type="button"
-          class="flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-muted hover:text-foreground active:scale-90"
-          aria-label="Edit review"
-          title="Edit review"
-          @click="emit('edit', review)"
-        >
-          <Pencil class="size-4" />
-        </button>
-        <button
-          type="button"
-          class="flex size-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive active:scale-90"
-          aria-label="Delete my review"
-          title="Delete my review"
-          @click="emit('delete', review)"
-        >
-          <Trash2 class="size-4" />
-        </button>
-      </div>
+      <UiRating :model-value="review.rating" :size="12" readonly class="shrink-0 pt-1" />
     </header>
 
-    <p class="mt-4 whitespace-pre-line text-[15px] leading-relaxed text-foreground/90">
+    <p class="mt-5 whitespace-pre-line font-serif text-xl leading-relaxed text-foreground/90">
       {{ review.comment }}
     </p>
+
+    <div v-if="own" class="mt-5 flex gap-5 text-[11px] font-medium uppercase tracking-[0.16em]">
+      <button type="button" class="ed-link" @click="emit('edit', review)">Edit</button>
+      <button type="button" class="ed-link text-destructive" @click="emit('delete', review)">Delete</button>
+    </div>
 
     <div
       v-for="(reply, index) in review.replies"
       :key="reply._id ?? index"
-      class="mt-4 rounded-2xl rounded-tl-sm bg-muted/70 p-4 md:ml-14"
+      class="mt-6 border-l border-foreground pl-5"
     >
-      <div class="flex flex-wrap items-center gap-2">
-        <span
-          class="flex size-7 shrink-0 items-center justify-center rounded-full bg-foreground text-background"
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <p class="eyebrow leading-normal">
+          <span class="text-foreground">From the store</span>
+          <span class="mx-2">&middot;</span>{{ replyAdminName(reply) }}
+          <span class="mx-2">&middot;</span>{{ formatReviewDate(reply.createdAt) }}
+        </p>
+        <div
+          v-if="isAdmin && isOwnReply(reply, currentUser)"
+          class="ml-auto flex gap-4 text-[11px] font-medium uppercase tracking-[0.16em]"
         >
-          <ShieldCheck class="size-3.5" />
-        </span>
-        <span class="text-sm font-semibold">{{ replyAdminName(reply) }}</span>
-        <span
-          class="rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary"
-        >
-          Store team
-        </span>
-        <span class="text-xs text-muted-foreground">
-          {{ formatReviewDate(reply.createdAt) }}
-        </span>
-
-        <div v-if="isAdmin && isOwnReply(reply, currentUser)" class="ml-auto flex gap-1">
-          <button
-            type="button"
-            class="flex size-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-background hover:text-foreground active:scale-90"
-            aria-label="Edit reply"
-            title="Edit reply"
-            @click="emit('edit-reply', review, reply)"
-          >
-            <Pencil class="size-3.5" />
-          </button>
-          <button
-            type="button"
-            class="flex size-8 items-center justify-center rounded-full text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive active:scale-90"
-            aria-label="Delete reply"
-            title="Delete reply"
-            @click="emit('delete-reply', review, reply)"
-          >
-            <Trash2 class="size-3.5" />
+          <button type="button" class="ed-link" @click="emit('edit-reply', review, reply)">Edit</button>
+          <button type="button" class="ed-link text-destructive" @click="emit('delete-reply', review, reply)">
+            Delete
           </button>
         </div>
       </div>
-      <p class="mt-2 whitespace-pre-line text-sm leading-relaxed">{{ reply.content }}</p>
+      <p class="mt-2 whitespace-pre-line text-[15px] leading-relaxed text-foreground/85">{{ reply.content }}</p>
     </div>
 
-    <div v-if="isAdmin" class="mt-4 md:ml-14">
+    <div v-if="isAdmin" class="mt-6">
       <button
         v-if="!replying"
         type="button"
-        class="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        class="group inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground transition-colors hover:text-foreground"
         @click="replying = true"
       >
-        <Reply class="size-4" />
-        Reply as store
+        <Reply class="size-3.5" :stroke-width="1.5" />
+        <span class="ed-link">Reply as store</span>
       </button>
 
-      <div
-        v-else
-        class="rounded-2xl border border-border bg-background p-3 focus-within:ring-2 focus-within:ring-ring"
-      >
+      <div v-else class="border-l border-border pl-5">
         <textarea
           v-model="draftReply"
           rows="3"
           aria-label="Store reply"
           placeholder="Write a reply from the store..."
-          class="w-full resize-none bg-transparent px-1 text-sm leading-relaxed placeholder:text-muted-foreground focus:outline-none"
+          class="w-full resize-none border-0 border-b border-input bg-transparent py-2 text-[15px] leading-relaxed placeholder:text-muted-foreground/70 focus:border-foreground focus:outline-none"
         ></textarea>
-        <div class="mt-2 flex justify-end gap-2">
-          <UiButton
-            variant="ghost"
-            size="sm"
-            class="rounded-full"
-            :disabled="posting"
-            @click="cancelReply"
-          >
+        <div class="mt-3 flex justify-end gap-2">
+          <UiButton variant="ghost" size="sm" class="uppercase tracking-[0.14em]" :disabled="posting" @click="cancelReply">
             Cancel
           </UiButton>
           <UiButton
             variant="ink"
             size="sm"
-            class="rounded-full px-4 shadow-none"
+            class="px-4 uppercase tracking-[0.14em] shadow-none"
             :disabled="!draftReply.trim()"
             :loading="posting"
             @click="postReply"
           >
-            <Send />
             Post reply
           </UiButton>
         </div>
@@ -152,10 +93,9 @@
 </template>
 
 <script setup lang="ts">
-import { Pencil, Reply, Send, ShieldCheck, Trash2, User } from "lucide-vue-next";
+import { Reply, User } from "lucide-vue-next";
 import { createReply } from "@/api/reviewApi";
 import {
-  avatarTone,
   formatReviewDate,
   isOwnReply,
   isOwnReview,

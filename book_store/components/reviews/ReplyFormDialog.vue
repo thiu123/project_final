@@ -2,46 +2,42 @@
   <UiDialog v-model:open="open">
     <UiDialogContent
       hide-close
-      class="w-[calc(100%-2rem)] gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-lg sm:rounded-3xl"
+      class="w-[calc(100%-2rem)] gap-0 p-0 shadow-none sm:max-w-lg"
       @pointer-down-outside.prevent
       @escape-key-down.prevent
     >
-      <div class="flex items-center gap-3 px-6 pt-6">
-        <span
-          class="flex size-10 -rotate-6 items-center justify-center rounded-xl bg-foreground text-background"
-        >
-          <ShieldCheck class="size-5" />
-        </span>
-        <div>
-          <UiDialogTitle class="text-lg font-bold tracking-tight">Edit store reply</UiDialogTitle>
-          <p class="text-sm text-muted-foreground">Readers see this under their review.</p>
-        </div>
+      <div class="px-6 pt-8 sm:px-8">
+        <p class="eyebrow">From the store</p>
+        <UiDialogTitle class="mt-4 font-serif text-3xl font-normal leading-tight tracking-[-0.02em]">
+          Edit <span class="italic">reply</span>
+        </UiDialogTitle>
+        <p class="mt-2 text-sm text-muted-foreground">Readers see this under their review.</p>
       </div>
 
-      <div class="p-6">
+      <div class="px-6 pt-6 sm:px-8">
         <textarea
           v-model="content"
           rows="4"
           aria-label="Reply content"
-          class="w-full resize-none rounded-2xl border bg-background p-4 text-sm leading-relaxed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          class="w-full resize-none border bg-transparent p-4 text-[15px] leading-relaxed focus:border-foreground focus:outline-none"
           :class="error ? 'border-destructive' : 'border-input'"
           @blur="validate"
         ></textarea>
-        <p v-if="error" class="mt-1.5 text-xs text-destructive">{{ error }}</p>
+        <p v-if="error" class="mt-2 text-xs text-destructive">{{ error }}</p>
       </div>
 
-      <div class="flex items-center justify-end gap-2 px-6 pb-6">
-        <UiButton variant="ghost" class="rounded-full" @click="open = false">
+      <div class="mt-6 flex items-center justify-end gap-2 border-t border-border px-6 py-4 sm:px-8">
+        <UiButton variant="ghost" class="uppercase tracking-[0.14em]" @click="open = false">
           Cancel
         </UiButton>
         <UiButton
           variant="ink"
-          class="rounded-full px-5 shadow-none"
+          size="cta"
+          class="h-10 px-6 shadow-none"
           :disabled="!content.trim()"
           :loading="saving"
           @click="submit"
         >
-          <Check />
           Update reply
         </UiButton>
       </div>
@@ -50,8 +46,6 @@
 </template>
 
 <script setup lang="ts">
-import { Check, ShieldCheck } from "lucide-vue-next";
-
 const props = defineProps<{
   /** Text the reply currently holds, loaded when the dialog opens. */
   initialContent: string;

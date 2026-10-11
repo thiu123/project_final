@@ -1,131 +1,135 @@
 <template>
-  <div class="grid grid-cols-12 items-center gap-2 p-4">
-    <!-- Selection + book -->
-    <div class="col-span-12 flex items-center sm:col-span-6">
-      <UiCheckbox
-        class="mr-3 hidden md:flex"
-        :model-value="selected"
-        @update:model-value="emit('update:selected', $event === true)"
+  <div class="flex gap-4 py-6 sm:gap-6 md:py-8">
+    <UiCheckbox
+      :model-value="selected"
+      :class="CHECKBOX_CLASS"
+      wrapper-class="mt-1 gap-0 self-start"
+      @update:model-value="emit('update:selected', $event === true)"
+    >
+      <span class="sr-only">Select {{ book?.title || "this book" }}</span>
+    </UiCheckbox>
+
+    <NuxtLink
+      v-if="book?._id"
+      :to="`/details/${book._id}`"
+      class="ed-cover aspect-[2/3] w-16 shrink-0 self-start overflow-hidden bg-muted md:w-20"
+      :aria-label="book.title"
+    >
+      <img
+        v-if="book.cover_url"
+        :src="book.cover_url"
+        :alt="book.title"
+        class="h-full w-full object-cover"
+        loading="lazy"
       />
+    </NuxtLink>
+    <div v-else class="ed-cover aspect-[2/3] w-16 shrink-0 self-start bg-muted md:w-20" />
 
-      <div class="mr-4 flex min-w-[80px] items-center">
-        <img
-          :src="book?.cover_url"
-          :alt="book?.title || 'Book cover'"
-          class="h-[120px] w-[80px] bg-muted object-cover shadow"
-          loading="lazy"
-        />
-      </div>
+    <div
+      class="grid min-w-0 flex-1 grid-cols-1 gap-5 md:grid-cols-[minmax(0,1fr)_8rem_6.5rem] md:gap-8"
+    >
+      <div class="min-w-0">
+        <NuxtLink
+          v-if="book?._id"
+          :to="`/details/${book._id}`"
+          class="line-clamp-2 font-serif text-lg leading-snug text-foreground transition-colors hover:text-primary md:text-xl"
+          :title="book.title"
+        >
+          {{ book.title }}
+        </NuxtLink>
+        <p v-else class="font-serif text-lg leading-snug text-muted-foreground md:text-xl">
+          This book is no longer available
+        </p>
 
-      <div class="min-w-0 grow">
-        <div class="mb-2 truncate text-base font-bold text-foreground">
-          {{ book?.title || "Product name" }}
-        </div>
-        <div class="mb-2 text-sm text-muted-foreground md:hidden">
-          by {{ book?.authors?.[0] || "Unknown Author" }}
-        </div>
-        <div class="mb-2 text-lg font-bold text-waterblue md:hidden">
-          {{ formatUsd(price) }}
-        </div>
+        <p class="mt-1 truncate text-[13px] text-muted-foreground">
+          {{ book?.authors?.[0] || "Unknown author" }}
+        </p>
 
-        <div class="mb-2 flex flex-wrap gap-2">
-          <UiBadge
-            :variant="item.productType === 'ebook' ? 'success' : 'default'"
-            class="text-xs"
-          >
-            {{ item.productType === "ebook" ? "📱 Ebook" : "📚 Hardbook" }}
-          </UiBadge>
-
-          <UiBadge
+        <div
+          class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-medium uppercase tracking-[0.14em]"
+        >
+          <span>{{ item.productType === "ebook" ? "Ebook" : "Hardback" }}</span>
+          <span
             v-if="item.productType === 'hardbook'"
-            :variant="stock.variant"
-            class="text-xs"
+            class="inline-flex items-center gap-2 text-muted-foreground"
           >
+            <span class="size-1.5 rounded-full" :class="stock.dot" />
             {{ stock.label }}
-          </UiBadge>
+          </span>
         </div>
 
-        <UiBadge
-          v-if="book?.subjects?.length"
-          variant="outline"
-          class="border-waterblue/50 text-xs capitalize text-waterblue"
-        >
-          {{ book.subjects[0] }}
-        </UiBadge>
-      </div>
-    </div>
-
-    <!-- Quantity -->
-    <div class="col-span-4 flex items-center justify-center sm:col-span-2">
-      <div
-        class="flex min-w-[80px] items-center justify-center rounded-lg bg-waterblue/5 p-1"
-      >
-        <button
-          type="button"
-          class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground transition-all duration-200 hover:bg-muted/70 disabled:pointer-events-none disabled:opacity-50"
-          :disabled="item.quantity <= 1"
-          aria-label="Decrease quantity"
-          @click="changeQuantity(item.quantity - 1)"
-        >
-          <Minus class="h-3.5 w-3.5" />
-        </button>
-
-        <input
-          :value="item.quantity"
-          type="number"
-          min="1"
-          :max="maxQuantity"
-          class="mx-1 h-8 w-[45px] min-w-[35px] rounded-lg border border-input bg-background px-1 text-center text-sm text-foreground focus:outline-none focus-visible:ring-1 focus-visible:ring-ring [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          @change="onQuantityInput"
-        />
+        <p class="mt-2 text-[13px] tabular-nums text-muted-foreground">
+          {{ formatUsd(price) }} each
+          <span v-if="item.productType === 'ebook'" class="ml-1 line-through opacity-70">
+            {{ formatUsd(book?.price ?? 0) }}
+          </span>
+        </p>
 
         <button
           type="button"
-          class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-waterblue/15 text-waterblue transition-all duration-200 hover:bg-waterblue/25 disabled:pointer-events-none disabled:opacity-50"
-          :disabled="item.quantity >= maxQuantity"
-          aria-label="Increase quantity"
-          @click="changeQuantity(item.quantity + 1)"
+          class="ed-link mt-4 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground"
+          @click="emit('remove')"
         >
-          <Plus class="h-3.5 w-3.5" />
+          Remove
         </button>
       </div>
-    </div>
 
-    <!-- Price -->
-    <div class="hidden text-right md:col-span-2 md:block">
-      <div class="text-base font-bold text-waterblue">
-        {{ formatUsd(price) }}
-      </div>
-      <div
-        v-if="item.productType === 'ebook'"
-        class="text-xs text-muted-foreground line-through"
-      >
-        {{ formatUsd(book?.price ?? 0) }}
-      </div>
-    </div>
+      <div class="flex items-center justify-between gap-4 md:contents">
+        <div class="md:flex md:justify-center md:pt-0.5">
+          <div class="inline-flex h-10 items-stretch border border-border">
+            <button
+              type="button"
+              :class="STEP_BUTTON_CLASS"
+              :disabled="item.quantity <= 1"
+              aria-label="Decrease quantity"
+              @click="changeQuantity(item.quantity - 1)"
+            >
+              <Minus class="size-3.5" :stroke-width="1.5" />
+            </button>
 
-    <!-- Remove -->
-    <div class="col-span-4 text-right sm:col-span-2">
-      <UiButton
-        variant="ghost"
-        size="iconSm"
-        class="text-destructive transition-all duration-200 hover:text-destructive"
-        aria-label="Remove item"
-        @click="emit('remove')"
-      >
-        <Trash2 class="h-5 w-5" />
-      </UiButton>
+            <input
+              :value="item.quantity"
+              type="number"
+              min="1"
+              :max="maxQuantity"
+              aria-label="Quantity"
+              class="w-10 border-x border-border bg-transparent text-center text-sm tabular-nums text-foreground focus:outline-none focus-visible:bg-accent [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              @change="onQuantityInput"
+            />
+
+            <button
+              type="button"
+              :class="STEP_BUTTON_CLASS"
+              :disabled="item.quantity >= maxQuantity"
+              aria-label="Increase quantity"
+              @click="changeQuantity(item.quantity + 1)"
+            >
+              <Plus class="size-3.5" :stroke-width="1.5" />
+            </button>
+          </div>
+        </div>
+
+        <p class="text-right text-base tabular-nums text-foreground md:pt-2.5">
+          {{ formatUsd(price * item.quantity) }}
+        </p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Minus, Plus, Trash2 } from "lucide-vue-next";
+import { Minus, Plus } from "lucide-vue-next";
 import { formatUsd, unitPrice } from "@/utils/pricing";
 import type { CartItem } from "@/types";
 
 /** Ebooks are a download, so there is no stock to cap them against. */
 const EBOOK_QUANTITY_CAP = 10;
+
+const CHECKBOX_CLASS =
+  "rounded-none border-foreground/50 shadow-none data-[state=checked]:border-foreground data-[state=checked]:bg-foreground data-[state=checked]:text-background";
+
+const STEP_BUTTON_CLASS =
+  "flex w-9 items-center justify-center text-foreground transition-colors hover:bg-accent disabled:pointer-events-none disabled:opacity-30";
 
 const props = defineProps<{
   item: CartItem;
@@ -152,11 +156,9 @@ const maxQuantity = computed(() =>
 
 const stock = computed(() => {
   const available = book.value?.stock ?? 0;
-  if (available > 20)
-    return { variant: "success" as const, label: `${available} in stock` };
-  if (available > 0)
-    return { variant: "warning" as const, label: `Only ${available} left!` };
-  return { variant: "destructive" as const, label: "Out of stock" };
+  if (available > 20) return { dot: "bg-success", label: `${available} in stock` };
+  if (available > 0) return { dot: "bg-warning", label: `Only ${available} left` };
+  return { dot: "bg-destructive", label: "Out of stock" };
 });
 
 function changeQuantity(next: number) {

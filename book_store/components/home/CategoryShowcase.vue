@@ -1,97 +1,98 @@
 <template>
-  <section class="container mx-auto mt-16 max-w-7xl px-4 md:mt-24">
-    <div v-reveal class="mb-8 flex items-end justify-between gap-6">
-      <h2 class="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-        Shop by category
-      </h2>
-      <NuxtLink
-        to="/subjects/all"
-        class="group inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold text-primary"
-      >
-        All categories
-        <ArrowRight class="h-4 w-4 transition-transform group-hover:translate-x-1" />
-      </NuxtLink>
-    </div>
+  <section class="container mx-auto max-w-7xl px-4">
+    <StoreSectionHeader
+      :number="number"
+      eyebrow="Browse"
+      description="The shelves our readers return to most, ranked by the number of titles."
+      to="/subjects/all"
+      link-label="All books"
+    >
+      Shop by <span class="italic">category</span>
+    </StoreSectionHeader>
 
     <div
       v-if="tiles.length"
-      class="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4 lg:grid-rows-2"
+      class="grid grid-cols-2 gap-x-4 gap-y-10 md:gap-x-6 lg:grid-cols-12"
     >
       <NuxtLink
         v-for="(tile, index) in tiles"
         :key="tile.slug"
         v-reveal="index * 70"
         :to="`/subjects/${tile.slug}`"
-        class="group relative isolate flex overflow-hidden rounded-2xl p-5 ring-1 ring-border transition-shadow duration-300 hover:shadow-[0_20px_40px_-20px_hsl(var(--foreground)/0.35)] md:p-6"
-        :class="[
-          TONES[index % TONES.length],
-          index === 0
-            ? 'col-span-2 min-h-[280px] lg:row-span-2 lg:min-h-[440px]'
-            : 'min-h-[200px] lg:min-h-0',
-        ]"
+        class="group flex flex-col"
+        :class="index === 0 ? 'col-span-2 lg:col-span-6 lg:row-span-2' : 'lg:col-span-3'"
       >
-        <div class="relative z-[1] flex max-w-[58%] flex-col">
-          <h3
-            class="font-bold capitalize leading-tight tracking-tight"
-            :class="index === 0 ? 'text-2xl md:text-4xl' : 'text-base md:text-lg'"
-          >
-            {{ tile.name }}
-          </h3>
-          <p class="mt-1.5 text-sm opacity-75">
-            {{ tile.count.toLocaleString() }} {{ tile.count === 1 ? "title" : "titles" }}
-          </p>
-          <span
+        <div
+          class="relative flex items-center justify-center overflow-hidden transition-colors duration-500"
+          :class="
+            index === 0
+              ? 'aspect-[5/4] bg-foreground dark:bg-accent lg:aspect-auto lg:flex-1'
+              : 'aspect-square bg-muted group-hover:bg-accent'
+          "
+        >
+          <p
             v-if="index === 0"
-            class="mt-auto inline-flex items-center gap-1.5 pt-6 text-sm font-semibold"
+            class="absolute left-5 top-5 text-[11px] font-medium uppercase leading-none tracking-[0.22em] text-background/60 dark:text-muted-foreground md:left-7 md:top-7"
           >
-            Browse shelf
-            <ArrowRight class="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            Most stocked
+          </p>
+          <div
+            v-if="tile.cover"
+            class="ed-cover aspect-[2/3] overflow-hidden bg-card transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-1.5"
+            :class="index === 0 ? 'w-[32%] lg:w-[36%]' : 'w-[44%]'"
+          >
+            <img :src="tile.cover" alt="" class="h-full w-full object-cover" loading="lazy" />
+          </div>
+          <span
+            v-else
+            class="font-serif text-6xl italic"
+            :class="index === 0 ? 'text-background/40 dark:text-muted-foreground/40' : 'text-muted-foreground/40'"
+            aria-hidden="true"
+          >
+            {{ tile.name.charAt(0) }}
           </span>
         </div>
 
         <div
-          v-if="tile.cover"
-          class="absolute -z-0 aspect-[2/3] overflow-hidden rounded-md shadow-[0_18px_36px_-12px_rgb(0_0_0/0.45)] transition-transform duration-500 ease-out"
-          :class="
-            index === 0
-              ? 'bottom-[-10%] right-[6%] w-[34%] rotate-[8deg] group-hover:rotate-[4deg] group-hover:-translate-y-2 lg:w-[30%]'
-              : 'bottom-[-18%] right-[-4%] w-[46%] rotate-[10deg] group-hover:rotate-[6deg] group-hover:-translate-y-2'
-          "
+          class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 pt-4"
         >
-          <img
-            :src="tile.cover"
-            alt=""
-            class="h-full w-full object-cover"
-            loading="lazy"
-          />
+          <h3
+            class="min-w-0 font-serif font-normal capitalize leading-tight text-foreground transition-colors group-hover:text-primary"
+            :class="index === 0 ? 'text-[1.75rem] md:text-[2.25rem]' : 'text-lg md:text-[1.35rem]'"
+          >
+            {{ tile.name }}
+          </h3>
+          <span class="shrink-0 text-[12px] tabular-nums text-muted-foreground">
+            {{ tile.count.toLocaleString() }} {{ tile.count === 1 ? "title" : "titles" }}
+          </span>
         </div>
       </NuxtLink>
     </div>
 
     <div
       v-else
-      class="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4 lg:grid-rows-2"
+      class="grid grid-cols-2 gap-x-4 gap-y-10 md:gap-x-6 lg:grid-cols-12"
+      aria-hidden="true"
     >
-      <UiSkeleton class="col-span-2 h-[280px] rounded-2xl lg:row-span-2 lg:h-[440px]" />
-      <UiSkeleton v-for="n in 4" :key="n" class="h-[200px] rounded-2xl lg:h-auto" />
+      <div class="col-span-2 flex flex-col lg:col-span-6 lg:row-span-2">
+        <UiSkeleton class="aspect-[5/4] w-full rounded-none lg:aspect-auto lg:flex-1" />
+        <UiSkeleton class="mt-4 h-8 w-1/2 rounded-none" />
+      </div>
+      <div v-for="n in 4" :key="n" class="lg:col-span-3">
+        <UiSkeleton class="aspect-square w-full rounded-none" />
+        <UiSkeleton class="mt-4 h-5 w-2/3 rounded-none" />
+      </div>
     </div>
   </section>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { ArrowRight } from "lucide-vue-next";
 import { useBookStore } from "@/stores/book";
 
-const TILE_COUNT = 5;
+defineProps<{ number?: string }>();
 
-const TONES = [
-  "bg-darkgreen text-white",
-  "bg-accent text-accent-foreground",
-  "bg-primary/15 text-foreground",
-  "bg-muted text-foreground",
-  "bg-foreground text-background",
-];
+const TILE_COUNT = 5;
 
 const { categories } = storeToRefs(useBookStore());
 

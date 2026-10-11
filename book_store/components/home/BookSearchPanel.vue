@@ -1,134 +1,139 @@
 <template>
-  <div v-reveal class="container mx-auto mt-16 px-4 md:mt-24">
-    <div class="mx-auto w-full lg:max-w-5xl xl:max-w-4xl">
-      <div
-        class="rounded-2xl border border-border bg-card p-6 md:p-10"
-      >
-        <!-- Header -->
-        <div class="mb-8 text-center">
-          <div class="mb-4 flex justify-center">
-            <div
-              class="flex h-16 w-16 items-center justify-center rounded-full bg-customyellow shadow-md"
-            >
-              <Search class="h-8 w-8 text-darkgreen" />
-            </div>
-          </div>
-          <h2 class="mb-3 text-3xl font-bold text-foreground md:text-4xl">
-            Discover Your Next Great Read
-          </h2>
-          <p class="text-lg text-muted-foreground">
-            Search through thousands of books to find your perfect match
-          </p>
-        </div>
+  <section class="bg-muted">
+    <div
+      v-reveal
+      class="container mx-auto grid max-w-7xl grid-cols-1 gap-14 px-4 py-20 md:py-28 lg:grid-cols-12 lg:gap-16"
+    >
+      <div class="lg:col-span-7">
+        <p class="eyebrow">Search the catalogue</p>
+        <h2
+          class="mt-5 font-serif text-[2.5rem] font-normal leading-[1.02] tracking-[-0.025em] text-foreground md:text-6xl"
+        >
+          What are you <span class="italic">reading</span> next?
+        </h2>
+        <p class="mt-5 max-w-[46ch] text-[15px] leading-relaxed text-muted-foreground">
+          Search by title or author across the whole catalogue.
+        </p>
 
-        <!-- Search bar -->
-        <form class="mb-6 grid grid-cols-12 gap-4" @submit.prevent="submitSearch">
-          <div class="col-span-12 md:col-span-10">
-            <UiInput
+        <form
+          class="mt-10 flex items-end gap-4 md:gap-6"
+          role="search"
+          @submit.prevent="submitSearch"
+        >
+          <label class="relative min-w-0 flex-1">
+            <span class="sr-only">Search for books or authors</span>
+            <Search
+              class="pointer-events-none absolute left-0 top-1/2 size-5 -translate-y-1/2 text-muted-foreground"
+              :stroke-width="1.5"
+            />
+            <input
               v-model="query"
-              placeholder="Search for books, authors, or genres..."
-              class="h-12 rounded-xl"
-            >
-              <template #prepend>
-                <Search class="h-5 w-5" />
-              </template>
-            </UiInput>
-          </div>
-          <div class="col-span-12 md:col-span-2">
-            <UiButton
-              type="submit"
-              block
-              size="lg"
-              class="h-12 rounded-xl font-bold shadow-md"
-              :disabled="!query.trim()"
-            >
-              Search
-            </UiButton>
-          </div>
+              type="search"
+              autocomplete="off"
+              placeholder="A title or an author"
+              class="ed-input h-14 pl-9 font-serif text-xl md:text-2xl"
+            />
+          </label>
+          <UiButton
+            type="submit"
+            variant="ink"
+            size="cta"
+            class="shrink-0 px-6 shadow-none md:px-8"
+            :disabled="!query.trim()"
+          >
+            Search
+          </UiButton>
         </form>
 
-        <!-- Live results -->
         <Transition
           enter-active-class="transition duration-200 ease-out"
-          enter-from-class="-translate-y-2 opacity-0"
+          enter-from-class="-translate-y-1 opacity-0"
           enter-to-class="translate-y-0 opacity-100"
           leave-active-class="transition duration-150 ease-in"
           leave-from-class="translate-y-0 opacity-100"
-          leave-to-class="-translate-y-2 opacity-0"
+          leave-to-class="-translate-y-1 opacity-0"
         >
-          <div
+          <ul
             v-if="results.length"
-            class="mb-6 overflow-hidden rounded-xl border border-border bg-card shadow-lg"
+            class="max-h-[400px] divide-y divide-border overflow-y-auto border-b border-border"
           >
-            <ul class="max-h-[400px] divide-y divide-border overflow-y-auto">
-              <li
-                v-for="book in results"
-                :key="book._id"
-                class="flex cursor-pointer items-center gap-4 px-4 py-3 transition-colors hover:bg-muted"
-                @click="router.push(`/details/${book._id}`)"
+            <li v-for="book in results" :key="book._id">
+              <NuxtLink
+                :to="`/details/${book._id}`"
+                class="group flex items-center gap-4 py-3"
               >
-                <img
-                  :src="book.cover_url"
-                  :alt="book.title"
-                  class="h-[60px] w-[60px] shrink-0 rounded-lg bg-muted object-cover"
-                />
+                <div class="ed-cover aspect-[2/3] w-10 shrink-0 overflow-hidden bg-background">
+                  <img
+                    v-if="book.cover_url"
+                    :src="book.cover_url"
+                    :alt="book.title"
+                    class="h-full w-full object-cover"
+                  />
+                </div>
 
                 <div class="min-w-0 flex-1">
-                  <div class="mb-1 truncate font-bold text-foreground">
+                  <p class="truncate font-serif text-lg leading-snug text-foreground transition-colors group-hover:text-primary">
                     {{ book.title }}
-                  </div>
-                  <div class="truncate text-sm text-muted-foreground">
-                    {{ book.authors?.join(", ") || "Unknown Author" }} •
-                    {{ book.first_publish_year }}
-                  </div>
+                  </p>
+                  <p class="mt-0.5 truncate text-[13px] text-muted-foreground">
+                    {{ book.authors?.join(", ") || "Unknown author" }}<template v-if="book.first_publish_year">
+                      <span class="mx-2 text-border">/</span>{{ book.first_publish_year }}</template>
+                  </p>
                 </div>
 
-                <div class="flex shrink-0 items-center">
-                  <Star class="mr-1 h-4 w-4 fill-amber-400 text-amber-400" />
-                  <span class="text-xs text-foreground">{{ book.rating ?? "-" }}</span>
-                </div>
-              </li>
-            </ul>
-          </div>
+                <span class="flex shrink-0 items-center gap-1 text-xs tabular-nums text-muted-foreground">
+                  <Star class="size-3 fill-current" />
+                  {{ book.rating ?? "-" }}
+                </span>
+              </NuxtLink>
+            </li>
+          </ul>
         </Transition>
+      </div>
 
-        <!-- Trending -->
-        <div class="text-center">
-          <h3 class="mb-6 text-2xl font-semibold text-foreground">
-            Trending This Week
-          </h3>
+      <div class="lg:col-span-4 lg:col-start-9">
+        <p class="eyebrow">Trending this week</p>
 
-          <div class="flex flex-wrap justify-center gap-4">
-            <template v-if="trending.length">
+        <div class="mt-6 grid grid-cols-3 gap-4 md:gap-5">
+          <template v-if="trending.length">
+            <NuxtLink
+              v-for="book in trending"
+              :key="book._id"
+              :to="`/details/${book._id}`"
+              class="group block"
+            >
               <div
-                v-for="book in trending"
-                :key="book._id"
-                class="cursor-pointer overflow-hidden rounded-lg bg-muted shadow transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-                @click="router.push(`/details/${book._id}`)"
+                class="ed-cover aspect-[2/3] overflow-hidden bg-background transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-y-1.5"
               >
                 <img
                   v-if="book.cover_url"
                   :src="book.cover_url"
                   :alt="book.title"
-                  class="h-[110px] w-20 object-cover"
+                  class="h-full w-full object-cover"
+                  loading="lazy"
                 />
-                <div v-else class="flex h-[110px] w-20 items-center justify-center">
-                  <UiSpinner class="text-primary" />
+                <div
+                  v-else
+                  class="flex h-full items-center justify-center p-2 text-center font-serif text-sm text-muted-foreground"
+                >
+                  {{ book.title }}
                 </div>
               </div>
-            </template>
-            <template v-else>
-              <UiSkeleton
-                v-for="n in 6"
-                :key="n"
-                class="h-[110px] w-20 rounded-xl shadow-md"
-              />
-            </template>
-          </div>
+              <p class="mt-3 line-clamp-2 font-serif text-[15px] leading-snug text-foreground transition-colors group-hover:text-primary">
+                {{ book.title }}
+              </p>
+            </NuxtLink>
+          </template>
+          <template v-else>
+            <div v-for="n in 3" :key="n">
+              <UiSkeleton class="aspect-[2/3] w-full rounded-none" />
+              <UiSkeleton class="mt-3 h-4 w-3/4 rounded-none" />
+            </div>
+          </template>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">

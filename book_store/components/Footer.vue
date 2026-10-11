@@ -1,160 +1,64 @@
 <template>
-  <footer class="border-t border-border bg-muted/40">
-    <div class="container mx-auto px-4">
-      <!-- Main Footer Content -->
-      <div class="grid grid-cols-12 gap-4 py-8">
-        <!-- Company Info Section -->
-        <div class="col-span-12 mb-6 md:col-span-4">
-          <div class="mb-4 flex items-center">
-            <div
-              class="mr-3 flex h-12 w-12 items-center justify-center rounded-full bg-customyellow"
-            >
-              <BookOpen class="h-7 w-7 text-darkgreen" />
-            </div>
-            <span class="text-2xl font-semibold text-foreground">
-              THBookStore
-            </span>
-          </div>
-          <p class="mb-4 text-base text-muted-foreground">
-            Your trusted destination for discovering and collecting the world's
-            finest books. From timeless classics to contemporary bestsellers.
+  <footer class="mt-24 bg-foreground text-background dark:border-t dark:border-border dark:bg-card dark:text-foreground md:mt-32">
+    <div class="container mx-auto max-w-7xl px-4 pb-10 pt-16 md:pt-24">
+      <div class="grid grid-cols-1 gap-12 lg:grid-cols-12">
+        <div class="lg:col-span-5">
+          <p class="font-serif text-4xl leading-[1.08] tracking-[-0.02em] md:text-5xl">
+            Good books,<br />
+            <span class="italic">carefully</span> chosen.
           </p>
+          <p class="mt-6 max-w-[40ch] text-[15px] leading-relaxed opacity-70">
+            Timeless classics and contemporary favourites, in hardback for the shelf or as ebooks for the
+            journey.
+          </p>
+        </div>
 
-          <!-- Contact Info -->
-          <div
-            class="rounded-lg border-l-[3px] border-waterblue bg-waterblue/5 p-4"
-          >
-            <div class="mb-2 flex items-center">
-              <MapPin class="mr-3 h-[18px] w-[18px] shrink-0 text-waterblue" />
-              <span class="text-sm text-foreground">
-                1234 Bookstore Drive & 4th Ave
-              </span>
-            </div>
-            <div class="mb-2 flex items-center">
-              <Phone class="mr-3 h-[18px] w-[18px] shrink-0 text-waterblue" />
-              <span class="text-sm text-foreground">0971450800</span>
-            </div>
-            <div class="flex items-center">
-              <Mail class="mr-3 h-[18px] w-[18px] shrink-0 text-waterblue" />
-              <span class="text-sm text-foreground">
-                nhokhieukute2004@gmail.com
-              </span>
-            </div>
+        <nav class="grid grid-cols-2 gap-10 sm:grid-cols-3 lg:col-span-7 lg:pl-12" aria-label="Footer">
+          <div v-for="group in LINK_GROUPS" :key="group.title">
+            <p class="text-[11px] font-medium uppercase tracking-[0.22em] opacity-60">{{ group.title }}</p>
+            <ul class="mt-5 space-y-3">
+              <li v-for="link in group.links" :key="link.name">
+                <NuxtLink :to="link.route" class="ed-link text-[15px]">{{ link.name }}</NuxtLink>
+              </li>
+            </ul>
           </div>
-
-          <!-- Social Media -->
-          <div class="mt-4">
-            <span class="mb-3 block text-sm font-bold text-foreground">
-              Follow Us
-            </span>
-            <div class="flex gap-2">
-              <button
-                type="button"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-waterblue text-waterblue transition-all duration-300 hover:-translate-y-0.5 hover:bg-waterblue hover:text-white"
-                aria-label="Facebook"
-              >
-                <Facebook class="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-waterblue text-waterblue transition-all duration-300 hover:-translate-y-0.5 hover:bg-waterblue hover:text-white"
-                aria-label="Twitter"
-              >
-                <Twitter class="h-4 w-4" />
-              </button>
-              <button
-                type="button"
-                class="inline-flex h-9 w-9 items-center justify-center rounded-full border border-waterblue text-waterblue transition-all duration-300 hover:-translate-y-0.5 hover:bg-waterblue hover:text-white"
-                aria-label="Instagram"
-              >
-                <Instagram class="h-4 w-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Shopping Section -->
-        <div class="col-span-12 mb-6 sm:col-span-6 md:col-span-2">
-          <h3 class="mb-4 text-lg font-semibold text-foreground">Shopping</h3>
-          <ul class="space-y-1">
-            <li v-for="(item, i) in shoppingLinks" :key="i">
-              <button
-                type="button"
-                class="py-1 text-sm text-muted-foreground transition-colors duration-300 hover:text-waterblue"
-                @click="goTo(item.route)"
-              >
-                {{ item.name }}
-              </button>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Account Section -->
-        <div class="col-span-12 mb-6 sm:col-span-6 md:col-span-2">
-          <h3 class="mb-4 text-lg font-semibold text-foreground">My Account</h3>
-          <ul class="space-y-1">
-            <li v-for="(item, i) in accountLinks" :key="i">
-              <button
-                type="button"
-                class="py-1 text-sm text-muted-foreground transition-colors duration-300 hover:text-waterblue"
-                @click="goTo(item.route)"
-              >
-                {{ item.name }}
-              </button>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Categories Section -->
-        <div class="col-span-12 mb-6 sm:col-span-6 md:col-span-2">
-          <h3 class="mb-4 text-lg font-semibold text-foreground">Categories</h3>
-          <ul class="space-y-1">
-            <li v-for="(item, i) in categoryLinks" :key="i">
-              <button
-                type="button"
-                class="py-1 text-sm text-muted-foreground transition-colors duration-300 hover:text-waterblue"
-                @click="goTo(item.route)"
-              >
-                {{ item.name }}
-              </button>
-            </li>
-          </ul>
-        </div>
-
-        <!-- Quick Actions Section -->
-        <div class="col-span-12 mb-6 sm:col-span-6 md:col-span-2">
-          <h3 class="mb-4 text-lg font-semibold text-foreground">
-            Quick Actions
-          </h3>
-          <ul class="space-y-1">
-            <li v-for="(item, i) in quickActions" :key="i">
-              <button
-                type="button"
-                class="py-1 text-sm text-muted-foreground transition-colors duration-300 hover:text-waterblue"
-                @click="goTo(item.route)"
-              >
-                {{ item.name }}
-              </button>
-            </li>
-          </ul>
-        </div>
+        </nav>
       </div>
 
-      <!-- Footer Divider -->
-      <div class="mb-4 h-px bg-border/50" />
-
-      <!-- Bottom Footer -->
       <div
-        class="flex flex-col items-center justify-between py-4 md:flex-row"
+        class="mt-16 grid grid-cols-1 gap-6 border-t pt-8 text-sm sm:grid-cols-3 [border-color:hsl(var(--background)/0.15)] dark:[border-color:hsl(var(--border))]"
       >
-        <div class="mb-2 text-center md:mb-0 md:text-left">
-          <span class="text-sm text-muted-foreground">
-            © 2025 THBookStore. All Rights Reserved.
-          </span>
-        </div>
-        <div class="flex gap-4">
-          <span class="text-sm text-muted-foreground">Privacy Policy</span>
-          <span class="text-sm text-muted-foreground">Terms of Service</span>
+        <p class="flex items-center gap-3 opacity-80">
+          <MapPin class="size-4 shrink-0" :stroke-width="1.5" />
+          1234 Bookstore Drive &amp; 4th Ave
+        </p>
+        <p class="flex items-center gap-3 opacity-80">
+          <Phone class="size-4 shrink-0" :stroke-width="1.5" />
+          0971450800
+        </p>
+        <p class="flex min-w-0 items-center gap-3 opacity-80">
+          <Mail class="size-4 shrink-0" :stroke-width="1.5" />
+          <span class="truncate">nhokhieukute2004@gmail.com</span>
+        </p>
+      </div>
+
+      <p
+        class="mt-16 select-none whitespace-nowrap text-center font-serif text-[17vw] font-medium leading-[0.8] tracking-[-0.04em] opacity-[0.12] lg:text-[13.5rem]"
+        aria-hidden="true"
+      >
+        TH<span class="font-normal italic">Book</span>Store
+      </p>
+
+      <div class="mt-10 flex flex-col items-center justify-between gap-4 text-xs opacity-60 md:flex-row">
+        <span>&copy; 2025 THBookStore. All rights reserved.</span>
+        <div class="flex items-center gap-6">
+          <span>Privacy Policy</span>
+          <span>Terms of Service</span>
+          <div class="flex items-center gap-4">
+            <span v-for="social in SOCIALS" :key="social.label" :aria-label="social.label">
+              <component :is="social.icon" class="size-4" :stroke-width="1.5" />
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -162,49 +66,40 @@
 </template>
 
 <script setup lang="ts">
-import {
-  BookOpen,
-  Facebook,
-  Instagram,
-  Mail,
-  MapPin,
-  Phone,
-  Twitter,
-} from "lucide-vue-next";
+import { Facebook, Instagram, Mail, MapPin, Phone, Twitter } from "lucide-vue-next";
 
-interface FooterLink {
-  name: string;
-  route: string;
-}
-
-const router = useRouter();
-
-const shoppingLinks: FooterLink[] = [
-  { name: "Shopping Cart", route: "/cart" },
-  { name: "My Orders", route: "/order" },
-  { name: "My Favorites", route: "/favorites" },
+const LINK_GROUPS = [
+  {
+    title: "Shop",
+    links: [
+      { name: "All books", route: "/subjects/all" },
+      { name: "Literary Fiction", route: "/subjects/literary-fiction" },
+      { name: "Romance", route: "/subjects/romance" },
+      { name: "Manga", route: "/subjects/manga" },
+    ],
+  },
+  {
+    title: "Account",
+    links: [
+      { name: "My profile", route: "/profiles" },
+      { name: "My orders", route: "/profiles?tab=orders" },
+      { name: "Favorites", route: "/favorites" },
+      { name: "Cart", route: "/cart" },
+    ],
+  },
+  {
+    title: "Help",
+    links: [
+      { name: "Contact us", route: "/contact" },
+      { name: "Sign in", route: "/login" },
+      { name: "Create account", route: "/signup" },
+    ],
+  },
 ];
 
-const accountLinks: FooterLink[] = [
-  { name: "My Profile", route: "/profiles" },
-  { name: "Login", route: "/login" },
-  { name: "Sign Up", route: "/signup" },
+const SOCIALS = [
+  { label: "Facebook", icon: Facebook },
+  { label: "X", icon: Twitter },
+  { label: "Instagram", icon: Instagram },
 ];
-
-const categoryLinks: FooterLink[] = [
-  { name: "Literary Fiction", route: "/subjects/literary fiction" },
-  { name: "Romance", route: "/subjects/romance" },
-  { name: "Manga", route: "/subjects/manga" },
-  { name: "All Categories", route: "/" },
-];
-
-const quickActions: FooterLink[] = [
-  { name: "Home", route: "/" },
-  { name: "Browse Books", route: "/" },
-  { name: "Contact Us", route: "/contact" },
-];
-
-function goTo(route: string) {
-  router.push(route);
-}
 </script>

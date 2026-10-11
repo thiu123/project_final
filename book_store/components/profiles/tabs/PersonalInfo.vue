@@ -1,93 +1,75 @@
 <template>
-  <div class="min-h-[80vh]">
-    <ProfilesTabsSectionHeading :icon="CircleUser" title="Personal Information" />
+  <section>
+    <ProfilesTabsSectionHeading
+      eyebrow="Profile"
+      title="Personal information"
+      description="The details on your THBookStore account."
+    />
 
-    <div
-      class="overflow-hidden rounded-xl bg-gradient-to-br from-white to-[#f8f9fa] shadow-md dark:from-card dark:to-card"
-    >
-      <div class="p-8">
-        <!-- Avatar -->
-        <div class="mb-8 flex items-center">
-          <UserAvatar
-            :src="currentUser?.avatar_url"
-            :name="currentUser?.username"
-            class="mr-6 h-[120px] w-[120px] text-4xl shadow-md"
+    <div class="flex flex-col gap-6 sm:flex-row sm:items-center sm:gap-8">
+      <UserAvatar
+        :src="currentUser?.avatar_url"
+        :name="currentUser?.username"
+        class="size-24 shrink-0 bg-muted font-serif text-4xl text-foreground md:size-28"
+      />
+
+      <div class="min-w-0">
+        <p class="truncate font-serif text-2xl leading-tight md:text-[1.75rem]">
+          {{ currentUser?.username || "User" }}
+        </p>
+        <p class="mt-1 truncate text-[14px] text-muted-foreground">
+          {{ currentUser?.email || "" }}
+        </p>
+
+        <div class="mt-5 flex flex-wrap items-center gap-x-7 gap-y-3">
+          <button
+            type="button"
+            class="group inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.14em] text-foreground disabled:pointer-events-none disabled:opacity-50"
+            :disabled="uploading"
+            @click="avatarInput?.click()"
           >
-            <User class="h-10 w-10 text-muted-foreground" />
-          </UserAvatar>
+            <Loader2 v-if="uploading" class="size-4 animate-spin" :stroke-width="1.5" />
+            <Camera v-else class="size-4" :stroke-width="1.5" />
+            <span class="ed-link">{{ uploading ? "Uploading" : "Change photo" }}</span>
+          </button>
 
-          <div>
-            <h3 class="mb-2 text-2xl font-semibold">
-              {{ currentUser?.username || "User" }}
-            </h3>
-            <p class="mb-4 text-sm text-muted-foreground">
-              {{ currentUser?.email || "" }}
-            </p>
-
-            <UiButton
-              class="mr-3 bg-waterblue text-white hover:bg-waterblue/90"
-              :loading="uploading"
-              @click="avatarInput?.click()"
-            >
-              <Camera class="mr-1 h-4 w-4" />
-              Change Avatar
-            </UiButton>
-
-            <UiButton
-              v-if="currentUser?.avatar_url"
-              variant="outline"
-              class="border-destructive text-destructive hover:bg-destructive/10 hover:text-destructive"
-              @click="removeAvatar"
-            >
-              <Trash2 class="mr-1 h-4 w-4" />
-              Remove
-            </UiButton>
-
-            <input
-              ref="avatarInput"
-              type="file"
-              accept="image/*"
-              class="hidden"
-              @change="handleAvatarUpload"
-            />
-          </div>
-        </div>
-
-        <UiSeparator class="mb-8" />
-
-        <div class="grid grid-cols-12 gap-x-4">
-          <div
-            v-for="field in fields"
-            :key="field.label"
-            class="col-span-12 md:col-span-6"
+          <button
+            v-if="currentUser?.avatar_url"
+            type="button"
+            class="inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-destructive"
+            @click="removeAvatar"
           >
-            <UiInput
-              :model-value="field.value"
-              :label="field.label"
-              readonly
-              wrapper-class="mb-4"
-            >
-              <template #prepend>
-                <component :is="field.icon" class="h-4 w-4" />
-              </template>
-            </UiInput>
-          </div>
+            <span class="ed-link">Remove</span>
+          </button>
         </div>
+        <p class="mt-3 text-[12px] text-muted-foreground">Any image file, up to 5 MB.</p>
+
+        <input
+          ref="avatarInput"
+          type="file"
+          accept="image/*"
+          class="hidden"
+          @change="handleAvatarUpload"
+        />
       </div>
     </div>
-  </div>
+
+    <dl class="mt-12 border-t border-border md:mt-14">
+      <div
+        v-for="field in fields"
+        :key="field.label"
+        class="grid grid-cols-1 gap-2 border-b border-border py-5 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)] sm:items-baseline sm:gap-8"
+      >
+        <dt class="eyebrow">{{ field.label }}</dt>
+        <dd class="break-words text-[15px] text-foreground">{{ field.value || "Not set" }}</dd>
+      </div>
+    </dl>
+  </section>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import {
-  Camera,
-  CircleUser,
-  Mail,
-  ShieldCheck,
-  Trash2,
-  User,
-} from "lucide-vue-next";
+import { Camera, Loader2 } from "lucide-vue-next";
 import { useAuthStore } from "@/stores/auth";
 import { uploadAvatar } from "@/api/userApi";
 import type { SnackbarPayload, User as UserType } from "@/types";
@@ -105,14 +87,13 @@ const uploading = ref(false);
 const avatarInput = ref<HTMLInputElement | null>(null);
 
 const fields = computed(() => [
-  { label: "Username", value: currentUser.value?.username ?? "", icon: User },
-  { label: "Email", value: currentUser.value?.email ?? "", icon: Mail },
+  { label: "Username", value: currentUser.value?.username ?? "" },
+  { label: "Email", value: currentUser.value?.email ?? "" },
   {
     label: "Role",
     // The User model's field is `admin`; the original template read a
     // non-existent `isAdmin`, so every account showed as a standard user.
     value: currentUser.value?.admin ? "Administrator" : "Standard User",
-    icon: ShieldCheck,
   },
 ]);
 

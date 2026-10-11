@@ -1,6 +1,3 @@
-import type { Component } from "vue";
-import { BookOpen, BookOpenText, Heart } from "lucide-vue-next";
-
 /**
  * The home page's subject carousels.
  *
@@ -14,35 +11,22 @@ export interface HomeCarousel {
   subject: string;
   title: string;
   subtitle: string;
-  icon: Component;
-  /** Classes for the badge overlaid on each cover. */
-  badgeClass: string;
-  /** Label for that badge; defaults to `title`. */
-  badgeLabel?: string;
 }
 
 export const HOME_CAROUSELS: HomeCarousel[] = [
   {
     subject: "literary fiction",
     title: "Literary Fiction",
-    subtitle: "Discover compelling stories and thought-provoking narratives",
-    icon: BookOpenText,
-    badgeClass: "bg-customyellow text-customblack",
+    subtitle: "Novels that stay with you long after the last page.",
   },
   {
     subject: "manga",
     title: "Manga",
-    subtitle: "Explore captivating visual stories and graphic novels",
-    icon: BookOpen,
-    badgeClass:
-      "bg-gradient-to-br from-[#ffd700] to-[#ffed4e] text-[#2c3e50]",
+    subtitle: "Serialised worlds, from first volume to final arc.",
   },
   {
     subject: "contemporary romance",
     title: "Romance",
-    subtitle: "Fall in love with heartwarming stories and passionate tales",
-    icon: Heart,
-    badgeClass: "bg-gradient-to-br from-[#ff69b4] to-[#ff8da1] text-white",
-    badgeLabel: "Romance",
+    subtitle: "Slow burns, second chances and happy endings.",
   },
 ];

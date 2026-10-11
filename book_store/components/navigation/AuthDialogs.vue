@@ -1,7 +1,7 @@
 <template>
   <div>
     <UiDialog :open="dialog === 'sign-in'" @update:open="onOpenChange">
-      <UiDialogContent :class="WIDE">
+      <UiDialogContent :class="DIALOG_CLASS">
         <UiDialogTitle class="sr-only">Sign in</UiDialogTitle>
         <UiDialogDescription class="sr-only">
           Sign in to your THBookStore account
@@ -18,7 +18,7 @@
     </UiDialog>
 
     <UiDialog :open="dialog === 'sign-up'" @update:open="onOpenChange">
-      <UiDialogContent :class="WIDE">
+      <UiDialogContent :class="DIALOG_CLASS">
         <UiDialogTitle class="sr-only">Sign up</UiDialogTitle>
         <UiDialogDescription class="sr-only">
           Create a new THBookStore account
@@ -33,7 +33,7 @@
     </UiDialog>
 
     <UiDialog :open="dialog === 'forgot-password'" @update:open="onOpenChange">
-      <UiDialogContent :class="NARROW">
+      <UiDialogContent :class="DIALOG_CLASS">
         <UiDialogTitle class="sr-only">Reset your password</UiDialogTitle>
         <UiDialogDescription class="sr-only">
           Get a password reset link by email
@@ -50,10 +50,8 @@ import { storeToRefs } from "pinia";
 import { useAuthDialogStore } from "@/stores/authDialog";
 import type { SnackbarPayload, User } from "@/types";
 
-const SHARED =
-  "gap-0 overflow-y-auto overflow-x-hidden p-0 max-h-[100dvh] sm:max-h-[calc(100dvh-2rem)] sm:rounded-xl";
-const WIDE = `${SHARED} max-w-[920px]`;
-const NARROW = `${SHARED} max-w-md`;
+const DIALOG_CLASS =
+  "max-w-[980px] gap-0 overflow-y-auto overflow-x-hidden border-0 p-0 shadow-none max-h-[100dvh] sm:max-h-[calc(100dvh-2rem)] sm:rounded-none";
 
 const emit = defineEmits<{
   "show-snackbar": [payload: SnackbarPayload];

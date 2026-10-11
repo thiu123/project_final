@@ -1,63 +1,71 @@
 <template>
-  <div class="min-h-[80vh]">
-    <ProfilesTabsSectionHeading :icon="Lock" title="Change Password" />
+  <section>
+    <ProfilesTabsSectionHeading
+      eyebrow="Security"
+      title="Change password"
+      :description="`Enter your current password, then choose a new one of at least ${MIN_PASSWORD_LENGTH} characters.`"
+    />
 
-    <div
-      class="overflow-hidden rounded-xl bg-gradient-to-br from-white to-[#f8f9fa] shadow-md dark:from-card dark:to-card"
-    >
-      <div class="p-8">
-        <form @submit.prevent="updatePassword">
-          <UiInput
-            v-model="form.current"
-            label="Current Password"
-            type="password"
-            required
-            :error-message="errors.current"
-            wrapper-class="mb-6"
-            @focus="errors.current = ''"
-          />
-
-          <UiInput
-            v-model="form.new"
-            label="New Password"
-            type="password"
-            required
-            :error-message="errors.new"
-            wrapper-class="mb-6"
-            @focus="errors.new = ''"
-          />
-
-          <UiInput
-            v-model="form.confirm"
-            label="Confirm New Password"
-            type="password"
-            required
-            :error-message="errors.confirm"
-            wrapper-class="mb-6"
-            @focus="errors.confirm = ''"
-          />
-
-          <UiButton
-            type="submit"
-            size="lg"
-            :loading="saving"
-            class="rounded-lg bg-waterblue font-bold text-white shadow hover:bg-waterblue/90"
-          >
-            <KeyRound class="mr-2 h-5 w-5" />
-            Update Password
-          </UiButton>
-        </form>
+    <form class="grid max-w-md gap-7" @submit.prevent="updatePassword">
+      <div>
+        <label for="profile-current-password" class="eyebrow mb-1 block">Current password</label>
+        <UiInput
+          id="profile-current-password"
+          v-model="form.current"
+          type="password"
+          autocomplete="current-password"
+          required
+          :class="FIELD_CLASS"
+          :error-message="errors.current"
+          @focus="errors.current = ''"
+        />
       </div>
-    </div>
-  </div>
+
+      <div>
+        <label for="profile-new-password" class="eyebrow mb-1 block">New password</label>
+        <UiInput
+          id="profile-new-password"
+          v-model="form.new"
+          type="password"
+          autocomplete="new-password"
+          required
+          :class="FIELD_CLASS"
+          :error-message="errors.new"
+          @focus="errors.new = ''"
+        />
+      </div>
+
+      <div>
+        <label for="profile-confirm-password" class="eyebrow mb-1 block">Confirm new password</label>
+        <UiInput
+          id="profile-confirm-password"
+          v-model="form.confirm"
+          type="password"
+          autocomplete="new-password"
+          required
+          :class="FIELD_CLASS"
+          :error-message="errors.confirm"
+          @focus="errors.confirm = ''"
+        />
+      </div>
+
+      <div class="pt-1">
+        <UiButton type="submit" variant="ink" size="cta" :loading="saving" class="w-full shadow-none sm:w-auto">
+          Update password
+        </UiButton>
+      </div>
+    </form>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { KeyRound, Lock } from "lucide-vue-next";
 import { useAuthStore } from "@/stores/auth";
 import type { SnackbarPayload } from "@/types";
 
 const MIN_PASSWORD_LENGTH = 6;
+
+const FIELD_CLASS =
+  "h-12 rounded-none border-0 border-b bg-transparent px-0 text-[15px] shadow-none focus-visible:border-foreground focus-visible:ring-0";
 
 const emit = defineEmits<{
   "show-snackbar": [payload: SnackbarPayload];

@@ -1,25 +1,26 @@
 <template>
-  <div
-    class="min-h-screen bg-gradient-to-br from-white to-[#d4dfed] pt-16 dark:from-background dark:to-card md:pt-0"
-  >
-    <div class="md:flex">
-      <!-- Left Sidebar -->
-      <ProfilesProfileSidebar
-        v-model:drawer="drawer"
-        v-model:activeTab="activeTab"
-      />
+  <div class="container mx-auto max-w-7xl px-4 pt-10 md:pt-16">
+    <header class="hero-rise border-b border-border pb-8 md:pb-12">
+      <p class="eyebrow">Account</p>
+      <h1 class="mt-5 break-words font-serif text-4xl font-normal leading-[1.02] tracking-[-0.025em] md:text-6xl">
+        Hello, <span class="italic">{{ currentUser?.username || "reader" }}</span>
+      </h1>
+      <p class="mt-4 max-w-[52ch] text-[15px] leading-relaxed text-muted-foreground">
+        Your details, orders, saved books and reviews, all on one page.
+      </p>
+    </header>
 
-      <!-- Main Content -->
-      <div class="min-w-0 flex-1">
-        <ProfilesProfileContent
-          :active-tab="activeTab"
-          :loading-orders="loadingOrders"
-          :loading-favorites="loadingFavorites"
-          :loading-reviews="loadingReviews"
-          @toggle-drawer="drawer = !drawer"
-          @show-snackbar="notifyFromPayload"
-        />
-      </div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 lg:gap-x-12">
+      <ProfilesProfileSidebar v-model:activeTab="activeTab" class="lg:col-span-3" />
+
+      <ProfilesProfileContent
+        class="pt-10 lg:col-span-9 lg:pt-14"
+        :active-tab="activeTab"
+        :loading-orders="loadingOrders"
+        :loading-favorites="loadingFavorites"
+        :loading-reviews="loadingReviews"
+        @show-snackbar="notifyFromPayload"
+      />
     </div>
 
     <SnackbarAlert
@@ -48,7 +49,6 @@ const reviewStore = useReviewStore();
 
 const { currentUser } = storeToRefs(authStore);
 
-const drawer = ref(true);
 const activeTab = ref("personal");
 const loadingOrders = ref(false);
 const loadingFavorites = ref(false);

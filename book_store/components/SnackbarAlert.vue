@@ -10,12 +10,12 @@
     >
       <div
         v-if="visible"
-        class="fixed bottom-6 left-1/2 z-[100] flex max-w-[90vw] -translate-x-1/2 items-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-white shadow-lg"
+        class="fixed bottom-6 left-1/2 z-[100] flex max-w-[90vw] -translate-x-1/2 items-center gap-2 rounded-full px-5 py-3 text-sm font-medium text-white shadow-lg [.storefront_&]:gap-3 [.storefront_&]:rounded-none [.storefront_&]:bg-foreground [.storefront_&]:py-3.5 [.storefront_&]:font-normal [.storefront_&]:text-background [.storefront_&]:shadow-[0_20px_40px_-20px_hsl(var(--foreground)/0.6)]"
         :class="colorClass"
         role="status"
       >
-        <CheckCircle2 v-if="color === 'success'" class="h-5 w-5 shrink-0" />
-        <AlertCircle v-else class="h-5 w-5 shrink-0" />
+        <CheckCircle2 v-if="color === 'success'" class="h-5 w-5 shrink-0 [.storefront_&]:size-4" :class="iconClass" />
+        <AlertCircle v-else class="h-5 w-5 shrink-0 [.storefront_&]:size-4" :class="iconClass" />
         <span>{{ text }}</span>
         <button
           type="button"
@@ -57,6 +57,16 @@ const colorClass = computed(
       warning: "bg-warning",
       info: "bg-info",
     })[props.color] ?? "bg-success"
+);
+
+const iconClass = computed(
+  () =>
+    ({
+      success: "[.storefront_&]:text-success",
+      error: "[.storefront_&]:text-destructive",
+      warning: "[.storefront_&]:text-warning",
+      info: "[.storefront_&]:text-info",
+    })[props.color] ?? "[.storefront_&]:text-success"
 );
 
 let timer: ReturnType<typeof setTimeout> | undefined;

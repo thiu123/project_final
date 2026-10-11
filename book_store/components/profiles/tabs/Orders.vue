@@ -1,145 +1,139 @@
 <template>
-  <div class="min-h-[80vh]">
-    <ProfilesTabsSectionHeading :icon="Package" title="Order History" />
+  <section>
+    <ProfilesTabsSectionHeading
+      :eyebrow="loading ? 'Orders' : `${placedOrders.length} ${placedOrders.length === 1 ? 'order' : 'orders'}`"
+      title="Order history"
+      description="A record of your orders and where each one stands."
+    />
 
     <ProfilesTabsLoadingState v-if="loading" label="Loading orders..." />
 
     <div v-else-if="placedOrders.length">
       <div
-        v-for="order in placedOrders"
-        :key="order._id"
-        class="mb-6 overflow-hidden rounded-xl bg-gradient-to-br from-white to-[#f8f9fa] shadow transition-all duration-300 hover:shadow-lg dark:from-card dark:to-card"
+        class="hidden gap-6 border-b border-border pb-3 md:grid"
+        :class="LEDGER_COLUMNS"
       >
-        <div class="p-8">
-          <div class="mb-6 flex items-center justify-between">
-            <div>
-              <h3 class="mb-2 text-2xl font-bold text-foreground">
-                Order #{{ order.orderId }}
-              </h3>
-              <p class="flex items-center text-sm text-muted-foreground">
-                <Calendar class="mr-1 h-4 w-4" />
-                {{ formatDate(order.createdAt) }}
-              </p>
-            </div>
-            <UiBadge
-              :variant="orderStatusVariant(order.status)"
-              class="px-3 py-1 text-sm font-bold"
-              :class="orderStatusClass(order.status)"
-            >
-              <component :is="orderStatusIcon(order.status)" class="mr-1 h-4 w-4" />
-              {{ order.status }}
-            </UiBadge>
-          </div>
-
-          <UiSeparator class="mb-6" />
-
-          <div
-            v-for="item in order.items"
-            :key="item._id"
-            class="mb-4 flex items-center rounded-lg bg-waterblue/5 p-4"
-          >
-            <img
-              :src="item.bookId?.cover_url"
-              :alt="item.bookId?.title || 'Book cover'"
-              class="mr-4 h-20 w-[60px] shrink-0 rounded-lg bg-muted object-cover shadow"
-              loading="lazy"
-            />
-            <div class="grow">
-              <h4 class="mb-1 text-base font-bold text-foreground">
-                {{ item.bookId?.title || "Unknown Book" }}
-              </h4>
-              <p class="text-sm text-muted-foreground">
-                Quantity: {{ item.quantity }}
-              </p>
-            </div>
-            <p class="text-lg font-bold text-waterblue">
-              {{ formatUsd(lineTotal(item)) }}
-            </p>
-          </div>
-
-          <UiSeparator class="my-6" />
-
-          <div class="mb-4">
-            <div class="mb-2 flex justify-between">
-              <span class="text-sm text-muted-foreground">Subtotal</span>
-              <span class="text-base font-medium">
-                {{ formatVndAsUsd(orderSubtotalVnd(order)) }}
-              </span>
-            </div>
-
-            <div
-              v-if="order.voucher?.code"
-              class="mb-2 flex items-center justify-between rounded bg-success/10 p-2"
-            >
-              <div class="flex items-center">
-                <TicketPercent class="mr-2 h-4 w-4 shrink-0 text-success" />
-                <span class="text-sm text-muted-foreground">Discount</span>
-                <UiBadge variant="success" class="ml-2 px-1.5 py-0 text-[10px]">
-                  {{ order.voucher.code }}
-                </UiBadge>
-              </div>
-              <span class="text-base font-bold text-success">
-                -{{ formatVndAsUsd(order.voucher.discountAmount) }}
-              </span>
-            </div>
-
-            <UiSeparator class="my-2" />
-            <div class="flex items-center justify-between">
-              <span class="text-lg font-bold text-foreground">Total</span>
-              <span class="text-2xl font-bold text-waterblue">
-                {{ formatVndAsUsd(order.total) }}
-              </span>
-            </div>
-          </div>
-
-          <UiButton
-            tag="NuxtLink"
-            :to="`/order/status/${order.orderId}`"
-            variant="outline"
-            size="lg"
-            class="rounded-lg border-waterblue font-bold text-waterblue hover:bg-waterblue/10 hover:text-waterblue"
-          >
-            <Eye class="mr-2 h-5 w-5" />
-            View Details
-          </UiButton>
-        </div>
+        <span class="eyebrow">Order no.</span>
+        <span class="eyebrow">Date</span>
+        <span class="eyebrow">Items</span>
+        <span class="eyebrow">Total</span>
+        <span class="eyebrow">Status</span>
+        <span class="sr-only">Details</span>
       </div>
+
+      <ul class="divide-y divide-border border-b border-border">
+        <li v-for="order in placedOrders" :key="order._id" class="py-6">
+          <div class="md:hidden">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0">
+                <p class="truncate text-[13px] font-medium tabular-nums" :title="order.orderId">
+                  #{{ order.orderId }}
+                </p>
+                <p class="mt-1 text-[13px] text-muted-foreground">
+                  {{ formatDate(order.createdAt) }}
+                  <span class="mx-1.5 text-border">/</span>
+                  {{ itemLabel(order) }}
+                </p>
+              </div>
+              <div class="shrink-0 text-right">
+                <p class="text-[15px] tabular-nums">{{ formatVndAsUsd(order.total) }}</p>
+                <p v-if="order.voucher?.code" class="mt-1 text-[12px] text-muted-foreground">
+                  {{ order.voucher.code }}
+                </p>
+              </div>
+            </div>
+            <div class="mt-4 flex items-center justify-between gap-4">
+              <span class="inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.14em]">
+                <span class="size-1.5 rounded-full" :class="statusDot(order.status)" />
+                {{ order.status }}
+              </span>
+              <NuxtLink
+                :to="`/order/status/${order.orderId}`"
+                class="group inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.14em]"
+              >
+                <span class="ed-link">View</span>
+                <ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" :stroke-width="1.5" />
+              </NuxtLink>
+            </div>
+          </div>
+
+          <div class="hidden items-center gap-6 md:grid" :class="LEDGER_COLUMNS">
+            <p class="break-all text-[12.5px] font-medium tabular-nums leading-snug">
+              #{{ order.orderId }}
+            </p>
+            <p class="text-[14px] text-muted-foreground">{{ formatDate(order.createdAt) }}</p>
+            <div class="flex min-w-0 items-center gap-3">
+              <div class="flex shrink-0">
+                <div
+                  v-for="(item, index) in order.items.slice(0, 3)"
+                  :key="item._id || index"
+                  class="aspect-[2/3] w-7 overflow-hidden bg-muted ring-2 ring-background"
+                  :class="index > 0 && '-ml-2'"
+                >
+                  <img
+                    v-if="item.bookId?.cover_url"
+                    :src="item.bookId.cover_url"
+                    :alt="item.bookId?.title || 'Book cover'"
+                    class="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+              <span class="truncate text-[14px] text-muted-foreground">{{ itemLabel(order) }}</span>
+            </div>
+            <div>
+              <p class="text-[15px] tabular-nums">{{ formatVndAsUsd(order.total) }}</p>
+              <p v-if="order.voucher?.code" class="mt-1 truncate text-[12px] text-muted-foreground">
+                {{ order.voucher.code }} &minus;{{ formatVndAsUsd(order.voucher.discountAmount) }}
+              </p>
+            </div>
+            <span class="inline-flex items-center gap-2 whitespace-nowrap text-[12px] font-medium uppercase tracking-[0.14em]">
+              <span class="size-1.5 shrink-0 rounded-full" :class="statusDot(order.status)" />
+              {{ order.status }}
+            </span>
+            <NuxtLink
+              :to="`/order/status/${order.orderId}`"
+              class="group inline-flex items-center justify-end gap-2 text-[12px] font-medium uppercase tracking-[0.14em]"
+              :aria-label="`View order ${order.orderId}`"
+            >
+              <span class="ed-link">View</span>
+              <ArrowRight class="size-4 transition-transform duration-300 group-hover:translate-x-1" :stroke-width="1.5" />
+            </NuxtLink>
+          </div>
+        </li>
+      </ul>
     </div>
 
     <ProfilesTabsEmptyState
       v-else
-      :icon="Package"
-      title="No orders yet"
-      :action-icon="ShoppingBag"
-      action-label="Start Shopping"
+      title="No orders yet."
+      action-label="Start shopping"
     >
       You haven't placed any orders yet. Start shopping to see your order history
       here.
     </ProfilesTabsEmptyState>
-  </div>
+  </section>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import {
-  Calendar,
-  Eye,
-  Package,
-  ShoppingBag,
-  TicketPercent,
-} from "lucide-vue-next";
+import { ArrowRight } from "lucide-vue-next";
 import { useOrderStore } from "@/stores/order";
-import {
-  orderStatusClass,
-  orderStatusIcon,
-  orderStatusVariant,
-} from "@/utils/orderStatus";
-import {
-  formatUsd,
-  formatVndAsUsd,
-  lineTotal,
-  orderSubtotalVnd,
-} from "@/utils/pricing";
+import type { Order } from "@/types";
+import { formatVndAsUsd } from "@/utils/pricing";
+
+const LEDGER_COLUMNS =
+  "grid-cols-[minmax(0,1.7fr)_minmax(0,0.85fr)_minmax(0,1.15fr)_minmax(0,0.9fr)_minmax(0,1fr)_4rem]";
+
+const STATUS_DOTS: Record<string, string> = {
+  pending: "bg-warning",
+  paid: "bg-success",
+  confirmed: "bg-info",
+  "in delivery": "bg-info",
+  delivered: "bg-success",
+  cancelled: "bg-muted-foreground",
+  failed: "bg-destructive",
+};
 
 defineProps<{ loading: boolean }>();
 
@@ -152,6 +146,17 @@ const placedOrders = computed(() =>
 );
 
 function formatDate(value?: string) {
-  return value ? new Date(value).toLocaleDateString() : "";
+  return value
+    ? new Date(value).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })
+    : "";
+}
+
+function statusDot(status?: string) {
+  return STATUS_DOTS[status?.toLowerCase() ?? ""] ?? "bg-muted-foreground";
+}
+
+function itemLabel(order: Order) {
+  const count = order.items.reduce((sum, item) => sum + (item.quantity ?? 0), 0);
+  return `${count} ${count === 1 ? "item" : "items"}`;
 }
 </script>

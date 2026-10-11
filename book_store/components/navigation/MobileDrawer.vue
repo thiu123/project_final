@@ -1,23 +1,23 @@
 <template>
   <div>
     <Transition
-      enter-active-class="transition-opacity duration-200"
+      enter-active-class="transition-opacity duration-300"
       enter-from-class="opacity-0"
       enter-to-class="opacity-100"
-      leave-active-class="transition-opacity duration-150"
+      leave-active-class="transition-opacity duration-200"
       leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
       <div
         v-if="open"
-        class="fixed inset-0 z-[60] bg-black/60"
+        class="fixed inset-0 z-[60] bg-foreground/40 backdrop-blur-[2px]"
         aria-hidden="true"
         @click="close"
       />
     </Transition>
 
     <Transition
-      enter-active-class="transition-transform duration-300 ease-out"
+      enter-active-class="transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
       enter-from-class="-translate-x-full"
       enter-to-class="translate-x-0"
       leave-active-class="transition-transform duration-200 ease-in"
@@ -26,166 +26,111 @@
     >
       <aside
         v-if="open"
-        class="fixed inset-y-0 left-0 z-[70] w-[280px] overflow-y-auto border-r border-border bg-background py-2"
+        class="fixed inset-y-0 left-0 z-[70] flex w-[min(88vw,360px)] flex-col overflow-y-auto bg-background"
+        aria-label="Menu"
       >
-        <!-- Brand -->
-        <div class="mb-4 flex items-center px-4 pt-2">
-          <div
-            class="mr-3 flex h-10 w-10 items-center justify-center rounded-full bg-customyellow shadow"
-          >
-            <BookOpen class="h-6 w-6 text-darkgreen" />
-          </div>
-          <span class="text-lg font-bold text-foreground">THBookStore</span>
-          <div class="ml-auto flex items-center gap-1">
+        <div class="flex h-16 items-center justify-between border-b border-border px-5">
+          <StoreWordmark size="sm" />
+          <div class="flex items-center gap-1">
             <ThemeToggle />
             <button
               type="button"
-              class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              class="inline-flex size-9 items-center justify-center transition-opacity hover:opacity-60"
               aria-label="Close menu"
               @click="close"
             >
-              <X class="h-5 w-5" />
+              <X class="size-5" :stroke-width="1.5" />
             </button>
           </div>
         </div>
 
-        <div class="mb-2 h-px bg-border" />
+        <nav class="flex-1 px-5 py-6">
+          <ul class="space-y-1">
+            <li>
+              <button type="button" :class="itemClass('/')" @click="go('/')">Home</button>
+            </li>
+            <li>
+              <button type="button" :class="itemClass('/subjects/all')" @click="go('/subjects/all')">
+                All books
+              </button>
+            </li>
+            <li>
+              <button
+                type="button"
+                :class="itemClass()"
+                :aria-expanded="categoriesOpen"
+                @click="categoriesOpen = !categoriesOpen"
+              >
+                Categories
+                <Plus
+                  class="ml-auto size-5 text-muted-foreground transition-transform duration-300"
+                  :stroke-width="1.5"
+                  :class="{ 'rotate-45': categoriesOpen }"
+                />
+              </button>
+              <NavigationCategoryTree
+                v-if="categoriesOpen"
+                class="mb-3 mt-1"
+                :categories="categories"
+                @select="go(`/subjects/${$event}`)"
+              />
+            </li>
+            <li>
+              <button type="button" :class="itemClass('/favorites')" @click="go('/favorites')">
+                Favorites
+                <span v-if="favoritesCount > 0" class="ml-auto text-sm tabular-nums text-muted-foreground">
+                  {{ favoritesCount }}
+                </span>
+              </button>
+            </li>
+            <li>
+              <button type="button" :class="itemClass('/contact')" @click="go('/contact')">Contact</button>
+            </li>
+          </ul>
+        </nav>
 
-        <nav class="px-2">
-          <button type="button" :class="itemClass('/')" @click="go('/')">
-            <Home class="h-5 w-5" />
-            Home
-          </button>
-
-          <button
-            type="button"
-            :class="itemClass()"
-            @click="categoriesOpen = !categoriesOpen"
-          >
-            <Shapes class="h-5 w-5" />
-            Category
-            <ChevronDown
-              class="ml-auto h-4 w-4 transition-transform duration-200"
-              :class="{ 'rotate-180': categoriesOpen }"
-            />
-          </button>
-
-          <NavigationCategoryTree
-            v-if="categoriesOpen"
-            :categories="categories"
-            variant="mobile"
-            @select="go(`/subjects/${$event}`)"
-          />
-
-          <button
-            type="button"
-            :class="itemClass('/favorites')"
-            @click="go('/favorites')"
-          >
-            <Heart class="h-5 w-5" />
-            Favorites
-            <UiBadge v-if="favoritesCount > 0" class="ml-auto">
-              {{ favoritesCount }}
-            </UiBadge>
-          </button>
-
-          <button
-            type="button"
-            :class="itemClass('/contact')"
-            @click="go('/contact')"
-          >
-            <Mail class="h-5 w-5" />
-            Contact Us
-          </button>
-
-          <div class="my-2 h-px bg-border" />
-
+        <div class="border-t border-border px-5 py-6">
           <template v-if="currentUser">
-            <div class="mb-2 flex items-center rounded-lg bg-muted p-3">
+            <div class="mb-5 flex items-center gap-3">
               <UserAvatar
                 :src="currentUser?.avatar_url"
                 :name="currentUser?.username"
-                class="mr-3 h-9 w-9"
+                class="size-10 bg-muted text-sm font-semibold text-foreground"
               />
               <div class="min-w-0">
-                <div class="truncate text-sm font-bold text-foreground">
-                  {{ currentUser.username }}
-                </div>
-                <div class="truncate text-xs text-muted-foreground">
-                  {{ currentUser.email }}
-                </div>
+                <p class="truncate font-serif text-base">{{ currentUser.username }}</p>
+                <p class="truncate text-xs text-muted-foreground">{{ currentUser.email }}</p>
               </div>
             </div>
-
-            <button
-              type="button"
-              :class="itemClass()"
-              @click="go('/profiles?tab=personal')"
-            >
-              <User class="h-5 w-5" />
-              Profile
-            </button>
-
-            <button
-              type="button"
-              :class="itemClass()"
-              @click="go('/profiles?tab=orders')"
-            >
-              <Package class="h-5 w-5" />
-              Orders
-            </button>
-
-            <button
-              type="button"
-              class="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
-              @click="emit('logout')"
-            >
-              <LogOut class="h-5 w-5" />
-              Logout
-            </button>
+            <ul class="space-y-3 text-sm">
+              <li>
+                <button type="button" class="ed-link" @click="go('/profiles?tab=personal')">Profile</button>
+              </li>
+              <li>
+                <button type="button" class="ed-link" @click="go('/profiles?tab=orders')">Orders</button>
+              </li>
+              <li>
+                <button type="button" class="ed-link text-destructive" @click="emit('logout')">Sign out</button>
+              </li>
+            </ul>
           </template>
 
-          <template v-else>
-            <div class="p-3">
-              <UiButton
-                block
-                variant="secondary"
-                class="rounded-full"
-                @click="openDialog('sign-in')"
-              >
-                Sign In
-              </UiButton>
-            </div>
-            <div class="p-3 pt-0">
-              <UiButton
-                block
-                variant="outline"
-                class="rounded-full border-darkgreen text-darkgreen dark:border-border dark:text-foreground"
-                @click="openDialog('sign-up')"
-              >
-                Sign Up
-              </UiButton>
-            </div>
-          </template>
-        </nav>
+          <div v-else class="grid gap-3">
+            <UiButton variant="ink" size="cta" block class="shadow-none" @click="openDialog('sign-in')">
+              Sign in
+            </UiButton>
+            <UiButton variant="outline" size="cta" block class="shadow-none" @click="openDialog('sign-up')">
+              Create account
+            </UiButton>
+          </div>
+        </div>
       </aside>
     </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  BookOpen,
-  ChevronDown,
-  Heart,
-  Home,
-  LogOut,
-  Mail,
-  Package,
-  Shapes,
-  User,
-  X,
-} from "lucide-vue-next";
+import { Plus, X } from "lucide-vue-next";
 import type { CategoryNode, User as UserType } from "@/types";
 import type { AuthDialog } from "@/stores/authDialog";
 
@@ -208,11 +153,8 @@ const router = useRouter();
 const categoriesOpen = ref(false);
 
 function itemClass(path?: string) {
-  const base =
-    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-muted";
-  return path && route.path === path
-    ? `${base} bg-customyellow/20 font-bold`
-    : base;
+  const base = "flex w-full items-center py-2.5 text-left font-serif text-2xl transition-colors";
+  return path && route.path === path ? `${base} italic text-primary` : `${base} hover:text-primary`;
 }
 
 function close() {

@@ -17,7 +17,7 @@
         :style="{ width: `${size}px`, height: `${size}px` }"
         :class="
           star <= Math.round(model)
-            ? 'fill-amber-400 text-amber-400'
+            ? 'fill-[hsl(var(--rating))] text-[hsl(var(--rating))]'
             : 'fill-transparent text-muted-foreground/40'
         "
       />

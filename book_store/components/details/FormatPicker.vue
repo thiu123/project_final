@@ -3,12 +3,8 @@
     <label
       v-for="option in options"
       :key="option.value"
-      class="relative flex cursor-pointer items-center gap-3 rounded-2xl border-2 bg-card p-3 transition-all duration-200 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background sm:p-4"
-      :class="
-        model === option.value
-          ? '-translate-x-0.5 -translate-y-0.5 border-foreground shadow-[4px_4px_0_0_hsl(var(--foreground))]'
-          : 'border-border hover:border-foreground/40'
-      "
+      class="relative flex cursor-pointer flex-col gap-1 border px-4 py-3.5 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2 has-[:focus-visible]:ring-offset-background"
+      :class="model === option.value ? 'border-foreground' : 'border-border hover:border-foreground/40'"
     >
       <input
         v-model="model"
@@ -17,31 +13,24 @@
         :value="option.value"
         class="sr-only"
       />
-      <span
-        class="flex size-10 shrink-0 items-center justify-center rounded-xl transition-transform duration-300"
-        :class="[option.tone, model === option.value && '-rotate-6 scale-110']"
-      >
-        <component :is="option.icon" class="size-5" />
-      </span>
-      <span class="min-w-0">
-        <span class="block text-sm font-semibold">{{ option.label }}</span>
-        <span class="block text-sm tabular-nums text-muted-foreground">
-          {{ formatUsd(option.price) }}
+      <span class="flex items-center justify-between gap-2">
+        <span class="text-[13px] font-medium uppercase tracking-[0.14em]">{{ option.label }}</span>
+        <span
+          class="flex size-4 items-center justify-center rounded-full border"
+          :class="model === option.value ? 'border-foreground' : 'border-input'"
+        >
+          <span v-if="model === option.value" class="size-2 rounded-full bg-foreground"></span>
         </span>
       </span>
-
-      <span
-        v-if="option.value === 'ebook' && savingPercent > 0"
-        class="absolute -top-2.5 right-3 rotate-6 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-accent-foreground ring-2 ring-background"
-      >
-        -{{ savingPercent }}%
+      <span class="flex items-baseline gap-2 text-sm">
+        <span class="tabular-nums">{{ formatUsd(option.price) }}</span>
+        <span v-if="option.note" class="text-xs text-primary">{{ option.note }}</span>
       </span>
     </label>
   </div>
 </template>
 
 <script setup lang="ts">
-import { Book, Tablet } from "lucide-vue-next";
 import { EBOOK_PRICE_RATIO, formatUsd } from "@/utils/pricing";
 import type { ProductType } from "@/types";
 
@@ -59,15 +48,13 @@ const options = computed(() => [
     value: "hardbook" as const,
     label: "Hardback",
     price: props.hardbookPrice,
-    icon: Book,
-    tone: "bg-primary/15 text-primary",
+    note: "",
   },
   {
     value: "ebook" as const,
     label: "Ebook",
     price: props.ebookPrice,
-    icon: Tablet,
-    tone: "bg-accent/60 text-accent-foreground",
+    note: savingPercent > 0 ? `Save ${savingPercent}%` : "",
   },
 ]);
 </script>

@@ -1,96 +1,76 @@
 <template>
-  <div class="relative h-screen bg-gradient-to-b from-muted/60 to-muted">
-    <!-- Loading overlay -->
+  <div class="relative h-screen bg-muted">
     <div
       v-if="isLoading"
-      class="absolute inset-0 z-50 flex items-center justify-center bg-black/60"
+      class="absolute inset-0 z-50 flex items-center justify-center bg-background/85"
     >
       <div class="text-center">
-        <UiSpinner size="xl" class="mx-auto text-primary" />
-        <p class="mt-4 text-lg font-semibold text-white">Loading PDF...</p>
+        <UiSpinner size="lg" class="mx-auto text-foreground" />
+        <p class="eyebrow mt-5">Opening the book</p>
       </div>
     </div>
 
     <template v-if="!isLoading">
-      <!-- Purchase Overlay -->
       <UiDialog :open="!isPurchased && hasPdf && currentPage >= totalPages">
         <UiDialogContent
           hide-close
-          class="rounded-xl sm:max-w-md"
+          class="w-[calc(100%-2rem)] gap-0 p-0 shadow-none sm:max-w-md"
           @pointer-down-outside.prevent
           @escape-key-down.prevent
         >
-          <UiDialogTitle class="sr-only">Preview Limit Reached</UiDialogTitle>
-
-          <div class="purchase-card px-2 py-4 text-center sm:px-4">
-            <div class="lock-icon mb-4 text-8xl">🔒</div>
-            <h2 class="mb-3 text-3xl font-bold">Preview Limit Reached</h2>
-            <p class="mb-2 text-base text-muted-foreground">
-              You've viewed all {{ totalPages }} available preview pages
+          <div class="purchase-card px-8 py-10">
+            <p class="eyebrow">Preview</p>
+            <UiDialogTitle class="mt-5 font-serif text-3xl font-normal leading-tight tracking-[-0.02em]">
+              That's the end of the <span class="italic">preview.</span>
+            </UiDialogTitle>
+            <p class="mt-4 text-[15px] leading-relaxed text-muted-foreground">
+              You've read all {{ totalPages }} preview pages. The ebook unlocks all
+              {{ fullPageCount ?? totalPages }} pages.
             </p>
-            <p class="my-6 text-lg font-bold text-primary">
-              Unlock all {{ fullPageCount ?? totalPages }} pages with full access
-            </p>
-            <UiButton
-              size="lg"
-              class="purchase-btn rounded-lg shadow-lg"
-              @click="goToPurchase"
-            >
-              <CreditCard class="mr-1 h-5 w-5" />
-              Purchase Full Access
+            <UiButton variant="ink" size="cta" block class="mt-8 shadow-none" @click="goToPurchase">
+              Buy the ebook
             </UiButton>
           </div>
         </UiDialogContent>
       </UiDialog>
 
-      <!-- Controls Bar -->
-      <header class="sticky top-0 z-10 border-b border-border bg-card shadow-sm">
-        <div class="container mx-auto flex items-center justify-between px-6">
-          <UiButton
-            size="lg"
-            class="nav-btn min-w-12 rounded-lg px-3 sm:min-w-[120px] sm:px-6"
+      <header class="sticky top-0 z-10 border-b border-border bg-background">
+        <div class="container mx-auto flex h-[72px] max-w-5xl items-center justify-between px-4">
+          <button
+            type="button"
+            class="group inline-flex h-10 items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] disabled:pointer-events-none disabled:opacity-30"
             :disabled="!hasPdf || currentPage <= 1"
             @click="prevPage"
           >
-            <ChevronLeft class="h-5 w-5" />
+            <ArrowLeft class="size-4 transition-transform group-hover:-translate-x-0.5" />
             <span class="hidden sm:inline">Previous</span>
-          </UiButton>
+          </button>
 
-          <div class="min-w-[100px] py-10 text-center sm:min-w-[150px]">
-            <div class="flex items-center justify-center gap-2">
-              <span class="text-3xl font-bold leading-none text-primary">
-                {{ currentPage }}
-              </span>
-              <span class="text-2xl text-muted-foreground">/</span>
-              <span class="text-2xl text-muted-foreground">
-                {{ totalPages }}
-              </span>
-            </div>
-            <div v-if="!isPurchased" class="font-bold text-destructive">
-              PREVIEW
-            </div>
+          <div class="text-center">
+            <p class="font-serif text-2xl leading-none tabular-nums">
+              {{ currentPage }}<span class="mx-2 text-muted-foreground">/</span><span class="text-muted-foreground">{{ totalPages }}</span>
+            </p>
+            <p v-if="!isPurchased" class="mt-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">
+              Preview
+            </p>
           </div>
 
-          <UiButton
-            size="lg"
-            class="nav-btn min-w-12 rounded-lg px-3 sm:min-w-[120px] sm:px-6"
+          <button
+            type="button"
+            class="group inline-flex h-10 items-center gap-2 text-[11px] font-medium uppercase tracking-[0.16em] disabled:pointer-events-none disabled:opacity-30"
             :disabled="!hasPdf || !canGoNext"
             @click="nextPage"
           >
             <span class="hidden sm:inline">Next</span>
-            <ChevronRight class="h-5 w-5" />
-          </UiButton>
+            <ArrowRight class="size-4 transition-transform group-hover:translate-x-0.5" />
+          </button>
         </div>
       </header>
 
-      <!-- PDF Viewer -->
-      <main class="h-[calc(100vh-88px)] overflow-y-auto">
-        <div class="container mx-auto flex justify-center px-4 py-8">
-          <div class="rounded-xl bg-card p-4 shadow-lg sm:p-6">
-            <canvas
-              ref="pdfCanvas"
-              class="block h-auto max-w-full rounded"
-            ></canvas>
+      <main class="h-[calc(100vh-72px)] overflow-y-auto">
+        <div class="container mx-auto flex justify-center px-4 py-10">
+          <div class="ed-cover bg-card">
+            <canvas ref="pdfCanvas" class="block h-auto max-w-full"></canvas>
           </div>
         </div>
       </main>
@@ -99,7 +79,7 @@
 </template>
 
 <script setup lang="ts">
-import { ChevronLeft, ChevronRight, CreditCard } from "lucide-vue-next";
+import { ArrowLeft, ArrowRight } from "lucide-vue-next";
 
 const props = withDefaults(
   defineProps<{
@@ -250,60 +230,18 @@ function goToPurchase() {
 </script>
 
 <style scoped>
-.nav-btn {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.nav-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(82, 149, 208, 0.4);
-}
-
-.nav-btn:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-/* Purchase Card Animations */
 .purchase-card {
-  animation: slideUp 0.4s ease;
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 @keyframes slideUp {
   from {
-    transform: translateY(40px);
+    transform: translateY(16px);
     opacity: 0;
   }
   to {
     transform: translateY(0);
     opacity: 1;
   }
-}
-
-.lock-icon {
-  animation: bounce 0.6s ease;
-}
-
-@keyframes bounce {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.purchase-btn {
-  box-shadow: 0 6px 20px rgba(82, 149, 208, 0.4);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.purchase-btn:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 28px rgba(82, 149, 208, 0.5);
-}
-
-.purchase-btn:active {
-  transform: translateY(-1px);
 }
 </style>

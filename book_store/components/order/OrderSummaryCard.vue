@@ -1,135 +1,60 @@
 <template>
-  <UiCard class="mb-8 overflow-hidden rounded-lg shadow-md">
-    <div class="summary-gradient p-5">
-      <div class="flex items-center">
-        <Calculator class="mr-3 h-7 w-7 text-white" />
-        <span class="text-2xl font-bold text-white">Order Summary</span>
-      </div>
-    </div>
+  <section aria-labelledby="order-summary-title">
+    <h2 id="order-summary-title" class="sr-only">Order summary</h2>
 
-    <UiSeparator />
-
-    <div class="p-6">
-      <!-- Items breakdown -->
-      <div class="mb-5">
-        <div
-          class="mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground"
-        >
-          Items Breakdown
-        </div>
-
-        <div
-          v-for="(item, index) in order.items"
-          :key="item._id ?? index"
-          class="mb-2 rounded-lg bg-muted/60 p-4"
-        >
-          <div class="flex items-center justify-between">
-            <div>
-              <div class="text-base font-medium text-foreground">
-                {{ item.bookId?.title }}
-                <UiBadge
-                  v-if="item.productType === 'ebook'"
-                  variant="success"
-                  class="ml-2 text-[10px]"
-                >
-                  Ebook
-                </UiBadge>
-              </div>
-              <div class="text-xs text-muted-foreground">
-                {{ formatUsd(itemUnitPrice(item)) }} × {{ item.quantity }}
-              </div>
-            </div>
-            <div class="text-lg font-bold text-primary">
-              {{ formatUsd(itemUnitPrice(item) * item.quantity) }}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <UiSeparator class="my-5" />
-
-      <div class="mb-4 flex items-center justify-between px-2">
-        <span class="text-base font-medium text-muted-foreground">Subtotal</span>
-        <span class="text-lg font-bold text-foreground">
-          {{ formatVndAsUsd(orderSubtotalVnd(order)) }}
-        </span>
-      </div>
-
-      <div
-        v-if="order.voucher?.code"
-        class="mb-4 rounded-lg bg-green-50 p-4 dark:bg-green-950/40"
-      >
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <span
-              class="mr-3 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-success"
-            >
-              <TicketPercent class="h-5 w-5 text-white" />
-            </span>
-            <div>
-              <div class="text-base font-medium text-foreground">
-                Voucher Discount
-              </div>
-              <UiBadge variant="success" class="mt-1">
-                {{ order.voucher.code }}
-              </UiBadge>
-            </div>
-          </div>
-          <div class="text-lg font-bold text-success">
-            -{{ formatVndAsUsd(order.voucher.discountAmount) }}
-          </div>
-        </div>
-      </div>
-
-      <UiSeparator class="my-5" />
-
-      <div class="rounded-lg bg-green-50 p-5 dark:bg-green-950/40">
-        <div class="flex items-center justify-between">
-          <div>
-            <div
-              class="mb-1 text-xs font-bold uppercase tracking-widest text-green-700 dark:text-green-300"
-            >
-              Total Paid
-            </div>
-            <div class="text-3xl font-bold text-success">
-              {{ formatVndAsUsd(order.total) }}
-            </div>
-          </div>
-          <CheckCircle2 class="h-[60px] w-[60px] text-success" />
-        </div>
-
-        <div
-          class="mt-4 border-t-2 border-dashed border-success/30 pt-4 text-center"
-        >
-          <span class="text-sm font-medium text-green-700 dark:text-green-300">
-            ≈ {{ order.total.toLocaleString() }} VNĐ
+    <dl class="divide-y divide-border border-y border-border text-[15px]">
+      <div class="flex items-baseline justify-between gap-4 py-3.5">
+        <dt class="text-muted-foreground">
+          Subtotal
+          <span class="ml-1 text-[13px] tabular-nums">
+            ({{ itemCount }} {{ itemCount === 1 ? "copy" : "copies" }})
           </span>
-        </div>
+        </dt>
+        <dd class="tabular-nums">{{ formatVndAsUsd(orderSubtotalVnd(order)) }}</dd>
+      </div>
+
+      <div v-if="order.voucher?.code" class="flex items-baseline justify-between gap-4 py-3.5">
+        <dt class="text-muted-foreground">
+          Voucher
+          <span class="ml-1 text-[11px] font-medium uppercase tracking-[0.12em] text-foreground">
+            {{ order.voucher.code }}
+          </span>
+        </dt>
+        <dd class="tabular-nums">&minus;{{ formatVndAsUsd(order.voucher.discountAmount) }}</dd>
+      </div>
+
+      <div v-if="hasHardback" class="flex items-baseline justify-between gap-4 py-3.5">
+        <dt class="text-muted-foreground">Delivery</dt>
+        <dd>Free</dd>
+      </div>
+    </dl>
+
+    <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 pt-6">
+      <span class="eyebrow">{{ isPaidFor(order) ? "Total paid" : "Total" }}</span>
+      <div class="text-right">
+        <p class="font-serif text-4xl leading-none tabular-nums md:text-5xl">
+          {{ formatVndAsUsd(order.total) }}
+        </p>
+        <p class="mt-2 text-[13px] tabular-nums text-muted-foreground">
+          &asymp; {{ order.total.toLocaleString() }} VNĐ
+        </p>
       </div>
     </div>
-  </UiCard>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { Calculator, CheckCircle2, TicketPercent } from "lucide-vue-next";
-import {
-  formatUsd,
-  formatVndAsUsd,
-  orderSubtotalVnd,
-  unitPrice,
-} from "@/utils/pricing";
-import type { Order, OrderItem } from "@/types";
+import { formatVndAsUsd, orderSubtotalVnd } from "@/utils/pricing";
+import { isPaidFor } from "@/utils/orderStatus";
+import type { Order } from "@/types";
 
-defineProps<{ order: Order }>();
+const props = defineProps<{ order: Order }>();
 
-function itemUnitPrice(item: OrderItem) {
-  return unitPrice(item.bookId?.price ?? 0, item.productType);
-}
+const itemCount = computed(() =>
+  props.order.items.reduce((sum, item) => sum + item.quantity, 0)
+);
+
+const hasHardback = computed(() =>
+  props.order.items.some((item) => item.productType === "hardbook")
+);
 </script>
-
-<style scoped>
-/* Header gradient (not expressible as a Tailwind utility) */
-.summary-gradient {
-  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
-}
-</style>

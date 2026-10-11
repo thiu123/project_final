@@ -32,6 +32,7 @@ export const buttonVariants = cva(
         'icon': 'h-9 w-9',
         'icon-sm': 'size-8',
         'icon-lg': 'size-10',
+        'cta': 'h-12 px-8 text-xs font-semibold uppercase tracking-[0.16em]',
 
         // camelCase aliases kept so existing call sites keep working.
         'iconSm': 'size-8',

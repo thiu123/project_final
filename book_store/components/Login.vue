@@ -1,35 +1,37 @@
 <template>
   <AuthShell
     :embedded="embedded"
+    eyebrow="Sign in"
     title="Welcome back"
     subtitle="Sign in to your THBookStore account."
-    caption="Your saved books, orders and ebooks in one place."
+    panel-label="Members"
+    caption="Your orders, saved books and ebooks, kept on one shelf."
   >
-    <AuthFormMessage v-if="notice" class="mb-5">{{ notice }}</AuthFormMessage>
+    <template #panel>Pick up <span class="italic">where</span> you left off.</template>
 
-    <AuthGoogleButton />
+    <AuthFormMessage v-if="notice" class="mb-8">{{ notice }}</AuthFormMessage>
 
-    <div class="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-      <span class="h-px flex-1 bg-border" />
-      or
-      <span class="h-px flex-1 bg-border" />
-    </div>
-
-    <form class="grid gap-4" novalidate @submit.prevent="onSubmit">
-      <UiInput
-        id="login-username"
-        v-model="username"
-        label="Username"
-        autocomplete="username"
-        class="h-10"
-        :error-message="usernameError"
-        @input="usernameError = ''"
-      />
+    <form class="grid gap-7" novalidate @submit.prevent="onSubmit">
+      <div>
+        <label for="login-username" class="eyebrow mb-1 block">Username</label>
+        <UiInput
+          id="login-username"
+          v-model="username"
+          autocomplete="username"
+          :class="FIELD_CLASS"
+          :error-message="usernameError"
+          @input="usernameError = ''"
+        />
+      </div>
 
       <div>
-        <div class="mb-1.5 flex items-center justify-between gap-3">
-          <UiLabel for="login-password">Password</UiLabel>
-          <AuthTextLink class="text-xs" @click="$emit('toggle-forgot-password')">
+        <div class="mb-1 flex items-center justify-between gap-3">
+          <label for="login-password" class="eyebrow">Password</label>
+          <AuthTextLink
+            tone="muted"
+            class="text-[12px]"
+            @click="$emit('toggle-forgot-password')"
+          >
             Forgot password?
           </AuthTextLink>
         </div>
@@ -38,20 +40,20 @@
           v-model="password"
           :type="showPassword ? 'text' : 'password'"
           autocomplete="current-password"
-          class="h-10"
+          :class="[FIELD_CLASS, 'pr-9']"
           :error-message="passwordError"
           @input="passwordError = ''"
         >
           <template #append>
             <button
               type="button"
-              class="rounded-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              class="-mr-3 flex size-8 items-center justify-center text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               :aria-label="showPassword ? 'Hide password' : 'Show password'"
               :aria-pressed="showPassword"
               @click="showPassword = !showPassword"
             >
-              <EyeOff v-if="showPassword" class="h-4 w-4" />
-              <Eye v-else class="h-4 w-4" />
+              <EyeOff v-if="showPassword" class="size-4" :stroke-width="1.5" />
+              <Eye v-else class="size-4" :stroke-width="1.5" />
             </button>
           </template>
         </UiInput>
@@ -68,14 +70,24 @@
         </AuthFormMessage>
       </Transition>
 
-      <UiButton type="submit" variant="ink" size="lg" block :loading="submitting" class="mt-1">
+      <UiButton type="submit" variant="ink" size="cta" block :loading="submitting" class="mt-1 shadow-none">
         Sign in
       </UiButton>
     </form>
 
+    <div class="my-7 flex items-center gap-4 text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground">
+      <span class="h-px flex-1 bg-border" />
+      or
+      <span class="h-px flex-1 bg-border" />
+    </div>
+
+    <AuthGoogleButton />
+
     <template #footer>
       New to THBookStore?
-      <AuthTextLink @click="$emit('toggle-sign-up')">Sign up</AuthTextLink>
+      <AuthTextLink class="text-[12px] uppercase tracking-[0.14em]" @click="$emit('toggle-sign-up')">
+        Create an account
+      </AuthTextLink>
     </template>
   </AuthShell>
 </template>
@@ -86,6 +98,9 @@ import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
 import { useFavoriteStore } from "@/stores/favorite";
 import type { User } from "@/types";
+
+const FIELD_CLASS =
+  "h-12 rounded-none border-0 border-b bg-transparent px-0 text-[15px] shadow-none focus-visible:border-foreground focus-visible:ring-0";
 
 withDefaults(
   defineProps<{

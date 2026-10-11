@@ -2,63 +2,48 @@
   <UiDialog v-model:open="open">
     <UiDialogContent
       hide-close
-      class="w-[calc(100%-2rem)] gap-0 overflow-hidden rounded-3xl p-0 sm:max-w-lg sm:rounded-3xl"
+      class="w-[calc(100%-2rem)] gap-0 p-0 shadow-none sm:max-w-lg"
       @pointer-down-outside.prevent
       @escape-key-down.prevent
     >
-      <div class="relative isolate overflow-hidden bg-muted/70 px-6 pb-6 pt-8 text-center">
-        <div
-          aria-hidden="true"
-          class="absolute -right-10 -top-10 -z-10 size-32 rounded-full bg-accent dark:bg-accent/80"
-        ></div>
-        <div
-          aria-hidden="true"
-          class="absolute -bottom-6 -left-4 -z-10 size-16 rotate-12 rounded-2xl bg-primary/25"
-        ></div>
-
-        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-          {{ review ? "Edit your review" : "Write a review" }}
-        </p>
-        <UiDialogTitle class="mt-2 text-2xl font-bold tracking-tight">
-          How did you find it?
+      <div class="px-6 pb-2 pt-8 sm:px-8">
+        <p class="eyebrow">{{ review ? "Edit your review" : "Write a review" }}</p>
+        <UiDialogTitle class="mt-4 font-serif text-3xl font-normal leading-tight tracking-[-0.02em]">
+          How did you <span class="italic">find it?</span>
         </UiDialogTitle>
 
-        <div class="mt-5 flex justify-center">
-          <UiRating v-model="rating" :length="5" :size="40" />
+        <div class="mt-6 flex items-center gap-4">
+          <UiRating v-model="rating" :length="5" :size="28" />
+          <span class="text-sm text-muted-foreground" aria-live="polite">{{ RATING_LABELS[rating] }}</span>
         </div>
-        <p class="mt-2 h-5 text-sm font-semibold" aria-live="polite">
-          {{ RATING_LABELS[rating] }}
-        </p>
       </div>
 
-      <div class="p-6">
-        <label for="review-comment" class="mb-2 block text-sm font-semibold">
-          Your thoughts
-        </label>
+      <div class="px-6 pt-6 sm:px-8">
+        <label for="review-comment" class="eyebrow block">Your thoughts</label>
         <textarea
           id="review-comment"
           v-model="comment"
           rows="5"
           placeholder="What stayed with you? Who would you hand this book to?"
-          class="w-full resize-none rounded-2xl border bg-background p-4 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          class="mt-3 w-full resize-none border bg-transparent p-4 font-serif text-lg leading-relaxed placeholder:font-sans placeholder:text-sm placeholder:text-muted-foreground/70 focus:border-foreground focus:outline-none"
           :class="commentError ? 'border-destructive' : 'border-input'"
           @blur="validate"
         ></textarea>
-        <p v-if="commentError" class="mt-1.5 text-xs text-destructive">{{ commentError }}</p>
+        <p v-if="commentError" class="mt-2 text-xs text-destructive">{{ commentError }}</p>
       </div>
 
-      <div class="flex items-center justify-end gap-2 px-6 pb-6">
-        <UiButton variant="ghost" class="rounded-full" @click="open = false">
+      <div class="mt-6 flex items-center justify-end gap-2 border-t border-border px-6 py-4 sm:px-8">
+        <UiButton variant="ghost" class="uppercase tracking-[0.14em]" @click="open = false">
           Cancel
         </UiButton>
         <UiButton
           variant="ink"
-          class="rounded-full px-5 shadow-none"
+          size="cta"
+          class="h-10 px-6 shadow-none"
           :disabled="!rating || !comment.trim()"
           :loading="saving"
           @click="submit"
         >
-          <Send />
           {{ submitLabel }}
         </UiButton>
       </div>
@@ -67,7 +52,6 @@
 </template>
 
 <script setup lang="ts">
-import { Send } from "lucide-vue-next";
 import type { Review } from "@/types";
 
 /**

@@ -1,145 +1,96 @@
 <template>
-  <div>
-    <!-- Mobile scrim (temporary drawer behavior on small screens) -->
-    <div
-      v-if="drawer"
-      class="fixed inset-0 z-40 bg-black/50 md:hidden"
-      aria-hidden="true"
-      @click="$emit('update:drawer', false)"
-    ></div>
-
-    <aside
-      class="fixed inset-y-0 left-0 z-50 flex w-72 flex-col overflow-y-auto border-r border-waterblue/10 bg-gradient-to-br from-[#f8f9fa] to-[#e9ecef] transition-transform duration-300 dark:from-card dark:to-background md:sticky md:top-0 md:z-auto md:h-screen md:w-64 md:shrink-0 md:translate-x-0"
-      :class="drawer ? 'translate-x-0' : '-translate-x-full'"
-    >
-      <!-- User Profile Header -->
-      <div class="border-b border-border p-6 text-center">
-        <div class="mb-4 flex justify-center">
-          <UserAvatar
-            :src="currentUser?.avatar_url"
-            :name="currentUser?.username"
-            class="h-[100px] w-[100px] border-4 border-white text-3xl shadow-md dark:border-muted"
+  <nav aria-label="Account sections" class="lg:sticky lg:top-28 lg:self-start lg:pt-14">
+    <div ref="stripRef" class="relative -mx-4 overflow-x-auto border-b border-border px-4 scrollbar-none lg:hidden">
+      <ul class="flex gap-7">
+        <li v-for="item in menuItems" :key="item.value">
+          <button
+            type="button"
+            class="relative whitespace-nowrap py-4 text-[12px] font-medium uppercase tracking-[0.14em] transition-colors"
+            :class="activeTab === item.value ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'"
+            :data-tab="item.value"
+            :aria-current="activeTab === item.value ? 'page' : undefined"
+            @click="$emit('update:activeTab', item.value)"
           >
-            <CircleUser class="h-10 w-10 text-muted-foreground" />
-          </UserAvatar>
-        </div>
-        <h3 class="mb-2 text-2xl font-bold text-foreground">
-          {{ currentUser?.username || "User" }}
-        </h3>
-        <p class="mb-3 text-sm text-muted-foreground">
-          {{ currentUser?.email || "No email" }}
-        </p>
-      </div>
+            {{ item.title }}
+            <span
+              v-if="activeTab === item.value"
+              class="absolute inset-x-0 bottom-0 h-px bg-foreground"
+              aria-hidden="true"
+            />
+          </button>
+        </li>
+      </ul>
+    </div>
 
-      <!-- Navigation Menu -->
-      <nav class="p-4">
-        <button
-          v-for="item in menuItems"
-          :key="item.value"
-          type="button"
-          class="mb-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition-all duration-300"
-          :class="
-            activeTab === item.value
-              ? 'bg-waterblue text-white shadow'
-              : 'text-foreground hover:bg-muted'
-          "
-          @click="$emit('update:activeTab', item.value)"
-        >
-          <component
-            :is="item.icon"
-            class="h-5 w-5 shrink-0"
-            :class="
-              activeTab === item.value ? 'text-white' : 'text-muted-foreground'
-            "
-          />
-          <span class="flex-1 text-base font-medium">{{ item.title }}</span>
-          <ChevronRight
-            v-if="activeTab === item.value"
-            class="h-4 w-4 shrink-0 text-white"
-          />
-        </button>
-      </nav>
+    <div class="hidden lg:block">
+      <p class="eyebrow">Your account</p>
+      <ul class="mt-5 border-t border-border">
+        <li v-for="(item, index) in menuItems" :key="item.value" class="border-b border-border">
+          <button
+            type="button"
+            class="group flex w-full items-center gap-4 py-4 text-left"
+            :aria-current="activeTab === item.value ? 'page' : undefined"
+            @click="$emit('update:activeTab', item.value)"
+          >
+            <span class="flex w-6 shrink-0 items-center" aria-hidden="true">
+              <span v-if="activeTab === item.value" class="h-px w-5 bg-foreground" />
+              <span v-else class="text-[11px] tabular-nums text-muted-foreground">
+                {{ String(index + 1).padStart(2, "0") }}
+              </span>
+            </span>
+            <span
+              class="font-serif text-[1.3rem] leading-tight transition-colors"
+              :class="activeTab === item.value ? 'text-foreground' : 'text-muted-foreground group-hover:text-foreground'"
+            >
+              {{ item.title }}
+            </span>
+          </button>
+        </li>
+      </ul>
 
-      <!-- Quick Stats Section -->
-      <div class="mt-auto p-4">
-        <div
-          class="rounded-xl bg-gradient-to-br from-white to-[#f8f9fa] p-4 shadow dark:from-card dark:to-card"
-        >
-          <h4 class="mb-3 text-base font-bold text-foreground">Quick Stats</h4>
-          <div class="mb-3 flex items-center justify-between">
-            <div class="text-center">
-              <div class="text-lg font-bold text-waterblue">
-                {{ ordersCount }}
-              </div>
-              <div class="text-xs text-muted-foreground">Orders</div>
-            </div>
-            <div class="text-center">
-              <div class="text-lg font-bold text-customyellow">
-                {{ favoritesCount }}
-              </div>
-              <div class="text-xs text-muted-foreground">Favorites</div>
-            </div>
-            <div class="text-center">
-              <div class="text-lg font-bold text-lightgreen">
-                {{ reviewsCount }}
-              </div>
-              <div class="text-xs text-muted-foreground">Reviews</div>
-            </div>
-          </div>
+      <dl class="mt-10 space-y-4">
+        <div v-for="stat in stats" :key="stat.label" class="flex items-baseline justify-between gap-4">
+          <dt class="eyebrow">{{ stat.label }}</dt>
+          <dd class="font-serif text-2xl tabular-nums leading-none">{{ stat.value }}</dd>
         </div>
-      </div>
-    </aside>
-  </div>
+      </dl>
+    </div>
+  </nav>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { useAuthStore } from "@/stores/auth";
 import { useFavoriteStore } from "@/stores/favorite";
 import { useOrderStore } from "@/stores/order";
 import { useReviewStore } from "@/stores/review";
-import type { Component } from "vue";
-import {
-  ChevronRight,
-  CircleUser,
-  Heart,
-  Lock,
-  Package,
-  Star,
-} from "lucide-vue-next";
 
-withDefaults(
+const props = withDefaults(
   defineProps<{
-    drawer?: boolean;
     activeTab?: string;
   }>(),
   {
-    drawer: true,
     activeTab: "personal",
   }
 );
 
 defineEmits<{
-  (e: "update:drawer", value: boolean): void;
   (e: "update:activeTab", value: string): void;
 }>();
 
-const authStore = useAuthStore();
 const orderStore = useOrderStore();
 const favoriteStore = useFavoriteStore();
 const reviewStore = useReviewStore();
 
-const { currentUser } = storeToRefs(authStore);
 const { userOrders } = storeToRefs(orderStore);
 const { favorites } = storeToRefs(favoriteStore);
 const { userReviews } = storeToRefs(reviewStore);
 
-const menuItems: { title: string; value: string; icon: Component }[] = [
-  { title: "Personal Info", value: "personal", icon: CircleUser },
-  { title: "Orders", value: "orders", icon: Package },
-  { title: "Favorites", value: "favorites", icon: Heart },
-  { title: "My Reviews", value: "reviews", icon: Star },
-  { title: "Change Password", value: "password", icon: Lock },
+const menuItems: { title: string; value: string }[] = [
+  { title: "Personal info", value: "personal" },
+  { title: "Orders", value: "orders" },
+  { title: "Favorites", value: "favorites" },
+  { title: "My reviews", value: "reviews" },
+  { title: "Change password", value: "password" },
 ];
 
 const ordersCount = computed(
@@ -148,6 +99,26 @@ const ordersCount = computed(
 );
 const favoritesCount = computed(() => favorites.value?.length || 0);
 const reviewsCount = computed(() => userReviews.value?.length || 0);
+
+const stats = computed(() => [
+  { label: "Paid orders", value: ordersCount.value },
+  { label: "Favorites", value: favoritesCount.value },
+  { label: "Reviews", value: reviewsCount.value },
+]);
+
+const stripRef = ref<HTMLElement | null>(null);
+
+function revealActiveTab() {
+  const strip = stripRef.value;
+  const button = strip?.querySelector<HTMLElement>(`[data-tab="${props.activeTab}"]`);
+  if (!strip || !button) return;
+  strip.scrollLeft = button.offsetLeft - strip.clientWidth / 2 + button.offsetWidth / 2;
+}
+
+watch(
+  () => props.activeTab,
+  () => nextTick(revealActiveTab)
+);
 
 async function loadAllData() {
   try {

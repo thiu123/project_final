@@ -1,242 +1,323 @@
 <template>
-  <div class="container mx-auto p-4 md:p-8">
-    <div class="mx-auto w-full md:w-10/12 lg:w-8/12">
-      <!-- Status header -->
-      <div class="mb-8 overflow-hidden rounded-xl">
-        <div
-          :class="isSettled ? 'success-gradient' : 'warning-gradient'"
-          class="p-8 text-center md:p-12"
+  <div class="container mx-auto max-w-7xl px-4 pt-10 md:pt-16">
+    <header v-if="order" class="hero-rise border-b border-border pb-10 md:pb-14">
+      <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <p class="eyebrow">
+          Order <span class="ml-1 tabular-nums text-foreground">{{ order.orderId }}</span>
+        </p>
+        <span
+          class="inline-flex items-center gap-2 text-[12px] font-medium uppercase tracking-[0.14em]"
         >
-          <component
-            :is="header.icon"
-            class="pulse-animation mx-auto mb-4 h-[100px] w-[100px] text-white"
-          />
-          <h1 class="mb-3 text-4xl font-bold text-white md:text-5xl">
-            {{ header.title }}
-          </h1>
-          <p v-if="!isEbookOnly" class="text-lg text-white/90">
-            {{ header.subtitle }}
-          </p>
-        </div>
+          <span class="size-1.5 rounded-full" :class="STATUS_DOTS[order.status] ?? 'bg-muted-foreground'" />
+          {{ order.status }}
+        </span>
+      </div>
+      <h1
+        class="mt-6 max-w-[22ch] font-serif text-4xl font-normal leading-[1.02] tracking-[-0.025em] md:mt-8 md:text-6xl"
+      >
+        {{ header.lead }} <span class="italic">{{ header.emphasis }}</span>.
+      </h1>
+      <p
+        v-if="!isEbookOnly && header.subtitle"
+        class="mt-5 max-w-[52ch] text-[15px] leading-relaxed text-muted-foreground"
+      >
+        {{ header.subtitle }}
+      </p>
+    </header>
+
+    <header v-else-if="!loaded" class="border-b border-border pb-10 md:pb-14">
+      <UiSkeleton class="h-3 w-48 rounded-none" />
+      <UiSkeleton class="mt-8 h-12 w-full max-w-xl rounded-none md:h-16" />
+      <UiSkeleton class="mt-5 h-4 w-72 rounded-none" />
+    </header>
+
+    <header v-else class="hero-rise border-b border-border pb-10 md:pb-14">
+      <p class="eyebrow">Order</p>
+      <h1
+        class="mt-6 font-serif text-4xl font-normal leading-[1.02] tracking-[-0.025em] md:text-6xl"
+      >
+        We couldn&rsquo;t find <span class="italic">this order</span>.
+      </h1>
+      <p class="mt-5 max-w-[52ch] text-[15px] leading-relaxed text-muted-foreground">
+        It may belong to another account, or the link may be incomplete. Your
+        orders are all listed in your profile.
+      </p>
+      <UiButton variant="ink" size="cta" class="mt-8 shadow-none" @click="router.push('/profiles?tab=orders')">
+        View my orders
+      </UiButton>
+    </header>
+
+    <div
+      v-if="order"
+      class="mt-10 grid grid-cols-1 gap-14 md:mt-14 lg:grid-cols-12 lg:gap-16"
+    >
+      <div class="space-y-14 lg:col-span-4">
+        <OrderInfoCard :order="order" />
+
+        <section aria-labelledby="order-progress-title">
+          <h2
+            id="order-progress-title"
+            class="border-b border-foreground pb-4 font-serif text-2xl font-normal leading-snug md:text-[1.75rem]"
+          >
+            Progress
+          </h2>
+
+          <ol class="pt-6">
+            <li
+              v-for="(step, index) in timeline"
+              :key="step.key"
+              class="relative flex gap-4 pb-7 last:pb-0"
+              :aria-current="index === currentStepIndex ? 'step' : undefined"
+            >
+              <span
+                v-if="index < timeline.length - 1"
+                class="absolute -bottom-[5px] left-[4px] top-[14px] w-px"
+                :class="timeline[index + 1].state === 'pending' ? 'bg-border' : 'bg-foreground/50'"
+                aria-hidden="true"
+              />
+              <span
+                class="relative mt-[5px] size-[9px] shrink-0 rounded-full"
+                :class="[
+                  TIMELINE_DOTS[step.state],
+                  index === currentStepIndex && step.state === 'done' && 'ring-4 ring-foreground/10',
+                ]"
+                aria-hidden="true"
+              />
+              <div class="min-w-0">
+                <p
+                  class="text-[12px] font-medium uppercase tracking-[0.14em]"
+                  :class="TIMELINE_LABELS[step.state]"
+                >
+                  {{ step.label }}
+                </p>
+                <p class="mt-1 text-[13px] tabular-nums text-muted-foreground">
+                  {{ step.at ? formatDateTime(step.at) : step.state === "pending" ? "To come" : "Date not recorded" }}
+                </p>
+              </div>
+            </li>
+          </ol>
+        </section>
       </div>
 
-      <template v-if="order">
-        <OrderInfoCard :order="order" />
+      <div class="lg:col-span-8">
         <OrderItemsCard :items="order.items" />
         <OrderSummaryCard :order="order" />
-      </template>
 
-      <!-- Actions -->
-      <div class="mb-6 grid grid-cols-12 gap-2">
-        <div v-if="canCancelOrder" class="col-span-12 sm:col-span-6 md:col-span-4">
-          <UiButton
-            variant="destructive"
-            size="lg"
-            block
-            class="h-12 rounded-lg font-bold shadow"
-            :loading="cancelling"
-            @click="cancelDialog = true"
-          >
-            <Ban class="mr-2 h-5 w-5" />
-            Cancel Order
+        <div class="mt-12 flex flex-col gap-3 sm:flex-row sm:items-center">
+          <UiButton variant="ink" size="cta" class="shadow-none" @click="router.push('/')">
+            Continue shopping
           </UiButton>
-        </div>
-
-        <div class="col-span-12" :class="actionColumnClass">
           <UiButton
-            size="lg"
-            block
-            class="h-12 rounded-lg font-bold shadow"
-            @click="router.push('/')"
-          >
-            <Home class="mr-2 h-5 w-5" />
-            Continue Shopping
-          </UiButton>
-        </div>
-
-        <div class="col-span-12" :class="actionColumnClass">
-          <UiButton
-            variant="secondary"
-            size="lg"
-            block
-            class="h-12 rounded-lg font-bold shadow"
+            variant="outline"
+            size="cta"
+            class="bg-transparent shadow-none"
             @click="router.push('/profiles?tab=orders')"
           >
-            <Package class="mr-2 h-5 w-5" />
-            View My Orders
+            View my orders
           </UiButton>
-        </div>
-      </div>
-
-      <!-- What's next -->
-      <div class="mb-4 rounded-lg bg-blue-50 p-5 dark:bg-blue-950/40">
-        <div class="flex items-start">
-          <span
-            class="mr-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-info"
+          <button
+            v-if="canCancelOrder"
+            type="button"
+            class="mt-3 text-[12px] font-medium uppercase tracking-[0.14em] text-destructive transition-opacity hover:opacity-80 disabled:opacity-50 sm:ml-auto sm:mt-0"
+            :disabled="cancelling"
+            @click="cancelDialog = true"
           >
-            <Info class="h-7 w-7 text-white" />
-          </span>
-          <div>
-            <div class="mb-3 text-lg font-bold text-blue-800 dark:text-blue-200">
-              What's Next?
-            </div>
-            <div class="text-sm text-blue-700 dark:text-blue-300">
-              <div
-                v-for="step in NEXT_STEPS"
-                :key="step.text"
-                class="mb-2 flex items-start"
-              >
-                <component
-                  :is="step.icon"
-                  class="mr-2 mt-1 h-[18px] w-[18px] shrink-0 text-info"
-                />
-                <span>{{ step.text }}</span>
-              </div>
-
-              <div v-if="canCancelOrder" class="mt-3 flex items-start">
-                <AlertCircle
-                  class="mr-2 mt-1 h-[18px] w-[18px] shrink-0 text-warning"
-                />
-                <span class="text-warning">
-                  You can cancel this order before admin confirmation
-                </span>
-              </div>
-            </div>
-          </div>
+            <span class="ed-link">Cancel order</span>
+          </button>
         </div>
+        <p v-if="canCancelOrder" class="mt-3 text-[13px] text-muted-foreground sm:text-right">
+          You can cancel this order until our team confirms it.
+        </p>
       </div>
-
-      <!-- Cancel confirmation -->
-      <UiDialog v-model:open="cancelDialog">
-        <UiDialogContent class="sm:max-w-lg">
-          <UiDialogHeader>
-            <UiDialogTitle
-              class="flex items-center text-xl font-semibold text-destructive"
-            >
-              <TriangleAlert class="mr-2 h-5 w-5" />
-              Cancel Order?
-            </UiDialogTitle>
-          </UiDialogHeader>
-
-          <p class="mb-3 text-base">
-            Are you sure you want to cancel this order?
-          </p>
-          <UiAlert variant="warning">
-            This action cannot be undone. Your payment will be refunded within
-            5-7 business days.
-          </UiAlert>
-
-          <UiDialogFooter>
-            <UiButton
-              variant="ghost"
-              :disabled="cancelling"
-              @click="cancelDialog = false"
-            >
-              Keep Order
-            </UiButton>
-            <UiButton
-              variant="destructive"
-              :loading="cancelling"
-              @click="confirmCancelOrder"
-            >
-              Yes, Cancel Order
-            </UiButton>
-          </UiDialogFooter>
-        </UiDialogContent>
-      </UiDialog>
-
-      <SnackbarAlert
-        v-model="snackbar.show"
-        :text="snackbar.message"
-        :color="snackbar.color"
-        :timeout="3000"
-      />
     </div>
+
+    <section
+      v-if="order && !STOPPED_STATUSES.includes(order.status)"
+      class="mt-24 md:mt-32"
+      aria-label="What happens next"
+    >
+      <StoreSectionHeader eyebrow="After you order" title="What happens next" />
+      <ol class="grid grid-cols-1 gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+        <li v-for="(step, index) in NEXT_STEPS" :key="step" v-reveal="index * 70">
+          <span class="font-serif text-3xl leading-none tabular-nums text-muted-foreground">
+            {{ String(index + 1).padStart(2, "0") }}
+          </span>
+          <p class="mt-5 max-w-[30ch] text-[15px] leading-relaxed text-foreground/85">
+            {{ step }}
+          </p>
+        </li>
+      </ol>
+    </section>
+
+    <UiDialog v-model:open="cancelDialog">
+      <UiDialogContent class="rounded-none shadow-none sm:max-w-md sm:rounded-none">
+        <UiDialogHeader>
+          <p class="eyebrow">Order {{ order?.orderId }}</p>
+          <UiDialogTitle class="pt-2 font-serif text-2xl font-normal leading-snug">
+            Cancel this order?
+          </UiDialogTitle>
+        </UiDialogHeader>
+
+        <p class="text-[15px] leading-relaxed text-foreground/85">
+          Are you sure you want to cancel this order?
+        </p>
+        <p class="border-l border-foreground pl-4 text-[13px] leading-relaxed text-muted-foreground">
+          This action cannot be undone. Your payment will be refunded within
+          5-7 business days.
+        </p>
+
+        <UiDialogFooter class="gap-2">
+          <UiButton
+            variant="ghost"
+            class="text-[12px] font-medium uppercase tracking-[0.14em] shadow-none"
+            :disabled="cancelling"
+            @click="cancelDialog = false"
+          >
+            Keep order
+          </UiButton>
+          <UiButton
+            variant="destructive"
+            class="text-[12px] font-medium uppercase tracking-[0.14em] shadow-none"
+            :loading="cancelling"
+            @click="confirmCancelOrder"
+          >
+            Yes, cancel order
+          </UiButton>
+        </UiDialogFooter>
+      </UiDialogContent>
+    </UiDialog>
+
+    <SnackbarAlert
+      v-model="snackbar.show"
+      :text="snackbar.message"
+      :color="snackbar.color"
+      :timeout="3000"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import type { Component } from "vue";
-import {
-  AlertCircle,
-  Ban,
-  CheckCircle2,
-  Clock,
-  Home,
-  Info,
-  MailCheck,
-  Package,
-  Route,
-  ShieldCheck,
-  TriangleAlert,
-  XCircle,
-} from "lucide-vue-next";
 import orderApi from "~/api/orderApi";
 import { useOrderStore } from "@/stores/order";
 import { useSnackbar } from "@/composables/useSnackbar";
+import { buildOrderTimeline, formatDateTime } from "@/utils/orders";
 import type { OrderStatus } from "@/types";
+
+interface StatusHeader {
+  lead: string;
+  emphasis: string;
+  subtitle: string;
+}
+
+type TimelineState = "done" | "pending" | "stopped";
+
+interface TimelineStep {
+  key: string;
+  label: string;
+  at?: string;
+  state: TimelineState;
+}
 
 /**
  * Headline for each status, in one table rather than three parallel `switch`
  * statements that had to be kept in step by hand.
  */
-const STATUS_HEADERS: Record<
-  OrderStatus,
-  { icon: Component; title: string; subtitle: string }
-> = {
+const STATUS_HEADERS: Record<OrderStatus, StatusHeader> = {
   Pending: {
-    icon: Clock,
-    title: "Order Pending",
-    subtitle: "Processing your order",
+    lead: "Thank you, your order has been",
+    emphasis: "placed",
+    subtitle: "We are processing your order now.",
   },
   Paid: {
-    icon: CheckCircle2,
-    title: "Payment Successful!",
-    subtitle: "Waiting for admin confirmation",
+    lead: "Thank you, your payment",
+    emphasis: "went through",
+    subtitle: "Your order is waiting for our team to confirm it.",
   },
   Confirmed: {
-    icon: CheckCircle2,
-    title: "Order Confirmed!",
-    subtitle: "Your order is being prepared",
+    lead: "Thank you, your order is",
+    emphasis: "confirmed",
+    subtitle: "Your books are being prepared.",
   },
   "In Delivery": {
-    icon: CheckCircle2,
-    title: "Out for Delivery!",
-    subtitle: "Your order is on the way",
+    lead: "Your order is",
+    emphasis: "on its way",
+    subtitle: "The courier has your parcel and it will be with you soon.",
   },
   Delivered: {
-    icon: CheckCircle2,
-    title: "Order Delivered!",
-    subtitle: "Your order has been delivered",
+    lead: "Your order has been",
+    emphasis: "delivered",
+    subtitle: "We hope you enjoy your new books.",
   },
   Cancelled: {
-    icon: Ban,
-    title: "Order Cancelled",
-    subtitle: "This order has been cancelled",
+    lead: "This order has been",
+    emphasis: "cancelled",
+    subtitle: "Nothing more will happen with it.",
   },
   Failed: {
-    icon: XCircle,
-    title: "Payment Failed",
-    subtitle: "Payment was not successful",
+    lead: "The payment",
+    emphasis: "did not go through",
+    subtitle: "Payment was not successful, so the order was not completed.",
   },
 };
 
-const FALLBACK_HEADER = { icon: Info, title: "Order Details", subtitle: "" };
+const FAILED_DELIVERY_HEADER: StatusHeader = {
+  lead: "The delivery",
+  emphasis: "could not be completed",
+  subtitle: "The courier was unable to hand over this order.",
+};
 
-/** Statuses where the money is in and fulfilment is under way. */
-const SETTLED_STATUSES: OrderStatus[] = [
-  "Paid",
-  "Confirmed",
-  "In Delivery",
-  "Delivered",
-];
+const FALLBACK_HEADER: StatusHeader = {
+  lead: "Order",
+  emphasis: "details",
+  subtitle: "",
+};
+
+const STATUS_DOTS: Record<OrderStatus, string> = {
+  Pending: "bg-warning",
+  Paid: "bg-success",
+  Confirmed: "bg-info",
+  "In Delivery": "bg-info",
+  Delivered: "bg-success",
+  Cancelled: "bg-destructive",
+  Failed: "bg-destructive",
+};
+
+const STEP_LABELS: Record<OrderStatus, string> = {
+  Pending: "Order placed",
+  Paid: "Payment received",
+  Confirmed: "Confirmed",
+  "In Delivery": "Out for delivery",
+  Delivered: "Delivered",
+  Cancelled: "Cancelled",
+  Failed: "Payment failed",
+};
+
+const ORDER_FLOWS: Record<"prepaid" | "cod" | "ebook", OrderStatus[]> = {
+  prepaid: ["Pending", "Paid", "Confirmed", "In Delivery", "Delivered"],
+  cod: ["Pending", "Confirmed", "In Delivery", "Delivered", "Paid"],
+  ebook: ["Pending", "Paid"],
+};
+
+const STOPPED_STATUSES: OrderStatus[] = ["Cancelled", "Failed"];
+
+const TIMELINE_DOTS: Record<TimelineState, string> = {
+  done: "bg-foreground",
+  pending: "border border-foreground/40 bg-background",
+  stopped: "bg-destructive",
+};
+
+const TIMELINE_LABELS: Record<TimelineState, string> = {
+  done: "text-foreground",
+  pending: "text-muted-foreground",
+  stopped: "text-destructive",
+};
 
 const NEXT_STEPS = [
-  { icon: MailCheck, text: "You will receive an email confirmation shortly" },
-  { icon: ShieldCheck, text: "Admin will review and confirm your order" },
-  { icon: Clock, text: "Your order will be processed after admin confirmation" },
-  { icon: Route, text: 'Track your order status in "My Orders" section' },
+  "You will receive an email confirmation shortly.",
+  "Our team will review and confirm your order.",
+  "Your order is processed once it has been confirmed.",
+  "Follow its progress at any time under My orders in your profile.",
 ];
 
 const route = useRoute();
@@ -249,14 +330,15 @@ const { snackbar, notify, notifyError } = useSnackbar();
 
 const cancelDialog = ref(false);
 const cancelling = ref(false);
+const loaded = ref(false);
 
-const header = computed(
-  () => (order.value && STATUS_HEADERS[order.value.status]) || FALLBACK_HEADER
-);
-
-const isSettled = computed(() =>
-  SETTLED_STATUSES.includes(order.value?.status as OrderStatus)
-);
+const header = computed<StatusHeader>(() => {
+  if (!order.value) return FALLBACK_HEADER;
+  if (order.value.status === "Failed" && order.value.paymentMethod === "COD") {
+    return FAILED_DELIVERY_HEADER;
+  }
+  return STATUS_HEADERS[order.value.status] ?? FALLBACK_HEADER;
+});
 
 const isEbookOnly = computed(
   () =>
@@ -271,10 +353,43 @@ const canCancelOrder = computed(() => {
   return ["Pending", "Paid"].includes(order.value.status);
 });
 
-/** The three action buttons share the row differently once Cancel appears. */
-const actionColumnClass = computed(() =>
-  canCancelOrder.value ? "sm:col-span-6 md:col-span-4" : "sm:col-span-6"
-);
+const timeline = computed<TimelineStep[]>(() => {
+  const current = order.value;
+  if (!current) return [];
+
+  const isCod = current.paymentMethod === "COD";
+  const labelFor = (status: OrderStatus) =>
+    status === "Failed" && isCod ? "Delivery failed" : STEP_LABELS[status] ?? status;
+
+  const recorded: TimelineStep[] = buildOrderTimeline(current).map((entry, index) => ({
+    key: `${entry.status}-${entry.at ?? index}`,
+    label: labelFor(entry.status),
+    at: entry.at,
+    state: STOPPED_STATUSES.includes(entry.status) ? "stopped" : "done",
+  }));
+
+  if (STOPPED_STATUSES.includes(current.status)) return recorded;
+
+  const flow = isEbookOnly.value ? ORDER_FLOWS.ebook : isCod ? ORDER_FLOWS.cod : ORDER_FLOWS.prepaid;
+  const position = flow.indexOf(current.status);
+  if (position === -1) return recorded;
+
+  const reached = new Set(buildOrderTimeline(current).map((entry) => entry.status));
+  const upcoming: TimelineStep[] = flow
+    .slice(position + 1)
+    .filter((status) => !reached.has(status))
+    .map((status) => ({ key: `upcoming-${status}`, label: labelFor(status), state: "pending" }));
+
+  return [...recorded, ...upcoming];
+});
+
+const currentStepIndex = computed(() => {
+  const steps = timeline.value;
+  for (let index = steps.length - 1; index >= 0; index--) {
+    if (steps[index].state !== "pending") return index;
+  }
+  return -1;
+});
 
 onMounted(getOrder);
 
@@ -283,6 +398,8 @@ async function getOrder() {
     await orderStore.fetchOrderById(route.params.id as string);
   } catch (error) {
     console.error("Error fetching order:", error);
+  } finally {
+    loaded.value = true;
   }
 }
 
@@ -301,28 +418,3 @@ async function confirmCancelOrder() {
   }
 }
 </script>
-
-<style scoped>
-/* Header gradients + pulse keyframes (not expressible as Tailwind utilities) */
-.success-gradient {
-  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
-}
-
-.warning-gradient {
-  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
-}
-
-@keyframes pulse-scale {
-  0%,
-  100% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.1);
-  }
-}
-
-.pulse-animation {
-  animation: pulse-scale 2s ease-in-out infinite;
-}
-</style>

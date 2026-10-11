@@ -59,6 +59,8 @@
 
     --radius: 0.5rem;
 
+    --rating: 43 96% 56%;
+
     color-scheme: light;
   }
 
@@ -107,7 +109,101 @@
     --chart-4: 35 92% 60%;
     --chart-5: 202 20% 65%;
 
+    --rating: 43 96% 56%;
+
     color-scheme: dark;
+  }
+
+  body.storefront {
+    --background: 40 33% 98%;
+    --foreground: 24 10% 10%;
+
+    --card: 40 33% 98%;
+    --card-foreground: 24 10% 10%;
+
+    --popover: 40 30% 99%;
+    --popover-foreground: 24 10% 10%;
+
+    --primary: 4 50% 33%;
+    --primary-foreground: 40 33% 98%;
+
+    --secondary: 38 22% 93%;
+    --secondary-foreground: 24 10% 10%;
+
+    --muted: 38 24% 94%;
+    --muted-foreground: 28 7% 38%;
+
+    --accent: 38 28% 91%;
+    --accent-foreground: 24 10% 10%;
+
+    --destructive: 2 62% 44%;
+    --destructive-foreground: 40 33% 98%;
+
+    --success: 152 32% 30%;
+    --success-foreground: 40 33% 98%;
+
+    --warning: 33 72% 34%;
+    --warning-foreground: 40 33% 98%;
+
+    --info: 212 34% 38%;
+    --info-foreground: 40 33% 98%;
+
+    --canvas: 38 26% 95%;
+    --border: 34 16% 86%;
+    --input: 34 14% 80%;
+    --ring: 24 10% 10%;
+
+    --rating: 24 10% 10%;
+
+    --radius: 0.125rem;
+  }
+
+  .dark body.storefront {
+    --background: 30 8% 7%;
+    --foreground: 38 25% 91%;
+
+    --card: 30 7% 9%;
+    --card-foreground: 38 25% 91%;
+
+    --popover: 30 7% 10%;
+    --popover-foreground: 38 25% 91%;
+
+    --primary: 6 48% 66%;
+    --primary-foreground: 30 8% 7%;
+
+    --secondary: 30 6% 14%;
+    --secondary-foreground: 38 25% 91%;
+
+    --muted: 30 6% 12%;
+    --muted-foreground: 34 8% 64%;
+
+    --accent: 30 6% 15%;
+    --accent-foreground: 38 25% 91%;
+
+    --destructive: 2 60% 62%;
+    --destructive-foreground: 30 8% 7%;
+
+    --success: 150 32% 54%;
+    --success-foreground: 30 8% 7%;
+
+    --warning: 35 70% 60%;
+    --warning-foreground: 30 8% 7%;
+
+    --info: 212 40% 68%;
+    --info-foreground: 30 8% 7%;
+
+    --canvas: 30 8% 5.5%;
+    --border: 30 6% 19%;
+    --input: 30 6% 24%;
+    --ring: 38 25% 91%;
+
+    --rating: 38 25% 91%;
+  }
+
+  body.storefront h1,
+  body.storefront h2,
+  body.storefront h3 {
+    font-optical-sizing: auto;
   }
 
   * {
@@ -138,6 +234,34 @@
 }
 
 @layer components {
+  .eyebrow {
+    @apply text-[11px] font-medium uppercase leading-none tracking-[0.22em] text-muted-foreground;
+  }
+
+  .ed-link {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    transition: background-size 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .ed-link:hover,
+  .ed-link:focus-visible,
+  .ed-link[aria-current="page"] {
+    background-size: 100% 1px;
+  }
+
+  .ed-cover {
+    box-shadow:
+      0 1px 2px hsl(24 10% 10% / 0.08),
+      0 18px 32px -18px hsl(24 10% 10% / 0.45);
+  }
+
+  .ed-input {
+    @apply h-12 w-full border-0 border-b border-input bg-transparent px-0 text-[15px] text-foreground transition-colors placeholder:text-muted-foreground/70 focus:border-foreground focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
   .admin-table {
     @apply w-full text-sm;
   }
@@ -217,22 +341,6 @@
     to {
       opacity: 1;
       transform: translateY(0);
-    }
-  }
-
-  .heart-pop {
-    animation: heart-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
-  }
-
-  @keyframes heart-pop {
-    0% {
-      transform: scale(0.6);
-    }
-    60% {
-      transform: scale(1.25);
-    }
-    100% {
-      transform: scale(1);
     }
   }
 }
