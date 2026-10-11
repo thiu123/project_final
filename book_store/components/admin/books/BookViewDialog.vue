@@ -56,7 +56,7 @@
                 </div>
                 <div class="flex justify-between gap-4 px-4 py-2.5">
                   <dt class="text-muted-foreground">Ebook file</dt>
-                  <dd class="text-foreground">{{ book.pdf_url ? "Uploaded" : "None" }}</dd>
+                  <dd class="text-foreground">{{ book.pdf_pages ? `${book.pdf_pages} pages` : "None" }}</dd>
                 </div>
                 <div class="flex justify-between gap-4 px-4 py-2.5">
                   <dt class="shrink-0 text-muted-foreground">Book ID</dt>

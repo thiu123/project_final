@@ -172,6 +172,7 @@ import {
   GraduationCap,
   ShoppingCart,
 } from "lucide-vue-next";
+import { useAuthDialogStore } from "@/stores/authDialog";
 import { useBookStore } from "@/stores/book";
 import { useCartStore } from "@/stores/cart";
 import { formatUsd } from "@/utils/pricing";
@@ -200,6 +201,7 @@ const router = useRouter();
 const bookStore = useBookStore();
 const { homeSubjects } = storeToRefs(bookStore);
 const cartStore = useCartStore();
+const authDialog = useAuthDialogStore();
 
 const activeSubject = ref(TABS[0].subject);
 const selectedBook = ref<Book | null>(null);
@@ -221,6 +223,12 @@ watch(
 );
 
 async function addToCart(bookId: string) {
+  const signedIn = authDialog.ensureSignedIn(
+    "Sign in to add books to your cart.",
+    () => addToCart(bookId)
+  );
+  if (!signedIn) return;
+
   try {
     await cartStore.addToCart({
       bookId,
@@ -228,9 +236,12 @@ async function addToCart(bookId: string) {
       productType: "hardbook",
     });
     emit("show-snackbar", { message: "Added to cart!", color: "success" });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error adding to cart:", error);
-    emit("show-snackbar", { message: "Failed to add to cart", color: "error" });
+    emit("show-snackbar", {
+      message: error.response?.data?.msg || "Failed to add to cart",
+      color: "error",
+    });
   }
 }
 </script>

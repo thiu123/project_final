@@ -93,17 +93,6 @@ export class GeminiService {
     this.logger.log(`Gemini models, in order: ${this.modelNames.join(' → ')}`);
   }
 
-  async generate(prompt: string, systemInstruction?: string): Promise<string> {
-    try {
-      const result = await this.attempt((name) =>
-        this.model(name, systemInstruction).generateContent(prompt),
-      );
-      return result.response.text().trim();
-    } catch (error) {
-      this.rethrow(error);
-    }
-  }
-
   // One conversational turn. Costs one Gemini call when the model answers from
   // history alone, two when it needs a catalogue lookup.
   async runTurn({

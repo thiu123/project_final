@@ -12,7 +12,7 @@ export class AdminGuard extends JwtAuthGuard {
     const request = context.switchToHttp().getRequest<RequestWithUser>();
     const user = this.authenticate(request);
 
-    if (user.admin || request.params.id === user.id) return true;
+    if (user.admin) return true;
 
     throw new ForbiddenException({
       msg: 'You do not have permission to do this',

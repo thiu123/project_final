@@ -10,6 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 import { AdminGuard } from '../../common/guards/admin.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
@@ -23,6 +24,7 @@ export class ReviewsController {
   @Post('create')
   @HttpCode(200)
   @UseGuards(JwtAuthGuard)
+  @RateLimit({ name: 'review', limit: 20, windowSeconds: 60 * 60 })
   createReview(@CurrentUser() user: JwtPayload, @Body() dto: CreateReviewDto) {
     return this.reviewsService.createReview(user.id, dto);
   }

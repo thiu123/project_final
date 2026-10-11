@@ -57,7 +57,7 @@ export class UsersController {
     return this.usersService.uploadImage(
       file,
       queryType || bodyType || 'avatar',
-      user.id,
+      user,
     );
   }
 }

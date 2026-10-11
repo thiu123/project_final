@@ -4,6 +4,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import {
   loginUser,
+  logoutUser,
   registerUser,
   changePassword as changePasswordApi,
   type LoginPayload,
@@ -50,11 +51,21 @@ export const useAuthStore = defineStore("auth", () => {
     }
   }
 
+  function setAccessToken(token: string) {
+    accessToken.value = token;
+    localStorage.setItem("accessToken", token);
+    if (currentUser.value) {
+      currentUser.value = { ...currentUser.value, accessToken: token };
+      localStorage.setItem("currentUser", JSON.stringify(currentUser.value));
+    }
+  }
+
   function logout() {
     currentUser.value = null;
     accessToken.value = "";
     localStorage.removeItem("accessToken");
     localStorage.removeItem("currentUser");
+    logoutUser().catch(() => undefined);
 
     const cartStore = useCartStore();
     const favoriteStore = useFavoriteStore();
@@ -74,6 +85,7 @@ export const useAuthStore = defineStore("auth", () => {
   async function changePassword(passwordData: ChangePasswordPayload) {
     try {
       const res = await changePasswordApi(passwordData);
+      if (res.data?.accessToken) setAccessToken(res.data.accessToken);
       return res.data;
     } catch (err: any) {
       throw err.response?.data || err.message;
@@ -99,5 +111,6 @@ export const useAuthStore = defineStore("auth", () => {
     changePassword,
     restoreSession,
     loginSuccess,
+    setAccessToken,
   };
 });

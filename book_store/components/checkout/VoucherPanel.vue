@@ -164,7 +164,7 @@ import {
   Ticket,
   TicketPercent,
 } from "lucide-vue-next";
-import { getAllVouchers, validateVoucher } from "@/api/voucherApi";
+import { getAvailableVouchers, validateVoucher } from "@/api/voucherApi";
 import { formatUsd } from "@/utils/pricing";
 import type { Voucher } from "@/types";
 
@@ -196,7 +196,7 @@ onMounted(loadAvailable);
 async function loadAvailable() {
   loadingList.value = true;
   try {
-    const response = await getAllVouchers(true);
+    const response = await getAvailableVouchers();
     available.value = Array.isArray(response) ? response : response.data ?? [];
   } catch (error) {
     console.error("Error loading vouchers:", error);

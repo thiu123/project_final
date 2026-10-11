@@ -187,7 +187,7 @@ import {
   X,
 } from "lucide-vue-next";
 import type { CategoryNode, User as UserType } from "@/types";
-import type { AuthDialog } from "@/components/navigation/AuthDialogs.vue";
+import type { AuthDialog } from "@/stores/authDialog";
 
 defineProps<{
   categories: CategoryNode[];

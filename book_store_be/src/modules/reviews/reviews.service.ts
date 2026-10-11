@@ -18,7 +18,7 @@ export class ReviewsService {
   getReviewsByBook(bookId: string) {
     return this.reviewModel
       .find({ bookId })
-      .populate('userId')
+      .populate('userId', 'username avatar_url')
       .populate('bookId', 'title')
       .populate('replies.adminId', 'username email');
   }

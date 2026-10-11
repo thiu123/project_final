@@ -8,6 +8,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+import { allowedOrigins } from '../../config/cors';
 import { OrderStatus, PaymentMethod } from '../../constants/app.constants';
 
 export const ADMIN_ROOM = 'admins';
@@ -22,7 +23,16 @@ export interface NewOrderNotification {
   createdAt: string;
 }
 
-@WebSocketGateway({ namespace: '/notifications', cors: { origin: '*' } })
+@WebSocketGateway({
+  namespace: '/notifications',
+  cors: {
+    origin: (
+      origin: string | undefined,
+      callback: (error: Error | null, allow?: boolean) => void,
+    ) => callback(null, !origin || allowedOrigins().includes(origin)),
+    credentials: true,
+  },
+})
 export class NotificationsGateway implements OnGatewayConnection {
   private readonly logger = new Logger(NotificationsGateway.name);
 

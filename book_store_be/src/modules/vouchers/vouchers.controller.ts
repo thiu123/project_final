@@ -7,7 +7,6 @@ import {
   Param,
   Post,
   Put,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import { AdminGuard } from '../../common/guards/admin.guard';
@@ -31,8 +30,14 @@ export class VouchersController {
   }
 
   @Get('all')
-  getAllVouchers(@Query('activeOnly') activeOnly?: string) {
-    return this.vouchersService.getAllVouchers(activeOnly);
+  getAvailableVouchers() {
+    return this.vouchersService.getAvailableVouchers();
+  }
+
+  @Get('admin/all')
+  @UseGuards(AdminGuard)
+  getAllVouchers() {
+    return this.vouchersService.getAllVouchers();
   }
 
   @Post()

@@ -13,7 +13,7 @@
 
     <template v-if="!isLoading">
       <!-- Purchase Overlay -->
-      <UiDialog :open="!isPurchased && currentPage >= previewLimit">
+      <UiDialog :open="!isPurchased && hasPdf && currentPage >= totalPages">
         <UiDialogContent
           hide-close
           class="rounded-xl sm:max-w-md"
@@ -26,10 +26,10 @@
             <div class="lock-icon mb-4 text-8xl">🔒</div>
             <h2 class="mb-3 text-3xl font-bold">Preview Limit Reached</h2>
             <p class="mb-2 text-base text-muted-foreground">
-              You've viewed all {{ previewLimit }} available preview pages
+              You've viewed all {{ totalPages }} available preview pages
             </p>
             <p class="my-6 text-lg font-bold text-primary">
-              Unlock all {{ totalPages }} pages with full access
+              Unlock all {{ fullPageCount ?? totalPages }} pages with full access
             </p>
             <UiButton
               size="lg"
@@ -63,7 +63,7 @@
               </span>
               <span class="text-2xl text-muted-foreground">/</span>
               <span class="text-2xl text-muted-foreground">
-                {{ isPurchased ? totalPages : previewLimit }}
+                {{ totalPages }}
               </span>
             </div>
             <div v-if="!isPurchased" class="font-bold text-destructive">
@@ -104,13 +104,15 @@ import { ChevronLeft, ChevronRight, CreditCard } from "lucide-vue-next";
 const props = withDefaults(
   defineProps<{
     pdfUrl: string;
+    httpHeaders?: Record<string, string>;
     isPurchased?: boolean;
-    previewLimit?: number;
+    fullPageCount?: number | null;
     bookId?: string | number | null;
   }>(),
   {
+    httpHeaders: undefined,
     isPurchased: false,
-    previewLimit: 20,
+    fullPageCount: null,
     bookId: null,
   }
 );
@@ -129,12 +131,7 @@ const pdfCanvas = ref<HTMLCanvasElement | null>(null);
 let pdfjsLib: any = null;
 let pdfDoc: any = null;
 
-const canGoNext = computed(() =>
-  props.isPurchased
-    ? currentPage.value < totalPages.value
-    : currentPage.value < props.previewLimit &&
-      currentPage.value < totalPages.value
-);
+const canGoNext = computed(() => currentPage.value < totalPages.value);
 
 onMounted(() => {
   initPdfReader();
@@ -198,7 +195,10 @@ async function loadPdfDocument() {
   try {
     if (!pdfjsLib) throw new Error("PDF.js not loaded");
 
-    const loadingTask = pdfjsLib.getDocument(props.pdfUrl);
+    const loadingTask = pdfjsLib.getDocument({
+      url: props.pdfUrl,
+      httpHeaders: props.httpHeaders,
+    });
     pdfDoc = await loadingTask.promise;
 
     totalPages.value = pdfDoc.numPages;
@@ -231,8 +231,7 @@ async function renderPage(num: number) {
 }
 
 async function nextPage() {
-  if (!props.isPurchased && currentPage.value >= props.previewLimit) return;
-  if (currentPage.value < totalPages.value) {
+  if (canGoNext.value) {
     currentPage.value++;
     await renderPage(currentPage.value);
   }

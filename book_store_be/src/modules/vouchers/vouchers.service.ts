@@ -98,26 +98,26 @@ export class VouchersService {
     };
   }
 
-  // `activeOnly=true` is the storefront: only vouchers a customer can redeem
-  // right now. The admin panel omits it and manages every voucher.
-  getAllVouchers(activeOnly?: string) {
-    const filter: FilterQuery<VoucherDocument> = {};
-
-    if (activeOnly === 'true') {
-      filter.isActive = true;
-      filter.expiryDate = { $gt: new Date() };
-      filter.$expr = {
+  getAvailableVouchers() {
+    const filter: FilterQuery<VoucherDocument> = {
+      isActive: true,
+      expiryDate: { $gt: new Date() },
+      $expr: {
         $or: [
           { $eq: ['$usageLimit', null] },
           { $lt: ['$usedCount', '$usageLimit'] },
         ],
-      };
-    }
+      },
+    };
 
     return this.voucherModel
       .find(filter)
       .select('-__v')
       .sort({ createdAt: -1 });
+  }
+
+  getAllVouchers() {
+    return this.voucherModel.find().select('-__v').sort({ createdAt: -1 });
   }
 
   async createVoucher(dto: CreateVoucherDto) {

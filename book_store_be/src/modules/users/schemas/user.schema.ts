@@ -9,7 +9,7 @@ export class User {
   @Prop({ type: String, required: true, unique: true })
   email: string;
 
-  @Prop({ type: String, required: false })
+  @Prop({ type: String, required: false, select: false })
   password?: string;
 
   @Prop({ type: String, unique: true, sparse: true })
@@ -21,11 +21,14 @@ export class User {
   @Prop({ type: Boolean, default: false })
   admin: boolean;
 
-  @Prop({ type: String, default: null })
+  @Prop({ type: String, default: null, select: false })
   resetPasswordToken: string | null;
 
-  @Prop({ type: Date, default: null })
+  @Prop({ type: Date, default: null, select: false })
   resetPasswordExpires: Date | null;
+
+  @Prop({ type: Number, default: 0, select: false })
+  tokenVersion: number;
 }
 
 export type UserDocument = HydratedDocument<User>;

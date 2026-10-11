@@ -117,10 +117,13 @@
                 PDF only, max {{ MAX_EBOOK_MB }}MB. Only needed if this book is
                 sold as an ebook
               </p>
-              <div v-if="form.pdf_url" class="mt-2">
+              <div v-if="form.pdf_url || form.pdf_pages" class="mt-2">
                 <UiBadge variant="success">
                   <Check class="h-3 w-3" />
                   Ebook file uploaded
+                  <template v-if="form.pdf_pages">
+                    ({{ form.pdf_pages }} pages)
+                  </template>
                 </UiBadge>
               </div>
             </div>
@@ -246,7 +249,8 @@ import {
   X,
 } from "lucide-vue-next";
 import { v4 as uuidv4 } from "uuid";
-import { uploadBookImage, uploadBookEbookFile } from "~/api/userApi";
+import { uploadBookImage } from "~/api/userApi";
+import { uploadEbookFile } from "~/api/bookApi";
 import { useBookStore } from "@/stores/book";
 import type { Book, SnackbarPayload } from "@/types";
 
@@ -269,7 +273,9 @@ export interface BookFormData {
   sold?: number;
   subjects: string[];
   description: string;
-  pdf_url: string | null;
+  pdf_url?: string | null;
+  pdf_preview_url: string | null;
+  pdf_pages: number | null;
   rating?: number;
 }
 
@@ -319,6 +325,8 @@ function emptyForm(): BookFormData {
     subjects: [],
     description: "",
     pdf_url: null,
+    pdf_preview_url: null,
+    pdf_pages: null,
   };
 }
 
@@ -380,26 +388,28 @@ async function upload(kind: "image" | "ebook", file: File) {
   const label = kind === "image" ? "image" : "ebook file";
   notify(`Uploading ${label}...`, "info");
   try {
-    const response =
-      kind === "image"
-        ? await uploadBookImage(file)
-        : await uploadBookEbookFile(file);
-
-    const url = response.data?.data?.url;
-    if (!url) throw new Error("No URL returned from server");
-
     if (kind === "image") {
+      const response = await uploadBookImage(file);
+      const url = response.data?.data?.url;
+      if (!url) throw new Error("No URL returned from server");
+
       form.value.cover_url = url;
       errors.value.cover_url = undefined;
     } else {
-      form.value.pdf_url = url;
+      const { data } = await uploadEbookFile(file);
+      form.value.pdf_url = data.url;
+      form.value.pdf_preview_url = data.preview_url;
+      form.value.pdf_pages = data.pages;
     }
     notify(`${label[0].toUpperCase()}${label.slice(1)} uploaded successfully!`);
   } catch (error: any) {
     console.error(`${kind} upload error:`, error);
     notify(
       `Failed to upload ${label}: ` +
-        (error.response?.data?.message || error.message || "Unknown error"),
+        (error.response?.data?.msg ||
+          error.response?.data?.message ||
+          error.message ||
+          "Unknown error"),
       "error"
     );
   }

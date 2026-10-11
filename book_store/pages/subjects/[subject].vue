@@ -149,6 +149,7 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { BookOpen, Library, X } from "lucide-vue-next";
+import { useAuthDialogStore } from "@/stores/authDialog";
 import { useBookStore } from "@/stores/book";
 import { useCartStore } from "@/stores/cart";
 import { useFavoriteStore } from "@/stores/favorite";
@@ -167,6 +168,7 @@ const router = useRouter();
 
 const bookStore = useBookStore();
 const cartStore = useCartStore();
+const authDialog = useAuthDialogStore();
 const favoriteStore = useFavoriteStore();
 
 const { books, pagination, categories, loading } = storeToRefs(bookStore);
@@ -242,12 +244,18 @@ async function toggleFavoriteBook(bookId: string) {
 }
 
 async function handleAddToCart(bookId: string) {
+  const signedIn = authDialog.ensureSignedIn(
+    "Sign in to add books to your cart.",
+    () => handleAddToCart(bookId)
+  );
+  if (!signedIn) return;
+
   try {
     await cartStore.addToCart({ bookId, quantity: 1, productType: "hardbook" });
     notify("Added to cart!");
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error adding to cart:", error);
-    notifyError("Failed to add to cart.");
+    notifyError(error.response?.data?.msg || "Failed to add to cart.");
   }
 }
 

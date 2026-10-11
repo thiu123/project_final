@@ -188,20 +188,12 @@ export function orderStatusDotClass(status?: string): string {
 // Payment methods
 // ---------------------------------------------------------------------------
 
-const PAYMENT_STYLES: Record<
-  PaymentMethod,
-  { class: string; icon: Component }
-> = {
-  Vnpay: { class: "border-primary/40 text-primary", icon: CreditCard },
-  Momo: { class: "border-success/40 text-success", icon: Wallet },
-  // COD is the one that still owes money, so it reads as a warning.
-  COD: { class: "border-warning/40 text-warning", icon: Banknote },
+const PAYMENT_ICONS: Record<PaymentMethod, Component> = {
+  Vnpay: CreditCard,
+  Momo: Wallet,
+  COD: Banknote,
 };
 
-export function paymentMethodClass(method: PaymentMethod): string {
-  return PAYMENT_STYLES[method]?.class ?? "border-border text-muted-foreground";
-}
-
 export function paymentMethodIcon(method: PaymentMethod): Component {
-  return PAYMENT_STYLES[method]?.icon ?? Wallet;
+  return PAYMENT_ICONS[method] ?? Wallet;
 }

@@ -87,7 +87,7 @@ import {
 } from "lucide-vue-next";
 import { PROFILE_MENU } from "@/constants/profileMenu";
 import type { User as UserType } from "@/types";
-import type { AuthDialog } from "@/components/navigation/AuthDialogs.vue";
+import type { AuthDialog } from "@/stores/authDialog";
 
 defineProps<{ currentUser: UserType | null }>();
 

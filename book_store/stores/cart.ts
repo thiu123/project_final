@@ -33,21 +33,20 @@ export const useCartStore = defineStore("cart", () => {
     }
   }
 
-  async function addToCart({
-    bookId,
-    quantity,
-    productType,
-  }: {
-    bookId: string;
-    quantity: number;
-    productType: ProductType;
-  }) {
-    try {
-      await addToCartApi(bookId, quantity, productType);
-      await fetchCart();
-    } catch (error) {
-      console.error("Add to cart failed:", error);
-    }
+  async function addToCart(
+    {
+      bookId,
+      quantity,
+      productType,
+    }: {
+      bookId: string;
+      quantity: number;
+      productType: ProductType;
+    },
+    { refresh = true }: { refresh?: boolean } = {}
+  ) {
+    await addToCartApi(bookId, quantity, productType);
+    if (refresh) await fetchCart();
   }
 
   /**

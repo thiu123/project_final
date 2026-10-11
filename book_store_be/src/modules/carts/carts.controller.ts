@@ -43,9 +43,4 @@ export class CartsController {
   removeItem(@CurrentUser() user: JwtPayload, @Body() dto: RemoveCartItemDto) {
     return this.cartsService.removeItem(user.id, dto);
   }
-
-  @Delete('deleteCart')
-  deleteCart(@CurrentUser() user: JwtPayload) {
-    return this.cartsService.deleteCart(user.id);
-  }
 }

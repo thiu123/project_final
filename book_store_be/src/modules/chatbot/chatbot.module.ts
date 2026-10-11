@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { RateLimitService } from '../../common/services/rate-limit.service';
 import { BooksModule } from '../books/books.module';
 import { ChatHistoryService } from './chat-history.service';
 import { ChatbotController } from './chatbot.controller';
@@ -15,7 +14,6 @@ import { GeminiService } from './gemini.service';
     ChatbotToolsService,
     ChatHistoryService,
     GeminiService,
-    RateLimitService,
   ],
 })
 export class ChatbotModule {}

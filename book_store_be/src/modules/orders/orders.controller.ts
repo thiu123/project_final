@@ -77,12 +77,6 @@ export class OrdersController {
     return this.ordersService.updateOrderStatus(id, dto.status, user.id);
   }
 
-  @Put('admin/:id/confirm')
-  @UseGuards(AdminGuard)
-  confirmOrder(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
-    return this.ordersService.confirmOrder(id, user.id);
-  }
-
   @Put(':id/cancel')
   @UseGuards(JwtAuthGuard)
   cancelOrder(@CurrentUser() user: JwtPayload, @Param('id') id: string) {
@@ -106,6 +100,11 @@ export class OrdersController {
     res.redirect(await this.ordersService.handleVnpayReturn(query));
   }
 
+  @Get('vnpay_ipn')
+  vnpayIpn(@Query() query: VnpayReturnQuery) {
+    return this.ordersService.handleVnpayIpn(query);
+  }
+
   @Get('momo_return')
   async momoReturn(
     @Query() query: MomoReturnQuery,
@@ -114,9 +113,16 @@ export class OrdersController {
     res.redirect(await this.ordersService.handleMomoReturn(query));
   }
 
+  @Post('momo_ipn')
+  @HttpCode(204)
+  async momoIpn(@Body() body: MomoReturnQuery): Promise<void> {
+    await this.ordersService.handleMomoIpn(body);
+  }
+
   // Keep last: it also matches every static path above.
   @Get(':id')
-  getOrderById(@Param('id') orderId: string) {
-    return this.ordersService.getOrderById(orderId);
+  @UseGuards(JwtAuthGuard)
+  getOrderById(@CurrentUser() user: JwtPayload, @Param('id') orderId: string) {
+    return this.ordersService.getOrderById(orderId, user);
   }
 }

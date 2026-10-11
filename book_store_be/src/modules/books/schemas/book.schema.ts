@@ -12,8 +12,14 @@ export class Book {
   @Prop({ type: String })
   cover_url?: string;
 
-  @Prop({ type: String, default: null })
+  @Prop({ type: String, default: null, select: false })
   pdf_url: string | null;
+
+  @Prop({ type: String, default: null })
+  pdf_preview_url: string | null;
+
+  @Prop({ type: Number, default: null })
+  pdf_pages: number | null;
 
   @Prop({ type: Number })
   first_publish_year?: number;

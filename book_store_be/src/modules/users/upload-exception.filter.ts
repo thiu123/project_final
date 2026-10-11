@@ -23,6 +23,9 @@ export class UploadExceptionFilter implements ExceptionFilter {
       return;
     }
 
-    response.status(HttpStatus.BAD_REQUEST).json({ msg: exception.message });
+    const body = exception.getResponse() as { msg?: string };
+    response
+      .status(HttpStatus.BAD_REQUEST)
+      .json({ msg: body.msg ?? exception.message });
   }
 }

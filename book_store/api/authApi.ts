@@ -32,6 +32,12 @@ export const changePassword = (passwordData: ChangePasswordPayload) => {
   return axiosInstance.put(`${BASE_URL}/change-password`, passwordData);
 };
 
+export const logoutUser = () => {
+  return axiosInstance.post(`${BASE_URL}/logout`, null, {
+    skipAuthRefresh: true,
+  });
+};
+
 export const forgotPassword = (email: string) => {
   return axiosInstance.post(`${BASE_URL}/forgot-password`, { email });
 };

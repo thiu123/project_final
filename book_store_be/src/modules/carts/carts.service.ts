@@ -74,14 +74,6 @@ export class CartsService {
     return cart;
   }
 
-  async deleteCart(userId: string) {
-    const cart = await this.cartModel.findOneAndDelete({ userId });
-    if (!cart) {
-      throw new NotFoundException({ msg: 'Cart not found' });
-    }
-    return { msg: 'Cart deleted successfully' };
-  }
-
   private async findCartOrFail(userId: string): Promise<CartDocument> {
     const cart = await this.cartModel.findOne({ userId });
     if (!cart) {

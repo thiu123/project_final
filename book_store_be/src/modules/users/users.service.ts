@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Inject,
   Injectable,
   InternalServerErrorException,
@@ -8,18 +9,18 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import * as fs from 'fs';
 import { Model } from 'mongoose';
+import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import {
   CLOUDINARY,
   Cloudinary,
 } from '../../config/cloudinary/cloudinary.provider';
 import { User, UserDocument } from './schemas/user.schema';
 
-export type UploadType = 'avatar' | 'book' | 'ebook_file';
+export type UploadType = 'avatar' | 'book';
 
 const FOLDERS: Record<UploadType, string> = {
   avatar: 'avatars',
   book: 'books',
-  ebook_file: 'ebook_files',
 };
 
 @Injectable()
@@ -43,25 +44,36 @@ export class UsersService {
   async uploadImage(
     file: Express.Multer.File | undefined,
     uploadType: string,
-    userId: string,
+    user: JwtPayload,
   ) {
     if (!file) {
       throw new BadRequestException({ msg: 'No file uploaded' });
     }
 
     const type = (uploadType || 'avatar') as UploadType;
+    if (!Object.hasOwn(FOLDERS, type)) {
+      this.removeTempFile(file.path);
+      throw new BadRequestException({ msg: 'Unknown upload type' });
+    }
+
+    if (type === 'book' && !user.admin) {
+      this.removeTempFile(file.path);
+      throw new ForbiddenException({
+        msg: 'You do not have permission to do this',
+      });
+    }
 
     try {
       const result = await this.cloudinary.uploader.upload(file.path, {
-        folder: FOLDERS[type] ?? 'uploads',
-        resource_type: type === 'ebook_file' ? 'raw' : 'image',
+        folder: FOLDERS[type],
+        resource_type: 'image',
       });
 
       const data =
         type === 'avatar'
           ? await this.userModel
               .findByIdAndUpdate(
-                userId,
+                user.id,
                 { avatar_url: result.secure_url },
                 { new: true },
               )

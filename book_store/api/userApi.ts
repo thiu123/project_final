@@ -31,17 +31,3 @@ export const uploadBookImage = (file: File) => {
     headers: { "Content-Type": "multipart/form-data" },
   });
 };
-
-// Upload ebook file (pdf)
-export const uploadBookEbookFile = (file: File) => {
-  const formData = new FormData();
-  formData.append("image", file);
-
-  return axiosInstance.post(
-    `${BASE_URL}/upload-images?type=ebook_file`,
-    formData,
-    {
-      headers: { "Content-Type": "multipart/form-data" },
-    }
-  );
-};

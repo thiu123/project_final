@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BooksModule } from '../books/books.module';
 import { CartsModule } from '../carts/carts.module';
+import { EbooksModule } from '../ebooks/ebooks.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { VouchersModule } from '../vouchers/vouchers.module';
 import { OrdersController } from './orders.controller';
@@ -15,6 +16,7 @@ import { Order, OrderSchema } from './schemas/order.schema';
     MongooseModule.forFeature([{ name: Order.name, schema: OrderSchema }]),
     CartsModule,
     BooksModule,
+    EbooksModule,
     VouchersModule,
     NotificationsModule,
   ],

@@ -109,15 +109,6 @@ const orderApi = {
     return res.data;
   },
 
-  // Admin: Confirm order
-  confirmOrder: async (orderId: string): Promise<Order> => {
-    const res = await axiosInstance.put<Order>(
-      `${API_URL}/admin/${orderId}/confirm`,
-      {}
-    );
-    return res.data;
-  },
-
   // User: Cancel order
   cancelOrder: async (orderId: string): Promise<Order> => {
     const res = await axiosInstance.put<Order>(

@@ -37,18 +37,21 @@ export const validateVoucher = async (
   }
 };
 
-// Get vouchers. Pass activeOnly=true to only get vouchers a customer could
-// actually redeem right now (used by checkout); omit it for the admin panel,
-// which needs to see and manage inactive/expired vouchers too.
-export const getAllVouchers = async (
-  activeOnly = false
-): Promise<VoucherListResponse> => {
+export const getAvailableVouchers = async (): Promise<VoucherListResponse> => {
   try {
     const response = await axiosInstance.get<VoucherListResponse>(
-      `${BASE_URL}/all`,
-      {
-        params: activeOnly ? { activeOnly: true } : {},
-      }
+      `${BASE_URL}/all`
+    );
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error.message;
+  }
+};
+
+export const getAllVouchers = async (): Promise<VoucherListResponse> => {
+  try {
+    const response = await axiosInstance.get<VoucherListResponse>(
+      `${BASE_URL}/admin/all`
     );
     return response.data;
   } catch (error: any) {

@@ -47,3 +47,30 @@ export function formatReviewDate(dateString?: string): string {
     day: "numeric",
   });
 }
+
+export function ratingBreakdown(reviews: Review[]) {
+  const counts = [0, 0, 0, 0, 0];
+  for (const review of reviews) {
+    if (review.rating >= 1 && review.rating <= 5) counts[5 - review.rating]++;
+  }
+  return counts.map((count, index) => ({
+    stars: 5 - index,
+    count,
+    percentage: reviews.length > 0 ? (count / reviews.length) * 100 : 0,
+  }));
+}
+
+export type RatingBreakdown = ReturnType<typeof ratingBreakdown>;
+
+const AVATAR_TONES = [
+  "bg-accent text-accent-foreground",
+  "bg-primary/20 text-primary",
+  "bg-success/15 text-success",
+  "bg-warning/15 text-warning",
+];
+
+export function avatarTone(seed: string): string {
+  let sum = 0;
+  for (const char of seed) sum += char.charCodeAt(0);
+  return AVATAR_TONES[sum % AVATAR_TONES.length];
+}

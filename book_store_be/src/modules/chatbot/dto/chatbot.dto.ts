@@ -12,19 +12,3 @@ export class ChatDto {
   @MaxLength(MAX_INPUT_LENGTH)
   message: string;
 }
-
-export class SuggestBooksDto {
-  @Trim()
-  @IsString()
-  @IsNotEmpty({ message: 'Please provide your preferences.' })
-  @MaxLength(MAX_INPUT_LENGTH)
-  userPreferences: string;
-}
-
-export class GenerateReviewDto {
-  @Trim()
-  @IsString()
-  @IsNotEmpty({ message: 'Please provide the book title or subject.' })
-  @MaxLength(MAX_INPUT_LENGTH)
-  bookQuery: string;
-}

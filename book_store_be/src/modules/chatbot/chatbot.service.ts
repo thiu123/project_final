@@ -1,15 +1,5 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  Logger,
-  NotFoundException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { RateLimitService } from '../../common/services/rate-limit.service';
-import { RedisService } from '../../config/redis/redis.service';
-import { BooksService } from '../books/books.service';
-import { LeanBook } from '../books/books.types';
-import { BookSort, QueryBooksDto } from '../books/dto/query-books.dto';
 import { ChatHistoryService, SessionBook } from './chat-history.service';
 import { CHATBOT_TOOLS, ChatbotToolsService } from './chatbot.tools';
 import {
@@ -22,18 +12,6 @@ import {
 const RATE_LIMIT = 15;
 const RATE_LIMIT_WINDOW_SECONDS = 60;
 
-const REVIEW_CACHE_PREFIX = 'chatbot:review:';
-const REVIEW_CACHE_TTL_SECONDS = 3600;
-
-type ReviewLanguage = 'vi' | 'en';
-
-// Filler stripped from "review Harry Potter" before searching the catalogue.
-// Split in two because `\b` is ASCII-only and never matches before "đ".
-const REVIEW_FILLER_ASCII =
-  /\b(reviews?|books?|please|about|tell me|what do you think of|show me|give me|for me)\b/gi;
-const REVIEW_FILLER_VI =
-  /(đánh giá|nhận xét|giới thiệu|cho tôi|giúp tôi|của tôi|cuốn|quyển|sách|về)/gi;
-
 const SYSTEM_INSTRUCTION = `You are the AI book advisor for an online bookstore that sells both print books and ebooks.
 
 Rules:
@@ -43,22 +21,6 @@ Rules:
 - Always answer in the same language the user wrote in.
 - Be warm and concise: two or three sentences of framing, then the books. Mention each book by its exact title so it can be linked.
 - Prices are in the store's own currency; quote the number the tool gave you and nothing else.`;
-
-// Reviews are written with no tools attached, so they need their own
-// instruction: the rule above would otherwise leave the model nothing to say.
-const REVIEW_INSTRUCTION = `You are the AI book advisor for an online bookstore.
-Write about the book you are given as if recommending it to a friend.
-Never mention that you are an AI, and write in the language the prompt asks for.`;
-
-const SUGGESTION_INSTRUCTION = `${SYSTEM_INSTRUCTION}
-- The user wants recommendations. Return between three and five books, each with one short sentence on why it fits.`;
-
-export interface Suggestion {
-  title: string;
-  subjects?: string[];
-  reason: string;
-  bookId?: string;
-}
 
 export interface ReferencedBook {
   bookId: string;
@@ -78,8 +40,6 @@ export class ChatbotService {
     private readonly tools: ChatbotToolsService,
     private readonly history: ChatHistoryService,
     private readonly rateLimit: RateLimitService,
-    private readonly booksService: BooksService,
-    private readonly redis: RedisService,
   ) {}
 
   async chat(userId: string, message: string) {
@@ -128,178 +88,6 @@ export class ChatbotService {
     return { success: true };
   }
 
-  // Same pipeline as chat, shaped as recommendations. The books always come
-  // from the tool results; only the wording comes from Gemini.
-  async suggestBooks(userId: string, userPreferences: string) {
-    await this.enforceRateLimit(userId);
-
-    try {
-      const seen = new Map<string, SessionBook>();
-
-      const turn = await this.gemini.runTurn({
-        history: [],
-        message: userPreferences,
-        systemInstruction: SUGGESTION_INSTRUCTION,
-        tools: CHATBOT_TOOLS,
-        executor: async (call) => {
-          const result = await this.tools.execute(call);
-          this.collectBooks(result, seen);
-          return result;
-        },
-      });
-
-      const referenced = this.resolveReferenced(turn.text, seen);
-      const suggestions: Suggestion[] = referenced.length
-        ? referenced.map((book) => ({
-            title: book.title,
-            subjects: book.subjects,
-            reason: this.reasonFor(turn.text, book.title),
-            bookId: book.bookId,
-          }))
-        : await this.fallbackSuggestions();
-
-      return { success: true, data: { reply: turn.text, suggestions } };
-    } catch (error) {
-      throw this.toHttpError(error, 'Error while suggesting books');
-    }
-  }
-
-  async generateSmartReview(userId: string, bookQuery: string) {
-    const book = await this.findBookForReview(bookQuery);
-    if (!book) {
-      throw new NotFoundException({
-        success: false,
-        message: `I couldn't find that book in our store. Could you try a different title?`,
-      });
-    }
-
-    const bookInfo = {
-      id: String(book._id),
-      title: book.title,
-      subjects: book.subjects ?? [],
-    };
-    const language = this.detectLanguage(bookQuery);
-    const cacheKey = `${REVIEW_CACHE_PREFIX}${bookInfo.id}:${language}`;
-
-    const cached = await this.redis.get(cacheKey);
-    if (cached) {
-      return {
-        success: true,
-        data: {
-          bookFound: true,
-          generatedReview: cached,
-          cached: true,
-          bookInfo,
-        },
-      };
-    }
-
-    await this.enforceRateLimit(userId);
-
-    try {
-      const review = await this.gemini.generate(
-        this.buildReviewPrompt(bookInfo.title, bookInfo.subjects, language),
-        REVIEW_INSTRUCTION,
-      );
-
-      // An empty completion is a failure, not a review: never cache it, or the
-      // book gets a blank review for an hour.
-      if (!review) {
-        this.logger.warn(
-          `Gemini returned an empty review for "${bookInfo.title}"`,
-        );
-        return this.templateReview(bookInfo, language);
-      }
-
-      await this.redis.setEx(cacheKey, REVIEW_CACHE_TTL_SECONDS, review);
-      return {
-        success: true,
-        data: {
-          bookFound: true,
-          generatedReview: review,
-          usedAI: true,
-          bookInfo,
-        },
-      };
-    } catch (error) {
-      if (error instanceof GeminiQuotaError) {
-        return this.templateReview(bookInfo, language);
-      }
-      throw this.toHttpError(error, 'Error while generating review');
-    }
-  }
-
-  // Top-rated books, used when Gemini is unavailable or named nothing we stock.
-  private async fallbackSuggestions(): Promise<Suggestion[]> {
-    const query = new QueryBooksDto();
-    query.limit = 5;
-    query.sort = BookSort.Rating;
-
-    const { items } = await this.booksService.findAll(query);
-    return items.map((book) => ({
-      title: book.title,
-      subjects: book.subjects ?? [],
-      reason: 'One of the highest-rated books in our store right now.',
-      bookId: String(book._id),
-    }));
-  }
-
-  private async findBookForReview(bookQuery: string): Promise<LeanBook | null> {
-    const stripped = bookQuery
-      .replace(REVIEW_FILLER_ASCII, ' ')
-      .replace(REVIEW_FILLER_VI, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    // Try the cleaned-up title first, then the raw query in case the stripping
-    // removed part of the real title ("The Book Thief").
-    for (const term of [stripped, bookQuery].filter(Boolean)) {
-      const query = new QueryBooksDto();
-      query.limit = 1;
-      query.sort = BookSort.Rating;
-      query.search = term;
-
-      const { items } = await this.booksService.findAll(query);
-      if (items.length) return items[0];
-    }
-
-    return null;
-  }
-
-  private buildReviewPrompt(
-    title: string,
-    subjects: string[],
-    language: ReviewLanguage,
-  ): string {
-    const languageName = language === 'vi' ? 'Vietnamese' : 'English';
-    return `Write a natural, enthusiastic review of "${title}" (genres: ${subjects.join(', ')}).
-Talk as if recommending it to a friend: what makes it special, who would enjoy it, and the overall feel.
-Keep it to 3-5 conversational sentences addressed to the reader.
-Write the review in ${languageName}.`;
-  }
-
-  // Vietnamese is the only other language the storefront ships, and its
-  // diacritics are unmistakable. The result is part of the cache key.
-  private detectLanguage(text: string): ReviewLanguage {
-    return /[ăâêôơưđàáảãạèéẻẽẹìíỉĩịòóỏõọùúủũụỳýỷỹỵ]/i.test(text) ? 'vi' : 'en';
-  }
-
-  private templateReview(
-    bookInfo: { id: string; title: string; subjects: string[] },
-    language: ReviewLanguage,
-  ) {
-    const genre = bookInfo.subjects[0] ?? 'this genre';
-    const generatedReview =
-      language === 'vi'
-        ? `"${bookInfo.title}" là một trong những cuốn được bạn đọc quay lại nhiều nhất ở thể loại ${genre}. Nếu bạn thích ${bookInfo.subjects.join(' và ')} thì cuốn này rất đáng thử.`
-        : `"${bookInfo.title}" is one of the titles our readers keep coming back to in ${genre}. If ${bookInfo.subjects.join(' and ')} is your thing, it is well worth a look.`;
-
-    return {
-      success: true,
-      data: { bookFound: true, generatedReview, usedAI: false, bookInfo },
-    };
-  }
-
   private collectBooks(result: object, seen: Map<string, SessionBook>): void {
     const books = (result as { books?: SessionBook[] }).books;
     if (!Array.isArray(books)) return;
@@ -325,17 +113,6 @@ Write the review in ${languageName}.`;
         rating: book.rating,
         inStock: book.inStock,
       }));
-  }
-
-  private reasonFor(reply: string, title: string): string {
-    const sentence = reply
-      .split(/(?<=[.!?])\s+|\n+/)
-      .find((part) => part.toLowerCase().includes(title.toLowerCase()));
-
-    return (
-      sentence?.replace(/^[\d\-*•.\s]+/, '').trim() ||
-      'A good match for what you asked for.'
-    );
   }
 
   private async enforceRateLimit(userId: string): Promise<void> {

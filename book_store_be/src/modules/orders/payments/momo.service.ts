@@ -2,13 +2,28 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import axios, { AxiosError } from 'axios';
 import * as crypto from 'crypto';
-import { PaymentRequest } from './payment.types';
+import { PaymentRequest, PaymentResult } from './payment.types';
 
 interface MomoCreateResponse {
   resultCode: number;
   message?: string;
   payUrl?: string;
 }
+
+const RESULT_SIGNATURE_FIELDS = [
+  'amount',
+  'extraData',
+  'message',
+  'orderId',
+  'orderInfo',
+  'orderType',
+  'partnerCode',
+  'payType',
+  'requestId',
+  'responseTime',
+  'resultCode',
+  'transId',
+] as const;
 
 @Injectable()
 export class MomoService {
@@ -28,7 +43,7 @@ export class MomoService {
     const backendUrl =
       configService.get<string>('BACKEND_URL') ?? 'http://localhost:5000';
     this.redirectUrl = `${backendUrl}/api/order/momo_return`;
-    this.ipnUrl = this.redirectUrl;
+    this.ipnUrl = `${backendUrl}/api/order/momo_ipn`;
   }
 
   /** Creates a MoMo payment and returns the `payUrl` the customer is redirected to. */
@@ -92,5 +107,43 @@ export class MomoService {
       );
       throw error;
     }
+  }
+
+  verify(params: Record<string, unknown>): PaymentResult | null {
+    const received = params.signature;
+    if (
+      typeof received !== 'string' ||
+      params.partnerCode !== this.partnerCode
+    ) {
+      return null;
+    }
+
+    const rawSignature = [
+      `accessKey=${this.accessKey}`,
+      ...RESULT_SIGNATURE_FIELDS.map(
+        (field) => `${field}=${this.stringify(params[field])}`,
+      ),
+    ].join('&');
+    const expected = crypto
+      .createHmac('sha256', this.secretKey)
+      .update(rawSignature)
+      .digest('hex');
+
+    const valid =
+      received.length === expected.length &&
+      crypto.timingSafeEqual(Buffer.from(received), Buffer.from(expected));
+    if (!valid || !params.orderId) return null;
+
+    return {
+      orderId: this.stringify(params.orderId),
+      success: Number(params.resultCode) === 0,
+      amount: Number(params.amount),
+    };
+  }
+
+  private stringify(value: unknown): string {
+    return typeof value === 'string' || typeof value === 'number'
+      ? String(value)
+      : '';
   }
 }

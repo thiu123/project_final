@@ -22,7 +22,10 @@ export const useNotificationStore = defineStore("notification", () => {
     const { apiBase } = useRuntimeConfig().public;
 
     socket = io(`${apiBase}/notifications`, {
-      auth: { token: `Bearer ${token}` },
+      auth: (callback) =>
+        callback({
+          token: `Bearer ${localStorage.getItem("accessToken") || token}`,
+        }),
       transports: ["websocket"],
     });
 

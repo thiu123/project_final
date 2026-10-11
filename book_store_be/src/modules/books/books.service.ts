@@ -118,6 +118,7 @@ export class BooksService {
         groups: { _id: string; books: Book[] }[];
         subjectStats: SubjectStat[];
       }>([
+        { $project: { pdf_url: 0 } },
         {
           $facet: {
             latest: [

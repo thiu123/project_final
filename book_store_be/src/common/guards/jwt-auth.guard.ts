@@ -1,7 +1,6 @@
 import {
   CanActivate,
   ExecutionContext,
-  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -39,7 +38,7 @@ export class JwtAuthGuard implements CanActivate {
       );
       return request.user;
     } catch {
-      throw new ForbiddenException({ msg: 'Token is not valid' });
+      throw new UnauthorizedException({ msg: 'Token is not valid' });
     }
   }
 }

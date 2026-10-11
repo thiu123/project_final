@@ -38,6 +38,7 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import { useAuthStore } from "@/stores/auth";
+import { useAuthDialogStore } from "@/stores/authDialog";
 import { useBookStore } from "@/stores/book";
 import { useCartStore } from "@/stores/cart";
 import { useFavoriteStore } from "@/stores/favorite";
@@ -59,6 +60,7 @@ const promoBooks = computed(() => {
 
 const favoriteStore = useFavoriteStore();
 const cartStore = useCartStore();
+const authDialog = useAuthDialogStore();
 const authStore = useAuthStore();
 
 const { snackbar, notify, notifyError, notifyFromPayload } = useSnackbar();
@@ -108,12 +110,18 @@ async function handleGoogleAuthCallback() {
 }
 
 async function handleAddToCart(bookId: string, quantity: number) {
+  const signedIn = authDialog.ensureSignedIn(
+    "Sign in to add books to your cart.",
+    () => handleAddToCart(bookId, quantity)
+  );
+  if (!signedIn) return;
+
   try {
     await cartStore.addToCart({ bookId, quantity, productType: "hardbook" });
     notify("Add to cart successfully!");
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error adding to cart:", error);
-    notifyError("Failed to add to cart.");
+    notifyError(error.response?.data?.msg || "Failed to add to cart.");
   }
 }
 </script>

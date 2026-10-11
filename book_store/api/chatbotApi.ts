@@ -34,8 +34,3 @@ export const clearChatHistory = async (): Promise<void> => {
     throw error.response?.data || error.message;
   }
 };
-
-// `POST /suggestions` and `POST /review/generate` still exist on the backend,
-// but the widget now routes everything through /chat — the model decides
-// whether a message wants recommendations or a review. No wrapper is kept here
-// until something actually calls them.

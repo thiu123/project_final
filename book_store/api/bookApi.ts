@@ -65,3 +65,22 @@ export const updateBook = (id: string, bookData: Partial<Book>) => {
 export const deleteBookById = (id: string) => {
   return axiosInstance.delete(`${API_URL}/${id}`);
 };
+
+export interface EbookUpload {
+  url: string;
+  preview_url: string | null;
+  pages: number;
+}
+
+export const uploadEbookFile = (file: File) => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return axiosInstance.post<EbookUpload>(`${API_URL}/ebook-file`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+};
+
+export const ebookReadUrl = (id: string) => {
+  return `${axiosInstance.defaults.baseURL}${API_URL}/${id}/read`;
+};

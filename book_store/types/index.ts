@@ -19,6 +19,8 @@ export interface Book {
   title: string;
   cover_url?: string;
   pdf_url?: string | null;
+  pdf_preview_url?: string | null;
+  pdf_pages?: number | null;
   first_publish_year?: number;
   authors: string[];
   price: number;

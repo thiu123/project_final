@@ -105,24 +105,21 @@
           <NavigationUserMenu
             v-if="isSessionRestored"
             :current-user="currentUser"
-            @open-dialog="authDialog = $event"
+            @open-dialog="authDialog.open($event)"
             @logout="handleLogout"
           />
         </div>
       </div>
     </header>
 
-    <NavigationAuthDialogs
-      v-model="authDialog"
-      @show-snackbar="notifyFromPayload"
-    />
+    <NavigationAuthDialogs @show-snackbar="notifyFromPayload" />
 
     <NavigationMobileDrawer
       v-model:open="mobileMenuOpen"
       :categories="categories"
       :current-user="currentUser"
       :favorites-count="favoritesCount"
-      @open-dialog="authDialog = $event"
+      @open-dialog="authDialog.open($event)"
       @logout="handleLogout"
     />
 
@@ -151,7 +148,7 @@ import { useCartStore } from "@/stores/cart";
 import { useFavoriteStore } from "@/stores/favorite";
 import { useSnackbar } from "@/composables/useSnackbar";
 import { favoriteBookId } from "@/utils/favorites";
-import type { AuthDialog } from "@/components/navigation/AuthDialogs.vue";
+import { useAuthDialogStore } from "@/stores/authDialog";
 
 const COUNT_BADGE_CLASS =
   "absolute -right-0.5 -top-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold leading-none text-primary-foreground";
@@ -172,7 +169,7 @@ const { categories } = storeToRefs(bookStore);
 
 const { snackbar, notifyFromPayload } = useSnackbar();
 
-const authDialog = ref<AuthDialog>(null);
+const authDialog = useAuthDialogStore();
 const mobileMenuOpen = ref(false);
 const isSessionRestored = ref(false);
 
@@ -188,11 +185,6 @@ const favoritesCount = computed(
 );
 
 const cartItemCount = computed(() => cartItems.value.length);
-
-// Signing in (or out) resolves whatever dialog was open.
-watch(currentUser, (user) => {
-  if (user) authDialog.value = null;
-});
 
 onMounted(async () => {
   bookStore.fetchCategories();

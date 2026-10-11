@@ -1,428 +1,310 @@
 <template>
   <div class="min-h-screen bg-background">
-    <!-- Loading State -->
+    <DetailsPageSkeleton v-if="isLoading" />
+
     <div
-      v-if="isLoading"
-      class="flex min-h-[50vh] items-center justify-center px-4"
+      v-else-if="loadFailed"
+      class="container mx-auto flex max-w-md flex-col items-center px-4 py-24 text-center md:py-32"
     >
-      <div class="text-center">
-        <UiSpinner size="xl" class="mx-auto mb-4 text-primary" />
-        <p class="text-lg font-semibold text-muted-foreground">
-          Loading book details...
-        </p>
+      <div class="relative mb-10">
+        <div
+          class="flex size-24 -rotate-6 items-center justify-center rounded-3xl bg-accent text-accent-foreground"
+        >
+          <BookX class="size-10" />
+        </div>
+        <div
+          aria-hidden="true"
+          class="absolute -bottom-3 -right-5 size-10 rotate-12 rounded-xl bg-primary/25"
+        ></div>
       </div>
+      <h1 class="text-3xl font-bold tracking-tight">We couldn't find that book</h1>
+      <p class="mt-3 text-muted-foreground">
+        It may have been taken off the shelf, or the link is slightly off.
+      </p>
+      <UiButton
+        as-child
+        variant="ink"
+        class="mt-8 h-12 rounded-full px-7 text-base font-semibold shadow-none"
+      >
+        <NuxtLink to="/subjects/all">
+          Browse the catalogue
+          <ArrowRight />
+        </NuxtLink>
+      </UiButton>
     </div>
 
-    <!-- Main Content -->
-    <div v-else class="px-4 py-6">
-      <!-- Breadcrumb -->
-      <nav aria-label="Breadcrumb" class="mb-6">
-        <ol class="flex flex-wrap items-center gap-1 text-sm">
+    <div v-else class="container mx-auto max-w-7xl px-4 py-8 md:py-12">
+      <nav aria-label="Breadcrumb" class="mb-8 md:mb-10">
+        <ol class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
           <li>
-            <NuxtLink to="/" class="text-primary hover:underline">Home</NuxtLink>
+            <NuxtLink to="/" class="transition-colors hover:text-foreground">Home</NuxtLink>
           </li>
-          <ChevronRight class="h-4 w-4 text-muted-foreground" />
-          <li class="text-muted-foreground">
-            {{ book.title || "Book Details" }}
+          <li aria-hidden="true" class="text-border">/</li>
+          <template v-if="primarySubject">
+            <li>
+              <NuxtLink
+                :to="`/subjects/${subjectSlug(primarySubject)}`"
+                class="capitalize transition-colors hover:text-foreground"
+              >
+                {{ primarySubject }}
+              </NuxtLink>
+            </li>
+            <li aria-hidden="true" class="text-border">/</li>
+          </template>
+          <li class="max-w-[40ch] truncate font-medium text-foreground" aria-current="page">
+            {{ book.title }}
           </li>
         </ol>
       </nav>
 
-      <!-- Book Overview Section -->
-      <UiCard class="mb-6 shadow">
-        <div class="p-6">
-          <div class="grid grid-cols-12 gap-4">
-            <!-- Book Cover -->
-            <div class="col-span-12 md:col-span-4">
-              <div class="text-center">
-                <div
-                  class="mx-auto max-w-[380px] overflow-hidden rounded-lg bg-muted"
-                >
-                  <img
-                    :src="
-                      book?.cover_url ||
-                      '/placeholder.svg?height=400&width=260'
-                    "
-                    alt="Book Cover"
-                    class="mx-auto h-[480px] w-full object-cover"
-                  />
-                </div>
-              </div>
-            </div>
+      <div class="grid grid-cols-1 items-start gap-10 lg:grid-cols-12 lg:gap-16">
+        <div class="hero-rise lg:sticky lg:top-28 lg:col-span-5">
+          <DetailsCoverStage
+            :book="book"
+            :favorite="isFavorite"
+            @toggle-favorite="handleToggleFavorites"
+          />
+        </div>
 
-            <!-- Book Info -->
-            <div class="col-span-12 md:col-span-8">
-              <div>
-                <!-- Title -->
-                <h1 class="mb-4 text-3xl font-bold text-primary">
-                  {{ book.title }}
-                </h1>
-
-                <!-- Author -->
-                <div class="mb-4 flex items-center">
-                  <UserPen class="mr-2 h-6 w-6 text-muted-foreground" />
-                  <span class="mr-2 text-base font-medium text-muted-foreground"
-                    >by</span
-                  >
-                  <UiBadge
-                    variant="outline"
-                    class="border-primary px-3 py-1 text-sm text-primary"
-                  >
-                    {{ book.authors?.[0] }}
-                  </UiBadge>
-                </div>
-
-                <!-- Rating -->
-                <div class="mb-6 flex items-center">
-                  <UiRating
-                    :model-value="displayRating"
-                    :size="16"
-                    readonly
-                    class="mr-2"
-                  />
-                  <span class="mr-1 text-base font-medium">{{
-                    displayRating
-                  }}</span>
-                  <span class="text-sm text-muted-foreground"
-                    >({{ totalReviews }} reviews)</span
-                  >
-                </div>
-
-                <!-- Sold Count -->
-                <div class="mb-4">
-                  <UiBadge variant="success">
-                    <Flame class="h-3.5 w-3.5" />
-                    Sold {{ book.sold || 0 }}
-                  </UiBadge>
-                </div>
-
-                <!-- Price & Stock -->
-                <div class="mb-6 rounded-lg bg-muted p-4">
-                  <div class="mb-4 flex items-center justify-between">
-                    <div>
-                      <div class="mb-2 text-4xl font-bold text-success">
-                        {{ formatUsd(displayPrice) }}
-                      </div>
-                      <!-- Stock Status -->
-                      <div v-if="productType === 'hardbook'">
-                        <UiBadge
-                          v-if="(book.stock ?? 0) > LOW_STOCK_THRESHOLD"
-                          variant="success"
-                        >
-                          <CheckCircle2 class="h-3.5 w-3.5" />
-                          In Stock ({{ book.stock }} available)
-                        </UiBadge>
-                        <UiBadge
-                          v-else-if="(book.stock ?? 0) > 0"
-                          variant="warning"
-                        >
-                          <AlertTriangle class="h-3.5 w-3.5" />
-                          Low Stock (Only {{ book.stock }} left!)
-                        </UiBadge>
-                        <UiBadge v-else variant="destructive">
-                          <XCircle class="h-3.5 w-3.5" />
-                          Out of Stock
-                        </UiBadge>
-                      </div>
-                      <UiBadge v-else variant="info">
-                        <InfinityIcon class="h-3.5 w-3.5" />
-                        Digital Product - Always Available
-                      </UiBadge>
-                    </div>
-                    <UiButton
-                      variant="outline"
-                      size="icon"
-                      :aria-label="
-                        isFavorite
-                          ? 'Remove from favorites'
-                          : 'Add to favorites'
-                      "
-                      @click="handleToggleFavorites"
-                    >
-                      <Heart
-                        class="h-5 w-5"
-                        :class="
-                          isFavorite
-                            ? 'fill-current text-destructive'
-                            : 'text-muted-foreground'
-                        "
-                      />
-                    </UiButton>
-                  </div>
-                </div>
-
-                <!-- Product Type Selection -->
-                <div class="mb-6 rounded-lg border border-border bg-muted/50 p-4">
-                  <span class="mb-3 block text-sm font-medium"
-                    >Choose Product Type</span
-                  >
-                  <div class="flex flex-wrap items-center gap-4">
-                    <label class="flex cursor-pointer items-center">
-                      <input
-                        v-model="productType"
-                        type="radio"
-                        value="hardbook"
-                        class="h-4 w-4 accent-primary"
-                      />
-                      <span class="ml-2 flex items-center">
-                        <BookOpen class="mr-2 h-6 w-6 text-primary" />
-                        <span>
-                          <span class="font-medium">📚 Hardbook</span>
-                          <span class="block text-xs text-muted-foreground">
-                            {{ formatUsd(hardbookPrice) }}
-                          </span>
-                        </span>
-                      </span>
-                    </label>
-
-                    <label class="ml-4 flex cursor-pointer items-center">
-                      <input
-                        v-model="productType"
-                        type="radio"
-                        value="ebook"
-                        class="h-4 w-4 accent-success"
-                      />
-                      <span class="ml-2 flex items-center">
-                        <Tablet class="mr-2 h-6 w-6 text-success" />
-                        <span>
-                          <span class="font-medium">📱 Ebook (PDF)</span>
-                          <span class="block text-xs text-muted-foreground">
-                            {{ formatUsd(ebookPrice) }}
-                          </span>
-                        </span>
-                      </span>
-                    </label>
-                  </div>
-
-                  <!-- Ebook Preview Button -->
-                  <UiButton
-                    v-if="productType === 'ebook'"
-                    variant="outline"
-                    size="sm"
-                    class="mt-2"
-                    :class="
-                      hasPurchasedEbook
-                        ? 'border-success text-success hover:text-success'
-                        : 'border-info text-info hover:text-info'
-                    "
-                    @click="router.push({ path: '/reader', query: { bookId } })"
-                  >
-                    <CheckCircle2 v-if="hasPurchasedEbook" class="h-4 w-4" />
-                    <BookOpen v-else class="h-4 w-4" />
-                    {{ hasPurchasedEbook ? "Preview full" : "Preview (20 pages free)" }}
-                  </UiButton>
-                </div>
-
-                <!-- Quantity & Actions -->
-                <div class="rounded-lg border border-border bg-card p-4">
-                  <!-- Quantity -->
-                  <div class="mb-4">
-                    <span class="mb-2 block text-sm font-medium">Quantity</span>
-                    <div class="flex max-w-[200px] items-center">
-                      <UiButton
-                        variant="outline"
-                        size="iconSm"
-                        aria-label="Decrease quantity"
-                        :disabled="quantity <= 1 || isOutOfStock"
-                        @click="quantity > 1 ? quantity-- : 1"
-                      >
-                        <Minus class="h-4 w-4" />
-                      </UiButton>
-                      <input
-                        v-model.number="quantity"
-                        type="number"
-                        min="1"
-                        :max="maxQuantity"
-                        :disabled="isOutOfStock"
-                        class="mx-2 h-9 w-20 rounded-md border border-input bg-background px-2 text-center text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                      />
-                      <UiButton
-                        variant="outline"
-                        size="iconSm"
-                        aria-label="Increase quantity"
-                        :disabled="quantity >= maxQuantity || isOutOfStock"
-                        @click="quantity++"
-                      >
-                        <Plus class="h-4 w-4" />
-                      </UiButton>
-                    </div>
-                    <div
-                      v-if="
-                        productType === 'hardbook' &&
-                        (book.stock ?? 0) > 0 &&
-                        (book.stock ?? 0) < MAX_LINE_QUANTITY
-                      "
-                      class="mt-1 text-xs text-warning"
-                    >
-                      Maximum {{ book.stock }} items available
-                    </div>
-                  </div>
-
-                  <!-- Action Buttons -->
-                  <div class="flex flex-col gap-3 sm:flex-row">
-                    <UiButton
-                      size="lg"
-                      class="grow"
-                      :disabled="isOutOfStock"
-                      @click="handleAddToCart"
-                    >
-                      <ShoppingCart class="h-5 w-5" />
-                      {{ isOutOfStock ? "Out of Stock" : "Add to Cart" }}
-                    </UiButton>
-                    <UiButton
-                      variant="success"
-                      size="lg"
-                      class="grow"
-                      :disabled="isOutOfStock"
-                      @click="handleBuyNow"
-                    >
-                      <Zap class="h-5 w-5" />
-                      Buy Now
-                    </UiButton>
-                  </div>
-                </div>
-              </div>
-            </div>
+        <div class="lg:col-span-7">
+          <div v-if="book.subjects?.length" class="hero-rise mb-5 flex flex-wrap gap-2">
+            <NuxtLink
+              v-for="subject in book.subjects.slice(0, 3)"
+              :key="subject"
+              :to="`/subjects/${subjectSlug(subject)}`"
+              class="rounded-full bg-muted px-3 py-1 text-xs font-semibold capitalize text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              {{ subject }}
+            </NuxtLink>
           </div>
-        </div>
-      </UiCard>
 
-      <div class="grid grid-cols-12 gap-4">
-        <!-- Book Details -->
-        <div class="col-span-12 md:col-span-6">
-          <UiCard class="h-full overflow-hidden shadow">
-            <div
-              class="flex items-center bg-primary px-4 py-3 font-semibold text-primary-foreground"
+          <h1
+            class="hero-rise text-4xl font-bold leading-[1.05] tracking-tight md:text-5xl"
+            style="--rise-delay: 60ms"
+          >
+            {{ book.title }}
+          </h1>
+
+          <p
+            v-if="author"
+            class="hero-rise mt-4 text-lg text-muted-foreground"
+            style="--rise-delay: 120ms"
+          >
+            by
+            <NuxtLink
+              :to="`/subjects/all?search=${encodeURIComponent(author)}`"
+              class="group relative ml-0.5 inline-block font-semibold text-foreground"
             >
-              <BookOpen class="mr-2 h-5 w-5" />
-              Book Details
-            </div>
-            <div>
-              <div class="flex items-start gap-4 px-4 py-3">
-                <Hash class="mt-0.5 h-6 w-6 text-primary" />
-                <div>
-                  <div class="text-sm font-medium">Book ID</div>
-                  <div class="text-sm text-muted-foreground">
-                    {{ book.key?.split("/").pop() || "8935250707640" }}
-                  </div>
-                </div>
-              </div>
-
-              <UiSeparator />
-
-              <div class="flex items-start gap-4 px-4 py-3">
-                <UserPen class="mt-0.5 h-6 w-6 text-primary" />
-                <div>
-                  <div class="text-sm font-medium">Author</div>
-                  <div class="text-sm text-muted-foreground">
-                    {{ book.authors?.[0] }}
-                  </div>
-                </div>
-              </div>
-
-              <UiSeparator />
-
-              <div class="flex items-start gap-4 px-4 py-3">
-                <Calendar class="mt-0.5 h-6 w-6 text-primary" />
-                <div>
-                  <div class="text-sm font-medium">Publication Year</div>
-                  <div class="text-sm text-muted-foreground">
-                    {{ book.first_publish_year }}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </UiCard>
-        </div>
-
-        <!-- Customer Reviews -->
-        <div class="col-span-12 md:col-span-6">
-          <UiCard class="h-full overflow-hidden shadow">
-            <div
-              class="flex items-center bg-amber-500 px-4 py-3 font-semibold text-white"
-            >
-              <Star class="mr-2 h-5 w-5" />
-              Customer Reviews
-            </div>
-            <div class="p-4">
-              <div class="mb-4 text-center">
-                <div class="mb-2 text-4xl font-bold text-amber-500">
-                  {{ displayRating.toFixed(1)
-                  }}<span class="text-2xl font-semibold text-muted-foreground"
-                    >/5</span
-                  >
-                </div>
-                <UiRating
-                  :model-value="displayRating"
-                  :size="16"
-                  readonly
-                  class="mb-2 justify-center"
+              {{ author }}
+              <svg
+                aria-hidden="true"
+                class="absolute -bottom-1.5 left-0 h-2 w-full text-accent transition-colors group-hover:text-primary dark:text-accent/80"
+                viewBox="0 0 100 8"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d="M0 4 Q 6.25 0 12.5 4 T 25 4 T 37.5 4 T 50 4 T 62.5 4 T 75 4 T 87.5 4 T 100 4"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                  vector-effect="non-scaling-stroke"
                 />
-                <div class="text-sm text-muted-foreground">
-                  Based on {{ totalReviews }}
-                  {{ totalReviews === 1 ? "review" : "reviews" }}
-                </div>
-              </div>
+              </svg>
+            </NuxtLink>
+          </p>
 
-              <!-- Rating Breakdown -->
-              <div class="mb-4">
-                <div
-                  v-for="(rating, index) in ratingBreakdown"
-                  :key="index"
-                  class="mb-1 flex items-center"
-                >
-                  <span class="mr-2 min-w-[15px] text-xs">{{ 5 - index }}</span>
-                  <Star
-                    class="mr-2 h-3.5 w-3.5 fill-amber-400 text-amber-400"
-                  />
-                  <div
-                    class="mr-2 h-1.5 grow overflow-hidden rounded-full bg-muted"
-                  >
-                    <div
-                      class="h-full rounded-full bg-amber-400 transition-all"
-                      :style="{ width: `${rating.percentage}%` }"
-                    />
-                  </div>
-                  <span class="min-w-[25px] text-xs">({{ rating.count }})</span>
-                </div>
-              </div>
+          <a
+            href="#reviews"
+            class="hero-rise group mt-5 inline-flex items-center gap-2 text-sm"
+            style="--rise-delay: 160ms"
+          >
+            <UiRating :model-value="displayRating" :size="18" readonly />
+            <span class="font-semibold tabular-nums">{{ displayRating.toFixed(1) }}</span>
+            <span class="text-muted-foreground underline-offset-4 group-hover:underline">
+              {{ totalReviews }} {{ totalReviews === 1 ? "review" : "reviews" }}
+            </span>
+          </a>
 
-              <div class="text-center">
-                <UiButton
-                  variant="outline"
-                  size="sm"
-                  class="border-primary text-primary hover:text-primary"
-                  @click="router.push(`/reviews/${book._id}`)"
-                >
-                  <Pencil class="h-4 w-4" />
-                  Write Review
-                </UiButton>
-              </div>
+          <div
+            class="hero-rise mt-8 border-t border-dashed border-border pt-8"
+            style="--rise-delay: 200ms"
+          >
+            <div class="flex flex-wrap items-end gap-x-4 gap-y-1">
+              <span class="text-5xl font-bold tracking-tight tabular-nums">
+                {{ formatUsd(displayPrice) }}
+              </span>
+              <span
+                v-if="productType === 'ebook'"
+                class="pb-1.5 text-lg tabular-nums text-muted-foreground line-through"
+              >
+                {{ formatUsd(hardbookPrice) }}
+              </span>
             </div>
-          </UiCard>
+            <p class="mt-3 flex items-center gap-2 text-sm font-medium">
+              <span class="relative flex size-2.5">
+                <span
+                  v-if="stockStatus.pulse"
+                  class="absolute inline-flex h-full w-full animate-ping rounded-full opacity-60"
+                  :class="stockStatus.dot"
+                ></span>
+                <span class="relative inline-flex size-2.5 rounded-full" :class="stockStatus.dot"></span>
+              </span>
+              {{ stockStatus.label }}
+            </p>
+          </div>
+
+          <div class="hero-rise mt-8" style="--rise-delay: 240ms">
+            <p class="mb-3 text-sm font-semibold">Pick a format</p>
+            <DetailsFormatPicker
+              v-model="productType"
+              :hardbook-price="hardbookPrice"
+              :ebook-price="ebookPrice"
+            />
+
+            <button
+              v-if="productType === 'ebook'"
+              type="button"
+              class="group mt-5 inline-flex items-center gap-2 text-sm font-semibold"
+              @click="router.push({ path: '/reader', query: { bookId } })"
+            >
+              <CheckCircle2 v-if="hasPurchasedEbook" class="size-4 text-success" />
+              <BookOpen v-else class="size-4" />
+              <span
+                class="underline decoration-accent decoration-[3px] underline-offset-4 transition-colors group-hover:decoration-primary"
+              >
+                {{ hasPurchasedEbook ? "You own this ebook, open the reader" : "Read the first 20 pages free" }}
+              </span>
+              <ArrowRight class="size-4 transition-transform group-hover:translate-x-1" />
+            </button>
+          </div>
+
+          <div class="hero-rise mt-8 flex flex-wrap gap-3" style="--rise-delay: 280ms">
+            <div
+              class="inline-flex h-12 shrink-0 items-center rounded-full border border-border bg-card p-1"
+            >
+              <button
+                type="button"
+                class="flex size-10 items-center justify-center rounded-full transition hover:bg-muted active:scale-90 disabled:pointer-events-none disabled:opacity-40"
+                aria-label="Decrease quantity"
+                :disabled="quantity <= 1 || isOutOfStock"
+                @click="quantity--"
+              >
+                <Minus class="size-4" />
+              </button>
+              <input
+                v-model.number="quantity"
+                type="number"
+                inputmode="numeric"
+                min="1"
+                :max="maxQuantity"
+                :disabled="isOutOfStock"
+                aria-label="Quantity"
+                class="w-10 bg-transparent text-center text-base font-semibold tabular-nums [appearance:textfield] focus:outline-none disabled:opacity-40 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                @change="clampQuantity"
+              />
+              <button
+                type="button"
+                class="flex size-10 items-center justify-center rounded-full transition hover:bg-muted active:scale-90 disabled:pointer-events-none disabled:opacity-40"
+                aria-label="Increase quantity"
+                :disabled="quantity >= maxQuantity || isOutOfStock"
+                @click="quantity++"
+              >
+                <Plus class="size-4" />
+              </button>
+            </div>
+
+            <UiButton
+              variant="ink"
+              class="group h-12 min-w-[10rem] flex-1 rounded-full text-base font-semibold shadow-none"
+              :disabled="isOutOfStock"
+              @click="handleAddToCart"
+            >
+              <ShoppingCart class="transition-transform duration-300 group-hover:-rotate-12" />
+              {{ isOutOfStock ? "Out of stock" : "Add to cart" }}
+            </UiButton>
+            <UiButton
+              class="group h-12 min-w-[10rem] flex-1 rounded-full bg-accent text-base font-semibold text-accent-foreground shadow-none hover:bg-accent/80 active:scale-[0.98]"
+              :disabled="isOutOfStock"
+              @click="handleBuyNow"
+            >
+              Buy now
+              <ArrowRight class="transition-transform group-hover:translate-x-1" />
+            </UiButton>
+          </div>
+
+          <p
+            v-if="
+              productType === 'hardbook' &&
+              (book.stock ?? 0) > 0 &&
+              (book.stock ?? 0) < MAX_LINE_QUANTITY
+            "
+            class="mt-3 text-xs font-medium text-warning"
+          >
+            Up to {{ book.stock }} copies per order.
+          </p>
         </div>
       </div>
 
-      <!-- Description -->
-      <UiCard
-        v-if="book.description"
-        class="mt-6 overflow-hidden shadow"
+      <section
+        v-reveal
+        class="mt-20 grid grid-cols-1 gap-12 md:mt-28 lg:grid-cols-12 lg:gap-16"
+        aria-labelledby="about-heading"
       >
-        <div
-          class="flex items-center bg-secondary px-4 py-3 font-semibold text-secondary-foreground"
-        >
-          <FileText class="mr-2 h-5 w-5" />
-          Description
-        </div>
-        <div class="p-4">
-          <p class="text-base leading-relaxed">
-            {{ displayDescription }}
+        <div class="lg:col-span-7">
+          <h2 id="about-heading" class="text-2xl font-bold tracking-tight md:text-3xl">
+            About this book
+          </h2>
+          <template v-if="displayDescription">
+            <p
+              class="mt-5 whitespace-pre-line text-base leading-[1.75] text-foreground/85"
+              :class="isLongDescription && !descriptionExpanded && 'line-clamp-6'"
+            >
+              {{ displayDescription }}
+            </p>
+            <button
+              v-if="isLongDescription"
+              type="button"
+              class="mt-4 inline-flex items-center gap-1.5 rounded-full bg-muted px-4 py-2 text-sm font-semibold transition-colors hover:bg-accent hover:text-accent-foreground"
+              :aria-expanded="descriptionExpanded"
+              @click="descriptionExpanded = !descriptionExpanded"
+            >
+              {{ descriptionExpanded ? "Show less" : "Read more" }}
+              <ChevronDown
+                class="size-4 transition-transform duration-300"
+                :class="descriptionExpanded && 'rotate-180'"
+              />
+            </button>
+          </template>
+          <p v-else class="mt-5 text-muted-foreground">
+            The publisher hasn't shared a description for this one yet.
           </p>
         </div>
-      </UiCard>
+
+        <div class="lg:col-span-5">
+          <DetailsFactSheet :book="book" />
+        </div>
+      </section>
+
+      <section id="reviews" v-reveal class="mt-20 scroll-mt-28 md:mt-28" aria-label="Reviews">
+        <DetailsReviewsSummary
+          :book-id="bookId"
+          :rating="displayRating"
+          :total="totalReviews"
+          :breakdown="breakdown"
+          :reviews="reviews"
+          :locked="!currentUser && totalReviews > 0"
+          @sign-in="handleSignInForReviews"
+        />
+      </section>
+
+      <DetailsRelatedShelf
+        v-if="primarySubject && book._id"
+        :subject="primarySubject"
+        :exclude-id="book._id"
+        class="mt-20 md:mt-28"
+      />
     </div>
 
-    <!-- Snackbar -->
     <SnackbarAlert
       v-model="snackbar.show"
       :text="snackbar.message"
@@ -434,27 +316,17 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
 import {
-  AlertTriangle,
+  ArrowRight,
   BookOpen,
-  Calendar,
+  BookX,
   CheckCircle2,
-  ChevronRight,
-  FileText,
-  Flame,
-  Hash,
-  Heart,
-  Infinity as InfinityIcon,
+  ChevronDown,
   Minus,
-  Pencil,
   Plus,
   ShoppingCart,
-  Star,
-  Tablet,
-  UserPen,
-  XCircle,
-  Zap,
 } from "lucide-vue-next";
 import { useAuthStore } from "@/stores/auth";
+import { useAuthDialogStore } from "@/stores/authDialog";
 import { useCartStore } from "@/stores/cart";
 import { useFavoriteStore } from "@/stores/favorite";
 import { useOrderStore } from "@/stores/order";
@@ -462,6 +334,8 @@ import { useReviewStore } from "@/stores/review";
 import { useSnackbar } from "@/composables/useSnackbar";
 import { isFavoriteBook } from "@/utils/favorites";
 import { EBOOK_PRICE_RATIO, formatUsd } from "@/utils/pricing";
+import { ratingBreakdown } from "@/utils/reviews";
+import { subjectSlug } from "@/utils/subjects";
 import { getBookById } from "@/api/bookApi";
 import { getAverageRating } from "@/api/reviewApi";
 import type { Book, ProductType } from "@/types";
@@ -470,11 +344,13 @@ import type { Book, ProductType } from "@/types";
 const LOW_STOCK_THRESHOLD = 20;
 /** Cap on a single line, so one order cannot clear the shelf. */
 const MAX_LINE_QUANTITY = 10;
+const LONG_DESCRIPTION_LENGTH = 600;
 
 const route = useRoute();
 const router = useRouter();
 
 const cartStore = useCartStore();
+const authDialog = useAuthDialogStore();
 const orderStore = useOrderStore();
 const favoriteStore = useFavoriteStore();
 const reviewStore = useReviewStore();
@@ -488,28 +364,23 @@ const { reviews } = storeToRefs(reviewStore);
 const { snackbar, notify, notifyError } = useSnackbar();
 
 const book = ref<Partial<Book>>({});
-const isLoading = ref(false);
+const isLoading = ref(true);
+const loadFailed = ref(false);
 const quantity = ref(1);
 const productType = ref<ProductType>("hardbook");
 const averageRating = ref(0);
 const totalReviews = ref(0);
+const descriptionExpanded = ref(false);
 
 const bookId = computed(() => route.params.id as string);
 
 const isFavorite = computed(() => isFavoriteBook(favorites.value, book.value._id));
 
-/** Counts per star, highest first — index 0 is five stars. */
-const ratingBreakdown = computed(() => {
-  const counts = [0, 0, 0, 0, 0];
-  for (const review of reviews.value) {
-    if (review.rating >= 1 && review.rating <= 5) counts[5 - review.rating]++;
-  }
-  const total = reviews.value.length;
-  return counts.map((count) => ({
-    count,
-    percentage: total > 0 ? (count / total) * 100 : 0,
-  }));
-});
+const author = computed(() => book.value.authors?.[0] ?? "");
+
+const primarySubject = computed(() => book.value.subjects?.[0] ?? "");
+
+const breakdown = computed(() => ratingBreakdown(reviews.value));
 
 const displayRating = computed(() =>
   totalReviews.value > 0 ? averageRating.value : book.value.rating || 0
@@ -537,6 +408,20 @@ const maxQuantity = computed(() =>
     : Math.min(book.value.stock ?? 0, MAX_LINE_QUANTITY)
 );
 
+const stockStatus = computed(() => {
+  if (productType.value === "ebook") {
+    return { label: "Instant access in the online reader", dot: "bg-info", pulse: false };
+  }
+  const stock = book.value.stock ?? 0;
+  if (stock > LOW_STOCK_THRESHOLD) {
+    return { label: `In stock, ${stock} ready to ship`, dot: "bg-success", pulse: true };
+  }
+  if (stock > 0) {
+    return { label: `Hurry, only ${stock} left`, dot: "bg-warning", pulse: true };
+  }
+  return { label: "Out of stock", dot: "bg-destructive", pulse: false };
+});
+
 /**
  * Some legacy rows store the description as `{ value }` rather than a string.
  */
@@ -547,17 +432,30 @@ const displayDescription = computed(() => {
     : (description as string | undefined);
 });
 
+const isLongDescription = computed(
+  () => (displayDescription.value?.length ?? 0) > LONG_DESCRIPTION_LENGTH
+);
+
 watch(productType, () => {
   quantity.value = Math.min(quantity.value, Math.max(1, maxQuantity.value));
 });
 
 onMounted(async () => {
   await loadBook();
-  await Promise.all([
+  if (loadFailed.value) return;
+  await Promise.allSettled([
     orderStore.fetchUserOrders(),
     reviewStore.loadReviews(bookId.value),
   ]);
 });
+
+function handleSignInForReviews() {
+  const signedIn = authDialog.ensureSignedIn(
+    "Sign in to read reader reviews.",
+    () => reviewStore.loadReviews(bookId.value).catch(() => {})
+  );
+  if (signedIn) reviewStore.loadReviews(bookId.value).catch(() => {});
+}
 
 async function loadBook() {
   isLoading.value = true;
@@ -572,6 +470,7 @@ async function loadBook() {
     }
   } catch (error) {
     console.error("Fetch error:", error);
+    loadFailed.value = true;
   } finally {
     isLoading.value = false;
   }
@@ -589,7 +488,18 @@ async function loadAverageRating() {
   }
 }
 
+function clampQuantity() {
+  const value = Math.floor(Number(quantity.value)) || 1;
+  quantity.value = Math.min(Math.max(1, value), Math.max(1, maxQuantity.value));
+}
+
 async function handleAddToCart() {
+  const signedIn = authDialog.ensureSignedIn(
+    "Sign in to add books to your cart.",
+    handleAddToCart
+  );
+  if (!signedIn) return;
+
   try {
     await cartStore.addToCart({
       bookId: bookId.value,
@@ -597,25 +507,34 @@ async function handleAddToCart() {
       productType: productType.value,
     });
 
-    const typeName = productType.value === "ebook" ? "Ebook" : "Hardbook";
+    const typeName = productType.value === "ebook" ? "Ebook" : "Hardback";
     notify(`${typeName} added to cart successfully!`);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error adding to cart:", error);
-    notifyError("Failed to add to cart.");
+    notifyError(error.response?.data?.msg || "Failed to add to cart.");
   }
 }
 
 async function handleBuyNow() {
+  const signedIn = authDialog.ensureSignedIn(
+    "Sign in to buy this book.",
+    handleBuyNow
+  );
+  if (!signedIn) return;
+
   try {
-    await cartStore.addToCart({
-      bookId: bookId.value,
-      quantity: quantity.value,
-      productType: productType.value,
-    });
+    await cartStore.addToCart(
+      {
+        bookId: bookId.value,
+        quantity: quantity.value,
+        productType: productType.value,
+      },
+      { refresh: false }
+    );
     router.push("/cart");
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error during buy now:", error);
-    notifyError("Failed to proceed to checkout.");
+    notifyError(error.response?.data?.msg || "Failed to proceed to checkout.");
   }
 }
 

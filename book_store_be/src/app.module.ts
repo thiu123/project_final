@@ -3,13 +3,17 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Connection } from 'mongoose';
+import { RateLimitModule } from './common/rate-limit.module';
 import { CloudinaryModule } from './config/cloudinary/cloudinary.module';
+import { validateEnv } from './config/env.validation';
+import { MailModule } from './config/mail/mail.module';
 import { RedisModule } from './config/redis/redis.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BooksModule } from './modules/books/books.module';
 import { CartsModule } from './modules/carts/carts.module';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { ContactsModule } from './modules/contacts/contacts.module';
+import { EbooksModule } from './modules/ebooks/ebooks.module';
 import { FavoritesModule } from './modules/favorites/favorites.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
@@ -20,7 +24,7 @@ const mongoLogger = new Logger('Mongoose');
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnv }),
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -40,10 +44,13 @@ const mongoLogger = new Logger('Mongoose');
     // call, because access and refresh tokens use different keys.
     JwtModule.register({ global: true }),
     RedisModule,
+    RateLimitModule,
+    MailModule,
     CloudinaryModule,
     AuthModule,
     UsersModule,
     BooksModule,
+    EbooksModule,
     CartsModule,
     ReviewsModule,
     OrdersModule,

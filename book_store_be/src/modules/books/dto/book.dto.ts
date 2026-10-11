@@ -33,6 +33,15 @@ export class CreateBookDto {
   pdf_url?: string | null;
 
   @IsOptional()
+  @IsString()
+  pdf_preview_url?: string | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  pdf_pages?: number | null;
+
+  @IsOptional()
   @IsInt()
   first_publish_year?: number;
 
@@ -91,6 +100,15 @@ export class UpdateBookDto {
   @IsOptional()
   @IsString()
   pdf_url?: string | null;
+
+  @IsOptional()
+  @IsString()
+  pdf_preview_url?: string | null;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  pdf_pages?: number | null;
 
   @IsOptional()
   @IsInt()

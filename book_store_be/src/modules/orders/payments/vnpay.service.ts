@@ -5,10 +5,11 @@ import {
   HashAlgorithm,
   ignoreLogger,
   ProductCode,
+  ReturnQueryFromVNPay,
   VNPay,
   VnpLocale,
 } from 'vnpay';
-import { PaymentRequest } from './payment.types';
+import { PaymentRequest, PaymentResult } from './payment.types';
 
 @Injectable()
 export class VnpayService {
@@ -56,6 +57,26 @@ export class VnpayService {
         (error as Error).stack,
       );
       throw error;
+    }
+  }
+
+  verify(query: Record<string, unknown>): PaymentResult | null {
+    try {
+      const result = this.vnpay.verifyReturnUrl(
+        query as unknown as ReturnQueryFromVNPay,
+      );
+      if (!result.isVerified || !result.vnp_TxnRef) return null;
+
+      return {
+        orderId: String(result.vnp_TxnRef),
+        success: result.isSuccess,
+        amount: Number(result.vnp_Amount),
+      };
+    } catch (error) {
+      this.logger.warn(
+        `VNPay verification failed: ${(error as Error).message}`,
+      );
+      return null;
     }
   }
 }

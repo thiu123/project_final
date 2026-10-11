@@ -52,7 +52,7 @@ Each module follows `*.module.ts` / `*.controller.ts` / `*.service.ts` / `schema
 | Prefix          | Notes                                                   |
 | --------------- | ------------------------------------------------------- |
 | `/api/auth`     | `/google` and `/google/callback` use passport-google    |
-| `/api/users`    | `POST /upload-images?type=avatar\|book\|ebook_file`     |
+| `/api/users`    | `POST /upload-images?type=avatar\|book` (`book`: admin) |
 | `/api/books`    | see **Catalogue API** below; static routes precede `/:id` |
 | `/api/carts`    | all routes require a token                              |
 | `/api/reviews`  | admin replies under `/:reviewId/reply[/:replyId]`       |
@@ -60,7 +60,7 @@ Each module follows `*.module.ts` / `*.controller.ts` / `*.service.ts` / `schema
 | `/api/favorite` | toggle + list                                           |
 | `/api/chatbot`  | see **Chatbot** below; all routes require a token        |
 | `/api/contact`  | user + admin routes                                     |
-| `/api/voucher`  | `GET /all?activeOnly=true` for storefront               |
+| `/api/voucher`  | `GET /all` redeemable only; `GET /admin/all` for admins |
 
 ## Catalogue API
 
@@ -132,6 +132,22 @@ Three payment methods, all creating the same `Order`:
 `/vnpay_return` and `/momo_return` receive the gateway redirect and forward
 the customer to `/order/status/<orderId>` on the frontend.
 
+**Gateway callbacks are verified.** Every callback must carry a valid signature
+(VNPay SHA512 via the `vnpay` library, MoMo HMAC-SHA256 over the documented
+field order), name an order placed with that same gateway, and report exactly
+`order.total`. Only a `Pending` order is settled, so the redirect and the
+server-to-server notification can both arrive without double-counting, and a
+replayed failure cannot flip a paid order back to `Failed`.
+
+| Callback | Who calls it |
+| --- | --- |
+| `GET /vnpay_return`, `GET /momo_return` | The customer's browser. Works locally. |
+| `GET /vnpay_ipn` | VNPay's server. Register `<BACKEND_URL>/api/order/vnpay_ipn` as the IPN URL in the VNPay merchant portal; answers `{ RspCode, Message }`. |
+| `POST /momo_ipn` | MoMo's server, sent as `ipnUrl` with each payment; answers `204`. |
+
+The IPN routes need a public `BACKEND_URL`; on localhost only the redirects
+arrive, which is enough to settle orders in development.
+
 **When inventory is taken.** Prepaid orders reserve stock, consume the voucher
 and clear the cart when the gateway confirms payment. A COD order does all of
 that the moment it is placed, because nobody pays until delivery — so it sits
@@ -197,15 +213,11 @@ ever name books the store actually sells.
 | --- | --- |
 | `POST /chat` | `{ message }` → `{ reply, books }`. Remembers the thread per user. |
 | `DELETE /history` | Starts a fresh conversation. |
-| `POST /suggestions` | `{ userPreferences }` → `{ reply, suggestions }`, stateless. |
-| `POST /review/generate` | `{ bookQuery }` → a cached review for one book. |
 
 **Cost per message.** A turn costs two Gemini calls when the catalogue has to be
 searched and one when the model can answer from the conversation so far
 ("which of those is cheapest?"). Books shown earlier are stored with the
 history, so a follow-up answered from context still returns linkable rows.
-Reviews cost one call and are cached in Redis for an hour per book *and
-language*.
 
 **Model fallback.** `GEMINI_MODEL` is a comma-separated list tried in order.
 The free tier caps requests *per model per day* (20/day for gemini-3.6-flash at
@@ -231,20 +243,39 @@ stored as raw strings, and `"abc…"` never matches `ObjectId("abc…")` in a
 query. That is invisible until someone filters by the field: an affected user's
 orders simply disappear from their order history.
 
-Two scripts guard this:
+Documents written before a field was fixed keep their string ids and stay
+invisible to the casting queries until they are converted to `ObjectId`.
 
-```bash
-node scripts/verify-objectid-refs.js            # read-only; exits non-zero if any string ids remain
-node scripts/migrate-objectid-refs.js --dry-run # show what would change
-node scripts/migrate-objectid-refs.js           # convert, after writing a JSON backup
-```
+## Auth and sessions
 
-Run the migration once per database immediately after deploying a schema fix —
-until it runs, documents holding string ids are invisible to the newly-casting
-queries.
+- **Access token**: 15 minutes, sent as `token: Bearer <jwt>`. A missing,
+  invalid or expired token is `401`; the frontend then calls `POST /auth/refresh`
+  once and retries the request.
+- **Refresh token**: 7 days, `httpOnly` cookie, signed with a separate key.
+  Refreshing re-reads the user, so a deleted account or a changed admin flag
+  takes effect at the next refresh. Each user has a `tokenVersion`; resetting or
+  changing the password bumps it, which signs out every other device.
+  `POST /auth/logout` clears the cookie. In production (`NODE_ENV=production`)
+  the cookie is `Secure; SameSite=None` so a frontend on another domain can
+  still send it.
+- **Password reset** emails a link to `<FRONTEND_URL>/reset-password?token=…`
+  (valid 10 minutes). The response is the same whether or not the email exists.
+  Without SMTP settings the email is only logged, and only outside production.
+- **Rate limits** (per IP, fixed window in Redis, `429` with `Retry-After`):
+  login 10/15 min, register 5/h, forgot-password 5/h plus 3 emails/h per
+  address, reset-password 10/15 min, change-password 10/15 min, contact 5/h,
+  review 20/h. With Redis down the limits are not enforced. Behind a reverse
+  proxy set `TRUST_PROXY`, or every client shares the proxy's IP.
+- `password`, `resetPasswordToken`, `resetPasswordExpires` and `tokenVersion`
+  are `select: false`; query them explicitly with `+field` when needed.
+- CORS and the Socket.IO gateway only accept `CORS_ORIGINS` (default
+  `FRONTEND_URL`).
 
 ## Environment variables
 
-See `.env.example`. New optional variables compared to the Express version:
-`REDIS_URL`, `FRONTEND_URL`, `BACKEND_URL`, `VNPAY_TMN_CODE`, `VNPAY_SECURE_SECRET`
-(all default to the previous hardcoded localhost / sandbox values).
+See `.env.example`. The app refuses to start unless `JWT_ACCESS_KEY` and
+`JWT_REFRESH_KEY` are set, different, and at least 32 characters long.
+Optional: `REDIS_URL`, `FRONTEND_URL`, `BACKEND_URL`, `CORS_ORIGINS`,
+`TRUST_PROXY`, `MAIL_HOST` / `MAIL_PORT` / `MAIL_USER` / `MAIL_PASSWORD` /
+`MAIL_FROM`, `VNPAY_TMN_CODE`, `VNPAY_SECURE_SECRET` (the last two default to
+the VNPay sandbox).

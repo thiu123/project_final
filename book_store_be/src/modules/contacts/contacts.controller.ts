@@ -8,6 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { RateLimit } from '../../common/decorators/rate-limit.decorator';
 import { AdminGuard } from '../../common/guards/admin.guard';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
@@ -20,6 +21,7 @@ export class ContactsController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
+  @RateLimit({ name: 'contact', limit: 5, windowSeconds: 60 * 60 })
   createContact(
     @CurrentUser() user: JwtPayload,
     @Body() dto: CreateContactDto,

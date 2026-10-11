@@ -6,18 +6,29 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+import * as crypto from 'crypto';
 import { Model, Types } from 'mongoose';
+import {
+  InpOrderAlreadyConfirmed,
+  IpnFailChecksum,
+  IpnInvalidAmount,
+  IpnOrderNotFound,
+  IpnResponse,
+  IpnSuccess,
+  IpnUnknownError,
+} from 'vnpay';
+import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import {
   EBOOK_PRICE_RATIO,
   EXCHANGE_RATE_USD_TO_VND,
   OrderStatus,
-  PAID_ORDER_STATUSES,
   PaymentMethod,
   StatusActor,
 } from '../../constants/app.constants';
 import { BooksService } from '../books/books.service';
 import { Book, BookDocument } from '../books/schemas/book.schema';
 import { Cart, CartDocument, CartItem } from '../carts/schemas/cart.schema';
+import { EbooksService } from '../ebooks/ebooks.service';
 import { NotificationsGateway } from '../notifications/notifications.gateway';
 import {
   VoucherRejectReason,
@@ -30,10 +41,23 @@ import {
 } from './dto/order.dto';
 import { REVENUE_MATCH, allowedTransitions } from './order-transitions';
 import { MomoService } from './payments/momo.service';
+import { PaymentResult } from './payments/payment.types';
 import { VnpayService } from './payments/vnpay.service';
 import { Order, OrderDocument, ShippingAddress } from './schemas/order.schema';
 
 type PopulatedCartItem = Omit<CartItem, 'bookId'> & { bookId: BookDocument };
+
+type Gateway = Exclude<PaymentMethod, 'COD'>;
+
+type SettleOutcome =
+  'settled' | 'not_found' | 'already_settled' | 'amount_mismatch';
+
+const IPN_RESPONSES: Record<SettleOutcome, IpnResponse> = {
+  settled: IpnSuccess,
+  not_found: IpnOrderNotFound,
+  already_settled: InpOrderAlreadyConfirmed,
+  amount_mismatch: IpnInvalidAmount,
+};
 
 const HISTORY_ACTOR_FIELDS = 'username email avatar_url';
 
@@ -55,6 +79,7 @@ export class OrdersService {
     @InjectModel(Cart.name) private readonly cartModel: Model<CartDocument>,
     @InjectModel(Book.name) private readonly bookModel: Model<BookDocument>,
     private readonly booksService: BooksService,
+    private readonly ebooksService: EbooksService,
     private readonly vouchersService: VouchersService,
     private readonly vnpayService: VnpayService,
     private readonly momoService: MomoService,
@@ -106,13 +131,13 @@ export class OrdersService {
   }
 
   // Looks up by the public `orderId`, not the Mongo _id.
-  async getOrderById(orderId: string) {
+  async getOrderById(orderId: string, user: JwtPayload) {
     const order = await this.orderModel
       .findOne({ orderId })
       .populate('items.bookId')
       .populate('statusHistory.actorId', HISTORY_ACTOR_FIELDS);
 
-    if (!order) {
+    if (!order || (!user.admin && order.userId.toString() !== user.id)) {
       throw new NotFoundException({ msg: 'Order not found' });
     }
     return order;
@@ -123,14 +148,9 @@ export class OrdersService {
       throw new BadRequestException({ msg: 'Book ID is required' });
     }
 
-    const order = await this.orderModel.findOne({
-      userId,
-      status: { $in: PAID_ORDER_STATUSES },
-      'items.bookId': bookId,
-      'items.productType': 'ebook',
-    });
-
-    return { isPurchased: !!order };
+    return {
+      isPurchased: await this.ebooksService.hasPurchased(userId, bookId),
+    };
   }
 
   async updateOrderStatus(id: string, status: OrderStatus, adminId?: string) {
@@ -165,10 +185,6 @@ export class OrdersService {
       .populate('items.bookId')
       .populate('userId', 'username email')
       .populate('statusHistory.actorId', HISTORY_ACTOR_FIELDS);
-  }
-
-  confirmOrder(id: string, adminId?: string) {
-    return this.updateOrderStatus(id, 'Confirmed', adminId);
   }
 
   async cancelOrder(userId: string, id: string) {
@@ -256,27 +272,62 @@ export class OrdersService {
   }
 
   async handleVnpayReturn(query: VnpayReturnQuery): Promise<string> {
-    try {
-      await this.settlePayment(
-        query.vnp_TxnRef,
-        query.vnp_ResponseCode === '00',
+    const result = this.vnpayService.verify(query);
+    if (!result) {
+      this.logger.warn(
+        `VNPay return rejected: bad signature (${query.vnp_TxnRef})`,
       );
       return this.statusPageUrl(query.vnp_TxnRef);
+    }
+
+    try {
+      await this.settlePayment(result, 'Vnpay');
     } catch (error) {
       this.logger.error(`VNPay return error: ${(error as Error).message}`);
-      return this.statusPageUrl(undefined);
+    }
+    return this.statusPageUrl(result.orderId);
+  }
+
+  async handleVnpayIpn(query: VnpayReturnQuery): Promise<IpnResponse> {
+    const result = this.vnpayService.verify(query);
+    if (!result) return IpnFailChecksum;
+
+    try {
+      return IPN_RESPONSES[await this.settlePayment(result, 'Vnpay')];
+    } catch (error) {
+      this.logger.error(`VNPay IPN error: ${(error as Error).message}`);
+      return IpnUnknownError;
     }
   }
 
   async handleMomoReturn(query: MomoReturnQuery): Promise<string> {
+    const result = this.momoService.verify(query);
+    if (!result) {
+      this.logger.warn(
+        `MoMo return rejected: bad signature (${String(query.orderId)})`,
+      );
+      return this.statusPageUrl(
+        typeof query.orderId === 'string' ? query.orderId : undefined,
+      );
+    }
+
     try {
-      // MoMo sends resultCode as the string "0" or the number 0.
-      await this.settlePayment(query.orderId, Number(query.resultCode) === 0);
-      return this.statusPageUrl(query.orderId);
+      await this.settlePayment(result, 'Momo');
     } catch (error) {
       this.logger.error(`MoMo return error: ${(error as Error).message}`);
-      return this.statusPageUrl(undefined);
     }
+    return this.statusPageUrl(result.orderId);
+  }
+
+  async handleMomoIpn(body: MomoReturnQuery): Promise<void> {
+    const result = this.momoService.verify(body);
+    if (!result) {
+      this.logger.warn(
+        `MoMo IPN rejected: bad signature (${String(body.orderId)})`,
+      );
+      return;
+    }
+    await this.settlePayment(result, 'Momo');
   }
 
   // Ebooks cannot ship and access is only granted once an order is paid,
@@ -330,7 +381,7 @@ export class OrdersService {
     const totalAmount = Math.round(
       (subtotal - discountAmount) * EXCHANGE_RATE_USD_TO_VND,
     );
-    const orderId = `ORD${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    const orderId = `ORD${Date.now()}${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
     await new this.orderModel({
       userId,
@@ -384,13 +435,29 @@ export class OrdersService {
   }
 
   private async settlePayment(
-    orderId: string | undefined,
-    success: boolean,
-  ): Promise<void> {
+    { orderId, success, amount }: PaymentResult,
+    gateway: Gateway,
+  ): Promise<SettleOutcome> {
     const order = await this.orderModel.findOne({ orderId });
-    if (!order) {
-      this.logger.error(`Order not found: ${orderId}`);
-      return;
+    if (!order || order.paymentMethod !== gateway) {
+      this.logger.error(`${gateway} callback for unknown order: ${orderId}`);
+      return 'not_found';
+    }
+
+    if (amount !== order.total) {
+      this.logger.error(
+        `${gateway} amount mismatch on ${orderId}: got ${amount}, expected ${order.total}`,
+      );
+      return 'amount_mismatch';
+    }
+
+    if (order.status !== 'Pending') {
+      if (success && order.status === 'Cancelled') {
+        this.logger.error(
+          `${gateway} reports payment for cancelled order ${orderId}: refund it manually`,
+        );
+      }
+      return 'already_settled';
     }
 
     const alreadyNotified = order.inventoryCommitted;
@@ -402,9 +469,11 @@ export class OrdersService {
     await order.save();
     this.logger.log(`Order ${orderId} updated to status: ${order.status}`);
 
-    if (!success) return;
-    await this.commitInventory(order);
-    if (!alreadyNotified) await this.notifyNewOrder(order.orderId);
+    if (success) {
+      await this.commitInventory(order);
+      if (!alreadyNotified) await this.notifyNewOrder(order.orderId);
+    }
+    return 'settled';
   }
 
   // Takes the stock, the voucher usage and the cart. COD reaches this while
